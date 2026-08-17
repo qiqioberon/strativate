@@ -1,5 +1,7 @@
 export type ProgramKind = 'Private Mentoring' | 'Intensive Mentoring' | 'Competition Class'
 
+export type WorkspaceSection = 'overview' | 'explore' | 'mentoring' | 'schedule' | 'programs' | 'library' | 'orders' | 'notifications' | 'profile' | 'support'
+
 export type DemoOrder = {
   id: string
   program: ProgramKind
