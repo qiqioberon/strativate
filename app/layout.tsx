@@ -1,10 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Strativate — Win Early. Get Ahead.',
+  description: 'Personalized mentoring and competition preparation for ambitious university students.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -25,6 +26,8 @@ export const metadata: Metadata = {
   },
 }
 
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+
 export const viewport: Viewport = {
   colorScheme: 'light dark',
   themeColor: [
@@ -39,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className="bg-background">
+      <body className={`${jakarta.className} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
