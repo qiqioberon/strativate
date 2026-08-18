@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleHelp, Clock3, Compass, CreditCard, FileText, LayoutDashboard, LibraryBig, Menu, MessageCircle, QrCode, ReceiptText, Search, ShieldCheck, Sparkles, UsersRound, X } from 'lucide-react'
-import { DemoOrder, formatOrderDate, mentorOptions, programOptions, readOrder, scheduleOptions, writeOrder } from '@/lib/demo-store'
+import { DemoOrder, createDemoOrder, mentorOptions, programOptions, readOrder, scheduleOptions, writeOrder } from '@/lib/demo-store'
 import { DemoRoleSwitcher } from '@/components/demo-role-switcher'
 
 type Section = 'overview' | 'explore' | 'mentoring' | 'schedule' | 'programs' | 'library' | 'orders' | 'notifications' | 'profile' | 'support'
@@ -27,8 +27,8 @@ export default function MenteeDashboard() {
   useEffect(() => { const savedOrder = readOrder(); setOrder(savedOrder); setHasUnpaidOrder(Boolean(savedOrder?.paymentStatus === 'Unpaid')); setHydrated(true) }, [])
 
   const chooseProgram = (value: typeof program) => { setProgram(value); setSubject(programOptions.find((item) => item.name === value)?.subjects[0] || '') }
-  const createOrder = () => { const next: DemoOrder = { id: `ST-${Math.floor(1000 + Math.random() * 9000)}`, program, subject, mentor: program === 'Competition Class' ? 'Class facilitator' : mentor, schedule, price: selectedProgram.price, status: 'Awaiting payment', paymentStatus: 'Unpaid', createdAt: formatOrderDate() }; writeOrder(next); setOrder(next); setHasUnpaidOrder(true); setSection('orders') }
-  const pay = () => { if (!order) return; const paid: DemoOrder = { ...order, status: 'Paid · awaiting assignment', paymentStatus: 'Paid' }; writeOrder(paid); setOrder(paid); setHasUnpaidOrder(false); setSection('overview') }
+  const createOrder = () => { const next = createDemoOrder({ program, title: selectedProgram.title, subject, mentor: program === 'Big Class' ? 'Class facilitator' : mentor, schedule, price: selectedProgram.price, sessions: selectedProgram.sessions, goal: 'Competition Focused', packageLabel: `${selectedProgram.sessions} Sessions`, mentorPreference: mentor }); writeOrder(next); setOrder(next); setHasUnpaidOrder(true); setSection('orders') }
+  const pay = () => { if (!order) return; const paid: DemoOrder = { ...order, status: 'ASSIGNMENT_PENDING', paymentStatus: 'Paid', paymentMethod: 'QRIS', mentor: 'Unassigned' }; writeOrder(paid); setOrder(paid); setHasUnpaidOrder(false); setSection('overview') }
   const resetOrder = () => { writeOrder(null); setOrder(null); setHasUnpaidOrder(false); setStep(0); setSection('explore') }
   const open = (value: Section) => { setSection(value); setMobileNav(false); if (value === 'notifications') setNotifications(0) }
 

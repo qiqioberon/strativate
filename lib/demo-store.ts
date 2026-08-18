@@ -1,25 +1,28 @@
-export type ProgramKind = 'Private Mentoring' | 'Intensive Mentoring' | 'Big Class'
+export type ProgramKind = 'Private Mentoring' | 'Intensive Mentoring' | 'Big Class' | 'Digital Product'
 export type OrderStatus = 'PAYMENT_PENDING' | 'PAID' | 'ASSIGNMENT_PENDING' | 'MENTOR_INVITED' | 'MENTOR_ASSIGNED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'REASSIGNMENT_REQUIRED'
-
-export type DemoOrder = { id: string; program: ProgramKind; title: string; subject: string; mentor: string; schedule: string; sessions: number; completed: number; price: string; paymentStatus: 'Unpaid' | 'Paid'; status: OrderStatus; createdAt: string; customer?: string; note?: string }
-
-export const DEMO_STORE_KEY = 'strativate-demo-v2'
+export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Expired' | 'Refunded'
+export type DemoOrder = { id: string; program: ProgramKind; title: string; subject: string; mentor: string; schedule: string; sessions: number; completed: number; price: string; paymentStatus: PaymentStatus; status: OrderStatus; createdAt: string; customer?: string; note?: string; goal?: string; participantType?: 'Individual' | 'Team'; teamSize?: number; packageLabel?: string; mentorPreference?: string; paymentMethod?: 'QRIS' | 'Virtual Account' | 'E-Wallet'; adminNote?: string }
+export type DemoAppointment = { id: string; orderId: string; date: string; time: string; status: 'Scheduled' | 'Completed' | 'Reschedule requested' | 'Cancelled'; duration: number }
+export type DemoNotification = { id: string; title: string; body: string; role: 'mentee' | 'mentor' | 'admin'; read: boolean; createdAt: string }
+export type DemoState = { version: 3; orders: DemoOrder[]; appointments: DemoAppointment[]; notifications: DemoNotification[]; availability: Record<string, string> }
+export const DEMO_STORE_KEY = 'strativate-demo-v3'
 export const mentorOptions = ['Albert L.', 'Navira A.', 'Salsabila Putri', 'Raka Wijaya']
 export const scheduleOptions = ['Thu, 20 Aug · 19:00 WIB', 'Sat, 22 Aug · 10:00 WIB', 'Tue, 25 Aug · 19:00 WIB']
 export const programOptions = [
-  { name: 'Private Mentoring' as const, title: 'Private Mentoring', price: 'Rp 750K', detail: 'Three 75-minute sessions with a competition mentor.', subjects: ['HSBC Business Case Competition', 'Pitch Deck Review', 'Business Plan Preparation'], sessions: 3 },
-  { name: 'Intensive Mentoring' as const, title: 'Business Case Intensive', price: 'Rp 1.2M', detail: 'Five guided sessions from rough idea to final presentation.', subjects: ['Case Structuring', 'Solution Development', 'Financial Modeling'], sessions: 5 },
-  { name: 'Big Class' as const, title: 'Business Case Big Class', price: 'Rp 450K', detail: 'A cohort experience with live classes, materials, and simulations.', subjects: ['July 2026 Cohort', 'Case Simulation', 'Final Presentation'], sessions: 8 },
+ { name: 'Private Mentoring' as const, title: 'Private Mentoring', price: 'Rp 750K', detail: 'Three 75-minute sessions with a competition mentor.', subjects: ['HSBC Business Case Competition', 'Pitch Deck Review', 'Business Plan Preparation'], sessions: 3 },
+ { name: 'Intensive Mentoring' as const, title: 'Business Case Intensive', price: 'Rp 1.2M', detail: 'Five guided sessions from rough idea to final presentation.', subjects: ['Case Structuring', 'Solution Development', 'Financial Modeling'], sessions: 5 },
+ { name: 'Big Class' as const, title: 'Business Case Big Class', price: 'Rp 450K', detail: 'A cohort experience with live classes, materials, and simulations.', subjects: ['July 2026 Cohort', 'Case Simulation', 'Final Presentation'], sessions: 8 },
 ]
-
 const starterOrders: DemoOrder[] = [
-  { id: 'ST-2048', program: 'Private Mentoring', title: 'Private Mentoring', subject: 'HSBC Business Case Competition', mentor: 'Albert L.', schedule: 'Thu, 20 Aug · 19:00 WIB', sessions: 3, completed: 1, price: 'Rp 750K', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '12 Aug 2026', customer: 'Aqil Farrukh' },
-  { id: 'ST-2051', program: 'Intensive Mentoring', title: 'Business Case Intensive', subject: 'Solution Development', mentor: 'Navira A.', schedule: 'Sat, 22 Aug · 10:00 WIB', sessions: 5, completed: 3, price: 'Rp 1.2M', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '10 Aug 2026', customer: 'Sarah Rahman' },
-  { id: 'ST-2054', program: 'Big Class', title: 'Business Case Big Class', subject: 'July 2026 Cohort', mentor: 'Salsabila Putri', schedule: 'Mon, 24 Aug · 10:00 WIB', sessions: 8, completed: 4, price: 'Rp 450K', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '08 Aug 2026', customer: 'Dimas Prakoso' },
+ { id: 'ST-2048', program: 'Private Mentoring', title: 'Private Mentoring', subject: 'HSBC Business Case Competition', mentor: 'Albert L.', schedule: 'Thu, 20 Aug · 19:00 WIB', sessions: 3, completed: 1, price: 'Rp 750K', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '12 Aug 2026', customer: 'Marsha N.', goal: 'Competition Focused', participantType: 'Individual', packageLabel: '3 Sessions', mentorPreference: 'No Preference — Recommended' },
+ { id: 'ST-2051', program: 'Intensive Mentoring', title: 'Business Case Intensive', subject: 'Solution Development', mentor: 'Navira A.', schedule: 'Sat, 22 Aug · 10:00 WIB', sessions: 5, completed: 3, price: 'Rp 1.2M', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '10 Aug 2026', customer: 'Sarah Rahman', goal: 'Competition Focused', participantType: 'Team', teamSize: 4, packageLabel: '5 Sessions' },
+ { id: 'ST-2054', program: 'Big Class', title: 'Business Case Big Class', subject: 'July 2026 Cohort', mentor: 'Salsabila Putri', schedule: 'Mon, 24 Aug · 10:00 WIB', sessions: 8, completed: 4, price: 'Rp 450K', paymentStatus: 'Paid', status: 'ACTIVE', createdAt: '08 Aug 2026', customer: 'Dimas Prakoso', goal: 'Foundation Learning', participantType: 'Individual' },
 ]
-
-export function readOrders(): DemoOrder[] { if (typeof window === 'undefined') return starterOrders; try { const raw = window.localStorage.getItem(DEMO_STORE_KEY); return raw ? JSON.parse(raw) : starterOrders } catch { return starterOrders } }
+export function readOrders(): DemoOrder[] { if (typeof window === 'undefined') return starterOrders; try { const raw = window.localStorage.getItem(DEMO_STORE_KEY); if (!raw) return starterOrders; const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : parsed.orders || starterOrders } catch { return starterOrders } }
 export function writeOrders(orders: DemoOrder[]) { if (typeof window !== 'undefined') window.localStorage.setItem(DEMO_STORE_KEY, JSON.stringify(orders)) }
-export function readOrder(): DemoOrder | null { return readOrders()[0] || null }
+export function readOrder() { return readOrders()[0] || null }
 export function writeOrder(order: DemoOrder | null) { const orders = readOrders(); if (order) writeOrders([order, ...orders.filter((item) => item.id !== order.id)]); else writeOrders(orders.slice(1)) }
+export function createDemoOrder(input: Partial<DemoOrder> & Pick<DemoOrder, 'program' | 'title' | 'subject' | 'price' | 'sessions'>): DemoOrder { return { id: `ST-${Math.floor(1000 + Math.random() * 9000)}`, mentor: 'Unassigned', schedule: 'Not scheduled', completed: 0, paymentStatus: 'Pending', status: 'PAYMENT_PENDING', createdAt: formatOrderDate(), customer: 'Marsha N.', ...input } }
 export function formatOrderDate() { return new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date()) }
+export function demoAppointments(orders = readOrders()): DemoAppointment[] { return orders.filter((o) => o.status === 'ACTIVE' || o.status === 'MENTOR_ASSIGNED').map((o) => ({ id: `apt-${o.id}`, orderId: o.id, date: '20 Aug 2026', time: o.schedule.split('·')[1]?.trim() || '19:00 WIB', status: 'Scheduled', duration: 75 })) }
+export function demoNotifications(): DemoNotification[] { return [{ id: 'n1', title: 'Your mentor has been assigned.', body: 'Albert L. is ready for your next session.', role: 'mentee', read: false, createdAt: 'Today · 09:24' }, { id: 'n2', title: 'New assignment request received.', body: 'Review the HSBC Business Case brief.', role: 'mentor', read: false, createdAt: 'Today · 09:12' }, { id: 'n3', title: 'Two orders need mentor assignment.', body: 'Open the assignment center to continue.', role: 'admin', read: false, createdAt: 'Today · 08:54' }] }
