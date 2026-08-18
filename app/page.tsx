@@ -67,7 +67,7 @@ export default function Page() {
         </nav>
         <div className="header-actions">
           <button className="text-button desktop-only" onClick={signIn}>Sign in</button>
-          <button className="button button-primary desktop-only" onClick={() => go('programs')}>Start learning <ArrowRight size={16} /></button>
+          <button className="button button-primary desktop-only" onClick={() => { window.location.href = '/explore' }}>Start learning <ArrowRight size={16} /></button>
           <button className="mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">{mobileOpen ? <X /> : <Menu />}</button>
         </div>
       </header>
