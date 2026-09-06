@@ -1,4 +1,15 @@
 .auth-form { display: grid; gap: 16px; }
+.mentor-invitations { margin: 24px 0; padding: 20px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.mentor-invitations h3 { font-weight: 700; }
+.mentor-invitations > p { margin: 10px 0; color: var(--muted-foreground); font-size: 13px; }
+.invitation-email { overflow-wrap: anywhere; }
+.password-field { display: grid; gap: 7px; min-width: 0; }
+.password-control { position: relative; }
+.auth-form .password-control input { padding-right: 52px; }
+.password-toggle { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); width: 44px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted-foreground); cursor: pointer; }
+.password-toggle:hover { color: var(--primary); }
+.password-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.password-toggle:disabled { opacity: .5; cursor: default; }
 .auth-form label { display: grid; gap: 7px; color: var(--muted-foreground); font-size: 13px; font-weight: 600; }
 .auth-form input, .auth-form select, .auth-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 9px; background: white; color: var(--foreground); font: inherit; font-size: 14px; }
 .auth-form input:focus-visible, .auth-form select:focus-visible, .auth-form textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

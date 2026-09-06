@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formError } from '@/lib/auth/errors'
+import { PasswordInput } from './password-input'
 export function AuthForm() {
   const [register, setRegister] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -35,7 +36,7 @@ export function AuthForm() {
   }
   return <><div className="auth-heading"><p className="kicker">{register ? 'Mulai perjalananmu' : 'Welcome back'}</p><h1>{register ? <>Daftar di <em>Strativate.</em></> : <>Your next <em>win.</em></>}</h1><p>{register ? 'Masukkan email untuk menerima tautan verifikasi dan melengkapi profilmu.' : 'Masuk untuk melanjutkan perjalananmu bersama Strativate.'}</p></div><form className="auth-form" onSubmit={submit}>
     <label>Email<input name="email" type="email" required autoComplete="email" maxLength={254} disabled={busy} /></label>
-    {!register && <label>Password<input name="password" type="password" required autoComplete="current-password" disabled={busy} /></label>}
+    {!register && <PasswordInput label="Password" name="password" required autoComplete="current-password" disabled={busy} />}
     {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     <button className="button button-primary full-button" disabled={busy}>{busy ? 'Memproses…' : register ? 'Kirim tautan email' : 'Masuk'}<ArrowRight size={16} /></button>
     <button className="button button-outline full-button" type="button" onClick={google} disabled={busy}>Lanjutkan dengan Google</button>

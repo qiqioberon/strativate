@@ -62,6 +62,7 @@ export type MentorInvite = {
   created_at: string
   updated_at: string
 }
+export type MentorInviteSummary = Pick<MentorInvite, 'email' | 'status' | 'created_at'> & { can_delete: boolean }
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row
   Insert: Insert
@@ -81,6 +82,8 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      list_mentor_invites: { Args: { p_offset?: number }; Returns: MentorInviteSummary[] }
+      delete_mentor_invite: { Args: { p_email: string }; Returns: undefined }
       import_institutions_batch: { Args: { p_rows: Json }; Returns: Json }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       save_onboarding_step: { Args: { p_step: number; p_data: Json }; Returns: MenteeProfile }
