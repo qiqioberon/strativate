@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './auth/auth.css'
 
 export const metadata: Metadata = {
   title: 'Strativate — Win Early. Get Ahead.',

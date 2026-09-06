@@ -1,0 +1,26 @@
+.auth-form { display: grid; gap: 16px; }
+.auth-form label { display: grid; gap: 7px; color: var(--muted-foreground); font-size: 13px; font-weight: 600; }
+.auth-form input, .auth-form select, .auth-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 9px; background: white; color: var(--foreground); font: inherit; font-size: 14px; }
+.auth-form input:focus-visible, .auth-form select:focus-visible, .auth-form textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.auth-form input[type=checkbox], .auth-form input[type=radio] { width: 18px; height: 18px; accent-color: var(--primary); }
+.auth-form .option-label { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 9px; background: white; color: var(--foreground); }
+.auth-form fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; min-width: 0; }
+.auth-form legend { margin-bottom: 12px; font-weight: 700; }
+.form-error { color: #b91c1c; font-size: 13px; }
+button:disabled { opacity: .6; cursor: wait; }
+.account-profile { max-width: 680px; }
+.onboarding-progress { display: flex; gap: 8px; list-style: none; padding: 0; margin: 25px 0; }
+.onboarding-progress li { flex: 1; border-top: 4px solid var(--border); padding-top: 8px; font-size: 10px; color: var(--muted-foreground); }
+.onboarding-progress li.active { border-color: var(--primary); color: var(--foreground); }
+.institution-picker { position: relative; }
+.institution-results { display: grid; gap: 4px; margin: 8px 0; padding: 8px; border: 1px solid var(--border); border-radius: 9px; background: white; max-height: 260px; overflow-y: auto; }
+.institution-results button { padding: 10px; border-radius: 6px; text-align: left; background: transparent; color: var(--foreground); }
+.institution-results button:hover, .institution-results button[aria-selected=true] { background: var(--muted); }
+.institution-results small { display: block; color: var(--muted-foreground); }
+.admin-data-panel { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 18px; }
+.admin-data-panel .auth-form { max-width: 660px; }
+.admin-data-panel .table-controls input, .admin-data-panel .table-controls select { padding: 10px; border: 1px solid var(--border); border-radius: 7px; }
+.admin-record { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; padding: 18px 0; border-top: 1px solid var(--border); }
+.admin-record > div:first-child { flex: 1; min-width: 180px; }
+.admin-record .button-row { flex-wrap: wrap; }
+.admin-record small { display: block; overflow-wrap: anywhere; color: var(--muted-foreground); }
