@@ -3,6 +3,11 @@
 Authentication, onboarding, database migrations, and administration setup:
 [Supabase setup guide](docs/supabase-setup.md).
 
+For existing deployments with migrations 001–002 applied, apply
+[`202609060003_invite_management_auth_ux.sql`](supabase/migrations/202609060003_invite_management_auth_ux.sql)
+before deploying the invitation management update. It adds admin-only invitation
+deletion and requires competition interests selected from the configured list.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
 ## Built with v0

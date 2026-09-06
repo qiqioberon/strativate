@@ -18,7 +18,11 @@ export function formError(error: unknown, fallback = 'Permintaan gagal. Periksa 
       'Choose exactly one referral response': 'Pilih satu sumber referral atau isi Lainnya.',
       'Select an active referral source': 'Opsi referral sudah tidak aktif. Pilih opsi lain.',
       'Select active interests': 'Salah satu minat sudah tidak aktif. Pilih kembali minatmu.',
-      'Select at least one interest': 'Pilih minimal satu minat atau isi Lainnya.',
+      'Select at least one interest': 'Pilih minimal satu minat dari daftar.',
+      'Custom interests are not supported': 'Pilih minat dari daftar yang tersedia.',
+      'Invitation is still being processed': 'Undangan masih diproses. Tunggu hingga pengiriman selesai.',
+      'Invitation not found': 'Undangan sudah dihapus. Muat ulang daftar.',
+      'Active accounts cannot be deleted through invitations': 'Akun sudah aktif. Akun tersebut tidak dapat dihapus melalui undangan.',
     }
     return messages[message] || 'Data belum valid. Periksa isian dan pilihanmu, lalu coba lagi.'
   }

@@ -15,16 +15,20 @@ APP_URL=http://localhost:3000
 
 `SUPABASE_SECRET_KEY` hanya dipakai server action undangan dan importer. Untuk deployment gunakan secret environment variable di hosting, dan ubah `APP_URL` ke origin HTTPS produksi. Jangan tambahkan prefix `NEXT_PUBLIC_` pada secret. Restart aplikasi setelah mengubah environment.
 
-Jalankan dua migrasi berurutan di Supabase SQL Editor, masing-masing sebagai satu transaksi (`BEGIN;` sebelum isi dan `COMMIT;` sesudah isi):
+Jalankan migrasi berurutan di Supabase SQL Editor, masing-masing sebagai satu transaksi (`BEGIN;` sebelum isi dan `COMMIT;` sesudah isi):
 
 1. `supabase/migrations/202609060001_auth_onboarding.sql`
 2. `supabase/migrations/202609060002_institution_import.sql`
+3. `supabase/migrations/202609060003_invite_management_auth_ux.sql`
+
+Untuk project yang sudah menjalankan 001 dan 002, jalankan **hanya 003 sebelum deployment revisi ini**. Migrasi 003 menambahkan pengelolaan undangan khusus admin dan mewajibkan minat dari daftar master. Jawaban minat bebas yang lama tidak dihapus massal; kolom historis dikosongkan ketika langkah minat disimpan ulang. Pilihan "Lainnya" pada sumber informasi/referral tetap tersedia.
 
 Alternatif dengan PostgreSQL CLI dan `SUPABASE_DB_URL` yang disimpan sebagai environment variable:
 
 ```powershell
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060001_auth_onboarding.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060002_institution_import.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060003_invite_management_auth_ux.sql
 ```
 
 `psql` tidak otomatis membaca `.env`; ekspor `SUPABASE_DB_URL` ke shell atau gunakan koneksi CLI dari menu **Connect** Supabase. Jangan menjalankan ulang migration 001 yang sudah diterapkan. Pada project yang memakai Supabase CLI, gunakan `supabase db push` sesuai riwayat migrasinya. Jika SQL Editor sudah dipakai terlebih dahulu, sinkronkan migration history sebelum beralih ke CLI.
@@ -116,6 +120,8 @@ Tidak ada Edge Function terpisah. `lib/admin/invite-mentor.ts` adalah Next.js se
 
 Undangan berulang yang sedang diproses/sudah terkirim tidak dikirim ulang. Kegagalan pengiriman sebelum user terbentuk dapat dicoba lagi. Jika proses server terputus sehingga registry tertinggal `pending`, periksa `mentor_invites` dan Auth Users melalui tooling admin: bila `user_id` sudah terisi dan role mentor benar, tandai registry `sent`; bila belum ada user dan tidak ada proses berjalan, tandai `failed` untuk mengizinkan percobaan ulang. Jangan menghapus/mengganti akun aktif untuk mengulang undangan.
 
+Admin → Mentors kini memiliki **Undangan mentor**, termasuk status gagal yang belum memiliki profil. Tombol **Hapus** meminta konfirmasi email tujuan. RPC `delete_mentor_invite` menghapus registry serta akun Auth/profil yang terkait dalam satu transaksi, hanya jika akun undangan belum dikonfirmasi, belum pernah login, belum menyimpan password, dan belum menyelesaikan setup. Token undangan lama tidak berlaku setelah akun dihapus, dan email dapat diundang kembali. Akun aktif serta undangan `pending` dilindungi; kegagalan penghapusan akun membatalkan penghapusan registry juga. Tidak ada grant baca/tulis langsung registry untuk browser. RPC daftar dan hapus memverifikasi role admin dari database setiap kali dipanggil.
+
 ## 7. Uji satu mentee email
 
 1. Buka browser privat, `/auth` → **Belum punya akun? Daftar**. Masukkan email milikmu dan kirim tautan.
@@ -123,8 +129,8 @@ Undangan berulang yang sedang diproses/sudah terkirim tidak dikirim ulang. Kegag
 3. Isi nama, username unik, password minimal 8 karakter, konfirmasi. Lanjutkan; cek `profiles` dan `mentee_profiles` lewat SQL Editor.
 4. Cari institusi minimal dua karakter; pilih hasil atau ajukan dengan tipe yang sesuai. Pengajuan baru `pending`, `user_submission`, dan `submitted_by` UUID sendiri. Akun lain tidak bisa melihatnya.
 5. Isi jurusan/angkatan; lanjut. Reload, keluar, lalu login email/password: harus kembali ke **Dari Mana?**.
-6. Pilih satu referral atau Lainnya; pilih beberapa minat dan/atau Lainnya. Selesaikan. Dashboard `/dashboard` terbuka hanya setelah completion tersimpan.
-7. Reload dan login ulang: tetap dashboard. Periksa custom text tidak menambah master referral/minat.
+6. Pilih satu referral atau Lainnya; pilih satu atau lebih minat dari daftar. Selesaikan. Dashboard `/dashboard` terbuka hanya setelah completion tersimpan.
+7. Reload dan login ulang: tetap dashboard. Periksa custom referral tidak menambah master referral.
 
 ## 8. Uji satu mentee Google
 
@@ -141,6 +147,8 @@ Undangan berulang yang sedang diproses/sudah terkirim tidak dikirim ulang. Kegag
 4. Sebagai mentee, mengetik `/admin`/`/mentor` harus diarahkan ke tujuan akun sendiri. RPC/REST langsung untuk mengubah role/master atau data orang lain harus ditolak.
 5. Di Admin → **Institutions**, filter `pending`, setujui/tolak/edit/arsipkan. **Duplikat** memerlukan pemilihan dan konfirmasi tujuan, memindahkan referensi secara transaksi lalu mengarsipkan asal.
 6. Di **Referral Sources** dan **Competition Interests**, tambah/edit nama/urutan atau arsipkan. Opsi nonaktif hilang dari pilihan baru; referensi lama tetap tersimpan.
+7. Dengan akun uji lain yang belum menerima undangan, uji **Hapus** → batal (data tetap ada), lalu konfirmasi (undangan dan akun uji hilang). Undang ulang email yang sama; akun harus tetap mendapat role mentor. Undangan akun yang sudah aktif tidak boleh dihapus.
+8. Uji ikon mata pada login, setup mentor, recovery password, dan langkah Data Diri onboarding. Tombol harus berganti tampil/sembunyi tanpa mengirim form atau mengubah isinya; password dan konfirmasinya dapat ditampilkan secara terpisah.
 
 ## 10. Pengujian otomatis dan batas bukti
 
@@ -161,13 +169,15 @@ $env:TEST_DATABASE_URL = 'postgresql://postgres@127.0.0.1:55439/strativate_test_
 pnpm test:db --bootstrap
 ```
 
-Runner hanya menerima nama database `strativate_test_*`. `--bootstrap` menolak database yang sudah memiliki tabel Auth/profiles, lalu memasang harness dan kedua migrasi. Tanpa `--bootstrap`, runner menjalankan ulang kedua suite SQL pada database uji yang telah disiapkan. Gunakan database uji bersih dengan seed bawaan, sebelum impor dataset lengkap. Suite importer memeriksa idempotensi, update, rollback batch gagal, serta perlindungan pengajuan pengguna.
+Runner hanya menerima nama database `strativate_test_*`. `--bootstrap` menolak database yang sudah memiliki tabel Auth/profiles, lalu memasang harness dan semua migrasi secara berurutan. Tanpa `--bootstrap`, runner menjalankan ulang tiga suite SQL pada database uji yang telah disiapkan. Gunakan database uji bersih dengan seed bawaan, sebelum impor dataset lengkap. Suite importer memeriksa idempotensi, update, rollback batch gagal, serta perlindungan pengajuan pengguna.
 
 `supabase/tests/auth_security.sql` memeriksa SQL/RLS sebagai role `anon`/`authenticated`, ownership, progress, password, invitation, master mutations, dan duplicate handling. Jalankan setelah migrasi pada database uji saja. Fixture di-rollback:
 
 ```powershell
 psql $env:TEST_DATABASE_URL -v ON_ERROR_STOP=1 -f supabase/tests/auth_security.sql
 ```
+
+`supabase/tests/mentor_invites.sql` memeriksa izin admin, penghapusan undangan/akun belum aktif, perlindungan akun aktif, undangan yang masih diproses, pengiriman ulang, dan rollback ketika penghapusan akun ditolak foreign key.
 
 `supabase/tests/bootstrap.sql` hanya harness untuk **PostgreSQL kosong lokal**, meniru kolom Auth dan helper claims agar RLS dapat diuji. Jangan jalankan bootstrap ini di Supabase atau database yang sudah berisi data. Test SQL lokal tidak membuktikan SMTP/OAuth hosted sudah dikonfigurasi; uji email/Google/invite di atas tetap diperlukan setelah setup provider dan migrasi.
 

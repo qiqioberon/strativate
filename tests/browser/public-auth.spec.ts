@@ -1,5 +1,29 @@
 import { expect, test } from '@playwright/test'
 
+test('password visibility can be toggled without submitting or losing the value', async ({ page }) => {
+  await page.goto('/auth')
+  const password = page.getByLabel('Password', { exact: true })
+  await page.getByLabel('Email', { exact: true }).fill('mentor@example.test')
+  await page.evaluate(() => {
+    document.documentElement.dataset.submissions = '0'
+    document.querySelector('form')!.addEventListener('submit', event => {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      document.documentElement.dataset.submissions = '1'
+    })
+  })
+  await password.fill('test-password-2026')
+  await expect(password).toHaveAttribute('type', 'password')
+  await page.getByRole('button', { name: 'Tampilkan password', exact: true }).click()
+  await expect(password).toHaveAttribute('type', 'text')
+  await expect(password).toHaveValue('test-password-2026')
+  await page.getByRole('button', { name: 'Sembunyikan password', exact: true }).click()
+  await expect(password).toHaveAttribute('type', 'password')
+  await expect(page).toHaveURL(/\/auth$/)
+  await expect(page.locator('html')).toHaveAttribute('data-submissions', '0')
+  await expect(page.locator('form').getByRole('alert')).toHaveCount(0)
+})
+
 test('one shared login offers password and Google without a public role picker', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))

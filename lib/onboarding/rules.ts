@@ -21,7 +21,6 @@ type ReferralPayload = {
 
 type InterestPayload = {
   interest_ids: string[]
-  other_interest_text: string | null
 }
 
 function textMetadata(metadata: Record<string, unknown>, key: string): string {
@@ -91,13 +90,11 @@ export function referralPayload(input: { referralId: string; otherText: string }
   }
 }
 
-export function interestPayload(input: { interestIds: string[]; otherText: string }): Result<InterestPayload> {
+export function interestPayload(input: { interestIds: string[] }): Result<InterestPayload> {
   const interestIds = [...new Set(input.interestIds.map((id) => id.trim()).filter(Boolean))]
-  const otherText = input.otherText.trim()
-  if (interestIds.length === 0 && !otherText) return { data: null, error: 'Pilih setidaknya satu minat kompetisi.' }
+  if (interestIds.length === 0) return { data: null, error: 'Pilih setidaknya satu minat kompetisi.' }
   if (interestIds.length > 100) return { data: null, error: 'Terlalu banyak minat dipilih.' }
-  if (otherText.length > 500) return { data: null, error: 'Minat lainnya maksimal 500 karakter.' }
-  return { data: { interest_ids: interestIds, other_interest_text: otherText || null }, error: null }
+  return { data: { interest_ids: interestIds }, error: null }
 }
 
 export function normalizeInstitutionName(value: string): string {

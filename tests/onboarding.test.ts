@@ -65,16 +65,14 @@ test('referral payload requires one master choice or one custom response', () =>
   assert.ok(referralPayload({ referralId: 'referral-id', otherText: 'Teman lain' }).error)
 })
 
-test('interest payload de-duplicates master ids and permits a custom-only response', () => {
-  assert.deepEqual(interestPayload({ interestIds: ['one', 'two', 'one'], otherText: ' Product Design ' }), {
-    data: { interest_ids: ['one', 'two'], other_interest_text: 'Product Design' },
+test('interest payload accepts only master selections and ignores legacy custom text', () => {
+  const legacyInput = { interestIds: ['one', 'two', 'one'], otherText: ' Product Design ' }
+  assert.deepEqual(interestPayload(legacyInput), {
+    data: { interest_ids: ['one', 'two'] },
     error: null,
   })
-  assert.deepEqual(interestPayload({ interestIds: [], otherText: 'Olimpiade' }).data, {
-    interest_ids: [],
-    other_interest_text: 'Olimpiade',
-  })
-  assert.match(interestPayload({ interestIds: [], otherText: '' }).error || '', /minat/i)
+  assert.match(interestPayload({ ...legacyInput, interestIds: [] }).error || '', /minat/i)
+  assert.match(interestPayload({ ...legacyInput, interestIds: [' ', ''] }).error || '', /minat/i)
 })
 
 test('institution names are trimmed and repeated whitespace is collapsed before submission', () => {
