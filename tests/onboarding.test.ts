@@ -33,7 +33,7 @@ test('profile payload validates email passwords but lets Google accounts omit th
     profilePayload({ firstName: ' Aqil ', lastName: ' Putra ', username: 'aqil_26', password: '', confirmation: '', passwordRequired: false }),
     { data: { first_name: 'Aqil', last_name: 'Putra', username: 'aqil_26' }, error: null },
   )
-  assert.match(profilePayload({ firstName: 'Aqil', lastName: '', username: 'aq', password: 'password-2026', confirmation: 'password-2026', passwordRequired: false }).error || '', /Username/)
+  assert.match(profilePayload({ firstName: 'Aqil', lastName: '', username: 'aq', password: 'password-2026', confirmation: 'password-2026', passwordRequired: false }).error || '', /Nama pengguna/)
 })
 
 test('an intentionally cleared surname stays blank after saved onboarding reload', () => {

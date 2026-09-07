@@ -6,8 +6,8 @@ export const formatRupiah = (amount: number) => `Rp${new Intl.NumberFormat('id-I
 
 const sessionCounts = [1, 3, 5, 7, 10]
 export const privateMentorTiers = [
-  { name: 'Top Student Mentor', description: 'High-achieving students sharing strategies from recent, firsthand competition experience.', rates: [300000, 285000, 279000, 270000, 250000] },
-  { name: 'Young Professional Mentor', description: 'Industry professionals bringing practical business experience and real-world perspectives.', rates: [350000, 335000, 329000, 320000, 300000] },
+  { name: 'Mentor Mahasiswa Berprestasi', description: 'Mahasiswa berprestasi yang berbagi strategi berdasarkan pengalaman langsung mengikuti kompetisi terkini.', rates: [300000, 285000, 279000, 270000, 250000] },
+  { name: 'Mentor Profesional Muda', description: 'Profesional industri yang membagikan pengalaman bisnis praktis dan perspektif dunia kerja.', rates: [350000, 335000, 329000, 320000, 300000] },
 ].map(tier => ({
   name: tier.name,
   description: tier.description,
@@ -15,47 +15,47 @@ export const privateMentorTiers = [
 }))
 
 export const intensivePackages = [
-  { name: 'Intensive', sessions: 4, price: 1150000, normalPrice: 1400000, description: 'Consistent weekly guidance, with time to apply feedback between sessions.', features: ['Weekly progress', 'Regular review and refinement', 'Steady competition preparation'] },
-  { name: 'Super Intensive', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'More frequent reviews for faster development and tighter preparation timelines.', features: ['Twice-weekly mentoring', 'Faster review cycles', 'Intensive competition preparation'] },
+  { name: 'Intensif', sessions: 4, price: 1150000, normalPrice: 1400000, description: 'Bimbingan rutin setiap minggu, dengan waktu untuk menerapkan masukan di antara sesi.', features: ['Perkembangan mingguan', 'Evaluasi dan penyempurnaan rutin', 'Persiapan kompetisi yang konsisten'] },
+  { name: 'Super Intensif', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'Evaluasi lebih sering untuk perkembangan lebih cepat dan waktu persiapan yang lebih singkat.', features: ['Mentoring dua kali seminggu', 'Siklus evaluasi lebih cepat', 'Persiapan kompetisi intensif'] },
 ]
 
 export const intensiveAddOns = [
-  { name: 'Detailed Performance Report', price: 150000, description: 'A structured evaluation of skills, progress, and development priorities.', features: ['Skill-based scoring', 'Strengths and improvement areas', 'Progress summary', 'Mentor recommendations'] },
-  { name: 'Mock Judging Simulation', price: 300000, description: 'Practice your pitch and Q&A in a realistic competition setting with an independent judge.', features: ['Timed pitch simulation', 'Competition-style Q&A', 'Independent judge feedback', 'Rubric-based performance score'] },
-  { name: 'Win Guarantee Protection', price: 500000, description: 'Additional protection for eligible participants against an agreed competition milestone.', features: ['Agreed outcome milestone', 'Competition-specific eligibility review', 'Refund or program-credit protection', 'Priority progress monitoring'], conditional: true },
+  { name: 'Laporan Kinerja Terperinci', price: 150000, description: 'Evaluasi terstruktur mengenai keterampilan, perkembangan, dan prioritas pengembangan.', features: ['Penilaian berbasis keterampilan', 'Kelebihan dan aspek yang perlu ditingkatkan', 'Ringkasan perkembangan', 'Rekomendasi mentor'] },
+  { name: 'Simulasi Penjurian', price: 300000, description: 'Latih presentasi dan sesi tanya jawab dalam suasana kompetisi yang realistis bersama juri independen.', features: ['Simulasi presentasi dengan batas waktu', 'Tanya jawab seperti dalam kompetisi', 'Masukan dari juri independen', 'Skor kinerja berdasarkan rubrik penilaian'] },
+  { name: 'Perlindungan Jaminan Kemenangan', price: 500000, description: 'Perlindungan tambahan bagi peserta yang memenuhi syarat berdasarkan target capaian kompetisi yang disepakati.', features: ['Target capaian yang disepakati', 'Penilaian kelayakan sesuai kompetisi', 'Perlindungan berupa pengembalian dana atau kredit program', 'Prioritas pemantauan perkembangan'], conditional: true },
 ]
 
 export const intensiveBundles = [
-  { name: 'Team Starter Bundle', price: 1250000, description: 'For individuals building their skills and working toward forming a suitable competition team.', features: ['Intensive package', 'Detailed Performance Report', 'Personalized mentoring roadmap', 'Competition preparation support'] },
-  { name: 'Competition Ready Bundle', price: 2500000, description: 'For intensive preparation, a stronger deck, and realistic pitching practice.', features: ['Super Intensive package', 'Detailed Performance Report', 'Mock Judging Simulation', 'Final-stage preparation support'] },
-  { name: 'Competition Assurance Bundle', price: 3000000, description: 'For eligible participants pursuing a defined competition milestone with added protection.', features: ['Super Intensive package', 'Detailed Performance Report', 'Mock Judging Simulation', 'Win Guarantee Protection'], conditional: true },
+  { name: 'Paket Rintisan Tim', price: 1250000, description: 'Untuk individu yang mengembangkan keterampilan dan mempersiapkan pembentukan tim kompetisi yang sesuai.', features: ['Paket Intensif', 'Laporan Kinerja Terperinci', 'Rencana mentoring yang disesuaikan', 'Dukungan persiapan kompetisi'] },
+  { name: 'Paket Siap Kompetisi', price: 2500000, description: 'Untuk persiapan intensif, materi presentasi yang lebih kuat, dan latihan presentasi yang realistis.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Dukungan persiapan tahap akhir'] },
+  { name: 'Paket Jaminan Kompetisi', price: 3000000, description: 'Untuk peserta yang memenuhi syarat dan mengejar target capaian kompetisi tertentu dengan perlindungan tambahan.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Perlindungan Jaminan Kemenangan'], conditional: true },
 ]
 
-export const guaranteeConditions = 'Terms, conditions, and eligibility assessment apply. The milestone and protection are agreed after a competition-specific review.'
+export const guaranteeConditions = 'Syarat, ketentuan, dan penilaian kelayakan berlaku. Target capaian dan perlindungan disepakati setelah peninjauan sesuai kompetisi.'
 
 export const competitionCategories = [
-  'Business Plan', 'Business Case', 'Business Essay', 'Equity Research',
-  'Scientific Paper (Karya Tulis Ilmiah)', 'Marketing', 'Accounting and Finance',
-  'Pitching', 'Economic & Policy Case',
+  'Rencana Bisnis', 'Studi Kasus Bisnis', 'Esai Bisnis', 'Riset Ekuitas',
+  'Karya Tulis Ilmiah', 'Pemasaran', 'Akuntansi dan Keuangan',
+  'Presentasi Ide', 'Studi Kasus Ekonomi dan Kebijakan',
 ]
 
 export const privateLearningPaths = [
-  { title: 'End-to-End Learning', description: 'Start from the fundamentals: understanding competitions, identifying problems, developing ideas, business analysis, proposal writing, and pitching. Recommended for first-timers.' },
-  { title: 'Competition-Focused Mentoring', description: 'Prepare for a specific target competition, from early case strategy and proposal development to mock presentations, Q&A drills, and final refinement.' },
+  { title: 'Pembelajaran Menyeluruh', description: 'Mulai dari dasar: memahami kompetisi, mengidentifikasi masalah, mengembangkan ide, menganalisis bisnis, menulis proposal, dan mempresentasikan ide. Direkomendasikan untuk pemula.' },
+  { title: 'Mentoring Berfokus pada Kompetisi', description: 'Siapkan diri untuk kompetisi yang dituju, mulai dari strategi awal kasus dan penyusunan proposal hingga simulasi presentasi, latihan tanya jawab, dan penyempurnaan akhir.' },
 ]
 
 export const privateTopics = [
-  { title: 'Idea & Problem Framing', description: 'Clarify the problem, validate your thinking, and shape a relevant solution.' },
-  { title: 'Business Analysis & Case Structuring', description: 'Use frameworks, industry research, and competitor analysis to strengthen your case.' },
-  { title: 'Proposal Writing & Storyline', description: 'Build a clear executive summary, logical flow, and a persuasive business proposal.' },
-  { title: 'Financial Analysis & Valuation', description: 'Work on financial models, valuation, investment analysis, and the assumptions behind them.' },
-  { title: 'Slide Deck & Visual Design', description: 'Improve deck structure, data visualization, and presentation clarity.' },
-  { title: 'Pitching & Presentation Skills', description: 'Practice delivery, communication, and responding to questions confidently.' },
+  { title: 'Perumusan Ide dan Masalah', description: 'Perjelas masalah, uji pemikiranmu, dan rumuskan solusi yang relevan.' },
+  { title: 'Analisis Bisnis dan Penyusunan Kasus', description: 'Gunakan kerangka kerja, riset industri, dan analisis pesaing untuk memperkuat kasusmu.' },
+  { title: 'Penulisan Proposal dan Alur Cerita', description: 'Susun ringkasan eksekutif yang jelas, alur yang logis, dan proposal bisnis yang meyakinkan.' },
+  { title: 'Analisis Keuangan dan Valuasi', description: 'Pelajari model keuangan, valuasi, analisis investasi, serta asumsi yang mendasarinya.' },
+  { title: 'Materi Presentasi dan Desain Visual', description: 'Tingkatkan struktur materi presentasi, visualisasi data, dan kejelasan penyampaian.' },
+  { title: 'Keterampilan Presentasi dan Penyampaian Ide', description: 'Latih penyampaian, komunikasi, dan cara menjawab pertanyaan dengan percaya diri.' },
 ]
 
 type ContentItem = { title: string; description: string }
 export type ProgramInformation = {
-  id: string; slug: MentoringSlug; title: 'Private Mentoring' | 'Intensive Mentoring'
+  id: string; slug: MentoringSlug; title: string
   category: 'Private Mentoring' | 'Intensive Mentoring'; kicker: string
   description: string; detail: string; price: number; priceLabel: string; priceContext: string
   sessions: number; format: string; duration: string; tags: string[]; outcomes: string[]
@@ -65,46 +65,46 @@ export type ProgramInformation = {
 
 export const mentoringPrograms: ProgramInformation[] = [
   {
-    id: 'private-mentoring', slug: 'private-mentoring', title: 'Private Mentoring', category: 'Private Mentoring',
-    kicker: 'Flexible, focused sessions',
-    description: 'Targeted guidance for a specific challenge, deliverable, or competition stage. Choose the topic, mentor, and number of sessions that fit your needs.',
-    detail: 'Start with one focused session and build from there. Develop your foundations, sharpen a proposal, improve your analysis, or rehearse your pitch with practical feedback tailored to your goals.',
+    id: 'private-mentoring', slug: 'private-mentoring', title: 'Mentoring Privat', category: 'Private Mentoring',
+    kicker: 'Sesi fleksibel dan terarah',
+    description: 'Bimbingan terarah untuk tantangan, hasil kerja, atau tahap kompetisi tertentu. Pilih topik, mentor, dan jumlah sesi sesuai kebutuhanmu.',
+    detail: 'Mulai dengan satu sesi terarah dan lanjutkan sesuai kebutuhan. Perkuat dasar pengetahuan, pertajam proposal, tingkatkan analisis, atau latih presentasimu dengan masukan praktis sesuai tujuanmu.',
     price: privateMentorTiers[0].packages[0].total,
-    priceLabel: `From ${formatRupiah(privateMentorTiers[0].packages[0].total)}`,
-    priceContext: '1-session package · same price for 1–4 participants',
-    sessions: 1, format: 'Online · 75-minute sessions', duration: 'Flexible scheduling',
-    tags: ['Per session', 'Individual or team', 'Competition preparation'], featured: true, informationOnly: true,
-    audience: 'For beginners learning from the ground up, individuals or teams preparing for a competition, and participants who need a focused review or practice session.',
-    highlights: ['75 minutes per session', 'Individual or team of 1–4', 'Choose your mentor'],
-    facts: ['75 minutes per session', 'Individual or team of 1–4 participants', 'Top Student or Young Professional Mentor', 'Packages of 1, 3, 5, 7, or 10 sessions'],
-    outcomes: ['Direct mentor networking and practical insights', 'Competition strategy discussion and actionable feedback', 'Judge-level perspectives from mentors with judging experience', 'Sample deck exposure when appropriate', 'Opportunity for mentor group discussion with 5+ sessions', 'Mini practice or dummy cases under agreed arrangements'],
+    priceLabel: `Mulai ${formatRupiah(privateMentorTiers[0].packages[0].total)}`,
+    priceContext: 'Paket 1 sesi · harga sama untuk 1–4 peserta',
+    sessions: 1, format: 'Daring · sesi 75 menit', duration: 'Jadwal fleksibel',
+    tags: ['Per sesi', 'Individu atau tim', 'Persiapan kompetisi'], featured: true, informationOnly: true,
+    audience: 'Untuk pemula yang belajar dari dasar, individu atau tim yang bersiap mengikuti kompetisi, serta peserta yang membutuhkan evaluasi atau latihan terarah.',
+    highlights: ['75 menit per sesi', 'Individu atau tim berisi 1–4 orang', 'Pilih mentormu'],
+    facts: ['75 menit per sesi', 'Individu atau tim berisi 1–4 peserta', 'Mentor Mahasiswa Berprestasi atau Profesional Muda', 'Paket 1, 3, 5, 7, atau 10 sesi'],
+    outcomes: ['Koneksi langsung dengan mentor dan wawasan praktis', 'Diskusi strategi kompetisi dan masukan yang dapat diterapkan', 'Perspektif juri dari mentor yang berpengalaman dalam penjurian', 'Referensi contoh materi presentasi bila sesuai', 'Kesempatan diskusi dalam grup bersama mentor untuk paket 5 sesi atau lebih', 'Latihan singkat atau kasus simulasi sesuai kesepakatan'],
     journey: [
-      { title: 'Initial consultation', description: 'Share your goals, progress, materials, and the area where you need support.' },
-      { title: 'Mentor match & plan', description: 'Find the right mentor and set a focused agenda for your session.' },
-      { title: 'Live mentoring session', description: 'Spend 75 interactive minutes discussing, analyzing, and working through your challenge.' },
-      { title: 'Action plan & next steps', description: 'Leave with prioritized actions, useful resources, and suggested next topics when needed.' },
+      { title: 'Konsultasi awal', description: 'Ceritakan tujuan, perkembangan, materi, dan bagian yang membutuhkan dukungan.' },
+      { title: 'Pemilihan mentor dan perencanaan', description: 'Temukan mentor yang tepat dan tentukan agenda sesi yang terarah.' },
+      { title: 'Sesi mentoring langsung', description: 'Gunakan 75 menit interaktif untuk berdiskusi, menganalisis, dan menyelesaikan tantanganmu.' },
+      { title: 'Rencana tindakan dan langkah berikutnya', description: 'Dapatkan prioritas tindakan, sumber belajar yang bermanfaat, dan saran topik lanjutan bila diperlukan.' },
     ],
   },
   {
-    id: 'intensive-mentoring', slug: 'intensive-mentoring', title: 'Intensive Mentoring', category: 'Intensive Mentoring',
-    kicker: 'Structured, continuous guidance',
-    description: 'Prepare systematically with a dedicated mentor, a personalized roadmap, regular feedback, and measurable progress throughout your preparation.',
-    detail: 'Build your competition readiness over a connected learning journey. Develop core concepts, apply them through assignments, refine your work, and track your progress with one consistent mentor.',
-    price: intensivePackages[0].price, priceLabel: `From ${formatRupiah(intensivePackages[0].price)}`,
-    priceContext: 'Intensive package · 4 sessions per month',
-    sessions: 4, format: 'Regular weekly mentoring', duration: '4 or 8 sessions per month',
-    tags: ['Dedicated mentor', 'Structured roadmap', 'Competition preparation'], featured: true, informationOnly: true,
-    audience: 'For high school and university students: beginners, active or experienced competitors, skill builders, and teams seeking consistent support toward a shared goal.',
-    highlights: ['4 or 8 sessions per month', 'One dedicated mentor', 'Personalized learning roadmap'],
-    facts: ['4 or 8 sessions per month for national competitions', 'One consistent mentor throughout the program', 'Personalized roadmap and guided assignments', 'Customized support for international competitions'],
-    outcomes: ['Dedicated mentor and personalized learning roadmap', 'Core concepts and practical frameworks', 'Hands-on assignments to develop real outputs', 'Continuous feedback and refinement', 'Competition recommendations and preparation timeline', 'Templates, sample proposals, and pitch deck references', 'Progress monitoring and final evaluation'],
+    id: 'intensive-mentoring', slug: 'intensive-mentoring', title: 'Mentoring Intensif', category: 'Intensive Mentoring',
+    kicker: 'Bimbingan terstruktur dan berkelanjutan',
+    description: 'Persiapkan diri secara sistematis bersama mentor khusus, rencana belajar yang disesuaikan, masukan rutin, dan perkembangan terukur sepanjang persiapan.',
+    detail: 'Bangun kesiapan kompetisimu melalui proses belajar yang berkesinambungan. Kuasai konsep inti, terapkan melalui tugas, sempurnakan hasil kerjamu, dan pantau perkembangan bersama mentor yang sama.',
+    price: intensivePackages[0].price, priceLabel: `Mulai ${formatRupiah(intensivePackages[0].price)}`,
+    priceContext: 'Paket Intensif · 4 sesi per bulan',
+    sessions: 4, format: 'Mentoring rutin mingguan', duration: '4 atau 8 sesi per bulan',
+    tags: ['Mentor khusus', 'Rencana belajar terstruktur', 'Persiapan kompetisi'], featured: true, informationOnly: true,
+    audience: 'Untuk siswa SMA dan mahasiswa: pemula, peserta kompetisi aktif atau berpengalaman, pengembang keterampilan, serta tim yang membutuhkan dukungan konsisten untuk mencapai tujuan bersama.',
+    highlights: ['4 atau 8 sesi per bulan', 'Satu mentor khusus', 'Rencana belajar yang disesuaikan'],
+    facts: ['4 atau 8 sesi per bulan untuk kompetisi nasional', 'Mentor yang sama sepanjang program', 'Rencana belajar yang disesuaikan dan tugas dengan bimbingan', 'Dukungan yang disesuaikan untuk kompetisi internasional'],
+    outcomes: ['Mentor khusus dan rencana belajar yang disesuaikan', 'Konsep inti dan kerangka kerja praktis', 'Tugas praktik untuk menghasilkan karya nyata', 'Masukan dan penyempurnaan berkelanjutan', 'Rekomendasi kompetisi dan jadwal persiapan', 'Templat, contoh proposal, dan referensi materi presentasi', 'Pemantauan perkembangan dan evaluasi akhir'],
     journey: [
-      { title: 'Initial assessment', description: 'Identify your current strengths, skill gaps, and priorities for improvement.' },
-      { title: 'Goal setting', description: 'Define learning objectives, competition targets, and expected outcomes.' },
-      { title: 'Guided development', description: 'Learn concepts, frameworks, and approaches with your dedicated mentor.' },
-      { title: 'Practice & application', description: 'Apply your learning to assignments, case exercises, or competition deliverables.' },
-      { title: 'Review & refinement', description: 'Use feedback to improve your work and strengthen areas that need development.' },
-      { title: 'Final evaluation', description: 'Review progress, key improvements, and priorities for continued development.' },
+      { title: 'Penilaian awal', description: 'Kenali kelebihan, keterampilan yang perlu ditingkatkan, dan prioritas pengembanganmu.' },
+      { title: 'Penetapan tujuan', description: 'Tentukan tujuan belajar, target kompetisi, dan hasil yang diharapkan.' },
+      { title: 'Pengembangan terbimbing', description: 'Pelajari konsep, kerangka kerja, dan pendekatan bersama mentor khususmu.' },
+      { title: 'Latihan dan penerapan', description: 'Terapkan pembelajaranmu melalui tugas, latihan kasus, atau karya untuk kompetisi.' },
+      { title: 'Evaluasi dan penyempurnaan', description: 'Gunakan masukan untuk memperbaiki hasil kerja dan memperkuat bagian yang perlu dikembangkan.' },
+      { title: 'Evaluasi akhir', description: 'Tinjau perkembangan, peningkatan utama, dan prioritas pengembangan selanjutnya.' },
     ],
   },
 ]

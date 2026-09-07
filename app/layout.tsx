@@ -6,8 +6,8 @@ import './auth/auth.css'
 import './program-information.css'
 
 export const metadata: Metadata = {
-  title: 'Strativate — Win Early. Get Ahead.',
-  description: 'Personalized mentoring and competition preparation for ambitious university students.',
+  title: "Strativate — Raih Kemenangan. Melangkah Lebih Jauh.",
+  description: "Bimbingan personal dan persiapan kompetisi untuk mahasiswa yang ingin meraih prestasi.",
   generator: 'v0.app',
   icons: {
     icon: [
@@ -44,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
+    <html lang="id" className="bg-background">
       <body className={`${jakarta.className} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

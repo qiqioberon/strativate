@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('password visibility can be toggled without submitting or losing the value', async ({ page }) => {
   await page.goto('/auth')
-  const password = page.getByLabel('Password', { exact: true })
+  const password = page.getByLabel('Kata sandi', { exact: true })
   await page.getByLabel('Email', { exact: true }).fill('mentor@example.test')
   await page.evaluate(() => {
     document.documentElement.dataset.submissions = '0'
@@ -14,10 +14,10 @@ test('password visibility can be toggled without submitting or losing the value'
   })
   await password.fill('test-password-2026')
   await expect(password).toHaveAttribute('type', 'password')
-  await page.getByRole('button', { name: 'Tampilkan password', exact: true }).click()
+  await page.getByRole('button', { name: 'Tampilkan kata sandi', exact: true }).click()
   await expect(password).toHaveAttribute('type', 'text')
   await expect(password).toHaveValue('test-password-2026')
-  await page.getByRole('button', { name: 'Sembunyikan password', exact: true }).click()
+  await page.getByRole('button', { name: 'Sembunyikan kata sandi', exact: true }).click()
   await expect(password).toHaveAttribute('type', 'password')
   await expect(page).toHaveURL(/\/auth$/)
   await expect(page.locator('html')).toHaveAttribute('data-submissions', '0')
@@ -28,9 +28,9 @@ test('one shared login offers password and Google without a public role picker',
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto('/auth')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your next win.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Raih kemenangan berikutnya.')
   await expect(page.getByLabel('Email', { exact: true })).toBeVisible()
-  await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible()
   await expect(page.getByText(/Continue as|Demo Role|Choose your workspace/i)).toHaveCount(0)
   expect(errors).toEqual([])
@@ -40,10 +40,10 @@ test('registration starts with only email and can return to login', async ({ pag
   await page.goto('/auth')
   await page.getByRole('button', { name: 'Belum punya akun? Daftar' }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Daftar di Strativate.')
-  await expect(page.getByLabel('Password', { exact: true })).toHaveCount(0)
+  await expect(page.getByLabel('Kata sandi', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Kirim tautan email' })).toBeVisible()
   await page.getByRole('button', { name: 'Sudah punya akun? Masuk' }).click()
-  await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible()
 })
 
 for (const path of ['/admin', '/mentor', '/dashboard', '/onboarding', '/auth/setup', '/checkout/private-hsbc']) {
