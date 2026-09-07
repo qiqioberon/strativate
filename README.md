@@ -3,6 +3,9 @@
 Authentication, onboarding, database migrations, and administration setup:
 [Supabase setup guide](docs/supabase-setup.md).
 
+Private and Intensive Mentoring content, source pages, and pricing decisions:
+[Program information guide](docs/program-information.md).
+
 For existing deployments with migrations 001–002 applied, apply
 [`202609060003_invite_management_auth_ux.sql`](supabase/migrations/202609060003_invite_management_auth_ux.sql)
 before deploying the invitation management update. It adds admin-only invitation

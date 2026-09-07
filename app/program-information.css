@@ -1,0 +1,89 @@
+.program-information { max-width: 1240px; }
+.program-breadcrumb { display: flex; justify-content: space-between; gap: 20px; }
+.program-information .detail-hero { align-items: center; gap: 48px; padding: 60px 0 72px; }
+.program-information .detail-hero h1 { font-size: clamp(48px, 6vw, 78px); letter-spacing: -.075em; }
+.program-information .detail-price { flex-direction: column; gap: 8px; align-items: flex-start; }
+.program-information .detail-price span { font-size: 12px; line-height: 1.6; }
+.program-information .detail-summary { align-self: center; width: 100%; }
+.program-information .detail-summary > div { font-size: 13px; line-height: 1.6; }
+.program-information .detail-summary svg { flex-shrink: 0; }
+.program-information .primary-cta { background: var(--primary); font-size: 13px; padding: 15px 22px; }
+.program-audience { display: flex; gap: 24px; padding: 32px; border-radius: 18px; background: var(--foreground); color: white; }
+.program-audience > svg { flex-shrink: 0; color: var(--primary); margin-top: 6px; }
+.program-audience h2 { font-size: 30px; letter-spacing: -.055em; margin: 8px 0 12px; }
+.program-audience p:last-child { max-width: 850px; line-height: 1.8; font-size: 14px; color: #f2e8e1; }
+.program-section { padding: 54px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 32px; }
+.program-section-heading { max-width: 750px; margin-bottom: 26px; }
+.program-section-heading h2, .program-contact h2 { font-size: clamp(28px, 3.3vw, 42px); letter-spacing: -.065em; line-height: 1.12; margin: 12px 0; }
+.program-section-heading > p:last-child:not(.kicker) { color: var(--muted-foreground); font-size: 14px; line-height: 1.8; }
+.program-comparison-grid, .program-three-grid { display: grid; gap: 20px; }
+.program-comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.program-three-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.program-info-card { padding: 26px; border: 1px solid var(--border); border-radius: 18px; background: white; min-width: 0; }
+.program-info-card h3 { font-size: 23px; line-height: 1.2; letter-spacing: -.045em; margin-bottom: 14px; }
+.program-info-card > .kicker { margin-bottom: 14px; }
+.program-info-card > p:not(.kicker) { font-size: 13px; color: var(--muted-foreground); line-height: 1.8; }
+.program-info-card > ul:not(.program-feature-list) { display: grid; gap: 9px; margin: 20px 0; padding-left: 18px; list-style: disc; font-size: 13px; line-height: 1.6; }
+.program-info-card .catalog-card-link { display: inline-block; font-size: 12px; margin-top: 12px; }
+.program-feature-list { display: grid; gap: 14px; padding: 0; margin: 18px 0 0; list-style: none; }
+.program-feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.7; }
+.program-feature-list svg { margin-top: 4px; flex-shrink: 0; color: var(--primary); }
+.program-section > .program-feature-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 34px; }
+.program-journey { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; padding: 0; margin: 0; list-style: none; }
+.program-journey li { display: flex; gap: 16px; }
+.program-step-number { flex-shrink: 0; font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -.04em; }
+.program-journey h3 { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+.program-journey p { color: var(--muted-foreground); font-size: 13px; line-height: 1.8; }
+.program-pricing-note { font-size: 14px; line-height: 1.8; color: var(--muted-foreground); margin: -8px 0 24px; }
+.program-price-table { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: white; }
+.program-price-table-heading { padding: 26px; background: #fff0e5; }
+.program-price-table-heading > svg { color: var(--primary); margin-bottom: 14px; }
+.program-price-table-heading h3 { font-size: 24px; letter-spacing: -.055em; line-height: 1.2; margin-bottom: 12px; }
+.program-price-table-heading p { font-size: 13px; line-height: 1.8; color: var(--muted-foreground); }
+.program-price-table table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.program-price-table th, .program-price-table td { padding: 16px 14px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.program-price-table th:first-child { text-align: left; }
+.program-price-table thead { background: #fffaf6; font-size: 11px; color: var(--muted-foreground); }
+.program-price-table tbody th { font-weight: 500; }
+.program-price-table td strong { font-weight: 800; }
+.program-table-note { padding: 16px; color: var(--muted-foreground); font-size: 11px; line-height: 1.7; }
+.program-info-card .program-session-count { color: var(--foreground); font-weight: 600; margin-bottom: 14px; }
+.program-info-card .program-package-price { font-size: clamp(25px, 2.4vw, 32px); color: var(--primary); font-weight: 800; letter-spacing: -.045em; line-height: 1.3; }
+.program-info-card .program-normal-price { font-size: 11px; margin: 6px 0 20px; }
+.program-info-card .program-consultation-label { font-size: 25px; margin: 8px 0 20px; }
+.program-package .program-feature-list { padding-top: 20px; border-top: 1px solid var(--border); }
+.program-package .program-feature-list li, .program-info-card .program-feature-list li { font-size: 13px; }
+.program-custom-package { background: #fff0e5; }
+.program-info-card .program-extra-price { color: var(--primary); font-weight: 800; font-size: 24px; margin-bottom: 12px; letter-spacing: -.035em; }
+.program-info-card .program-conditions { color: var(--foreground); font-size: 12px; line-height: 1.8; background: #fff0e5; border-radius: 9px; padding: 14px; margin-top: 20px; }
+.program-category-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0; }
+.program-category-list li { border: 1px solid var(--border); padding: 10px 15px; border-radius: 30px; background: white; font-size: 12px; }
+.program-contact { padding: 40px; border-radius: 20px; background: #fff0e5; margin-top: 50px; }
+.program-contact > p:not(.kicker) { max-width: 750px; font-size: 14px; line-height: 1.8; margin: 16px 0; }
+.program-contact-details { overflow-wrap: anywhere; font-weight: 600; }
+.program-contact-details span { margin: 0 8px; }
+.program-preview-price-context { display: block; font-size: 10px; font-weight: 400; line-height: 1.6; margin-top: 6px; max-width: 240px; }
+.program-card .card-bottom { gap: 12px; align-items: center; }
+.program-card .round-arrow { flex-shrink: 0; }
+.program-wide .wide-actions { flex-wrap: wrap; gap: 18px; }
+@media (max-width: 950px) {
+  .program-three-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .program-comparison-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .program-information .detail-hero { gap: 28px; padding: 42px 0; }
+  .program-information .detail-hero h1 { font-size: 48px; overflow-wrap: break-word; }
+  .program-information .detail-price strong { font-size: 27px; }
+  .program-audience { padding: 24px; gap: 14px; }
+  .program-audience > svg { width: 22px; }
+  .program-audience h2 { font-size: 26px; }
+  .program-section { padding: 38px 0; }
+  .program-three-grid, .program-journey, .program-section > .program-feature-list { grid-template-columns: 1fr; }
+  .program-info-card { padding: 24px; }
+  .program-price-table-heading { padding: 22px; }
+  .program-price-table table { font-size: 12px; }
+  .program-price-table th, .program-price-table td { padding: 14px 8px; }
+  .program-price-table thead { font-size: 10px; }
+  .program-contact { padding: 26px; }
+  .program-breadcrumb .back-link { font-size: 10px; }
+}

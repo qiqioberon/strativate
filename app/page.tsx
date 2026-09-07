@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { mentoringPrograms } from '@/lib/program-information'
+import { ProgramComparison } from '@/components/programs/program-comparison'
 import {
   ArrowRight,
   Award,
@@ -27,9 +30,14 @@ import {
 } from 'lucide-react'
 
 const programs = [
-  { title: 'Private Mentoring', tag: 'Most flexible', desc: 'Build the exact skill you need with a mentor who meets you where you are.', price: 'From Rp 199K', icon: Users, tone: 'orange', bullets: ['Choose your own mentor', '75-minute sessions', 'Individual or team goals'] },
-  { title: 'Intensive Mentoring', tag: 'Structured learning', desc: 'A guided learning journey for students ready to become competition-ready.', price: 'From Rp 899K', icon: Trophy, tone: 'red', bullets: ['Progressive curriculum', 'Weekly mentor checkpoints', 'Build your winning toolkit'] },
-  { title: 'Competition Class', tag: 'Learn together', desc: 'Learn with a cohort, practice together, and make your next competition your best one.', price: 'From Rp 349K', icon: BookOpen, tone: 'yellow', bullets: ['Live expert classes', 'Peer feedback circles', 'Certificate of completion'] },
+  ...mentoringPrograms.map(program => ({
+    title: program.title, tag: program.kicker, desc: program.description,
+    price: program.priceLabel, priceContext: program.priceContext,
+    icon: program.slug === 'private-mentoring' ? Users : Trophy,
+    tone: program.slug === 'private-mentoring' ? 'orange' : 'red',
+    bullets: program.highlights, href: `/program/${program.slug}`,
+  })),
+  { title: 'Competition Class', tag: 'Learn together', desc: 'Learn with a cohort, practice together, and make your next competition your best one.', price: 'From Rp 349K', priceContext: '', icon: BookOpen, tone: 'yellow', bullets: ['Live expert classes', 'Peer feedback circles', 'Certificate of completion'], href: '/explore' },
 ]
 
 const mentors = [
@@ -73,7 +81,7 @@ export default function Page() {
       </header>
 
       {view === 'home' && <Home go={go} buy={buy} />}
-      {view === 'programs' && <Programs go={go} buy={buy} />}
+      {view === 'programs' && <Programs />}
       {view === 'mentors' && <Mentors go={go} />}
       {view === 'products' && <Products buy={buy} />}
       {view === 'about' && <About go={go} />}
@@ -88,16 +96,26 @@ function Home({ go, buy }: { go: (v: string) => void; buy: (v: string) => void }
   return <main>
     <section className="hero"><div className="hero-copy"><div className="eyebrow"><Sparkles size={15} /> The competition advantage</div><h1>Win early.<br /><em>Get ahead.</em></h1><p className="hero-lede">Personalized mentoring and competition preparation from experienced winners, consultants, and young professionals.</p><div className="hero-actions"><button className="button button-primary" onClick={() => go('programs')}>Find your program <ArrowRight size={17} /></button><button className="button button-ghost" onClick={() => go('mentors')}><CirclePlay size={17} /> Meet our mentors</button></div><div className="hero-note"><span className="mini-stack"><i>AH</i><i>NP</i><i>RA</i></span><span><strong>2,500+</strong> students already building their edge</span></div></div><div className="hero-art"><div className="art-note note-one">National finalist <Trophy size={15} /></div><div className="art-card art-main"><div className="portrait portrait-orange"><span>AH</span></div><div><p className="small-label">Mentor spotlight</p><h3>Alvin Haryanto</h3><p>Strategy & case cracking</p></div><div className="rating"><Star size={14} fill="currentColor" /> 4.9</div></div><div className="art-card art-side"><Award size={23} /><strong>15+ wins</strong><span>across 4 countries</span></div><div className="art-scribble">your<br /><b>edge</b></div></div></section>
     <section className="trust-bar"><div><strong>2,500+</strong><span>Students empowered</span></div><div><strong>14+</strong><span>Partner universities</span></div><div><strong>3</strong><span>Countries represented</span></div><div><strong>100%</strong><span>Built for ambition</span></div></section>
-    <section className="section programs-preview"><div className="section-head"><div><p className="kicker">Choose your advantage</p><h2>One goal. <em>Your way.</em></h2></div><button className="arrow-link" onClick={() => go('programs')}>View all programs <ArrowRight size={16} /></button></div><div className="program-grid">{programs.map((p) => <ProgramCard key={p.title} program={p} onClick={() => go('programs')} />)}</div></section>
+    <section className="section programs-preview"><div className="section-head"><div><p className="kicker">Choose your advantage</p><h2>One goal. <em>Your way.</em></h2></div><button className="arrow-link" onClick={() => go('programs')}>View all programs <ArrowRight size={16} /></button></div><div className="program-grid">{programs.map((p) => <ProgramCard key={p.title} program={p} />)}</div></section>
     <section className="quote-section"><div className="quote-mark">“</div><blockquote>Strativate is where preparation stops being a guessing game.</blockquote><p>— Built by competition winners, for the next generation of winners.</p><button className="button button-dark" onClick={() => buy('Free starter guide')}>Get the free starter guide <ArrowRight size={16} /></button></section>
     <section className="section mentor-preview"><div className="section-head"><div><p className="kicker">The people behind the edge</p><h2>Learn from people<br /><em>who have done it.</em></h2></div><button className="arrow-link" onClick={() => go('mentors')}>Meet all mentors <ArrowRight size={16} /></button></div><div className="mentor-grid">{mentors.map((m) => <MentorCard mentor={m} key={m.name} />)}</div></section>
   </main>
 }
 
-function ProgramCard({ program, onClick }: { program: typeof programs[number]; onClick: () => void }) { const Icon = program.icon; return <article className={`program-card ${program.tone}`}><div className="card-top"><span className="icon-wrap"><Icon size={21} /></span><span className="tag">{program.tag}</span></div><h3>{program.title}</h3><p>{program.desc}</p><ul>{program.bullets.map((b) => <li key={b}><Check size={14} /> {b}</li>)}</ul><div className="card-bottom"><strong>{program.price}</strong><button className="round-arrow" onClick={onClick} aria-label={`Explore ${program.title}`}><ArrowRight size={18} /></button></div></article> }
+function ProgramCard({ program }: { program: typeof programs[number] }) {
+  const Icon = program.icon
+  return <article className={`program-card ${program.tone}`}><div className="card-top"><span className="icon-wrap"><Icon size={21} /></span><span className="tag">{program.tag}</span></div><h3>{program.title}</h3><p>{program.desc}</p><ul>{program.bullets.map(b => <li key={b}><Check size={14} />{b}</li>)}</ul><div className="card-bottom"><div><strong>{program.price}</strong><small className="program-preview-price-context">{program.priceContext}</small></div><Link href={program.href} className="round-arrow" aria-label={`Explore ${program.title}`}><ArrowRight size={18} /></Link></div></article>
+}
+
 function MentorCard({ mentor }: { mentor: typeof mentors[number] }) { return <article className="mentor-card"><div className={`portrait portrait-${mentor.color}`}><span>{mentor.initials}</span></div><div className="mentor-info"><div className="rating"><Star size={13} fill="currentColor" /> {mentor.rating}</div><h3>{mentor.name}</h3><p>{mentor.role}</p><span>{mentor.university}</span></div></article> }
 
-function Programs({ go, buy }: { go: (v: string) => void; buy: (v: string) => void }) { const [selected, setSelected] = useState('Private Mentoring'); return <main className="page-main"><PageIntro kicker="Find your path" title={<>Programs built for<br /><em>your next win.</em></>} text="From your first case to your final pitch, choose the kind of support that gets you moving." /><div className="program-list">{programs.map((p) => <div className={`program-wide ${p.tone}`} key={p.title}><div className="program-wide-icon"><p className="kicker">0{programs.indexOf(p) + 1}</p><p>{p.tag}</p></div><div className="program-wide-body"><h2>{p.title}</h2><p>{p.desc}</p><div className="wide-bullets">{p.bullets.map((b) => <span key={b}><Check size={14} />{b}</span>)}</div><div className="wide-actions"><strong>{p.price}<small> / session</small></strong><button className="button button-dark" onClick={() => { setSelected(p.title); buy(p.title) }}>Choose this path <ArrowRight size={16} /></button></div></div></div>)}</div><div className="demo-callout"><Sparkles size={22} /><div><strong>Demo flow: {selected} selected</strong><p>Sign in to see your credits, schedule a session, and track your progress.</p></div><button className="button button-primary" onClick={() => { window.location.href = '/auth' }}>Open dashboard</button></div></main> }
+function Programs() {
+  return <main className="page-main"><PageIntro kicker="Find your path" title={<>Programs built for<br /><em>your next win.</em></>} text="Compare flexible sessions and structured mentoring to find the support that fits your preparation." />
+    <div className="program-list">{programs.map((p, index) => <div className={`program-wide ${p.tone}`} key={p.title}><div className="program-wide-icon"><p className="kicker">0{index + 1}</p><p>{p.tag}</p></div><div className="program-wide-body"><h2>{p.title}</h2><p>{p.desc}</p><div className="wide-bullets">{p.bullets.map(b => <span key={b}><Check size={14} />{b}</span>)}</div><div className="wide-actions"><div><strong>{p.price}</strong><small className="program-preview-price-context">{p.priceContext}</small></div><Link href={p.href} className="button button-dark" aria-label={`View ${p.title}`}>View program <ArrowRight size={16} /></Link></div></div></div>)}</div>
+    <ProgramComparison />
+  </main>
+}
+
 function PageIntro({ kicker, title, text }: { kicker: string; title: React.ReactNode; text: string }) { return <div className="page-intro"><p className="kicker">{kicker}</p><h1>{title}</h1><p>{text}</p></div> }
 
 function Mentors({ go }: { go: (v: string) => void }) { return <main className="page-main"><PageIntro kicker="The Strativate roster" title={<>Find your <em>winning team.</em></>} text="Every mentor brings real competition experience, honest feedback, and a practical playbook." /><div className="filter-row"><div className="search-field"><Search size={17} /><input placeholder="Search by skill or name" /></div><button className="filter-pill">All expertise <ChevronDown size={15} /></button><button className="filter-pill">All universities <ChevronDown size={15} /></button></div><div className="mentor-directory">{mentors.concat([{ name: 'Dita Maharani', role: 'Business Plan', university: 'UNAIR · 8 wins', initials: 'DM', color: 'coral', rating: '4.9' }]).map((m) => <div className="directory-card" key={m.name}><MentorCard mentor={m} /><p className="mentor-bio">Turns complex business problems into clear stories and confident pitches.</p><div className="mentor-card-actions"><button className="button button-outline" onClick={() => { window.location.href = '/auth' }}>View profile</button><button className="button button-primary" onClick={() => { window.location.href = '/auth' }}>Book session</button></div></div>)}</div></main> }
