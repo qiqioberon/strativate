@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/supabase/database.types'
 import { passwordError, usernameError } from '@/lib/auth/rules'
 import { formError } from '@/lib/auth/errors'
-import { PasswordInput } from './password-input'
+import { PasswordInput } from "./password-input"
 export function SetupForm({ profile, recovery = false }: { profile: Profile; recovery?: boolean }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -37,10 +37,10 @@ export function SetupForm({ profile, recovery = false }: { profile: Profile; rec
     finally { setBusy(false) }
   }
   return <form className="auth-form" onSubmit={submit}>
-    {!recovery && <><label>Nama Depan<input name="first_name" defaultValue={profile.first_name || ''} required maxLength={100} /></label><label>Nama Belakang<input name="last_name" defaultValue={profile.last_name || ''} maxLength={100} /></label><label>Username<input name="username" defaultValue={profile.username || ''} required minLength={3} maxLength={30} autoComplete="username" /></label></>}
-    <PasswordInput label="Password" name="password" required={!passwordSaved} autoComplete="new-password" minLength={8} maxLength={128} disabled={busy} />
-    <PasswordInput label="Konfirmasi Password" name="confirmation" required={!passwordSaved} autoComplete="new-password" disabled={busy} />
-    {passwordSaved && <p role="status">Password tersimpan. Lengkapi data akun untuk melanjutkan.</p>}{error && <p className="form-error" role="alert">{error}</p>}
+    {!recovery && <><label>Nama Depan<input name="first_name" defaultValue={profile.first_name || ''} required maxLength={100} /></label><label>Nama Belakang<input name="last_name" defaultValue={profile.last_name || ''} maxLength={100} /></label><label>Nama pengguna<input name="username" defaultValue={profile.username || ''} required minLength={3} maxLength={30} autoComplete="username" /></label></>}
+    <PasswordInput label="Kata sandi" name="password" required={!passwordSaved} autoComplete="new-password" minLength={8} maxLength={128} disabled={busy} />
+    <PasswordInput label="Konfirmasi kata sandi" name="confirmation" required={!passwordSaved} autoComplete="new-password" disabled={busy} />
+    {passwordSaved && <p role="status">Kata sandi tersimpan. Lengkapi data akun untuk melanjutkan.</p>}{error && <p className="form-error" role="alert">{error}</p>}
     <button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan dan lanjutkan'}</button>
   </form>
 }

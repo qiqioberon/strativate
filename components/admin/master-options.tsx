@@ -1,9 +1,10 @@
 'use client'
+import { displayLabel } from '@/lib/labels'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { MasterOption } from '@/lib/supabase/database.types'
 import { formError } from '@/lib/auth/errors'
-export function MasterOptions({ table }: { table: 'referral_sources' | 'interests' }) {
+export function MasterOptions({ table }: { table: "referral_sources" | 'interests' }) {
   const [options, setOptions] = useState<MasterOption[]>([]), [editing, setEditing] = useState<MasterOption | null>(null)
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [loading, setLoading] = useState(true)
   const load = useCallback(async () => {
@@ -29,9 +30,9 @@ export function MasterOptions({ table }: { table: 'referral_sources' | 'interest
     try { const { error } = await createClient().from(table).update({ is_active: !option.is_active }).eq('id', option.id); if (error) throw error; await load() }
     catch (error) { setError(formError(error)) } finally { setBusy(false) }
   }
-  return <section className="role-card admin-data-panel"><h2>{table === 'interests' ? 'Minat Kompetisi' : 'Sumber Referral'}</h2>
+  return <section className="role-card admin-data-panel"><h2>{table === 'interests' ? 'Minat Kompetisi' : "Sumber Informasi"}</h2>
     <form key={editing?.id || 'new'} className="auth-form" onSubmit={save}><label>Nama<input name="name" required maxLength={100} defaultValue={editing?.name || ''} /></label><label>Urutan<input name="sort_order" type="number" required min={-10000} max={10000} defaultValue={editing?.sort_order ?? 0} /></label><label className="option-label"><input name="is_active" type="checkbox" defaultChecked={editing?.is_active ?? true} />Aktif</label><div className="button-row"><button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambah opsi'}</button>{editing && <button className="button button-outline" type="button" onClick={() => setEditing(null)}>Batal</button>}</div></form>
     {error && <p className="form-error" role="alert">{error}</p>}{loading && <p role="status">Memuat opsi…</p>}
-    {options.map(option => <div className="admin-record" key={option.id}><div><strong>{option.name}</strong><small>Urutan {option.sort_order} · {option.is_active ? 'Aktif' : 'Diarsipkan'}</small></div><div className="button-row"><button className="text-link" onClick={() => setEditing(option)} disabled={busy}>Edit</button><button className="text-link" onClick={() => archive(option)} disabled={busy}>{option.is_active ? 'Arsipkan' : 'Aktifkan'}</button></div></div>)}
+    {options.map(option => <div className="admin-record" key={option.id}><div><strong>{displayLabel(option.name)}</strong><small>Urutan {option.sort_order} · {option.is_active ? 'Aktif' : 'Diarsipkan'}</small></div><div className="button-row"><button className="text-link" onClick={() => setEditing(option)} disabled={busy}>Ubah</button><button className="text-link" onClick={() => archive(option)} disabled={busy}>{option.is_active ? 'Arsipkan' : 'Aktifkan'}</button></div></div>)}
   </section>
 }
