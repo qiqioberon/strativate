@@ -6,8 +6,8 @@ export const formatRupiah = (amount: number) => `Rp${new Intl.NumberFormat('id-I
 
 const sessionCounts = [1, 3, 5, 7, 10]
 export const privateMentorTiers = [
-  { name: 'Mentor Mahasiswa Berprestasi', description: 'Mahasiswa berprestasi yang berbagi strategi berdasarkan pengalaman langsung mengikuti kompetisi terkini.', rates: [300000, 285000, 279000, 270000, 250000] },
-  { name: 'Mentor Profesional Muda', description: 'Profesional industri yang membagikan pengalaman bisnis praktis dan perspektif dunia kerja.', rates: [350000, 335000, 329000, 320000, 300000] },
+  { name: 'Mentor Mahasiswa Berprestasi', description: 'Mahasiswa berprestasi yang berbagi strategi dari pengalaman langsung mengikuti kompetisi.', rates: [300000, 285000, 279000, 270000, 250000] },
+  { name: 'Mentor Profesional Muda', description: 'Profesional industri yang membawa pengalaman bisnis dan sudut pandang dunia kerja.', rates: [350000, 335000, 329000, 320000, 300000] },
 ].map(tier => ({
   name: tier.name,
   description: tier.description,
@@ -15,20 +15,20 @@ export const privateMentorTiers = [
 }))
 
 export const intensivePackages = [
-  { name: 'Intensif', sessions: 4, price: 1150000, normalPrice: 1400000, description: 'Bimbingan rutin setiap minggu, dengan waktu untuk menerapkan masukan di antara sesi.', features: ['Perkembangan mingguan', 'Evaluasi dan penyempurnaan rutin', 'Persiapan kompetisi yang konsisten'] },
-  { name: 'Super Intensif', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'Evaluasi lebih sering untuk perkembangan lebih cepat dan waktu persiapan yang lebih singkat.', features: ['Mentoring dua kali seminggu', 'Siklus evaluasi lebih cepat', 'Persiapan kompetisi intensif'] },
+  { name: 'Intensif', sessions: 4, price: 1150000, normalPrice: 1400000, description: 'Bimbingan mingguan yang memberi waktu untuk mencoba masukan sebelum sesi berikutnya.', features: ['Progres mingguan', 'Ulasan dan penyempurnaan rutin', 'Persiapan kompetisi yang konsisten'] },
+  { name: 'Super Intensif', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'Sesi lebih sering untuk mempercepat perkembangan saat tenggat kompetisi semakin dekat.', features: ['Mentoring dua kali seminggu', 'Siklus ulasan lebih cepat', 'Persiapan kompetisi intensif'] },
 ]
 
 export const intensiveAddOns = [
-  { name: 'Laporan Kinerja Terperinci', price: 150000, description: 'Evaluasi terstruktur mengenai keterampilan, perkembangan, dan prioritas pengembangan.', features: ['Penilaian berbasis keterampilan', 'Kelebihan dan aspek yang perlu ditingkatkan', 'Ringkasan perkembangan', 'Rekomendasi mentor'] },
-  { name: 'Simulasi Penjurian', price: 300000, description: 'Latih presentasi dan sesi tanya jawab dalam suasana kompetisi yang realistis bersama juri independen.', features: ['Simulasi presentasi dengan batas waktu', 'Tanya jawab seperti dalam kompetisi', 'Masukan dari juri independen', 'Skor kinerja berdasarkan rubrik penilaian'] },
+  { name: 'Laporan Kinerja Terperinci', price: 150000, description: 'Evaluasi terstruktur untuk melihat kemampuan, progres, dan prioritas pengembanganmu.', features: ['Penilaian berbasis keterampilan', 'Kelebihan dan area perbaikan', 'Ringkasan progres', 'Rekomendasi mentor'] },
+  { name: 'Simulasi Penjurian', price: 300000, description: 'Latih presentasi dan sesi tanya jawab dalam situasi kompetisi yang realistis bersama juri independen.', features: ['Simulasi presentasi dengan batas waktu', 'Tanya jawab bergaya kompetisi', 'Masukan dari juri independen', 'Skor kinerja berdasarkan rubrik'] },
   { name: 'Perlindungan Jaminan Kemenangan', price: 500000, description: 'Perlindungan tambahan bagi peserta yang memenuhi syarat berdasarkan target capaian kompetisi yang disepakati.', features: ['Target capaian yang disepakati', 'Penilaian kelayakan sesuai kompetisi', 'Perlindungan berupa pengembalian dana atau kredit program', 'Prioritas pemantauan perkembangan'], conditional: true },
 ]
 
 export const intensiveBundles = [
-  { name: 'Paket Rintisan Tim', price: 1250000, description: 'Untuk individu yang mengembangkan keterampilan dan mempersiapkan pembentukan tim kompetisi yang sesuai.', features: ['Paket Intensif', 'Laporan Kinerja Terperinci', 'Rencana mentoring yang disesuaikan', 'Dukungan persiapan kompetisi'] },
-  { name: 'Paket Siap Kompetisi', price: 2500000, description: 'Untuk persiapan intensif, materi presentasi yang lebih kuat, dan latihan presentasi yang realistis.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Dukungan persiapan tahap akhir'] },
-  { name: 'Paket Jaminan Kompetisi', price: 3000000, description: 'Untuk peserta yang memenuhi syarat dan mengejar target capaian kompetisi tertentu dengan perlindungan tambahan.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Perlindungan Jaminan Kemenangan'], conditional: true },
+  { name: 'Paket Rintisan Tim', price: 1250000, description: 'Untuk membangun kemampuan sekaligus mempersiapkan tim kompetisi yang sesuai.', features: ['Paket Intensif', 'Laporan Kinerja Terperinci', 'Rencana mentoring yang disesuaikan', 'Dukungan persiapan kompetisi'] },
+  { name: 'Paket Siap Kompetisi', price: 2500000, description: 'Untuk persiapan intensif, materi presentasi yang lebih kuat, dan latihan pitching yang realistis.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Dukungan persiapan tahap akhir'] },
+  { name: 'Paket Jaminan Kompetisi', price: 3000000, description: 'Untuk peserta yang memenuhi syarat dan mengejar target kompetisi tertentu dengan perlindungan tambahan.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Perlindungan Jaminan Kemenangan'], conditional: true },
 ]
 
 export const guaranteeConditions = 'Syarat, ketentuan, dan penilaian kelayakan berlaku. Target capaian dan perlindungan disepakati setelah peninjauan sesuai kompetisi.'
@@ -40,8 +40,8 @@ export const competitionCategories = [
 ]
 
 export const privateLearningPaths = [
-  { title: 'Pembelajaran Menyeluruh', description: 'Mulai dari dasar: memahami kompetisi, mengidentifikasi masalah, mengembangkan ide, menganalisis bisnis, menulis proposal, dan mempresentasikan ide. Direkomendasikan untuk pemula.' },
-  { title: 'Mentoring Berfokus pada Kompetisi', description: 'Siapkan diri untuk kompetisi yang dituju, mulai dari strategi awal kasus dan penyusunan proposal hingga simulasi presentasi, latihan tanya jawab, dan penyempurnaan akhir.' },
+  { title: 'Belajar dari Dasar sampai Siap Tampil', description: 'Mulai dari memahami kompetisi, menemukan masalah, mengembangkan ide, menganalisis bisnis, menulis proposal, hingga presentasi. Cocok untuk kamu yang baru mulai.' },
+  { title: 'Mentoring Fokus Kompetisi', description: 'Persiapkan satu kompetisi tertentu, mulai dari strategi kasus dan pengembangan proposal hingga simulasi presentasi, latihan tanya jawab, dan penyempurnaan akhir.' },
 ]
 
 export const privateTopics = [
