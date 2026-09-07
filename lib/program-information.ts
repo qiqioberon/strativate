@@ -16,7 +16,7 @@ export const privateMentorTiers = [
 
 export const intensivePackages = [
   { name: 'Intensif', sessions: 4, price: 1150000, normalPrice: 1400000, description: 'Bimbingan mingguan yang memberi waktu untuk mencoba masukan sebelum sesi berikutnya.', features: ['Progres mingguan', 'Ulasan dan penyempurnaan rutin', 'Persiapan kompetisi yang konsisten'] },
-  { name: 'Super Intensif', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'Sesi lebih sering untuk mempercepat perkembangan saat tenggat kompetisi semakin dekat.', features: ['Mentoring dua kali seminggu', 'Siklus ulasan lebih cepat', 'Persiapan kompetisi intensif'] },
+  { name: 'Super Intensif', sessions: 8, price: 2200000, normalPrice: 2800000, description: 'Sesi lebih sering untuk mempercepat perkembangan dan mempersingkat siklus persiapan.', features: ['Mentoring dua kali seminggu', 'Siklus ulasan lebih cepat', 'Persiapan kompetisi intensif'] },
 ]
 
 export const intensiveAddOns = [
@@ -26,8 +26,8 @@ export const intensiveAddOns = [
 ]
 
 export const intensiveBundles = [
-  { name: 'Paket Rintisan Tim', price: 1250000, description: 'Untuk membangun kemampuan sekaligus mempersiapkan tim kompetisi yang sesuai.', features: ['Paket Intensif', 'Laporan Kinerja Terperinci', 'Rencana mentoring yang disesuaikan', 'Dukungan persiapan kompetisi'] },
-  { name: 'Paket Siap Kompetisi', price: 2500000, description: 'Untuk persiapan intensif, materi presentasi yang lebih kuat, dan latihan pitching yang realistis.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Dukungan persiapan tahap akhir'] },
+  { name: 'Paket Rintisan Tim', price: 1250000, description: 'Untuk individu yang mengembangkan kemampuan dan mempersiapkan pembentukan tim kompetisi yang sesuai.', features: ['Paket Intensif', 'Laporan Kinerja Terperinci', 'Rencana mentoring yang disesuaikan', 'Dukungan persiapan kompetisi'] },
+  { name: 'Paket Siap Kompetisi', price: 2500000, description: 'Untuk persiapan intensif, materi presentasi yang lebih kuat, dan latihan presentasi yang realistis.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Dukungan persiapan tahap akhir'] },
   { name: 'Paket Jaminan Kompetisi', price: 3000000, description: 'Untuk peserta yang memenuhi syarat dan mengejar target kompetisi tertentu dengan perlindungan tambahan.', features: ['Paket Super Intensif', 'Laporan Kinerja Terperinci', 'Simulasi Penjurian', 'Perlindungan Jaminan Kemenangan'], conditional: true },
 ]
 

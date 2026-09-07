@@ -42,7 +42,7 @@ function IntensivePackages() {
     <article className="program-info-card program-package program-custom-package">
       <p className="kicker">Kompetisi internasional</p><h3>Sepenuhnya disesuaikan</h3><p className="program-session-count">Cakupan dan frekuensi sesuai kebutuhanmu</p>
       <p className="program-package-price program-consultation-label">Sesuai konsultasi</p>
-      <p>Setiap kompetisi internasional membutuhkan pendekatan berbeda. Rencana mentoring ditentukan setelah konsultasi awal.</p>
+      <p>Setiap kompetisi internasional membutuhkan pendekatan berbeda. Rencana mentoring disesuaikan setelah konsultasi awal.</p>
       <FeatureList items={['Rencana persiapan sesuai kompetisi', 'Cakupan dan frekuensi sesi yang disesuaikan', 'Pemilihan mentor berdasarkan kebutuhan kompetisi', 'Dukungan terarah sepanjang persiapan']} />
     </article>
   </div>

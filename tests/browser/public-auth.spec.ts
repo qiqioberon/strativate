@@ -58,7 +58,7 @@ for (const path of ['/admin', '/mentor', '/dashboard', '/onboarding', '/auth/set
 test('invalid callback ignores arbitrary external next URLs', async ({ page }) => {
   await page.goto('/auth/callback?next=https://example.com&error=access_denied')
   await expect(page).toHaveURL(/\/auth\/error$/)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kita coba lagi.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Coba lagi.')
 })
 
 test('login and registration fit the preserved mobile auth layout', async ({ page }) => {
