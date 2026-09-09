@@ -5,7 +5,7 @@ import { destinationFor, passwordError, usernameError } from '../lib/auth/rules'
 test('routes only known roles and enforces persisted onboarding/setup', () => {
   assert.equal(destinationFor({ role: 'admin' }, null), '/admin')
   assert.equal(destinationFor({ role: 'mentor', mentor_setup_completed_at: null }, null), '/auth/setup')
-  assert.equal(destinationFor({ role: 'mentor', mentor_setup_completed_at: 'now' }, null), '/mentor')
+  assert.equal(destinationFor({ role: 'mentor', mentor_setup_completed_at: 'now' }, null), '/mentor/dashboard')
   assert.equal(destinationFor({ role: 'mentee' }, null), '/onboarding')
   assert.equal(destinationFor({ role: 'mentee' }, { onboarding_completed_at: null }), '/onboarding')
   assert.equal(destinationFor({ role: 'mentee' }, { onboarding_completed_at: 'now' }), '/dashboard')

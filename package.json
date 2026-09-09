@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/auth.test.ts tests/import-institutions.test.ts tests/marketing-content.test.ts tests/onboarding.test.ts",
     "test:e2e": "playwright test",
     "test:db": "tsx scripts/test-database.ts",
     "import:institutions": "tsx --env-file=.env scripts/import-institutions.ts"

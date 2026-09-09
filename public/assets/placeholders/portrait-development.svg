@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Development portrait placeholder</title>
+  <desc id="desc">Temporary portrait slot awaiting an approved mentor photograph.</desc>
+  <rect width="900" height="1200" fill="#f5e8dc"/>
+  <circle cx="450" cy="390" r="176" fill="#ffbd3f"/>
+  <path d="M205 1010c28-246 119-375 245-375s217 129 245 375" fill="#bf1e1e"/>
+  <path d="M110 112h190M600 1088h190" stroke="#ff6200" stroke-width="18" stroke-linecap="round"/>
+  <text x="450" y="1110" text-anchor="middle" fill="#6f625a" font-family="Arial, sans-serif" font-size="24" letter-spacing="4">DEVELOPMENT PORTRAIT</text>
+</svg>

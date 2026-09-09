@@ -46,7 +46,7 @@ test('registration starts with only email and can return to login', async ({ pag
   await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible()
 })
 
-for (const path of ['/admin', '/mentor', '/dashboard', '/onboarding', '/auth/setup', '/checkout/private-hsbc']) {
+for (const path of ['/admin', '/mentor/dashboard', '/dashboard', '/onboarding', '/auth/setup', '/checkout/private-hsbc']) {
   test(`anonymous route guard rejects ${path} even with a forged demo role`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('strativate-demo-role', 'Admin'))
     await page.goto(path)

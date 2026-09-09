@@ -4,11 +4,11 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import './auth/auth.css'
 import './program-information.css'
+import './marketing.css'
 
 export const metadata: Metadata = {
   title: "Strativate — Raih Kemenangan. Melangkah Lebih Jauh.",
   description: "Bimbingan personal dan persiapan kompetisi untuk mahasiswa yang ingin meraih prestasi.",
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -44,10 +44,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="id" className="bg-background">
+    <html lang="id" className="bg-background" data-scroll-behavior="smooth">
       <body className={`${jakarta.className} antialiased`}>
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.VERCEL && <Analytics />}
       </body>
     </html>
   )
