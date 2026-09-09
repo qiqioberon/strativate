@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Compass, Users } from 'lucide-react'
 import { formatRupiah } from '@/lib/catalog/format'
+import { catalogPriceLabel, catalogProductTypeLabels, directCheckoutOfferings } from '@/lib/catalog/presentation'
 import type { CatalogProductDetail, CatalogProductSummary } from '@/lib/catalog/types'
 import { commercialItemEditorial, competitionCategories, deliveryOptionEditorial, getProgramEditorial } from '@/lib/program-information'
 import { ProgramComparison } from './program-comparison'
@@ -31,25 +32,67 @@ function IntensiveExtras({ product }: { product: CatalogProductDetail }) {
   </>
 }
 
-export function ProgramInformationDetail({ product, comparisons }: { product: CatalogProductDetail; comparisons: CatalogProductSummary[] }) {
+type ProductDetailProps = { product: CatalogProductDetail; comparisons: CatalogProductSummary[] }
+
+export function ProductDetail(props: ProductDetailProps) {
+  if (props.product.productType === 'private_mentoring' || props.product.productType === 'intensive_mentoring') {
+    return <MentoringProductDetail {...props} />
+  }
+  return <GeneralCatalogProductDetail product={props.product} />
+}
+
+function MentoringProductDetail({ product, comparisons }: ProductDetailProps) {
   const editorial = getProgramEditorial(product.code)
   const isPrivate = product.productType === 'private_mentoring'
-  const fixedPrices = product.commercialItems.flatMap((item) => item.pricingMode === 'fixed' ? [item.priceAmount] : [])
-  const startingPrice = fixedPrices.length ? `Mulai ${formatRupiah(Math.min(...fixedPrices))}` : 'Sesuai konsultasi'
+  const isIntensive = product.productType === 'intensive_mentoring'
   const allBenefits = Array.from(new Map(Object.values(product.benefitsByItemId).flat().map((benefit) => [benefit.id, benefit])).values())
 
   return <main className="detail-page program-information">
     <nav className="program-breadcrumb" aria-label="Jejak navigasi"><Link href="/" className="back-link">Strativate</Link><Link href="/explore" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> Jelajahi program</Link></nav>
-    <section className="detail-hero"><div><p className="kicker">{editorial?.kicker ?? 'Program Strativate'}</p><h1>{product.title}</h1><p className="detail-lede">{editorial?.detail ?? product.description ?? product.shortDescription}</p><div className="detail-price"><strong>{startingPrice}</strong><span>{product.defaultPurchaseFlow === 'consultation_offer' ? 'Pilih kebutuhanmu bersama tim Strativate' : 'Pembelian langsung'}</span></div><a href="#packages" className="primary-cta">Lihat paket <ArrowRight size={16} aria-hidden="true" /></a></div><aside className="detail-summary"><p className="kicker">Sekilas program</p>{editorial?.highlights.map((fact) => <div key={fact}><Check size={17} aria-hidden="true" /><span>{fact}</span></div>)}</aside></section>
+    <section className="detail-hero"><div><p className="kicker">{editorial?.kicker ?? 'Program Strativate'}</p><h1>{product.title}</h1><p className="detail-lede">{editorial?.detail ?? product.description ?? product.shortDescription}</p><div className="detail-price"><strong>{catalogPriceLabel(product)}</strong><span>{product.defaultPurchaseFlow === 'consultation_offer' ? 'Pilih kebutuhanmu bersama tim Strativate' : 'Pembelian langsung'}</span></div><a href="#packages" className="primary-cta">Lihat paket <ArrowRight size={16} aria-hidden="true" /></a></div><aside className="detail-summary"><p className="kicker">Sekilas program</p>{editorial?.highlights.map((fact) => <div key={fact}><Check size={17} aria-hidden="true" /><span>{fact}</span></div>)}</aside></section>
     {editorial && <section className="program-audience"><Compass size={30} aria-hidden="true" /><div><p className="kicker">Cocok untuk siapa?</p><h2>Mulai dari kebutuhanmu sekarang.</h2><p>{editorial.audience}</p></div></section>}
     {isPrivate && <><DeliveryOptions product={product} kind="learning_path" title="Mulai dari dasar atau fokus ke kompetisi tertentu." /><DeliveryOptions product={product} kind="focus_topic" title="Kerjakan hal yang paling penting." /></>}
     {!!allBenefits.length && <section className="program-section"><div className="program-section-heading"><p className="kicker">Yang akan kamu dapatkan</p><h2>{isPrivate ? 'Masukan yang bisa langsung dipakai.' : 'Progres yang terlihat dari waktu ke waktu.'}</h2></div><FeatureList items={allBenefits.map((benefit) => benefit.label)} /></section>}
     {editorial && <section className="program-section"><div className="program-section-heading"><p className="kicker">Cara kerja program</p><h2>Dari tujuan sampai langkah berikutnya.</h2></div><ol className="program-journey">{editorial.journey.map((step, index) => <li key={step.title}><span className="program-step-number" aria-hidden="true">0{index + 1}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol></section>}
     <section id="packages" className="program-section"><div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>{isPrivate ? 'Pilih mentormu. Tentukan ritmemu.' : 'Pilih tingkat bimbinganmu.'}</h2></div>{isPrivate ? <PrivatePackages product={product} /> : <IntensivePackages product={product} />}</section>
-    {!isPrivate && <IntensiveExtras product={product} />}
+    {isIntensive && <IntensiveExtras product={product} />}
     <section className="program-section"><div className="program-section-heading"><p className="kicker">Kategori kompetisi</p><h2>Dukungan lintas bidang.</h2></div><ul className="program-category-list">{competitionCategories.map((category) => <li key={category}>{category}</li>)}</ul></section>
     <ProgramComparison products={comparisons} />
-    <section className="program-contact"><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program dan merekomendasikan dukungan sesuai tujuan, tahap persiapan, dan jadwalmu.</p><p className="program-contact-details">+62 851-8775-4671 <span aria-hidden="true">·</span> strativateid@gmail.com</p><Link href="/explore" className="back-link">Kembali ke semua program <ArrowRight size={16} aria-hidden="true" /></Link></section>
+    <section className="program-contact"><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program dan merekomendasikan dukungan sesuai tujuan, tahap persiapan, dan jadwalmu.</p><Link href="/explore" className="back-link">Kembali ke semua program <ArrowRight size={16} aria-hidden="true" /></Link></section>
+  </main>
+}
+
+function GeneralCatalogProductDetail({ product }: { product: CatalogProductDetail }) {
+  const checkoutOfferings = new Map(directCheckoutOfferings(product).map(item => [item.id, item]))
+
+  return <main className="detail-page program-information">
+    <nav className="program-breadcrumb" aria-label="Jejak navigasi"><Link href="/" className="back-link">Strativate</Link><Link href="/explore" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> Jelajahi katalog</Link></nav>
+    <section className="detail-hero">
+      <div>
+        <p className="kicker">{catalogProductTypeLabels[product.productType]}</p>
+        <h1>{product.title}</h1>
+        <p className="detail-lede">{product.description ?? product.shortDescription}</p>
+        {product.digitalDetails && <p className="program-conditions">Format: {product.digitalDetails.contentType === 'pdf' ? 'PDF' : 'Video'}</p>}
+        <div className="detail-price"><strong>{catalogPriceLabel(product)}</strong><span>{product.defaultPurchaseFlow === 'direct_checkout' ? 'Pembelian langsung' : 'Sesuai konsultasi'}</span></div>
+        {product.offerings.length > 0 && <a href="#packages" className="primary-cta">Lihat pilihan <ArrowRight size={16} aria-hidden="true" /></a>}
+      </div>
+      <aside className="detail-summary"><p className="kicker">Informasi produk</p><div><Check size={17} aria-hidden="true" /><span>{product.shortDescription}</span></div></aside>
+    </section>
+    <section id="packages" className="program-section">
+      <div className="program-section-heading"><p className="kicker">Pilihan yang tersedia</p><h2>{product.offerings.length > 0 ? 'Pilih sesuai kebutuhanmu.' : 'Belum ada penawaran yang dipublikasikan.'}</h2></div>
+      {product.offerings.length > 0 && <div className="program-three-grid">{product.offerings.map((offering) => {
+        const checkoutOffering = checkoutOfferings.get(offering.id)
+        return <article className="program-info-card program-package" key={offering.id}>
+          <h3>{offering.title}</h3>
+          {offering.description && <p>{offering.description}</p>}
+          <p className={`program-package-price ${offering.pricingMode === 'quotation_required' ? 'program-consultation-label' : ''}`}>{offering.pricingMode === 'fixed' ? formatRupiah(offering.priceAmount) : 'Sesuai konsultasi'}</p>
+          {offering.pricingMode === 'fixed' && offering.referencePriceAmount !== null && <p className="program-normal-price">Harga referensi <s>{formatRupiah(offering.referencePriceAmount)}</s></p>}
+          <FeatureList items={(product.benefitsByItemId[offering.id] ?? []).map(benefit => benefit.label)} />
+          {checkoutOffering && <Link className="primary-cta" href={`/checkout/${product.slug}?item=${checkoutOffering.id}`}>Beli sekarang <ArrowRight size={16} aria-hidden="true" /></Link>}
+        </article>
+      })}</div>}
+    </section>
+    <section className="program-contact"><p className="kicker">Katalog Strativate</p><h2>Lihat pilihan lainnya.</h2><p>Bandingkan produk dan program yang telah dipublikasikan.</p><Link href="/explore" className="back-link">Kembali ke semua produk <ArrowRight size={16} aria-hidden="true" /></Link></section>
   </main>
 }
 

@@ -7,6 +7,7 @@ test('homepage and program overview link to guidebook information without a demo
   await expect(page.getByText('Demo flow:', { exact: false })).toHaveCount(0)
   await page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' }).getByRole('link', { name: 'Lihat Mentoring Privat', exact: true }).click()
   await expect(page).toHaveURL(/\/program\/private-mentoring$/)
+  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
   await page.getByRole('link', { name: 'Lihat paket', exact: true }).click()
   await expect(page).toHaveURL(/#packages$/)
   const student = page.getByRole('table', { name: 'Paket Mentor Mahasiswa Berprestasi' })

@@ -2,7 +2,8 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublicCatalogProduct, listPublicCatalog } from '@/lib/catalog/public'
 import { resolveMentoringSlug } from '@/lib/program-routes'
-import { ProgramInformationDetail } from '@/components/programs/program-detail'
+import { MarketingShell } from '@/components/marketing/marketing-shell'
+import { ProductDetail } from '@/components/programs/program-detail'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -17,5 +18,5 @@ export default async function ProgramDetail({ params }: { params: Promise<{ slug
   if (canonical && canonical !== slug) permanentRedirect(`/program/${canonical}`)
   const [product, comparisons] = await Promise.all([getPublicCatalogProduct(slug), listPublicCatalog()])
   if (!product) notFound()
-  return <ProgramInformationDetail product={product} comparisons={comparisons} />
+  return <MarketingShell><ProductDetail product={product} comparisons={comparisons} /></MarketingShell>
 }
