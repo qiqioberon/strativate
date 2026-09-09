@@ -16,7 +16,7 @@ async function main() {
         console.log(`Migration passed: ${filename}`)
       }
     }
-    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql']) {
+    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql', 'product_catalog.sql']) {
       const sql = readFileSync(`supabase/tests/${filename}`, 'utf8')
       await db.query(sql)
       console.log(`Passed: ${filename}`)
