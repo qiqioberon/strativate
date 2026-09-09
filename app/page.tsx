@@ -1,10 +1,13 @@
 import { HomePage } from '@/components/marketing/home-page'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
+import { listPublicCatalog } from '@/lib/catalog/public'
 
-export default function Page() {
+export default async function Page() {
+  const catalogProducts = await listPublicCatalog()
+
   return (
     <MarketingShell>
-      <HomePage />
+      <HomePage catalogProducts={catalogProducts} />
     </MarketingShell>
   )
 }
