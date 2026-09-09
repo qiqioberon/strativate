@@ -1,7 +1,7 @@
 # Product / Catalog Master Design
 
 **Date:** 2026-09-09  
-**Status:** Approved architecture, implementation specification  
+**Status:** Approved architecture and authoritative bootstrap specification  
 **Scope:** Product and Catalog Master only
 
 ## 1. Purpose
@@ -101,6 +101,8 @@ Pricing invariants:
 - an incomplete draft may have no pricing mode and no amounts;
 - published or archived identities cannot be deleted through the application.
 
+Private Mentoring additionally records the explicitly published per-session amount on `catalog_private_offering_configs.per_session_price_amount`. This value is presentation-relevant commercial master data and is not derived from the total package price. The guidebook's three-session Top Student offering therefore retains `Rp285.000` per session and `Rp885.000` total exactly as published, even though multiplying the displayed unit amount would produce a different number.
+
 Typed tables use the same `id` as their `catalog_commercial_items` row:
 
 - `catalog_offerings(id, product_id)` for base packages/variants;
@@ -128,7 +130,9 @@ The offering—and therefore its UUID—is the purchasable tier × session-packa
 - focus topics;
 - whether an option permits a customer-provided custom value.
 
-Delivery options have their own stable IDs for future fulfillment forms, but they are not rows in `catalog_commercial_items`, have no price, and cannot be selected as SKUs.
+Product Master owns each delivery option's stable ID/code, canonical operational/display label, lifecycle/availability, ordering, and whether a custom customer value is allowed. Delivery options have their own stable IDs for future fulfillment forms, but they are not rows in `catalog_commercial_items`, have no price, and cannot be selected as SKUs.
+
+The editorial layer may hold richer explanatory or marketing copy keyed by the Product Master delivery-option code. It must not define a second list of option identities or labels. Public pages iterate Product Master options and optionally enrich each one from editorial copy by code, so adding, retiring, or renaming an option remains a catalog operation.
 
 ### 4.5 Intensive Mentoring
 
@@ -178,6 +182,8 @@ Products and commercial items use draft, published, and archived states.
 - Archived rows remain referentially stable and hidden from public reads.
 - Archived rows may not return directly to published state; an administrator may duplicate them into a new draft when a materially new commercial identity is needed.
 - Stable IDs, product codes, item codes, product type, item kind, and owning product are immutable once created.
+
+Published records are the current authoritative catalog, not immutable snapshots. Administrators may change mutable attributes such as price, reference price, descriptions, visibility, featured state, and ordering while preserving the identity when the commercial meaning is unchanged. A material change to session count, tier/package meaning, bundle composition, or what an offering represents requires a new draft commercial identity followed by archival of the previous identity. Historical prices are intentionally not stored in Product Master; future order records will snapshot the selected identity and agreed price.
 
 Lifecycle transitions use `set_catalog_product_status(product_id, status)` and `set_catalog_commercial_item_status(item_id, status)` security-definer functions. Both require `public.is_admin()`, lock the target row, validate transitions, and set publication/archive timestamps. Direct column privileges do not permit browser clients to update lifecycle fields, so bypassing the UI cannot skip validation.
 
@@ -261,28 +267,84 @@ Digital Product cards and pages render only real published Product Master record
 
 ## 10. Checkout compatibility boundary
 
-Checkout/payment implementation remains unchanged in purpose and is not expanded.
+Checkout/payment implementation remains unchanged in purpose and is not expanded. The compatibility work is limited to replacing its legacy catalog lookup input.
 
 The existing simulated checkout route receives a minimal typed compatibility model derived from a published Product Master product and its selected fixed-price offering. It cannot import a hardcoded catalog array or invent a price. Mentoring routes that currently redirect to public program information retain that behavior.
 
-Quotation-required offerings never enter the simulated payment path. If no published fixed-price offering exists, the route preserves an honest unavailable/not-found outcome. This isolates legacy simulation while keeping Product Master authoritative and avoids a second commercial source of truth.
+Quotation-required offerings never enter the simulated payment path. If no published fixed-price offering exists, the route preserves an honest unavailable/not-found outcome. No cart behavior, order lifecycle, payment behavior, negotiated pricing, or checkout redesign is added. This isolates legacy simulation while keeping Product Master authoritative and avoids a second commercial source of truth.
 
-## 11. Business-data migration
+## 11. Authoritative business-data bootstrap
 
-The migration creates structure and security but does not promote existing demo arrays into production records.
+The supplied Private Mentoring and Intensive Mentoring guidebooks are the authoritative current business master for those two programs. Their Product Master records are seeded as published and public. When a guidebook value conflicts with an older hardcoded/demo value, the guidebook wins without arithmetic correction or reinterpretation.
 
-No Big Class or Digital Product rows are seeded. Existing names, prices, cohorts, formats, and download claims are unapproved demo material.
+Authoritative source pages are Private Mentoring pp. 5–12 and Intensive Mentoring pp. 5–13. The original PDFs remain outside the application bundle; the migration contains the normalized operational data extracted from those pages.
 
-No unresolved Intensive bundle, guarantee policy, or eligibility rule is seeded as published data. The admin and schema can represent approved versions later.
+### 11.1 Private Mentoring
 
-The Top Student Mentor three-session conflict is not resolved from the existing arithmetic or contradictory documentation. The migration does not seed that amount as published truth.
+The migration seeds the published `private-mentoring` product with consultation-led purchase flow, a 75-minute session duration, and equal package pricing for individuals or teams of 1–4 participants.
 
-Because the available repository material contains intertwined approved editorial content and disputed commercial values, the safest bootstrap is an empty Product Master. Existing mentoring editorial pages remain available but show no catalog price/package data until an administrator creates and publishes valid master records. This preserves business-data honesty and exercises the required no-product state.
+Mentor tiers:
+
+- `top_student`: Mentor Mahasiswa Berprestasi;
+- `young_professional`: Mentor Profesional Muda.
+
+Session-package identities are `sessions_1`, `sessions_3`, `sessions_5`, `sessions_7`, and `sessions_10`. Each tier/package combination receives its own published offering UUID.
+
+| Tier | Sessions | Per session | Package price | Reference price |
+| --- | ---: | ---: | ---: | ---: |
+| Top Student | 1 | Rp300.000 | Rp300.000 | — |
+| Top Student | 3 | Rp285.000 | Rp885.000 | Rp950.000 |
+| Top Student | 5 | Rp279.000 | Rp1.395.000 | Rp1.500.000 |
+| Top Student | 7 | Rp270.000 | Rp1.890.000 | Rp2.100.000 |
+| Top Student | 10 | Rp250.000 | Rp2.500.000 | Rp3.000.000 |
+| Young Professional | 1 | Rp350.000 | Rp350.000 | — |
+| Young Professional | 3 | Rp335.000 | Rp1.005.000 | Rp1.050.000 |
+| Young Professional | 5 | Rp329.000 | Rp1.645.000 | Rp1.750.000 |
+| Young Professional | 7 | Rp320.000 | Rp2.240.000 | Rp2.450.000 |
+| Young Professional | 10 | Rp300.000 | Rp3.000.000 | Rp3.500.000 |
+
+The `Rp885.000` Top Student three-session total is persisted exactly as printed; it is not replaced with `3 × Rp285.000`.
+
+Delivery-option identities are seeded for End-to-End Learning, Competition-Focused Mentoring, Idea & Problem Framing, Business Analysis & Case Structuring, Proposal Writing & Storyline, Financial Analysis & Valuation, Slide Deck & Visual Design, Pitching & Presentation Skills, and a custom-topic option that permits a customer-provided value. Canonical labels are natural Indonesian; richer explanatory copy remains editorial and is keyed by these stable codes.
+
+Included benefit identities cover Direct Mentor Networking, Judge-Level Insight, Competition Strategy Discussion, Sample Deck Exposure, 5+ Sessions Group Discussion, and Dummy Case or Mini Practice. The 5+ group-discussion benefit links only to the 5-, 7-, and 10-session offerings in both tiers. Benefits remain non-commercial.
+
+### 11.2 Intensive Mentoring
+
+The migration seeds the published `intensive-mentoring` product with consultation-led purchase flow.
+
+Published base offerings:
+
+- `intensive_national`: 4 sessions per month, fixed price Rp1.150.000, reference/normal price Rp1.400.000;
+- `super_intensive_national`: 8 sessions per month, fixed price Rp2.200.000, reference/normal price Rp2.800.000;
+- `international_custom`: quotation required, customized scope/frequency, and no fake zero price.
+
+Published add-ons:
+
+- `detailed_performance_report`: Rp150.000;
+- `mock_judging_simulation`: Rp300.000;
+- `win_guarantee_protection`: Rp500.000 and explicitly conditional.
+
+The guidebook presents these add-ons as optional extensions to the main Intensive program. Applicability links are seeded to the national fixed packages. Guarantee eligibility remains a descriptive condition only; no refund or eligibility engine is introduced.
+
+Published bundles and explicit composition:
+
+- `team_starter_bundle`, Rp1.250.000: Intensive offering + Detailed Performance Report + Personalized Mentoring Roadmap benefit + Competition Preparation Support benefit;
+- `competition_ready_bundle`, Rp2.500.000: Super Intensive offering + Detailed Performance Report + Mock Judging Simulation + Final-Stage Preparation Support benefit;
+- `competition_assurance_bundle`, Rp3.000.000: Super Intensive offering + Detailed Performance Report + Mock Judging Simulation + Win Guarantee Protection.
+
+The bundle price is persisted exactly and is not computed from its components. The Competition Assurance bundle is marked conditional consistently with its included guarantee add-on.
+
+Intensive included benefits are seeded from the guidebook's program/package descriptions, including Dedicated Mentor, Personalized Learning Roadmap, Core Concepts and Practical Frameworks, Hands-On Assignments, Templates and Winning References, Competition Timeline, Competition Recommendation, Continuous Feedback and Refinement, Progress Monitoring, and Final Evaluation.
+
+### 11.3 Data not bootstrapped
+
+No Big Class or Digital Product rows are seeded. Existing names, prices, cohorts, formats, and download claims for those domains are unapproved demo material. Their public sections render honest empty/coming-soon states until an approved master is entered and published.
 
 ## 12. Retired and narrowed sources
 
 - `lib/catalog.ts` stops owning product records and prices; its consumers move to the typed catalog query boundary.
-- Commercial arrays in `lib/program-information.ts` are removed. The file retains only editorial storytelling, learning-path explanation, topic explanation, journey copy, and comparable non-commercial content.
+- Commercial arrays in `lib/program-information.ts` are removed. The file retains only editorial storytelling, journey copy, and explanatory copy maps keyed by Product Master delivery-option/benefit codes; it does not retain independent learning-path, topic, benefit, offering, or price lists.
 - The admin `services`, Digital Product, and Big Class management arrays are removed and replaced by persistent catalog management.
 - `lib/demo-store.ts` no longer owns `programOptions`/`services` as a catalog. Other simulated order, enrollment, scheduling, and dashboard fixtures remain explicitly outside Product Master and outside this task.
 - The simulated checkout compatibility input is generated from Product Master rather than a hardcoded product array.
