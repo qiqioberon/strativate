@@ -57,3 +57,26 @@ test('mobile menu is accessible, navigates natively, and avoids overflow', async
   await expect(page).toHaveURL(/\/program$/)
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
+
+test('marketing footer spans the viewport and stacks its content rows', async ({ page }) => {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+
+    const footer = page.getByRole('contentinfo')
+    const footerBox = await footer.boundingBox()
+    const gridBox = await footer.locator('.marketing-footer__grid').boundingBox()
+    const bottomBox = await footer.locator('.marketing-footer__bottom').boundingBox()
+
+    expect(footerBox).not.toBeNull()
+    expect(gridBox).not.toBeNull()
+    expect(bottomBox).not.toBeNull()
+    expect(footerBox!.x).toBe(0)
+    expect(footerBox!.width).toBe(viewport.width)
+    expect(bottomBox!.y).toBeGreaterThanOrEqual(gridBox!.y + gridBox!.height)
+    await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
+  }
+})
