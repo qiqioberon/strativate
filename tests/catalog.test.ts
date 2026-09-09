@@ -10,6 +10,13 @@ import {
 import { formatRupiah } from '../lib/catalog/format'
 import { filterCatalogProducts } from '../lib/catalog/admin'
 import { toLegacyCheckoutItem } from '../lib/catalog/compatibility'
+import {
+  catalogPriceLabel,
+  directCheckoutOfferings,
+  selectDigitalProducts,
+  selectHomepagePrograms,
+  selectProgramDirectory,
+} from '../lib/catalog/presentation'
 import { getPublicCatalogProductFrom, listPublicCatalogFrom, type CatalogPublicDataSource } from '../lib/catalog/public-data'
 import { createPendingOrder } from '../lib/demo-store'
 
@@ -165,4 +172,63 @@ test('public query boundary assembles only the requested product from stable row
   assert.deepEqual(list.map((product) => product.id), [privateProduct.id])
   const detail = await getPublicCatalogProductFrom(source, privateProduct.slug)
   assert.equal(detail?.commercialItems[0].id, fixedItem.id)
+})
+
+test('catalog presentation labels fixed, quotation, and empty offerings without inventing prices', () => {
+  const fixed = assembleCatalogSummary(privateProduct, [fixedItem])
+  const quotationProduct = {
+    ...privateProduct,
+    id: 'product-quotation',
+    code: 'quotation',
+    slug: 'quotation',
+  }
+  const quotation = assembleCatalogSummary(quotationProduct, [{ ...quotationItem, product_id: quotationProduct.id }])
+  const empty = assembleCatalogSummary({
+    ...privateProduct,
+    id: 'product-empty',
+    code: 'empty',
+    slug: 'empty',
+  }, [])
+
+  assert.equal(catalogPriceLabel(fixed), 'Mulai Rp885.000')
+  assert.equal(catalogPriceLabel(quotation), 'Sesuai konsultasi')
+  assert.equal(catalogPriceLabel(empty), 'Segera hadir')
+})
+
+test('marketing selectors preserve Product Master order, featured state, and product type', () => {
+  const products = [
+    { ...assembleCatalogSummary(privateProduct, [fixedItem]), id: 'private', sortOrder: 20 },
+    { ...assembleCatalogSummary({ ...privateProduct, id: 'intensive', product_type: 'intensive_mentoring' as const }, []), id: 'intensive', sortOrder: 30 },
+    { ...assembleCatalogSummary({ ...privateProduct, id: 'big', product_type: 'big_class' as const }, []), id: 'big', sortOrder: 40 },
+    { ...assembleCatalogSummary({ ...privateProduct, id: 'digital', product_type: 'digital_product' as const }, []), id: 'digital', sortOrder: 10 },
+    { ...assembleCatalogSummary({ ...privateProduct, id: 'not-featured' }, []), id: 'not-featured', isFeatured: false, sortOrder: 5 },
+  ]
+
+  assert.deepEqual(selectProgramDirectory(products).map(product => product.id), ['not-featured', 'private', 'intensive', 'big'])
+  assert.deepEqual(selectDigitalProducts(products).map(product => product.id), ['digital'])
+  assert.deepEqual(selectHomepagePrograms(products).map(product => product.id), ['private', 'intensive', 'big'])
+})
+
+test('direct checkout accepts only fixed sellable offerings on direct-checkout products', () => {
+  const digitalProduct = {
+    ...privateProduct,
+    id: 'product-digital',
+    code: 'digital',
+    slug: 'digital',
+    product_type: 'digital_product' as const,
+    default_purchase_flow: 'direct_checkout' as const,
+  }
+  const digitalFixed = { ...fixedItem, id: 'digital-fixed', product_id: digitalProduct.id }
+  const digitalQuote = { ...quotationItem, id: 'digital-quote', product_id: digitalProduct.id }
+  const digitalHidden = { ...fixedItem, id: 'digital-hidden', product_id: digitalProduct.id, is_sellable: false }
+  const rows: CatalogAssemblyRows = {
+    items: [digitalFixed, digitalQuote, digitalHidden],
+    privateOfferings: [], intensiveOfferings: [], deliveryOptions: [], itemBenefits: [],
+    addOnApplicability: [], bundleComponents: [], digitalDetails: [], addOns: [], bundles: [],
+  }
+  const directDetail = assembleCatalogDetail(digitalProduct, rows)
+  const consultationDetail = assembleCatalogDetail({ ...digitalProduct, default_purchase_flow: 'consultation_offer' }, rows)
+
+  assert.deepEqual(directCheckoutOfferings(directDetail).map(item => item.id), ['digital-fixed'])
+  assert.deepEqual(directCheckoutOfferings(consultationDetail), [])
 })
