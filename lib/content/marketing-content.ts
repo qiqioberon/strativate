@@ -83,5 +83,5 @@ export const bigClassPlaceholder = {
   kicker: 'Program kelompok',
   description: 'Informasi program, jadwal, pengajar, dan harga sedang menunggu master konten Strativate.',
   contentStatus: 'placeholder',
-  cover: 'programs.bigClass.cover' as AssetKey,
+  cover: 'programs.bigClass.cover' as const,
 }

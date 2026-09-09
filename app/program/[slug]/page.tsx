@@ -1,26 +1,22 @@
-import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ArrowLeft, ArrowRight, Check, Clock3, Layers3, Video } from 'lucide-react'
-import { getCatalogItem, catalogItems } from '@/lib/catalog'
-import { displayLabel } from '@/lib/labels'
-import { getProgramInformation } from '@/lib/program-information'
+import { getPublicCatalogProduct, listPublicCatalog } from '@/lib/catalog/public'
 import { resolveMentoringSlug } from '@/lib/program-routes'
-import { ProgramInformationDetail } from '@/components/programs/program-detail'
+import { MarketingShell } from '@/components/marketing/marketing-shell'
+import { ProductDetail } from '@/components/programs/program-detail'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const item = getCatalogItem(resolveMentoringSlug(slug) || slug)
-  return item ? { title: `${item.title} | Strativate`, description: item.description } : {}
+  const canonical = resolveMentoringSlug(slug) ?? slug
+  const product = await getPublicCatalogProduct(canonical)
+  return product ? { title: `${product.title} | Strativate`, description: product.shortDescription } : {}
 }
 
-export function generateStaticParams() { return catalogItems.map((item) => ({ slug: item.slug })) }
 export default async function ProgramDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const canonical = resolveMentoringSlug(slug)
   if (canonical && canonical !== slug) permanentRedirect(`/program/${canonical}`)
-  const information = getProgramInformation(slug)
-  if (information) return <ProgramInformationDetail program={information} />
-  const item = getCatalogItem(slug); if (!item) notFound()
-  return <main className="detail-page"><Link href="/explore" className="back-link"><ArrowLeft size={15} /> Kembali ke Jelajahi Program</Link><section className="detail-hero"><div><p className="kicker">{displayLabel(item.category)} / {item.kicker}</p><h1>{item.title}</h1><p className="detail-lede">{item.detail}</p><div className="detail-price"><strong>{item.priceLabel}</strong><span>pembelian satu kali</span></div><Link href={`/checkout/${item.slug}`} className="primary-cta">Sesuaikan program ini <ArrowRight size={16} /></Link></div><aside className="detail-summary"><p className="kicker">Sekilas program</p><div><Clock3 size={17} /><span>{item.duration}</span></div><div><Video size={17} /><span>{item.format}</span></div><div><Layers3 size={17} /><span>{item.sessions ? `${item.sessions} sesi terbimbing` : 'Akses digital langsung'}</span></div></aside></section><section className="detail-sections"><div><p className="kicker">Hal yang akan kamu pelajari</p><h2>Langkah praktis dari tahapmu saat ini menuju tujuan berikutnya.</h2></div><ul>{item.outcomes.map((outcome) => <li key={outcome}><Check size={17} />{outcome}</li>)}</ul></section></main>
+  const [product, comparisons] = await Promise.all([getPublicCatalogProduct(slug), listPublicCatalog()])
+  if (!product) notFound()
+  return <MarketingShell><ProductDetail product={product} comparisons={comparisons} /></MarketingShell>
 }

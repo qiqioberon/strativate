@@ -11,7 +11,13 @@ import {
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
-import { mentoringPrograms } from '@/lib/program-information'
+import {
+  selectDigitalProducts,
+  selectHomepagePrograms,
+  toMarketingDigitalProduct,
+  toMarketingProgram,
+} from '@/lib/catalog/presentation'
+import type { CatalogProductSummary } from '@/lib/catalog/types'
 import {
   bigClassPlaceholder,
   faqPreview,
@@ -25,33 +31,25 @@ import { AssetMedia } from './asset-media'
 import { MentorCard } from './mentor-card'
 import { ProgramCard, type MarketingProgram } from './program-card'
 
-const homePrograms: MarketingProgram[] = [
-  ...mentoringPrograms.map((program, index) => ({
-    number: `0${index + 1}`,
-    title: program.title,
-    kicker: program.kicker,
-    description: program.description,
-    highlights: program.highlights,
-    priceLabel: program.priceLabel,
-    priceContext: program.priceContext,
-    href: `/program/${program.slug}`,
-    assetKey: `programs.${index === 0 ? 'private' : 'intensive'}.cover` as const,
-    status: 'approved' as const,
-    tone: index === 0 ? 'orange' as const : 'red' as const,
-  })),
-  {
-    number: '03',
-    title: bigClassPlaceholder.title,
-    kicker: bigClassPlaceholder.kicker,
-    description: bigClassPlaceholder.description,
-    highlights: [],
-    assetKey: bigClassPlaceholder.cover,
-    status: 'placeholder',
-    tone: 'yellow',
-  },
-]
+export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductSummary[] }) {
+  const featuredPrograms = selectHomepagePrograms(catalogProducts)
+  const homePrograms: MarketingProgram[] = featuredPrograms.map(toMarketingProgram)
+  const hasPublishedBigClass = catalogProducts.some(product => product.productType === 'big_class')
+  if (!hasPublishedBigClass) {
+    homePrograms.push({
+      id: 'big-class-placeholder',
+      number: String(homePrograms.length + 1).padStart(2, '0'),
+      title: bigClassPlaceholder.title,
+      kicker: bigClassPlaceholder.kicker,
+      description: bigClassPlaceholder.description,
+      highlights: [],
+      assetKey: bigClassPlaceholder.cover,
+      status: 'placeholder',
+      tone: 'yellow',
+    })
+  }
+  const digitalProducts = selectDigitalProducts(catalogProducts).map(toMarketingDigitalProduct)
 
-export function HomePage() {
   return (
     <main>
       <section className="marketing-hero">
@@ -103,7 +101,7 @@ export function HomePage() {
             <Link className="marketing-text-link" href="/program">Lihat semua program <ArrowRight data-icon="arrow" size={16} /></Link>
           </div>
           <div className="marketing-program-grid">
-            {homePrograms.map((program) => <ProgramCard key={program.number} program={program} />)}
+            {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
           </div>
         </div>
       </section>
@@ -144,19 +142,22 @@ export function HomePage() {
           <div className="marketing-products__intro">
             <p className="marketing-kicker">Produk digital</p>
             <h2 id="product-heading">Materi yang siap<br /><em>mengikuti ritmemu.</em></h2>
-            <p>Sampul, nama, format, dan harga final belum dipublikasikan. Slot ini sudah disiapkan agar katalog dapat diperbarui langsung dari data dan registry aset.</p>
+            <p>{digitalProducts.length > 0
+              ? 'Pilih materi mandiri yang telah dipublikasikan langsung dari katalog Strativate.'
+              : 'Sampul, nama, format, dan harga final belum dipublikasikan. Slot ini sudah disiapkan agar katalog dapat diperbarui langsung dari data dan registry aset.'}</p>
             <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/produk-digital">
               Lihat ruang produk <ArrowRight data-icon="arrow" size={16} />
             </Link>
           </div>
           <div className="marketing-product-stack">
-            {productPlaceholders.map((product, index) => (
+            {(digitalProducts.length > 0 ? digitalProducts : productPlaceholders).map((product, index) => (
               <article className="marketing-product-card" key={product.id}>
                 <AssetMedia assetKey={product.cover} decorative sizes="(max-width: 760px) 32vw, 13vw" />
                 <div>
                   <span>{product.eyebrow}</span>
-                  <h3>{product.title}</h3>
+                  <h3>{'href' in product ? <Link href={product.href}>{product.title}</Link> : product.title}</h3>
                   <p>{product.description}</p>
+                  {'priceLabel' in product ? <p>{product.priceLabel}</p> : null}
                 </div>
                 <strong aria-hidden="true">0{index + 1}</strong>
               </article>

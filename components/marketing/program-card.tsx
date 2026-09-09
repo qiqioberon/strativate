@@ -2,10 +2,11 @@ import { ArrowRight, Check, Clock3, Layers3, Sparkles, UsersRound } from 'lucide
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
-import type { AssetKey } from '@/lib/content/asset-registry'
+import type { CatalogMarketingProgram } from '@/lib/catalog/presentation'
 import { cn } from '@/lib/utils'
 
-export type MarketingProgram = {
+export type MarketingProgram = CatalogMarketingProgram | {
+  id: string
   number: string
   title: string
   kicker: string
@@ -14,9 +15,9 @@ export type MarketingProgram = {
   priceLabel?: string
   priceContext?: string
   href?: string
-  assetKey: AssetKey
-  status?: 'approved' | 'placeholder'
-  tone: 'orange' | 'red' | 'yellow'
+  assetKey: 'programs.bigClass.cover'
+  status: 'placeholder'
+  tone: 'yellow'
 }
 
 const programIcons = {

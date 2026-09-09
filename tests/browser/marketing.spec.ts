@@ -22,6 +22,7 @@ test('homepage uses real dedicated marketing links and safe editorial previews',
   await expect(page.getByRole('heading', { name: 'Mentor yang tepat, tanpa tebakan.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Materi yang siap mengikuti ritmemu.' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Lihat Mentoring Privat' })).toHaveAttribute('href', '/program/private-mentoring')
+  await expect(page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' })).toContainText('Rp300.000')
   await expect(page.getByText(/Alvin Haryanto|Universitas mitra|15\+ kemenangan|di 4 negara/)).toHaveCount(0)
 })
 
@@ -40,6 +41,18 @@ test('public mentor directory and protected mentor workspace remain distinct', a
 
   await page.goto('/mentor/dashboard')
   await expect(page).toHaveURL(/\/auth$/)
+})
+
+test('program and digital directories preserve the marketing shell and honest catalog states', async ({ page }) => {
+  await page.goto('/program')
+  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
+  await expect(page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' })).toContainText('Rp300.000')
+  await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
+
+  await page.goto('/produk-digital')
+  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
+  await expect(page.getByText('Belum tersedia untuk pembelian')).toHaveCount(2)
+  await expect(page.getByText(/Rp59\.000|Rp79\.000|Rp89\.000|Rp99\.000/)).toHaveCount(0)
 })
 
 test('mobile menu is accessible, navigates natively, and avoids overflow', async ({ page }) => {
