@@ -164,7 +164,7 @@
 .marketing-faq-list details[open] summary svg { transform: rotate(45deg); }
 .marketing-faq-list details p { max-width: 640px; padding: 0 46px 27px 49px; color: var(--marketing-muted); font-size: .75rem; line-height: 1.7; }
 
-.marketing-footer { color: #fff; background: #171314; }
+.marketing-footer { display: block; width: 100%; max-width: none; margin: 0; padding: 0; border-top: 0; color: #fff; background: #171314; }
 .marketing-footer__grid { display: grid; grid-template-columns: 1.1fr .75fr .85fr; gap: 70px; padding-block: 76px; }
 .marketing-footer__brand { padding: 5px 9px; background: #fff8f1; }
 .marketing-footer__lead > p { max-width: 420px; margin-top: 25px; color: #b8aaa2; font-size: .76rem; line-height: 1.7; }
