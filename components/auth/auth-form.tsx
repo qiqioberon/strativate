@@ -34,7 +34,7 @@ export function AuthForm() {
       if (error) throw error
     } catch (error) { setError(formError(error, 'Google belum dapat dihubungkan. Silakan coba lagi.')); setBusy(false) }
   }
-  return <><div className="auth-heading"><p className="kicker">{register ? 'Buat akunmu' : "Selamat datang kembali"}</p><h1>{register ? <>Mulai di <em>Strativate.</em></> : <>Siapkan langkah <em>berikutnya.</em></>}</h1><p>{register ? 'Masukkan email untuk menerima tautan verifikasi, lalu lengkapi profilmu.' : 'Masuk untuk melanjutkan persiapan bersama mentor dan materi yang sesuai.'}</p></div><form className="auth-form" onSubmit={submit}>
+  return <><div className="auth-heading"><p className="kicker">{register ? 'Mulai perjalananmu' : "Selamat datang kembali"}</p><h1>{register ? <>Daftar di <em>Strativate.</em></> : <>Raih kemenangan <em>berikutnya.</em></>}</h1><p>{register ? 'Masukkan email untuk menerima tautan verifikasi dan melengkapi profilmu.' : 'Masuk untuk melanjutkan perjalananmu bersama Strativate.'}</p></div><form className="auth-form" onSubmit={submit}>
     <label>Email<input name="email" type="email" required autoComplete="email" maxLength={254} disabled={busy} /></label>
     {!register && <PasswordInput label="Kata sandi" name="password" required autoComplete="current-password" disabled={busy} />}
     {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}

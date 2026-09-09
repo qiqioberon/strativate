@@ -24,6 +24,12 @@ export const catalogStatusLabels = {
   draft: 'Draf', published: 'Dipublikasikan', archived: 'Diarsipkan',
 } as const
 
+export function resolveCatalogProductType(value: unknown, existingType?: CatalogProductType): CatalogProductType {
+  if (existingType) return existingType
+  if (typeof value === 'string' && value in catalogProductTypeLabels) return value as CatalogProductType
+  throw new Error('Jenis produk wajib dipilih.')
+}
+
 export function normalizeCatalogCode(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
 }

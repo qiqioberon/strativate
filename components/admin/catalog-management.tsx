@@ -5,7 +5,7 @@ import { Archive, ChevronRight, Plus, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formError } from '@/lib/auth/errors'
 import { formatRupiah } from '@/lib/catalog/format'
-import { catalogProductTypeLabels, catalogStatusLabels, filterCatalogProducts, normalizeCatalogCode, normalizeCatalogSlug } from '@/lib/catalog/admin'
+import { catalogProductTypeLabels, catalogStatusLabels, filterCatalogProducts, normalizeCatalogCode, normalizeCatalogSlug, resolveCatalogProductType } from '@/lib/catalog/admin'
 import type {
   CatalogAdminCommercialItem, CatalogAdminProduct, CatalogLifecycleStatus, CatalogMentorTier, CatalogProduct,
   CatalogSessionPackage,
@@ -68,7 +68,7 @@ export function CatalogManagement() {
     event.preventDefault()
     const form = event.currentTarget
     const values = new FormData(form)
-    const productType = String(values.get('product_type')) as CatalogProduct['product_type']
+    const productType = resolveCatalogProductType(values.get('product_type'), selected && !creating ? selected.product_type : undefined)
     const payload = {
       slug: normalizeCatalogSlug(String(values.get('slug'))),
       title: String(values.get('title')).trim(),

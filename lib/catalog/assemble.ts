@@ -193,16 +193,38 @@ function benefitFromRow(row: CatalogItemBenefitRow): CatalogBenefit {
   }
 }
 
+function compareCatalogOrder(
+  left: { sortOrder: number; title?: string; label?: string; id: string },
+  right: { sortOrder: number; title?: string; label?: string; id: string },
+) {
+  return left.sortOrder - right.sortOrder
+    || (left.title ?? left.label ?? '').localeCompare(right.title ?? right.label ?? '', 'id')
+    || left.id.localeCompare(right.id)
+}
+
 export function assembleCatalogDetail(
   product: CatalogProductRow,
   rows: CatalogAssemblyRows,
 ): CatalogProductDetail {
-  const itemRows = rows.items.filter((item) => item.product_id === product.id)
+  const itemRows = rows.items
+    .filter((item) => item.product_id === product.id)
+    .sort((left, right) => left.sort_order - right.sort_order || left.title.localeCompare(right.title, 'id') || left.id.localeCompare(right.id))
   const items = itemRows.map(assembleCommercialItem)
   const itemById = new Map(items.map((item) => [item.id, item]))
   const summary = assembleCatalogSummary(product, itemRows)
+  const compareByItemOrder = (left: { id: string }, right: { id: string }) => {
+    const leftItem = itemById.get(left.id)
+    const rightItem = itemById.get(right.id)
+    if (!leftItem) return rightItem ? 1 : left.id.localeCompare(right.id)
+    if (!rightItem) return -1
+    return compareCatalogOrder(leftItem, rightItem)
+  }
+  const benefitsForItem = (itemId: string) => rows.itemBenefits
+    .filter((row) => row.item_id === itemId)
+    .map(benefitFromRow)
+    .sort(compareCatalogOrder)
 
-  const privateRows = rows.privateOfferings.filter((row) => row.product_id === product.id)
+  const privateRows = rows.privateOfferings.filter((row) => row.product_id === product.id).sort(compareByItemOrder)
   const privateOfferings = privateRows.flatMap((row): CatalogPrivateOffering[] => {
     const item = itemById.get(row.id)
     if (!item || item.kind !== 'offering' || item.pricingMode !== 'fixed') return []
@@ -227,6 +249,7 @@ export function assembleCatalogDetail(
 
   const intensiveOfferings = rows.intensiveOfferings
     .filter((row) => row.product_id === product.id)
+    .sort(compareByItemOrder)
     .flatMap((row): CatalogIntensiveOffering[] => {
       const item = itemById.get(row.id)
       if (!item || item.kind !== 'offering') return []
@@ -255,6 +278,7 @@ export function assembleCatalogDetail(
       allowsCustomValue: row.allows_custom_value,
       sortOrder: row.sort_order,
     }))
+    .sort(compareCatalogOrder)
 
   const addOns: CatalogAddOn[] = rows.addOns
     .filter((row) => row.product_id === product.id)
@@ -268,9 +292,11 @@ export function assembleCatalogDetail(
         publicConditionSummary: subtype.public_condition_summary,
         applicableOfferingIds: rows.addOnApplicability
           .filter((row) => row.add_on_id === item.id)
-          .map((row) => row.offering_id),
+          .map((row) => row.offering_id)
+          .sort((left, right) => compareByItemOrder({ id: left }, { id: right })),
       }]
     })
+    .sort(compareCatalogOrder)
 
   const bundles: CatalogBundle[] = rows.bundles
     .filter((row) => row.product_id === product.id)
@@ -290,10 +316,24 @@ export function assembleCatalogDetail(
             code: row.component_code,
             title: row.component_title,
             quantity: row.quantity,
-          })),
-        benefits: rows.itemBenefits.filter((row) => row.item_id === item.id).map(benefitFromRow),
+          }))
+          .sort((left, right) => {
+            const kindOrder = { offering: 0, add_on: 1, benefit: 2 } as const
+            const leftOrder = left.kind === 'benefit'
+              ? rows.itemBenefits.find(row => row.item_id === item.id && row.benefit_id === left.id)?.sort_order
+              : itemById.get(left.id)?.sortOrder
+            const rightOrder = right.kind === 'benefit'
+              ? rows.itemBenefits.find(row => row.item_id === item.id && row.benefit_id === right.id)?.sort_order
+              : itemById.get(right.id)?.sortOrder
+            return (leftOrder ?? 0) - (rightOrder ?? 0)
+              || kindOrder[left.kind] - kindOrder[right.kind]
+              || left.title.localeCompare(right.title, 'id')
+              || left.id.localeCompare(right.id)
+          }),
+        benefits: benefitsForItem(item.id),
       }]
     })
+    .sort(compareCatalogOrder)
 
   const privateDetails = privateRows[0]
     ? {
@@ -314,7 +354,7 @@ export function assembleCatalogDetail(
     deliveryOptions,
     benefitsByItemId: Object.fromEntries(items.map((item) => [
       item.id,
-      rows.itemBenefits.filter((row) => row.item_id === item.id).map(benefitFromRow),
+      benefitsForItem(item.id),
     ])),
     privateDetails,
     digitalDetails: rows.digitalDetails.find((row) => row.product_id === product.id)

@@ -8,7 +8,7 @@ import {
   type CatalogAssemblyRows,
 } from '../lib/catalog/assemble'
 import { formatRupiah } from '../lib/catalog/format'
-import { filterCatalogProducts } from '../lib/catalog/admin'
+import { filterCatalogProducts, resolveCatalogProductType } from '../lib/catalog/admin'
 import { toLegacyCheckoutItem } from '../lib/catalog/compatibility'
 import {
   catalogPriceLabel,
@@ -47,6 +47,12 @@ test('admin catalog filter matches title/code and lifecycle/type together', () =
   assert.deepEqual(filterCatalogProducts(products, { query: 'private_mentoring', productType: 'all', status: 'published' }).map((product) => product.id), [privateProduct.id])
 })
 
+test('admin editing preserves the immutable product type when disabled fields are absent', () => {
+  assert.equal(resolveCatalogProductType(null, 'digital_product'), 'digital_product')
+  assert.equal(resolveCatalogProductType('big_class'), 'big_class')
+  assert.throws(() => resolveCatalogProductType(null), /Jenis produk/)
+})
+
 test('formats printed guidebook amounts without recomputing them', () => {
   assert.equal(formatRupiah(885000), 'Rp885.000')
   assert.equal(formatRupiah(1150000), 'Rp1.150.000')
@@ -80,6 +86,29 @@ test('private offering keeps stable commercial identity and independent per-sess
   assert.equal(detail.privateOfferings[0].perSessionPriceAmount, 285000)
   assert.equal(detail.privateOfferings[0].priceAmount, 885000)
   assert.deepEqual(detail.privateDetails, { sessionDurationMinutes: 75, minParticipants: 1, maxParticipants: 4 })
+})
+
+test('catalog detail follows Product Master sort order instead of database row order', () => {
+  const first = { ...fixedItem, id: 'offering-first', code: 'first', title: 'First', sort_order: 10 }
+  const second = { ...fixedItem, id: 'offering-second', code: 'second', title: 'Second', sort_order: 20 }
+  const rows: CatalogAssemblyRows = {
+    items: [second, first],
+    privateOfferings: [], intensiveOfferings: [],
+    deliveryOptions: [
+      { id: 'delivery-second', product_id: privateProduct.id, kind: 'focus_topic', code: 'second', label: 'Second', allows_custom_value: false, sort_order: 20 },
+      { id: 'delivery-first', product_id: privateProduct.id, kind: 'focus_topic', code: 'first', label: 'First', allows_custom_value: false, sort_order: 10 },
+    ],
+    itemBenefits: [
+      { product_id: privateProduct.id, item_id: first.id, item_code: first.code, benefit_id: 'benefit-second', benefit_code: 'second', benefit_label: 'Second', benefit_description: null, sort_order: 20 },
+      { product_id: privateProduct.id, item_id: first.id, item_code: first.code, benefit_id: 'benefit-first', benefit_code: 'first', benefit_label: 'First', benefit_description: null, sort_order: 10 },
+    ],
+    addOnApplicability: [], bundleComponents: [], digitalDetails: [], addOns: [], bundles: [],
+  }
+
+  const detail = assembleCatalogDetail(privateProduct, rows)
+  assert.deepEqual(detail.offerings.map(item => item.id), [first.id, second.id])
+  assert.deepEqual(detail.deliveryOptions.map(item => item.id), ['delivery-first', 'delivery-second'])
+  assert.deepEqual(detail.benefitsByItemId[first.id].map(item => item.id), ['benefit-first', 'benefit-second'])
 })
 
 test('bundle composition remains typed relationships rather than description parsing', () => {
