@@ -473,6 +473,18 @@ select i.id, i.product_id, c.scope, c.sessions_per_month
 from public.catalog_commercial_items i join public.catalog_intensive_offering_configs c on c.id = i.id
 join public.catalog_products p on p.id = i.product_id
 where i.status = 'published' and i.kind = 'offering' and p.status = 'published' and p.is_public;
+create view public.public_catalog_add_ons with (security_invoker = true, security_barrier = true) as
+select a.id, a.product_id, a.kind, a.is_conditional, a.public_condition_summary
+from public.catalog_add_ons a
+join public.catalog_commercial_items i on i.id = a.id
+join public.catalog_products p on p.id = a.product_id
+where i.status = 'published' and i.kind = 'add_on' and p.status = 'published' and p.is_public;
+create view public.public_catalog_bundles with (security_invoker = true, security_barrier = true) as
+select b.id, b.product_id, b.kind, b.is_conditional, b.public_condition_summary
+from public.catalog_bundles b
+join public.catalog_commercial_items i on i.id = b.id
+join public.catalog_products p on p.id = b.product_id
+where i.status = 'published' and i.kind = 'bundle' and p.status = 'published' and p.is_public;
 create view public.public_catalog_delivery_options with (security_invoker = true, security_barrier = true) as
 select d.id, d.product_id, d.kind, d.code, d.label, d.allows_custom_value, d.sort_order
 from public.catalog_delivery_options d join public.catalog_products p on p.id = d.product_id
@@ -511,7 +523,8 @@ create view public.public_catalog_digital_details with (security_invoker = true,
 select d.product_id, d.content_type from public.catalog_digital_product_details d join public.catalog_products p on p.id = d.product_id
 where p.status = 'published' and p.is_public;
 grant select on public.public_catalog_products, public.public_catalog_commercial_items, public.public_catalog_private_offerings,
-  public.public_catalog_intensive_offerings, public.public_catalog_delivery_options, public.public_catalog_item_benefits,
+  public.public_catalog_intensive_offerings, public.public_catalog_add_ons, public.public_catalog_bundles,
+  public.public_catalog_delivery_options, public.public_catalog_item_benefits,
   public.public_catalog_add_on_applicability, public.public_catalog_bundle_components, public.public_catalog_digital_details to anon, authenticated;
 grant select on all tables in schema public to service_role;
 
