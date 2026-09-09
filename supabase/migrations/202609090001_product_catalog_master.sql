@@ -224,6 +224,128 @@ end $$;
 create trigger catalog_products_identity before update on public.catalog_products for each row execute function public.catalog_protect_identity();
 create trigger catalog_items_identity before update on public.catalog_commercial_items for each row execute function public.catalog_protect_identity();
 
+create function public.catalog_protect_definition_identity() returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if new.id <> old.id or new.product_id <> old.product_id or new.code <> old.code then
+    raise exception 'Stable catalog definition identity cannot be changed' using errcode = '22023';
+  end if;
+  if tg_table_name <> 'catalog_benefits' then
+    if new.product_type <> old.product_type then
+      raise exception 'Catalog definition product type cannot be changed' using errcode = '22023';
+    end if;
+  end if;
+  if tg_table_name = 'catalog_session_packages' then
+    if old.status <> 'draft' and new.session_count <> old.session_count then
+      raise exception 'Create a new session package identity to change session count' using errcode = '22023';
+    end if;
+  end if;
+  if old.status = 'archived' and new is distinct from old then
+    raise exception 'Archived catalog definition is immutable' using errcode = '22023';
+  end if;
+  if old.status <> 'draft' and new.status = 'draft' then
+    raise exception 'Published catalog definition cannot return to draft' using errcode = '22023';
+  end if;
+  if old.status = 'published' and new.status = 'archived' then
+    if tg_table_name = 'catalog_mentor_tiers' then
+      if exists (select 1 from public.catalog_private_offering_configs c join public.catalog_commercial_items i on i.id = c.id where c.mentor_tier_id = old.id and i.status = 'published') then
+        raise exception 'Archive dependent published offerings before this mentor tier' using errcode = '22023';
+      end if;
+    elsif tg_table_name = 'catalog_session_packages' then
+      if exists (select 1 from public.catalog_private_offering_configs c join public.catalog_commercial_items i on i.id = c.id where c.session_package_id = old.id and i.status = 'published') then
+        raise exception 'Archive dependent published offerings before this session package' using errcode = '22023';
+      end if;
+    elsif tg_table_name = 'catalog_benefits' then
+      if exists (select 1 from public.catalog_offering_benefits r join public.catalog_commercial_items i on i.id = r.offering_id where r.benefit_id = old.id and i.status = 'published')
+        or exists (select 1 from public.catalog_bundle_benefits r join public.catalog_commercial_items i on i.id = r.bundle_id where r.benefit_id = old.id and i.status = 'published') then
+        raise exception 'Archive dependent published commercial items before this benefit' using errcode = '22023';
+      end if;
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger catalog_mentor_tiers_identity before update on public.catalog_mentor_tiers for each row execute function public.catalog_protect_definition_identity();
+create trigger catalog_session_packages_identity before update on public.catalog_session_packages for each row execute function public.catalog_protect_definition_identity();
+create trigger catalog_delivery_options_identity before update on public.catalog_delivery_options for each row execute function public.catalog_protect_definition_identity();
+create trigger catalog_benefits_identity before update on public.catalog_benefits for each row execute function public.catalog_protect_definition_identity();
+
+create function public.catalog_protect_typed_structure() returns trigger language plpgsql security invoker set search_path = '' as $$
+declare v_status public.catalog_lifecycle_status;
+begin
+  if tg_table_name in ('catalog_offerings', 'catalog_add_ons', 'catalog_bundles') then
+    if new.id <> old.id or new.product_id <> old.product_id or new.kind <> old.kind then
+      raise exception 'Typed commercial identity cannot be changed' using errcode = '22023';
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'catalog_digital_product_details' then
+    if new.product_id <> old.product_id or new.product_type <> old.product_type then
+      raise exception 'Digital Product identity cannot be changed' using errcode = '22023';
+    end if;
+    select status into v_status from public.catalog_products where id = old.product_id;
+    if v_status <> 'draft' and new.content_type <> old.content_type then
+      raise exception 'Create a new product identity to change published digital content type' using errcode = '22023';
+    end if;
+    return new;
+  end if;
+
+  if new.id <> old.id or new.product_id <> old.product_id then
+    raise exception 'Commercial configuration identity cannot be changed' using errcode = '22023';
+  end if;
+  select status into v_status from public.catalog_commercial_items where id = old.id;
+  if tg_table_name = 'catalog_private_offering_configs' then
+    if v_status <> 'draft' and (new.mentor_tier_id <> old.mentor_tier_id or new.session_package_id <> old.session_package_id) then
+      raise exception 'Create a new commercial identity to change mentor tier or session package' using errcode = '22023';
+    end if;
+  elsif tg_table_name = 'catalog_intensive_offering_configs' then
+    if v_status <> 'draft' and (new.scope <> old.scope or new.sessions_per_month is distinct from old.sessions_per_month) then
+      raise exception 'Create a new commercial identity to change Intensive package meaning' using errcode = '22023';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger catalog_offerings_identity before update on public.catalog_offerings for each row execute function public.catalog_protect_typed_structure();
+create trigger catalog_add_ons_identity before update on public.catalog_add_ons for each row execute function public.catalog_protect_typed_structure();
+create trigger catalog_bundles_identity before update on public.catalog_bundles for each row execute function public.catalog_protect_typed_structure();
+create trigger catalog_private_configs_identity before update on public.catalog_private_offering_configs for each row execute function public.catalog_protect_typed_structure();
+create trigger catalog_intensive_configs_identity before update on public.catalog_intensive_offering_configs for each row execute function public.catalog_protect_typed_structure();
+create trigger catalog_digital_details_identity before update on public.catalog_digital_product_details for each row execute function public.catalog_protect_typed_structure();
+
+create function public.catalog_protect_structure_deletion() returns trigger language plpgsql security invoker set search_path = '' as $$
+declare v_status public.catalog_lifecycle_status;
+begin
+  if tg_table_name in ('catalog_private_mentoring_details', 'catalog_digital_product_details') then
+    select status into v_status from public.catalog_products where id = old.product_id;
+  else
+    select status into v_status from public.catalog_commercial_items where id = old.id;
+  end if;
+  if v_status is distinct from 'draft' then
+    raise exception 'Published or archived catalog structure cannot be deleted' using errcode = '22023';
+  end if;
+  return old;
+end $$;
+create trigger catalog_offerings_delete_guard before delete on public.catalog_offerings for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_add_ons_delete_guard before delete on public.catalog_add_ons for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_bundles_delete_guard before delete on public.catalog_bundles for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_private_configs_delete_guard before delete on public.catalog_private_offering_configs for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_intensive_configs_delete_guard before delete on public.catalog_intensive_offering_configs for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_private_details_delete_guard before delete on public.catalog_private_mentoring_details for each row execute function public.catalog_protect_structure_deletion();
+create trigger catalog_digital_details_delete_guard before delete on public.catalog_digital_product_details for each row execute function public.catalog_protect_structure_deletion();
+
+create function public.catalog_protect_deletion() returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if old.status <> 'draft' then
+    raise exception 'Published or archived catalog identities must be archived, not deleted' using errcode = '22023';
+  end if;
+  return old;
+end $$;
+create trigger catalog_products_delete_guard before delete on public.catalog_products for each row execute function public.catalog_protect_deletion();
+create trigger catalog_items_delete_guard before delete on public.catalog_commercial_items for each row execute function public.catalog_protect_deletion();
+create trigger catalog_mentor_tiers_delete_guard before delete on public.catalog_mentor_tiers for each row execute function public.catalog_protect_deletion();
+create trigger catalog_session_packages_delete_guard before delete on public.catalog_session_packages for each row execute function public.catalog_protect_deletion();
+create trigger catalog_delivery_options_delete_guard before delete on public.catalog_delivery_options for each row execute function public.catalog_protect_deletion();
+create trigger catalog_benefits_delete_guard before delete on public.catalog_benefits for each row execute function public.catalog_protect_deletion();
+
 create function public.catalog_require_draft_composition() returns trigger language plpgsql security invoker set search_path = '' as $$
 declare v_item uuid; v_status public.catalog_lifecycle_status;
 begin
@@ -291,6 +413,16 @@ begin
   then raise exception 'Included benefits must be published' using errcode = '22023'; end if;
 end $$;
 
+create function public.catalog_validate_published_item_trigger() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.status = 'published' then perform public.catalog_validate_commercial_item(new.id); end if;
+  return new;
+end $$;
+create trigger catalog_items_validate_published
+after insert or update of status, pricing_mode, price_amount, reference_price_amount, is_sellable
+on public.catalog_commercial_items for each row execute function public.catalog_validate_published_item_trigger();
+
 create function public.set_catalog_commercial_item_status(p_item_id uuid, p_status public.catalog_lifecycle_status) returns public.catalog_commercial_items
 language plpgsql security definer set search_path = '' as $$
 declare v_row public.catalog_commercial_items;
@@ -301,6 +433,16 @@ begin
   if v_row.status = 'archived' and p_status <> 'archived' then raise exception 'Archived identity cannot be republished' using errcode = '22023'; end if;
   if p_status = 'published' then perform public.catalog_validate_commercial_item(p_item_id); end if;
   if p_status = 'draft' and v_row.status <> 'draft' then raise exception 'Published identity cannot return to draft' using errcode = '22023'; end if;
+  if p_status = 'archived' and exists (
+    select 1
+    from (
+      select bundle_id from public.catalog_bundle_offerings where offering_id = p_item_id
+      union all
+      select bundle_id from public.catalog_bundle_add_ons where add_on_id = p_item_id
+    ) dependency
+    join public.catalog_commercial_items bundle on bundle.id = dependency.bundle_id
+    where bundle.status = 'published'
+  ) then raise exception 'Archive dependent published bundles before this component' using errcode = '22023'; end if;
   update public.catalog_commercial_items set status = p_status,
     published_at = case when p_status = 'published' then coalesce(published_at, now()) else published_at end,
     archived_at = case when p_status = 'archived' then coalesce(archived_at, now()) else null end
@@ -409,22 +551,22 @@ begin
   end loop;
 end $$;
 
-create policy catalog_offerings_public_read on public.catalog_offerings for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = catalog_offerings.id and i.status = 'published'));
-create policy catalog_add_ons_public_read on public.catalog_add_ons for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = catalog_add_ons.id and i.status = 'published'));
-create policy catalog_bundles_public_read on public.catalog_bundles for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = catalog_bundles.id and i.status = 'published'));
+create policy catalog_offerings_public_read on public.catalog_offerings for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = catalog_offerings.id and i.status = 'published' and p.status='published' and p.is_public));
+create policy catalog_add_ons_public_read on public.catalog_add_ons for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = catalog_add_ons.id and i.status = 'published' and p.status='published' and p.is_public));
+create policy catalog_bundles_public_read on public.catalog_bundles for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = catalog_bundles.id and i.status = 'published' and p.status='published' and p.is_public));
 create policy catalog_private_details_public_read on public.catalog_private_mentoring_details for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
 create policy catalog_tiers_public_read on public.catalog_mentor_tiers for select to anon, authenticated using (status = 'published' and exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
 create policy catalog_packages_public_read on public.catalog_session_packages for select to anon, authenticated using (status = 'published' and exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
-create policy catalog_private_configs_public_read on public.catalog_private_offering_configs for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = catalog_private_offering_configs.id and i.status = 'published'));
-create policy catalog_intensive_configs_public_read on public.catalog_intensive_offering_configs for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = catalog_intensive_offering_configs.id and i.status = 'published'));
+create policy catalog_private_configs_public_read on public.catalog_private_offering_configs for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = catalog_private_offering_configs.id and i.status = 'published' and p.status='published' and p.is_public));
+create policy catalog_intensive_configs_public_read on public.catalog_intensive_offering_configs for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = catalog_intensive_offering_configs.id and i.status = 'published' and p.status='published' and p.is_public));
 create policy catalog_digital_details_public_read on public.catalog_digital_product_details for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
 create policy catalog_delivery_public_read on public.catalog_delivery_options for select to anon, authenticated using (status = 'published' and exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
 create policy catalog_benefits_public_read on public.catalog_benefits for select to anon, authenticated using (status = 'published' and exists (select 1 from public.catalog_products p where p.id = product_id and p.status = 'published' and p.is_public));
-create policy catalog_offering_benefits_public_read on public.catalog_offering_benefits for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i where i.id = offering_id and i.status = 'published'));
-create policy catalog_applicability_public_read on public.catalog_add_on_applicability for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items a where a.id = add_on_id and a.status = 'published') and exists (select 1 from public.catalog_commercial_items o where o.id = offering_id and o.status = 'published'));
-create policy catalog_bundle_offerings_public_read on public.catalog_bundle_offerings for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published') and exists (select 1 from public.catalog_commercial_items o where o.id = offering_id and o.status = 'published'));
-create policy catalog_bundle_add_ons_public_read on public.catalog_bundle_add_ons for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published') and exists (select 1 from public.catalog_commercial_items a where a.id = add_on_id and a.status = 'published'));
-create policy catalog_bundle_benefits_public_read on public.catalog_bundle_benefits for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published'));
+create policy catalog_offering_benefits_public_read on public.catalog_offering_benefits for select to anon, authenticated using (exists (select 1 from public.catalog_commercial_items i join public.catalog_products p on p.id=i.product_id where i.id = offering_id and i.status = 'published' and p.status='published' and p.is_public));
+create policy catalog_applicability_public_read on public.catalog_add_on_applicability for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id=catalog_add_on_applicability.product_id and p.status='published' and p.is_public) and exists (select 1 from public.catalog_commercial_items a where a.id = add_on_id and a.status = 'published') and exists (select 1 from public.catalog_commercial_items o where o.id = offering_id and o.status = 'published'));
+create policy catalog_bundle_offerings_public_read on public.catalog_bundle_offerings for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id=catalog_bundle_offerings.product_id and p.status='published' and p.is_public) and exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published') and exists (select 1 from public.catalog_commercial_items o where o.id = offering_id and o.status = 'published'));
+create policy catalog_bundle_add_ons_public_read on public.catalog_bundle_add_ons for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id=catalog_bundle_add_ons.product_id and p.status='published' and p.is_public) and exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published') and exists (select 1 from public.catalog_commercial_items a where a.id = add_on_id and a.status = 'published'));
+create policy catalog_bundle_benefits_public_read on public.catalog_bundle_benefits for select to anon, authenticated using (exists (select 1 from public.catalog_products p where p.id=catalog_bundle_benefits.product_id and p.status='published' and p.is_public) and exists (select 1 from public.catalog_commercial_items b where b.id = bundle_id and b.status = 'published'));
 
 revoke all on public.catalog_products, public.catalog_commercial_items, public.catalog_offerings, public.catalog_add_ons, public.catalog_bundles,
   public.catalog_private_mentoring_details, public.catalog_mentor_tiers, public.catalog_session_packages, public.catalog_private_offering_configs,
@@ -528,7 +670,8 @@ grant select on public.public_catalog_products, public.public_catalog_commercial
   public.public_catalog_add_on_applicability, public.public_catalog_bundle_components, public.public_catalog_digital_details to anon, authenticated;
 grant select on all tables in schema public to service_role;
 
-revoke all on function public.catalog_set_audit_fields(), public.catalog_protect_identity(), public.catalog_require_draft_composition(),
+revoke all on function public.catalog_set_audit_fields(), public.catalog_protect_identity(), public.catalog_protect_definition_identity(), public.catalog_protect_typed_structure(), public.catalog_protect_structure_deletion(), public.catalog_protect_deletion(), public.catalog_require_draft_composition(),
+  public.catalog_validate_published_item_trigger(),
   public.catalog_validate_commercial_item(uuid), public.set_catalog_commercial_item_status(uuid, public.catalog_lifecycle_status),
   public.set_catalog_product_status(uuid, public.catalog_lifecycle_status),
   public.create_catalog_commercial_item(uuid, public.catalog_commercial_item_kind, text, text, text, public.catalog_pricing_mode, bigint, bigint, boolean, integer, uuid, uuid, bigint, public.catalog_intensive_scope, integer, boolean, text)

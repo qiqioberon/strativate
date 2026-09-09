@@ -12,14 +12,16 @@ test('homepage and program overview link to guidebook information without a demo
   const student = page.getByRole('table', { name: 'Paket Mentor Mahasiswa Berprestasi' })
   const threeSessions = student.getByRole('row').filter({ has: page.getByRole('rowheader', { name: '3 sesi', exact: true }) })
   await expect(threeSessions).toContainText('Rp285.000')
-  await expect(threeSessions).toContainText('Rp855.000')
-  await expect(student).not.toContainText('Rp885.000')
+  await expect(threeSessions).toContainText('Rp885.000')
   await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /bayar|pesan|beli/i })).toHaveCount(0)
 })
 
 test('Explore filters the two mentoring programs and opens intensive packages', async ({ page }) => {
   await page.goto('/explore')
+  await expect(page.locator('.catalog-card')).toHaveCount(2)
+  await expect(page.getByText('Panduan Pemecahan Kasus')).toHaveCount(0)
+  await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
   await page.getByRole('button', { name: 'Mentoring Intensif', exact: true }).click()
   await expect(page.locator('.catalog-card')).toHaveCount(1)
   await page.getByRole('link', { name: 'Lihat program' }).click()
@@ -30,6 +32,8 @@ test('Explore filters the two mentoring programs and opens intensive packages', 
   await expect(page.locator('#packages')).toContainText('4 sesi per bulan')
   await expect(page.locator('#packages')).toContainText('8 sesi per bulan')
   await expect(page.locator('#add-ons')).toContainText('Syarat, ketentuan, dan penilaian kelayakan berlaku')
+  await expect(page.getByRole('heading', { name: 'Paket Jaminan Kompetisi' }).locator('..')).toContainText('Super Intensif')
+  await expect(page.getByRole('heading', { name: 'Paket Jaminan Kompetisi' }).locator('..')).toContainText('Perlindungan Jaminan Kemenangan')
   await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
 })
 

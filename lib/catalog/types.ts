@@ -127,6 +127,7 @@ export interface CatalogProductDetail extends CatalogProductSummary {
   privateOfferings: CatalogPrivateOffering[]
   intensiveOfferings: CatalogIntensiveOffering[]
   deliveryOptions: CatalogDeliveryOption[]
+  benefitsByItemId: Record<string, CatalogBenefit[]>
   privateDetails: {
     sessionDurationMinutes: number
     minParticipants: number

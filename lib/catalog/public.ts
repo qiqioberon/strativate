@@ -2,6 +2,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 import { getPublicCatalogProductFrom, listPublicCatalogFrom, type CatalogPublicDataSource } from './public-data'
+import { postgresTestCatalogSource } from './postgres-test-source'
 
 type PublicViews = Database['public']['Views']
 type ViewName = keyof PublicViews
@@ -36,9 +37,9 @@ const publicSource: CatalogPublicDataSource = {
 }
 
 export function listPublicCatalog() {
-  return listPublicCatalogFrom(publicSource)
+  return listPublicCatalogFrom(process.env.TEST_DATABASE_URL ? postgresTestCatalogSource : publicSource)
 }
 
 export function getPublicCatalogProduct(slug: string) {
-  return getPublicCatalogProductFrom(publicSource, slug)
+  return getPublicCatalogProductFrom(process.env.TEST_DATABASE_URL ? postgresTestCatalogSource : publicSource, slug)
 }

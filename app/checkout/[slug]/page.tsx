@@ -1,16 +1,28 @@
-'use client'
+import { notFound, permanentRedirect } from 'next/navigation'
+import { LegacyCheckout } from '@/components/checkout/legacy-checkout'
+import { toLegacyCheckoutItem } from '@/lib/catalog/compatibility'
+import { getPublicCatalogProduct } from '@/lib/catalog/public'
+import { resolveMentoringSlug } from '@/lib/program-routes'
 
-import Link from 'next/link'
-import { use, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, CreditCard } from 'lucide-react'
-import { getCatalogItem } from '@/lib/catalog'
-import { displayLabel } from '@/lib/labels'
-import { completePurchase, createPendingOrder, readState, writeState } from '@/lib/demo-store'
+export default async function CheckoutPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ item?: string }>
+}) {
+  const { slug } = await params
+  const mentoringSlug = resolveMentoringSlug(slug)
+  if (mentoringSlug) permanentRedirect(`/program/${mentoringSlug}`)
 
-export default function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params); const item = getCatalogItem(slug); const [step, setStep] = useState<'configure' | 'review' | 'success'>('configure'); const [subject, setSubject] = useState('L’Oréal Brandstorm'); const [goal, setGoal] = useState('Competition Focused'); const [mentor, setMentor] = useState('Let Strativate match me'); const [schedule, setSchedule] = useState('Weekday evenings'); if (!item) return null
-  if (item.informationOnly) return <main className="detail-page"><h1>{item.title}</h1><p className="detail-lede">{item.detail}</p><Link href={`/program/${item.slug}`} className="primary-cta">Lihat program <ArrowRight size={16} /></Link></main>
-  const pay = () => { const pending = createPendingOrder({ type: item.category === 'Digital Products' ? 'Digital Product' : item.category, title: item.title, productId: item.id, subject, price: item.priceLabel, amount: item.price, sessions: item.sessions, goal, mentorPreference: mentor, packageLabel: item.sessions ? `${item.sessions} Sesi` : 'Akses digital' }); const next = completePurchase(readState(), pending, 'QRIS'); writeState(next); setStep('success') }
-  if (step === 'success') return <main className="checkout-page success-page"><div className="success-mark"><Check size={28} /></div><p className="kicker">PEMBELIAN TERCATAT</p><h1>Semua sudah siap.<br /><em>Lanjutkan persiapanmu.</em></h1><p>Pembelian {item.title} sudah terhubung ke akun Strativate milikmu. {item.sessions ? 'Kami akan memberi tahu saat mentormu ditentukan.' : 'Produk digitalmu sudah tersedia di Koleksi.'}</p><div className="success-actions"><Link href="/dashboard" className="primary-cta">Buka program saya <ArrowRight size={16} /></Link><Link href="/explore" className="secondary-cta">Lihat program lain</Link></div></main>
-  return <main className="checkout-page"><Link href={`/program/${item.slug}`} className="back-link"><ArrowLeft size={15} /> Kembali ke program</Link><div className="checkout-head"><p className="kicker">PEMBAYARAN / {step === 'configure' ? 'PENGATURAN' : 'TINJAUAN'}</p><h1>{item.title}</h1><div className="checkout-steps"><span className="current">1 Pengaturan</span><span className={step === 'review' ? 'current' : ''}>2 Tinjauan</span><span>3 Berhasil</span></div></div>{step === 'configure' ? <section className="checkout-layout"><div className="config-panel"><h2>Sesuaikan program dengan kebutuhanmu.</h2><p>Pilih konteks yang membantu kami menyiapkan pengalaman yang sesuai.</p><label>Apa yang ingin kamu capai?<input value={subject} onChange={(event) => setSubject(event.target.value)} /></label><label>Tujuan utama<div className="choice-row">{['Competition Focused', 'Career Growth', 'Build confidence'].map((option) => <button key={option} className={goal === option ? 'selected' : ''} onClick={() => setGoal(option)}>{displayLabel(option)}</button>)}</div></label>{item.sessions > 0 && <><label>Pilihan mentor<div className="choice-row">{['Let Strativate match me', 'Albert L.', 'Navira A.'].map((option) => <button key={option} className={mentor === option ? 'selected' : ''} onClick={() => setMentor(option)}>{displayLabel(option)}</button>)}</div></label><label>Pilihan jadwal<div className="choice-row">{['Weekday evenings', 'Weekend mornings', 'Flexible scheduling'].map((option) => <button key={option} className={schedule === option ? 'selected' : ''} onClick={() => setSchedule(option)}>{displayLabel(option)}</button>)}</div></label></>}</div><aside className="checkout-card"><p className="kicker">Pilihanmu</p><h2>{item.title}</h2><p>{item.format} · {item.duration}</p><div className="checkout-total"><span>Total</span><strong>{item.priceLabel}</strong></div><button className="primary-cta full" onClick={() => setStep('review')}>Tinjau pesanan <ArrowRight size={16} /></button></aside></section> : <section className="review-card"><div><p className="kicker">TINJAUAN PESANAN</p><h2>Apakah semuanya sudah sesuai?</h2><p>{subject} · {displayLabel(goal)} · {item.sessions ? `${displayLabel(mentor)} · ${displayLabel(schedule)}` : 'Akses digital'}</p></div><div className="checkout-total"><span>Total pembayaran</span><strong>{item.priceLabel}</strong></div><button className="primary-cta full" onClick={pay}><CreditCard size={16} /> Bayar dengan QRIS</button></section>}</main>
+  const product = await getPublicCatalogProduct(slug)
+  if (!product) notFound()
+  if (product.defaultPurchaseFlow !== 'direct_checkout') permanentRedirect(`/program/${product.slug}`)
+
+  const requestedId = (await searchParams).item
+  const offeringId = requestedId ?? (product.offerings.length === 1 ? product.offerings[0].id : undefined)
+  if (!offeringId) notFound()
+  const item = toLegacyCheckoutItem(product, offeringId)
+  if (!item) notFound()
+  return <LegacyCheckout item={item} />
 }

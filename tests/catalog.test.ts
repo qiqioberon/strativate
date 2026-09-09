@@ -8,8 +8,10 @@ import {
   type CatalogAssemblyRows,
 } from '../lib/catalog/assemble'
 import { formatRupiah } from '../lib/catalog/format'
+import { filterCatalogProducts } from '../lib/catalog/admin'
 import { toLegacyCheckoutItem } from '../lib/catalog/compatibility'
 import { getPublicCatalogProductFrom, listPublicCatalogFrom, type CatalogPublicDataSource } from '../lib/catalog/public-data'
+import { createPendingOrder } from '../lib/demo-store'
 
 const privateProduct = {
   id: 'product-private', code: 'private_mentoring', slug: 'private-mentoring',
@@ -28,6 +30,15 @@ const quotationItem = {
   title: 'Kompetisi Internasional', pricing_mode: 'quotation_required' as const,
   price_amount: null, reference_price_amount: null,
 }
+
+test('admin catalog filter matches title/code and lifecycle/type together', () => {
+  const products = [
+    { ...privateProduct, status: 'published' as const },
+    { ...privateProduct, id: 'digital-draft', code: 'digital_handbook', title: 'Panduan Digital', product_type: 'digital_product' as const, status: 'draft' as const },
+  ]
+  assert.deepEqual(filterCatalogProducts(products, { query: 'digital', productType: 'digital_product', status: 'draft' }).map((product) => product.id), ['digital-draft'])
+  assert.deepEqual(filterCatalogProducts(products, { query: 'private_mentoring', productType: 'all', status: 'published' }).map((product) => product.id), [privateProduct.id])
+})
 
 test('formats printed guidebook amounts without recomputing them', () => {
   assert.equal(formatRupiah(885000), 'Rp885.000')
@@ -91,6 +102,14 @@ test('catalog summaries sort quotation after fixed prices without treating it as
   assert.deepEqual(sortCatalogProducts([quoteSummary, fixedSummary], 'price_asc').map(product => product.id), [privateProduct.id, quoteProduct.id])
 })
 
+test('starting price comes from a base offering, not a cheaper add-on', () => {
+  const summary = assembleCatalogSummary(privateProduct, [
+    fixedItem,
+    { ...fixedItem, id: 'addon-cheap', code: 'addon', kind: 'add_on', price_amount: 150000 },
+  ])
+  assert.equal(summary.startingPriceAmount, 885000)
+})
+
 test('legacy checkout compatibility accepts only a fixed sellable offering UUID', () => {
   const detail = assembleCatalogDetail(privateProduct, {
     items: [fixedItem], privateOfferings: [], intensiveOfferings: [], deliveryOptions: [],
@@ -110,6 +129,15 @@ test('legacy checkout compatibility accepts only a fixed sellable offering UUID'
     itemBenefits: [], addOnApplicability: [], bundleComponents: [], digitalDetails: [], addOns: [], bundles: [],
   })
   assert.equal(toLegacyCheckoutItem(quoteDetail, quotationItem.id), null)
+})
+
+test('simulated checkout keeps product and commercial identities distinct', () => {
+  const pending = createPendingOrder({
+    type: 'Digital Product', title: 'Panduan', productId: 'product-digital', commercialItemId: 'offering-digital',
+    subject: 'Panduan', price: 'Rp99.000', amount: 99000, sessions: 0,
+  })
+  assert.equal(pending.productId, 'product-digital')
+  assert.equal(pending.commercialItemId, 'offering-digital')
 })
 
 test('public query boundary returns honest empty states and propagates failures', async () => {

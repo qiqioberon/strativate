@@ -162,7 +162,7 @@ export function assembleCatalogSummary(
   product: CatalogProductRow,
   itemRows: CatalogCommercialItemRow[],
 ): CatalogProductSummary {
-  const productItems = itemRows.filter((item) => item.product_id === product.id && item.is_sellable)
+  const productItems = itemRows.filter((item) => item.product_id === product.id && item.is_sellable && item.kind === 'offering')
   const fixedPrices = productItems
     .filter((item) => item.pricing_mode === 'fixed' && item.price_amount !== null)
     .map((item) => item.price_amount as number)
@@ -312,6 +312,10 @@ export function assembleCatalogDetail(
     privateOfferings,
     intensiveOfferings,
     deliveryOptions,
+    benefitsByItemId: Object.fromEntries(items.map((item) => [
+      item.id,
+      rows.itemBenefits.filter((row) => row.item_id === item.id).map(benefitFromRow),
+    ])),
     privateDetails,
     digitalDetails: rows.digitalDetails.find((row) => row.product_id === product.id)
       ? { contentType: rows.digitalDetails.find((row) => row.product_id === product.id)!.content_type }

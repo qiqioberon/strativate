@@ -84,6 +84,8 @@ export type CatalogCommercialItem = {
   published_at: string | null; archived_at: string | null; created_by: string | null; updated_by: string | null
   created_at: string; updated_at: string
 }
+export type CatalogAdminProduct = Omit<CatalogProduct, "created_by" | "updated_by">
+export type CatalogAdminCommercialItem = Omit<CatalogCommercialItem, "created_by" | "updated_by">
 export type CatalogOffering = { id: string; product_id: string; kind: "offering" }
 export type CatalogAddOn = { id: string; product_id: string; kind: "add_on"; is_conditional: boolean; public_condition_summary: string | null }
 export type CatalogBundle = { id: string; product_id: string; kind: "bundle"; is_conditional: boolean; public_condition_summary: string | null }

@@ -48,8 +48,18 @@ select test_catalog.assert((select count(*) = 9 from public.catalog_delivery_opt
 select test_catalog.assert((select count(*) = 0 from public.catalog_delivery_options d join public.catalog_commercial_items c on c.id = d.id), 'delivery options are not purchasable identities');
 select test_catalog.assert((select count(*) = 0 from public.catalog_benefits b join public.catalog_commercial_items c on c.id = b.id), 'benefits are not purchasable identities');
 
+insert into public.catalog_products (id,code,slug,product_type,status,default_purchase_flow,title,short_description,is_public)
+values ('79000000-0000-0000-0000-000000000001','internal_test','internal-test','big_class','published','consultation_offer','Internal Test','Must remain invisible',false);
+insert into public.catalog_commercial_items (id,product_id,code,kind,title,pricing_mode,price_amount)
+values ('79000000-0000-0000-0000-000000000002','79000000-0000-0000-0000-000000000001','internal_offering','offering','Internal Offering','fixed',123000);
+insert into public.catalog_offerings (id,product_id)
+values ('79000000-0000-0000-0000-000000000002','79000000-0000-0000-0000-000000000001');
+update public.catalog_commercial_items set status='published' where id='79000000-0000-0000-0000-000000000002';
+
 set local role anon;
 select test_catalog.assert((select count(*) = 2 from public.public_catalog_products), 'anonymous users see published public products');
+select test_catalog.assert((select count(*) = 0 from public.catalog_offerings where product_id='79000000-0000-0000-0000-000000000001'), 'anonymous base child read cannot leak internal product identity');
+select test_catalog.assert((select count(*) = 0 from public.public_catalog_commercial_items where product_id='79000000-0000-0000-0000-000000000001'), 'security-invoker view cannot leak internal commercial items');
 select test_catalog.denied($q$insert into public.catalog_products (code, slug, product_type, default_purchase_flow, title, short_description) values ('attack','attack','big_class','consultation_offer','Attack','Attack')$q$, 'anonymous catalog insert');
 select test_catalog.denied($q$select public.set_catalog_product_status('71000000-0000-0000-0000-000000000001', 'archived')$q$, 'anonymous lifecycle change');
 reset role;
@@ -87,6 +97,7 @@ select public.set_catalog_product_status((select id from public.catalog_products
 select test_catalog.assert((select count(*) = 1 from public.public_catalog_products where code = 'catalog_test_digital'), 'valid admin draft publishes');
 update public.catalog_commercial_items set price_amount = 109000 where code = 'digital_access';
 select test_catalog.assert((select price_amount = 109000 from public.catalog_commercial_items where code = 'digital_access'), 'published mutable price may evolve');
+select test_catalog.denied($q$update public.catalog_commercial_items set pricing_mode='quotation_required',price_amount=null,reference_price_amount=null where code='intensive_national'$q$, 'published national intensive cannot become quotation pricing in place');
 select public.set_catalog_product_status((select id from public.catalog_products where code = 'catalog_test_digital'), 'archived');
 select test_catalog.assert((select count(*) = 0 from public.public_catalog_products where code = 'catalog_test_digital'), 'archived product hidden');
 select test_catalog.denied($q$select public.set_catalog_product_status((select id from public.catalog_products where code = 'catalog_test_digital'), 'published')$q$, 'archived identity cannot republish');
@@ -95,7 +106,26 @@ select test_catalog.denied($q$insert into public.catalog_commercial_items (produ
 select test_catalog.denied($q$insert into public.catalog_session_packages (product_id, code, label, session_count) values ('71000000-0000-0000-0000-000000000001','zero','Zero',0)$q$, 'session count must be positive');
 select test_catalog.denied($q$insert into public.catalog_digital_product_details (product_id, content_type) values ('71000000-0000-0000-0000-000000000001','video')$q$, 'digital detail cannot attach to Private Mentoring');
 select test_catalog.denied($q$update public.catalog_products set code = 'changed_identity' where id = '71000000-0000-0000-0000-000000000001'$q$, 'published product code immutable');
+select test_catalog.denied($q$update public.catalog_session_packages set session_count = 4 where code = 'sessions_3'$q$, 'published session package meaning requires a new identity');
+select test_catalog.denied($q$update public.catalog_delivery_options set code = 'changed_delivery_identity' where code = 'end_to_end_learning'$q$, 'delivery option code remains stable');
+select test_catalog.denied($q$update public.catalog_intensive_offering_configs set sessions_per_month = 5 where id = '73000000-0000-0000-0000-000000000001'$q$, 'published intensive package meaning requires a new identity');
+select test_catalog.denied($q$update public.catalog_mentor_tiers set status = 'archived' where code = 'top_student'$q$, 'mentor tier used by a published offering cannot be archived');
+select test_catalog.denied($q$update public.catalog_benefits set status = 'archived' where code = 'direct_mentor_networking'$q$, 'benefit used by a published item cannot be archived');
+select test_catalog.denied($q$select public.set_catalog_commercial_item_status('73000000-0000-0000-0000-000000000001', 'archived')$q$, 'published bundle component cannot be archived while referenced');
+select test_catalog.denied($q$delete from public.catalog_offerings where id = '73000000-0000-0000-0000-000000000003'$q$, 'published offering subtype cannot be deleted');
+select test_catalog.denied($q$delete from public.catalog_private_mentoring_details where product_id = '71000000-0000-0000-0000-000000000001'$q$, 'published product details cannot be deleted');
+with deleted as (
+  delete from public.catalog_commercial_items where code = 'intensive_national' returning id
+)
+select test_catalog.assert((select count(*) = 0 from deleted), 'admin RLS cannot delete published commercial identity');
+with deleted as (
+  delete from public.catalog_products where code = 'private_mentoring' returning id
+)
+select test_catalog.assert((select count(*) = 0 from deleted), 'admin RLS cannot delete published product identity');
 reset role;
+
+select test_catalog.denied($q$delete from public.catalog_commercial_items where code = 'intensive_national'$q$, 'trusted direct access cannot delete published commercial identity');
+select test_catalog.denied($q$delete from public.catalog_products where code = 'private_mentoring'$q$, 'trusted direct access cannot delete published product identity');
 
 rollback;
 select 'PASS: product catalog master security, lifecycle, domain, and authoritative seed' as result;
