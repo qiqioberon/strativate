@@ -28,7 +28,7 @@ test('one shared login offers password and Google without a public role picker',
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto('/auth')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Raih kemenangan berikutnya.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Siapkan langkah berikutnya.')
   await expect(page.getByLabel('Email', { exact: true })).toBeVisible()
   await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible()
@@ -39,7 +39,7 @@ test('one shared login offers password and Google without a public role picker',
 test('registration starts with only email and can return to login', async ({ page }) => {
   await page.goto('/auth')
   await page.getByRole('button', { name: 'Belum punya akun? Daftar' }).click()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Daftar di Strativate.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mulai di Strativate.')
   await expect(page.getByLabel('Kata sandi', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Kirim tautan email' })).toBeVisible()
   await page.getByRole('button', { name: 'Sudah punya akun? Masuk' }).click()
@@ -58,7 +58,7 @@ for (const path of ['/admin', '/mentor/dashboard', '/dashboard', '/onboarding', 
 test('invalid callback ignores arbitrary external next URLs', async ({ page }) => {
   await page.goto('/auth/callback?next=https://example.com&error=access_denied')
   await expect(page).toHaveURL(/\/auth\/error$/)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Coba kembali.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Coba lagi.')
 })
 
 test('login and registration fit the preserved mobile auth layout', async ({ page }) => {

@@ -3,13 +3,18 @@
 Authentication, onboarding, database migrations, and administration setup:
 [Supabase setup guide](docs/supabase-setup.md).
 
-Private and Intensive Mentoring content, source pages, and pricing decisions:
-[Program information guide](docs/program-information.md).
+Product / Catalog Master, authoritative guidebook bootstrap, ownership boundaries,
+RLS model, and verification:
+[Product Master guide](docs/program-information.md).
 
 For existing deployments with migrations 001–002 applied, apply
 [`202609060003_invite_management_auth_ux.sql`](supabase/migrations/202609060003_invite_management_auth_ux.sql)
 before deploying the invitation management update. It adds admin-only invitation
 deletion and requires competition interests selected from the configured list.
+
+Apply [`202609090001_product_catalog_master.sql`](supabase/migrations/202609090001_product_catalog_master.sql)
+before deploying Product Master. The migration publishes the approved Private and
+Intensive Mentoring master, but intentionally seeds no Big Class or Digital Product.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
