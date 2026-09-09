@@ -17,7 +17,8 @@ export async function proxy(request: NextRequest) {
     },
   } })
   const { data: { user } } = await supabase.auth.getUser()
-  const protectedPath = /^\/(admin|mentor|dashboard|onboarding|checkout)(\/|$)/.test(request.nextUrl.pathname)
+  const protectedPath = /^\/(admin|dashboard|onboarding|checkout)(\/|$)/.test(request.nextUrl.pathname)
+    || /^\/mentor\/dashboard(\/|$)/.test(request.nextUrl.pathname)
   if (!user && protectedPath) {
     const redirect = NextResponse.redirect(new URL('/auth', request.url))
     response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie))
@@ -26,4 +27,4 @@ export async function proxy(request: NextRequest) {
   response.headers.set('Cache-Control', 'private, no-store')
   return response
 }
-export const config = { matcher: ['/auth/:path*', '/admin/:path*', '/mentor/:path*', '/dashboard/:path*', '/onboarding/:path*', '/checkout/:path*'] }
+export const config = { matcher: ['/auth/:path*', '/admin/:path*', '/mentor/dashboard/:path*', '/dashboard/:path*', '/onboarding/:path*', '/checkout/:path*'] }

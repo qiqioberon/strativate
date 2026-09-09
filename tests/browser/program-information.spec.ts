@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test'
 
 test('homepage and program overview link to guidebook information without a demo purchase', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: 'Jelajahi Mentoring Privat', exact: true })).toHaveAttribute('href', '/program/private-mentoring')
-  await page.locator('.main-nav').getByRole('button', { name: 'Program', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'Lihat Mentoring Privat', exact: true })).toHaveAttribute('href', '/program/private-mentoring')
+  await page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Program', exact: true }).click()
   await expect(page.getByText('Demo flow:', { exact: false })).toHaveCount(0)
-  await page.getByRole('link', { name: 'Lihat Mentoring Privat', exact: true }).click()
+  await page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' }).getByRole('link', { name: 'Lihat Mentoring Privat', exact: true }).click()
   await expect(page).toHaveURL(/\/program\/private-mentoring$/)
   await page.getByRole('link', { name: 'Lihat paket', exact: true }).click()
   await expect(page).toHaveURL(/#packages$/)

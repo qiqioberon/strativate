@@ -5,5 +5,7 @@ export default defineConfig({
   reporter: 'list',
   use: { baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000', trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: { command: 'pnpm start --port 3000', url: 'http://localhost:3000/auth', reuseExistingServer: true, timeout: 60000 },
+  webServer: process.env.TEST_BASE_URL
+    ? undefined
+    : { command: 'pnpm start --port 3000', url: 'http://localhost:3000/auth', reuseExistingServer: true, timeout: 60000 },
 })
