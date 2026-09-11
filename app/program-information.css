@@ -87,3 +87,4 @@
   .program-contact { padding: 26px; }
   .program-breadcrumb .back-link { font-size: 10px; }
 }
+.program-contact-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 24px; }

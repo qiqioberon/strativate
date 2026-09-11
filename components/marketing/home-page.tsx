@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+import { BrandLogo } from '@/components/brand/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
 import {
   selectDigitalProducts,
@@ -21,10 +22,10 @@ import type { CatalogProductSummary } from '@/lib/catalog/types'
 import {
   bigClassPlaceholder,
   faqPreview,
-  mentorPlaceholders,
-  preparationPrinciples,
   productPlaceholders,
 } from '@/lib/content/marketing-content'
+import { socialProof } from '@/lib/content/brand'
+import { featuredMentors } from '@/lib/content/mentors'
 import { cn } from '@/lib/utils'
 
 import { AssetMedia } from './asset-media'
@@ -44,7 +45,7 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
       description: bigClassPlaceholder.description,
       highlights: [],
       assetKey: bigClassPlaceholder.cover,
-      status: 'placeholder',
+      status: 'overview',
       tone: 'yellow',
     })
   }
@@ -68,24 +69,25 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
             </div>
           </div>
 
-          <div className="marketing-hero__visual" aria-label="Slot visual utama Strativate">
+          <div className="marketing-hero__visual" aria-label="Identitas visual Strativate">
             <div className="marketing-hero__visual-head">
               <span>STRATIVATE / 01</span>
               <Compass aria-hidden="true" size={22} />
             </div>
-            <AssetMedia assetKey="achievements.featured.image" priority sizes="(max-width: 900px) 94vw, 47vw" />
+            <div className="marketing-hero__brand-art"><BrandLogo variant="mark" priority /></div>
             <div className="marketing-hero__visual-foot">
               <strong>Ruang untuk<br />bertumbuh.</strong>
-              <p>Siap diganti dengan key visual atau dokumentasi resmi tanpa mengubah komposisi hero.</p>
+              <p>Pelatihan bisnis, akuntansi, dan persiapan kompetisi dengan pendekatan praktis.</p>
               <ArrowDownRight aria-hidden="true" size={28} />
             </div>
           </div>
         </div>
-        <div className="marketing-container marketing-hero__principles" aria-label="Cara persiapan Strativate">
-          {preparationPrinciples.map((principle) => (
-            <article key={principle.number}>
-              <span>{principle.number}</span>
-              <div><strong>{principle.title}</strong><p>{principle.description}</p></div>
+        <p className="marketing-container marketing-proof-context">Siswa kami berasal dari</p>
+        <div className="marketing-container marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
+          {socialProof.map((proof) => (
+            <article key={proof.label}>
+              <span>{proof.value}</span>
+              <div><strong>{proof.label}</strong></div>
             </article>
           ))}
         </div>
@@ -123,16 +125,16 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
         <div className="marketing-container">
           <div className="marketing-section-head">
             <div>
-              <p className="marketing-kicker">Profil yang akan terverifikasi</p>
-              <h2 id="mentor-heading">Mentor yang tepat,<br /><em>tanpa tebakan.</em></h2>
+              <p className="marketing-kicker">Mentor Strativate</p>
+              <h2 id="mentor-heading">Belajar dari pengalaman,<br /><em>bertumbuh dengan arahan.</em></h2>
             </div>
             <div className="marketing-section-head__note">
-              <p>Struktur profil sudah siap untuk foto dan data resmi. Identitas baru tampil setelah verifikasi dan izin publikasi.</p>
+              <p>Kenali pengalaman, pencapaian, dan fokus keahlian mentor yang tercantum dalam data Strativate.</p>
               <Link className="marketing-text-link" href="/mentor">Buka direktori mentor <ArrowRight data-icon="arrow" size={16} /></Link>
             </div>
           </div>
           <div className="marketing-mentor-grid">
-            {mentorPlaceholders.map((mentor, index) => <MentorCard mentor={mentor} index={index} key={mentor.id} />)}
+            {featuredMentors.map((mentor, index) => <MentorCard mentor={mentor} index={index} key={mentor.slug} />)}
           </div>
         </div>
       </section>

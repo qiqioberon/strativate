@@ -12,13 +12,12 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { BrandLogo } from '@/components/brand/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
-import { getAsset } from '@/lib/content/asset-registry'
 import { marketingNavigation, type NavigationIcon } from '@/lib/content/marketing-content'
 import { cn } from '@/lib/utils'
 
@@ -38,8 +37,6 @@ function isActiveRoute(pathname: string, href: string) {
 export function SiteHeader() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const logo = getAsset('brand.logo.primary')
-
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
@@ -57,8 +54,7 @@ export function SiteHeader() {
     <header className="marketing-header">
       <div className="marketing-header__inner">
         <Link className="marketing-brand" href="/" aria-label="Beranda Strativate">
-          <Image src={logo.src} alt={logo.alt} width={164} height={42} priority />
-          {logo.placeholder && <span className="sr-only">Logo pengembangan, belum final</span>}
+          <BrandLogo priority />
         </Link>
 
         <nav className="marketing-nav" aria-label="Navigasi utama">

@@ -1,51 +1,29 @@
 import { Analytics } from '@vercel/analytics/next'
-import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
+import { Poppins } from 'next/font/google'
+
+import { brandDescription } from '@/lib/content/brand'
+
 import './globals.css'
 import './auth/auth.css'
 import './program-information.css'
 import './marketing.css'
 
 export const metadata: Metadata = {
-  title: "Strativate — Raih Kemenangan. Melangkah Lebih Jauh.",
-  description: "Bimbingan personal dan persiapan kompetisi untuk mahasiswa yang ingin meraih prestasi.",
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+  metadataBase: new URL('https://strativate.id'),
+  title: { default: 'Strativate', template: '%s | Strativate' },
+  description: brandDescription,
+  openGraph: { title: 'Strativate', description: brandDescription, locale: 'id_ID', type: 'website' },
 }
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--font-poppins' })
 
-export const viewport: Viewport = {
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
-}
+export const viewport: Viewport = { colorScheme: 'light', themeColor: '#FF7A00' }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className="bg-background" data-scroll-behavior="smooth">
-      <body className={`${jakarta.className} antialiased`}>
+      <body className={`${poppins.variable} ${poppins.className} antialiased`}>
         {children}
         {process.env.VERCEL && <Analytics />}
       </body>

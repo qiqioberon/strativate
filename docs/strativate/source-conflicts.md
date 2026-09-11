@@ -1,4 +1,29 @@
-# Strativate unresolved source conflicts
+# Strativate source conflict register
+
+## 11 September 2026 resolution update
+
+The new `Bahan FE 1` handoff resolves the earlier typography, palette, logo,
+contact, social-proof wording, and mentor-roster gaps. The implementation uses
+Poppins; `#FF7A00`, `#DC0D16`, `#B3151C`, `#FFE79D`, `#000000`, and `#FDFDFD`;
+the supplied PNG logo family; `2500+ Siswa`, `15+ Universitas`, and `20+ Sekolah
+Menengah Atas`; and all 26 spreadsheet mentor rows. It never calls institutions
+partners and publishes no mentor ratings or internal workbook notes.
+
+Still unresolved:
+
+- the printed `Rp885.000` three-session Top Student total remains authoritative
+  in Product Master despite conflicting arithmetic;
+- the localized Product Master bundle names remain authoritative over guidebook
+  English labels until an owner-approved catalog migration exists;
+- guarantee/refund wording remains conditional and requires approved legal terms;
+- Big Class is a sourced service overview only; no commercial detail was supplied;
+- seven mentors have no linked photo; Navira, Fajri, M. Iqbal, and Lubna have
+  cross-source name/tier/role differences recorded in the handoff receipt;
+- country-count, partnership, institution-logo, and quantitative rating claims
+  remain omitted.
+
+The original audit table below is retained as historical provenance. Rows
+explicitly resolved above must not be treated as current blockers.
 
 These conflicts come from the September 2026 frontend content/asset audit. They
 are decisions for Strativate, not facts for developers to resolve. Until a

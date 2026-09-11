@@ -17,24 +17,6 @@ export const preparationPrinciples = [
   { number: '03', title: 'Perbaiki dengan terarah', description: 'Gunakan setiap sesi dan materi untuk meninjau, mencoba, lalu menyempurnakan.' },
 ] as const
 
-export type MentorPreview = {
-  id: string
-  contentStatus: 'placeholder'
-  portrait: AssetKey
-  name?: string
-  role?: string
-  expertise?: string
-  university?: string
-  achievement?: string
-  rating?: number
-}
-
-export const mentorPlaceholders: MentorPreview[] = [
-  { id: 'primary', contentStatus: 'placeholder', portrait: 'mentors.primary.portrait', expertise: 'Profil dan keahlian sedang diverifikasi' },
-  { id: 'secondary', contentStatus: 'placeholder', portrait: 'mentors.secondary.portrait', expertise: 'Profil dan keahlian sedang diverifikasi' },
-  { id: 'tertiary', contentStatus: 'placeholder', portrait: 'mentors.tertiary.portrait', expertise: 'Profil dan keahlian sedang diverifikasi' },
-]
-
 export type ProductPreview = {
   id: string
   contentStatus: 'placeholder'
@@ -69,19 +51,19 @@ export const faqPreview = [
     answer: 'Halaman Program merangkum pilihan yang tersedia dan mengarahkanmu ke informasi setiap program.',
   },
   {
-    question: 'Kapan profil mentor ditampilkan?',
-    answer: 'Profil akan dipublikasikan setelah identitas, keahlian, foto, dan izin tayang selesai diverifikasi.',
+    question: 'Bagaimana memilih mentor?',
+    answer: 'Gunakan pencarian dan filter pada halaman Mentor untuk melihat kategori, keahlian, dan pengalaman yang tercantum pada setiap profil.',
   },
   {
-    question: 'Bagaimana jika informasi yang saya cari belum tersedia?',
-    answer: 'Informasi yang masih menunggu keputusan Strativate ditandai sebagai belum tersedia agar tidak menimbulkan klaim yang keliru.',
+    question: 'Bagaimana menghubungi Strativate?',
+    answer: 'Hubungi Strativate melalui WhatsApp di +62 851-8775-4671 atau email strativateid@gmail.com.',
   },
 ] as const
 
 export const bigClassPlaceholder = {
   title: 'Big Class',
-  kicker: 'Program kelompok',
-  description: 'Informasi program, jadwal, pengajar, dan harga sedang menunggu master konten Strativate.',
-  contentStatus: 'placeholder',
+  kicker: 'Kelas terbuka',
+  description: 'Kelas terbuka untuk mempelajari topik bisnis, akuntansi, riset, dan persiapan kompetisi bersama mentor Strativate.',
+  contentStatus: 'overview',
   cover: 'programs.bigClass.cover' as const,
 }

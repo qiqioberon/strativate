@@ -13,12 +13,12 @@ export default function FaqPage() {
         <PageIntro
           eyebrow="Tanya jawab"
           title={<>Mulai dari informasi<br /><em>yang sudah pasti.</em></>}
-          description="Jawaban di bawah berfokus pada cara menjelajahi layanan. Detail operasional baru ditambahkan setelah sumber resmi tersedia."
+          description="Temukan cara membandingkan layanan, memilih mentor, dan menghubungi tim Strativate."
           aside={<Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/program">Bandingkan program <ArrowRight data-icon="arrow" size={16} /></Link>}
         />
         <section className="marketing-page-section">
           <div className="marketing-container marketing-faq-directory">
-            <div className="marketing-faq-directory__aside"><CircleHelp aria-hidden="true" size={30} /><strong>Pertanyaan yang belum memiliki jawaban resmi tidak akan diisi dengan asumsi.</strong></div>
+            <div className="marketing-faq-directory__aside"><CircleHelp aria-hidden="true" size={30} /><strong>Masih punya pertanyaan? Hubungi tim Strativate melalui kanal resmi yang tercantum di bagian bawah halaman.</strong></div>
             <div className="marketing-faq-list">
               {faqPreview.map((item, index) => (
                 <details key={item.question} open={index === 0}>
