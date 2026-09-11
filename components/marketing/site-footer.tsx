@@ -1,8 +1,8 @@
 import { ArrowUpRight, Compass, HelpCircle, Library, Sparkles, Users } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 
-import { getAsset } from '@/lib/content/asset-registry'
+import { BrandLogo } from '@/components/brand/brand-logo'
+import { publicContact } from '@/lib/content/brand'
 
 const footerLinks = [
   { label: 'Program', href: '/program', icon: Compass },
@@ -13,14 +13,12 @@ const footerLinks = [
 ]
 
 export function SiteFooter() {
-  const logo = getAsset('brand.logo.primary')
-
   return (
     <footer className="marketing-footer">
       <div className="marketing-container marketing-footer__grid">
         <div className="marketing-footer__lead">
           <Link className="marketing-brand marketing-footer__brand" href="/" aria-label="Beranda Strativate">
-            <Image src={logo.src} alt={logo.alt} width={164} height={42} />
+            <BrandLogo />
           </Link>
           <p>Persiapan kompetisi yang terasa lebih terarah, dari langkah pertama sampai evaluasi berikutnya.</p>
         </div>
@@ -38,7 +36,11 @@ export function SiteFooter() {
         <div className="marketing-footer__note">
           <span className="marketing-kicker">Strativate</span>
           <strong>Raih kemenangan.<br />Melangkah lebih jauh.</strong>
-          <p>Informasi kontak dan kanal sosial akan ditambahkan setelah sumber resminya disetujui.</p>
+          <div className="marketing-footer__contact">
+            <a href={publicContact.whatsapp}>{publicContact.phone}</a>
+            <a href={publicContact.emailHref}>{publicContact.email}</a>
+            <a href={publicContact.instagram} target="_blank" rel="noreferrer">@strativate.id</a>
+          </div>
         </div>
       </div>
       <div className="marketing-container marketing-footer__bottom">

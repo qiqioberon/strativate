@@ -1,11 +1,11 @@
-import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 import { MarketingShell } from '@/components/marketing/marketing-shell'
-import { MentorCard } from '@/components/marketing/mentor-card'
+import { MentorDirectory } from '@/components/marketing/mentor-directory'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { buttonVariants } from '@/components/ui/button'
-import { mentorPlaceholders } from '@/lib/content/marketing-content'
+import { mentors } from '@/lib/content/mentors'
 
 export default function MentorPage() {
   return (
@@ -13,16 +13,13 @@ export default function MentorPage() {
       <main>
         <PageIntro
           eyebrow="Direktori mentor"
-          title={<>Kenali mentormu<br /><em>melalui data yang jelas.</em></>}
-          description="Nama, foto, institusi, pencapaian, dan penilaian hanya akan ditampilkan setelah sumber serta izin publikasinya terverifikasi."
+          title={<>Belajar bersama mentor<br /><em>yang berpengalaman.</em></>}
+          description="Temukan mentor berdasarkan kategori dan keahlian yang tercantum dalam data mentor Strativate. Profil tanpa foto menggunakan penanda yang jelas."
           aside={<Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">Pilih program dahulu <ArrowRight data-icon="arrow" size={16} /></Link>}
         />
         <section className="marketing-page-section">
           <div className="marketing-container">
-            <div className="marketing-content-notice"><ShieldCheck aria-hidden="true" size={20} /><div><strong>Direktori sedang dipersiapkan</strong><p>Komponen ini sudah mendukung seluruh atribut opsional tanpa menjadikannya klaim wajib.</p></div></div>
-            <div className="marketing-mentor-grid marketing-mentor-grid--directory">
-              {mentorPlaceholders.map((mentor, index) => <MentorCard mentor={mentor} index={index} key={mentor.id} />)}
-            </div>
+            <MentorDirectory mentors={mentors} />
           </div>
         </section>
       </main>

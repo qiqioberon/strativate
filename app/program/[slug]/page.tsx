@@ -9,7 +9,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const canonical = resolveMentoringSlug(slug) ?? slug
   const product = await getPublicCatalogProduct(canonical)
-  return product ? { title: `${product.title} | Strativate`, description: product.shortDescription } : {}
+  return product
+    ? { title: product.title, description: product.shortDescription, alternates: { canonical: `/program/${canonical}` } }
+    : {}
 }
 
 export default async function ProgramDetail({ params }: { params: Promise<{ slug: string }> }) {

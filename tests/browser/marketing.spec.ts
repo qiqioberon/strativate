@@ -19,10 +19,13 @@ test('homepage uses real dedicated marketing links and safe editorial previews',
 
   await expect(nav.getByRole('link', { name: 'Beranda', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('heading', { name: 'Pilih cara belajarmu.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Mentor yang tepat, tanpa tebakan.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Belajar dari pengalaman, bertumbuh dengan arahan.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Materi yang siap mengikuti ritmemu.' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Lihat Mentoring Privat' })).toHaveAttribute('href', '/program/private-mentoring')
   await expect(page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' })).toContainText('Rp300.000')
+  await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
+  await expect(page.getByText('2500+', { exact: true })).toBeVisible()
+  await expect(page.getByText('Siswa kami berasal dari', { exact: true })).toBeVisible()
   await expect(page.getByText(/Alvin Haryanto|Universitas mitra|15\+ kemenangan|di 4 negara/)).toHaveCount(0)
 })
 
@@ -38,6 +41,11 @@ test('public mentor directory and protected mentor workspace remain distinct', a
   await page.goto('/mentor')
   await expect(page).toHaveURL(/\/mentor$/)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('mentor')
+  await expect(page.locator('.marketing-mentor-card')).toHaveCount(26)
+  await expect(page.getByText('Menampilkan 26 mentor')).toBeVisible()
+  await page.getByPlaceholder('Cari nama atau keahlian').fill('Navira Putri')
+  await expect(page.locator('.marketing-mentor-card')).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'Navira Putri' })).toBeVisible()
 
   await page.goto('/mentor/dashboard')
   await expect(page).toHaveURL(/\/auth$/)
@@ -46,7 +54,9 @@ test('public mentor directory and protected mentor workspace remain distinct', a
 test('program and digital directories preserve the marketing shell and honest catalog states', async ({ page }) => {
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
-  await expect(page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' })).toContainText('Rp300.000')
+  await expect(page.locator('.marketing-service-card')).toHaveCount(8)
+  await expect(page.getByRole('heading', { name: 'Private Mentoring' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Community' })).toBeVisible()
   await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
 
   await page.goto('/produk-digital')

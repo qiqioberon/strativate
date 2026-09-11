@@ -16,7 +16,7 @@ export type MarketingProgram = CatalogMarketingProgram | {
   priceContext?: string
   href?: string
   assetKey: 'programs.bigClass.cover'
-  status: 'placeholder'
+  status: 'overview'
   tone: 'yellow'
 }
 
@@ -28,7 +28,7 @@ const programIcons = {
 
 export function ProgramCard({ program }: { program: MarketingProgram }) {
   const Icon = programIcons[program.tone]
-  const isPlaceholder = program.status === 'placeholder'
+  const isPlaceholder = false
 
   return (
     <article className={cn('marketing-program-card', `is-${program.tone}`, isPlaceholder && 'is-placeholder')}>

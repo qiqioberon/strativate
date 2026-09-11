@@ -5,6 +5,7 @@ import { catalogPriceLabel, catalogProductTypeLabels, directCheckoutOfferings } 
 import type { CatalogProductDetail, CatalogProductSummary } from '@/lib/catalog/types'
 import { commercialItemEditorial, competitionCategories, deliveryOptionEditorial, getProgramEditorial } from '@/lib/program-information'
 import { ProgramComparison } from './program-comparison'
+import { publicContact } from '@/lib/content/brand'
 
 function FeatureList({ items }: { items: string[] }) {
   return <ul className="program-feature-list">{items.map((item) => <li key={item}><Check size={16} aria-hidden="true" /><span>{item}</span></li>)}</ul>
@@ -58,7 +59,7 @@ function MentoringProductDetail({ product, comparisons }: ProductDetailProps) {
     {isIntensive && <IntensiveExtras product={product} />}
     <section className="program-section"><div className="program-section-heading"><p className="kicker">Kategori kompetisi</p><h2>Dukungan lintas bidang.</h2></div><ul className="program-category-list">{competitionCategories.map((category) => <li key={category}>{category}</li>)}</ul></section>
     <ProgramComparison products={comparisons} />
-    <section className="program-contact"><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program dan merekomendasikan dukungan sesuai tujuan, tahap persiapan, dan jadwalmu.</p><Link href="/explore" className="back-link">Kembali ke semua program <ArrowRight size={16} aria-hidden="true" /></Link></section>
+    <section className="program-contact"><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program sesuai tujuan, tahap persiapan, dan jadwalmu.</p><div className="program-contact-actions"><a href={publicContact.whatsapp} className="primary-cta">Konsultasi via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a><a href={publicContact.emailHref} className="back-link">{publicContact.email}</a></div></section>
   </main>
 }
 

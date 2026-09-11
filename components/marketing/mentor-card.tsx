@@ -1,28 +1,24 @@
-import { Award, GraduationCap, Star } from 'lucide-react'
+import { Award, ExternalLink } from 'lucide-react'
 
 import { AssetMedia } from './asset-media'
-import type { MentorPreview } from '@/lib/content/marketing-content'
+import type { Mentor } from '@/lib/content/mentors'
 
-export function MentorCard({ mentor, index }: { mentor: MentorPreview; index: number }) {
-  const hasVerifiedProfile = Boolean(mentor.name)
-
+export function MentorCard({ mentor, index }: { mentor: Mentor; index: number }) {
   return (
     <article className="marketing-mentor-card">
       <div className="marketing-mentor-card__media">
-        <AssetMedia assetKey={mentor.portrait} sizes="(max-width: 760px) 88vw, 28vw" />
-        <span className="marketing-mentor-card__index" aria-hidden="true">0{index + 1}</span>
+        <AssetMedia assetKey={mentor.portrait} sizes="(max-width: 760px) 88vw, 28vw" priority={index < 4} />
+        <span className="marketing-mentor-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
       </div>
       <div className="marketing-mentor-card__content">
-        <span className="marketing-mentor-card__status">
-          {hasVerifiedProfile ? 'Mentor Strativate' : 'Profil dalam verifikasi'}
-        </span>
-        <h3>{mentor.name ?? 'Profil mentor akan hadir di sini'}</h3>
-        {(mentor.role || mentor.expertise) && <p>{mentor.role ?? mentor.expertise}</p>}
+        <span className="marketing-mentor-card__status">{mentor.tier ?? 'Mentor Strativate'}</span>
+        <h3>{mentor.name}</h3>
+        {mentor.title && <p>{mentor.title}</p>}
         <div className="marketing-mentor-card__meta">
-          {mentor.university && <span><GraduationCap aria-hidden="true" size={14} />{mentor.university}</span>}
-          {mentor.achievement && <span><Award aria-hidden="true" size={14} />{mentor.achievement}</span>}
-          {typeof mentor.rating === 'number' && <span><Star aria-hidden="true" size={14} />{mentor.rating.toFixed(1)}</span>}
+          {mentor.credentials.slice(0, 2).map((credential) => <span key={credential}><Award aria-hidden="true" size={14} />{credential}</span>)}
         </div>
+        <div className="marketing-mentor-card__expertise">{mentor.expertise.map(item => <span key={item}>{item}</span>)}</div>
+        {mentor.linkedIn && <a className="marketing-mentor-card__linkedin" href={mentor.linkedIn} target="_blank" rel="noreferrer"><ExternalLink aria-hidden="true" size={14} /> LinkedIn</a>}
       </div>
     </article>
   )

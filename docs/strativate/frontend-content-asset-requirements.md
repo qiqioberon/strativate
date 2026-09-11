@@ -1,5 +1,14 @@
 # Strativate frontend content and asset requirements
 
+> **Implementation update — 11 September 2026.** The later stakeholder handoff in
+> `Bahan FE 1` supersedes the pre-handoff “missing/unconfirmed” status statements
+> in this historical audit. The supplied brand guideline, color palette, six logo
+> PNGs, program page, two guidebooks, and mentor workbook are now implemented.
+> See [`frontend-handoff-receipt-2026-09-11.md`](frontend-handoff-receipt-2026-09-11.md)
+> for the authoritative file-by-file receipt and [`asset-status.md`](asset-status.md)
+> for current status. Legal policies, standalone program/achievement/testimonial
+> media, institution logos, and seven mentor portraits remain outstanding.
+
 This is the durable engineering reference derived from the 27-page
 `Strativate_Frontend_Content_Asset_Requirements.pdf` dated September 2026. It
 summarizes the document without treating the PDF's embedded images as production
