@@ -67,10 +67,55 @@ export type MentorInvite = {
   invited_by: string
   status: "pending" | "sent" | "failed"
   user_id: string | null
+  tier_id: string | null
   created_at: string
   updated_at: string
 }
-export type MentorInviteSummary = Pick<MentorInvite, 'email' | 'status' | 'created_at'> & { can_delete: boolean }
+export type MentorInviteSummary = Pick<MentorInvite, 'email' | 'status' | 'tier_id' | 'created_at'> & {
+  tier_code: string | null
+  tier_name: string | null
+  can_delete: boolean
+}
+export type MentorTier = {
+  id: string
+  code: string
+  name: string
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+export type MentorProfile = {
+  user_id: string
+  tier_id: string | null
+  timezone: string
+  created_at: string
+  updated_at: string
+}
+export type MentorAvailabilityRule = {
+  id: string
+  mentor_id: string
+  day_of_week: number
+  start_time: string
+  end_time: string
+  created_at: string
+  updated_at: string
+}
+export type ManagedMentor = {
+  user_id: string
+  email: string
+  first_name: string | null
+  last_name: string | null
+  username: string | null
+  avatar_url: string | null
+  tier_id: string | null
+  tier_code: string | null
+  tier_name: string | null
+  timezone: string
+  mentor_setup_completed_at: string | null
+  created_at: string
+  availability_configured: boolean
+}
 export type CatalogProduct = {
   id: string; code: string; slug: string; product_type: CatalogProductType; status: CatalogLifecycleStatus
   default_purchase_flow: CatalogPurchaseFlow; title: string; short_description: string; description: string | null
@@ -125,6 +170,9 @@ export type Database = {
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
       mentee_interests: Table<{ user_id: string; interest_id: string; created_at: string }, { user_id: string; interest_id: string; created_at?: string }>
       mentor_invites: Table<MentorInvite, Partial<MentorInvite> & Pick<MentorInvite, "email" | "invited_by">>
+      mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier, "code" | "name">>
+      mentor_profiles: Table<MentorProfile, Partial<MentorProfile> & Pick<MentorProfile, "user_id">>
+      mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule, "mentor_id" | "day_of_week" | "start_time" | "end_time">>
       catalog_products: Table<CatalogProduct, Partial<CatalogProduct> & Pick<CatalogProduct, "code" | "slug" | "product_type" | "default_purchase_flow" | "title" | "short_description">>
       catalog_commercial_items: Table<CatalogCommercialItem, Partial<CatalogCommercialItem> & Pick<CatalogCommercialItem, "product_id" | "code" | "kind" | "title">>
       catalog_offerings: Table<CatalogOffering, CatalogOffering>
@@ -159,6 +207,9 @@ export type Database = {
     }
     Functions: {
       list_mentor_invites: { Args: { p_offset?: number }; Returns: MentorInviteSummary[] }
+      list_managed_mentors: { Args: { p_offset?: number; p_query?: string; p_tier_id?: string | null; p_setup_status?: string }; Returns: ManagedMentor[] }
+      set_mentor_tier: { Args: { p_mentor_id: string; p_tier_id: string }; Returns: MentorProfile }
+      save_mentor_availability: { Args: { p_mentor_id: string; p_rules: Json }; Returns: MentorAvailabilityRule[] }
       delete_mentor_invite: { Args: { p_email: string }; Returns: undefined }
       import_institutions_batch: { Args: { p_rows: Json }; Returns: Json }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }

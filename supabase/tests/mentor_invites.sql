@@ -23,11 +23,11 @@ insert into auth.users(id, email) values
   ('50000000-0000-0000-0000-000000000001', 'admin@invite.test'),
   ('50000000-0000-0000-0000-000000000002', 'mentee@invite.test');
 update public.profiles set role = 'admin' where id = '50000000-0000-0000-0000-000000000001';
-insert into public.mentor_invites(email, invited_by, status) values
-  ('failed@invite.test', '50000000-0000-0000-0000-000000000001', 'failed'),
-  ('waiting@invite.test', '50000000-0000-0000-0000-000000000001', 'pending'),
-  ('active@invite.test', '50000000-0000-0000-0000-000000000001', 'pending'),
-  ('processing@invite.test', '50000000-0000-0000-0000-000000000001', 'pending');
+insert into public.mentor_invites(email, invited_by, status, tier_id) values
+  ('failed@invite.test', '50000000-0000-0000-0000-000000000001', 'failed', '81000000-0000-0000-0000-000000000001'),
+  ('waiting@invite.test', '50000000-0000-0000-0000-000000000001', 'pending', '81000000-0000-0000-0000-000000000001'),
+  ('active@invite.test', '50000000-0000-0000-0000-000000000001', 'pending', '81000000-0000-0000-0000-000000000002'),
+  ('processing@invite.test', '50000000-0000-0000-0000-000000000001', 'pending', '81000000-0000-0000-0000-000000000002');
 insert into auth.users(id, email, invited_at) values
   ('50000000-0000-0000-0000-000000000003', 'waiting@invite.test', now()),
   ('50000000-0000-0000-0000-000000000004', 'active@invite.test', now());
@@ -60,7 +60,7 @@ select test_invites.assert(exists(select 1 from auth.users where email = 'active
 select test_invites.assert(exists(select 1 from public.profiles where id = '50000000-0000-0000-0000-000000000002'), 'unrelated account preserved');
 
 -- The same email can be invited again and gets a fresh mentor profile.
-insert into public.mentor_invites(email, invited_by) values ('waiting@invite.test', '50000000-0000-0000-0000-000000000001');
+insert into public.mentor_invites(email, invited_by, tier_id) values ('waiting@invite.test', '50000000-0000-0000-0000-000000000001', '81000000-0000-0000-0000-000000000001');
 insert into auth.users(id, email, invited_at) values ('50000000-0000-0000-0000-000000000005', 'waiting@invite.test', now());
 select test_invites.assert((select role = 'mentor' from public.profiles where id = '50000000-0000-0000-0000-000000000005'), 'reinvitation keeps trusted mentor assignment');
 update public.mentor_invites set status = 'sent' where email = 'waiting@invite.test';

@@ -36,6 +36,30 @@ test('one shared login offers password and Google without a public role picker',
   expect(errors).toEqual([])
 })
 
+test('session-shaped browser state does not redirect the public homepage', async ({ context, page }) => {
+  const publicRoot = new URL('/', process.env.TEST_BASE_URL || 'http://localhost:3000').href
+  const storedSession = JSON.stringify({
+    access_token: 'test-access-token',
+    refresh_token: 'test-refresh-token',
+    expires_at: 4102444800,
+    user: { id: 'test-mentor', role: 'authenticated' },
+  })
+  await context.addCookies([{
+    name: 'sb-localhost-auth-token',
+    value: `base64-${Buffer.from(storedSession).toString('base64url')}`,
+    url: publicRoot,
+    sameSite: 'Lax',
+  }])
+  await page.addInitScript(session => {
+    localStorage.setItem('sb-localhost-auth-token', session)
+  }, storedSession)
+
+  await page.goto('/')
+  await expect(page).toHaveURL(publicRoot)
+  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Pilih cara belajarmu.' })).toBeVisible()
+})
+
 test('registration starts with only email and can return to login', async ({ page }) => {
   await page.goto('/auth')
   await page.getByRole('button', { name: 'Belum punya akun? Daftar' }).click()

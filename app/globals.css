@@ -78,3 +78,72 @@ footer { max-width: 1120px; margin: 0 auto; padding: 35px 32px; display: flex; a
 .workspace-brand .brand-logo, .role-brand .brand-logo { width: 142px; height: auto; }
 .workspace-loading-mark { width: 48px; height: auto; border-radius: 0; background: transparent; }
 .auth-card .brand-logo { width: 160px; height: auto; }
+
+.mentor-management { display: grid; gap: 18px; }
+.mentor-management-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 8px; }
+.mentor-management-heading h2 { margin: 8px 0; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.07em; }
+.mentor-management-heading > div > p:last-child { color: #707982; font-size: 12px; }
+.mentor-management-count { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 999px; color: #53606b; background: #eef1f5; font-size: 10px; font-weight: 800; }
+.mentor-management-count svg { width: 16px; color: var(--primary); }
+.mentor-management-section { display: grid; gap: 20px; }
+.mentor-invite-fields { display: grid; grid-template-columns: minmax(240px, 1.4fr) minmax(210px, 1fr); gap: 12px; }
+.mentor-management-filters { display: grid; grid-template-columns: minmax(260px, 1fr) 190px 220px; gap: 10px; align-items: end; }
+.mentor-management-filters > label:not(.search-field), .mentor-tier-control { display: grid; gap: 6px; color: #6d7780; font-size: 10px; }
+.mentor-management-filters select, .mentor-tier-control select { min-height: 38px; padding: 8px 10px; border: 1px solid #dce2e7; border-radius: 7px; background: #fff; color: var(--foreground); font: inherit; font-size: 10px; }
+.mentor-account-list { display: grid; border-top: 1px solid #e8ebee; }
+.mentor-account-row { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) minmax(130px, .8fr) minmax(110px, .7fr) auto; align-items: center; gap: 18px; padding: 18px 0; border-bottom: 1px solid #e8ebee; }
+.mentor-account-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mentor-account-identity > div { display: grid; min-width: 0; gap: 3px; }
+.mentor-account-identity strong, .mentor-account-identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mentor-account-identity small, .mentor-account-status span, .mentor-tier-control small { color: #7b858d; font-size: 9px; }
+.mentor-account-status { display: grid; gap: 5px; font-size: 10px; }
+.mentor-account-status strong.active { color: #257346; }
+.mentor-account-status strong.pending { color: #9e5e10; }
+.mentor-management-empty { display: grid; place-items: center; gap: 8px; min-height: 150px; color: #7b858d; font-size: 11px; }
+.mentor-management-empty svg { color: var(--primary); }
+.mentor-pagination { justify-content: flex-end; }
+.mentor-manage-panel { display: grid; gap: 20px; border-color: #f0b48c; }
+.mentor-manage-close { display: grid; border: 1px solid #e0e4e8; border-radius: 7px; width: 34px; height: 34px; }
+.mentor-detail-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0; }
+.mentor-detail-summary > div { display: grid; gap: 5px; padding: 14px; border-radius: 10px; background: #f6f8f9; }
+.mentor-detail-summary dt { color: #7b858d; font-size: 9px; }
+.mentor-detail-summary dd { margin: 0; font-size: 11px; font-weight: 800; }
+.mentor-manage-availability { display: grid; gap: 18px; padding-top: 22px; border-top: 1px solid #e8ebee; }
+.mentor-manage-availability > div:first-child { display: grid; gap: 6px; }
+.mentor-manage-availability > div:first-child h3 { font-size: 18px; letter-spacing: -.04em; }
+.mentor-manage-availability > div:first-child p:last-child { color: #707982; font-size: 11px; }
+.mentor-availability-editor { display: grid; gap: 18px; }
+.mentor-domain-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.mentor-domain-summary > div { display: grid; gap: 5px; padding: 13px; border: 1px solid #e8ebee; border-radius: 10px; background: #fafbfc; }
+.mentor-domain-summary dt { color: #7b858d; font-size: 9px; }
+.mentor-domain-summary dd { margin: 0; font-size: 11px; font-weight: 800; }
+.availability-week { display: grid; gap: 10px; }
+.availability-day { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid #e8ebee; }
+.availability-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.availability-day-heading h3 { font-size: 13px; }
+.availability-day-heading small { color: #7b858d; font-size: 9px; }
+.availability-day-heading .text-link { display: inline-flex; align-items: center; gap: 5px; }
+.availability-day-heading .text-link svg { width: 14px; }
+.availability-range { display: grid; grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr) auto; align-items: end; gap: 10px; }
+.availability-range label { display: grid; gap: 5px; color: #6d7780; font-size: 9px; }
+.availability-range input { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #dce2e7; border-radius: 7px; background: #fff; color: var(--foreground); font: inherit; font-size: 10px; }
+.availability-range > span { align-self: center; color: #7b858d; }
+.availability-remove { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #e3d7d2; border-radius: 8px; color: var(--red); background: #fff; }
+.availability-remove svg { width: 15px; }
+.availability-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.mentor-availability-load-error { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+@media (max-width: 1000px) {
+  .mentor-account-row { grid-template-columns: 1fr 1fr; }
+  .mentor-account-row > .button { justify-self: start; }
+  .mentor-detail-summary { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 800px) {
+  .mentor-management-heading { align-items: start; flex-direction: column; }
+  .mentor-invite-fields, .mentor-management-filters, .mentor-account-row, .mentor-detail-summary { grid-template-columns: 1fr; }
+  .mentor-account-row { align-items: start; }
+  .mentor-domain-summary, .availability-range { grid-template-columns: 1fr; }
+  .availability-range > span { display: none; }
+  .availability-remove { justify-self: start; }
+}

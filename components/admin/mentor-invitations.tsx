@@ -55,6 +55,7 @@ export function MentorInvitations({ refreshKey, onDeleted }: { refreshKey: numbe
     {loading ? <p role="status">Memuat undangan…</p> : invitations.map(invitation =>
       <div className="admin-record" key={invitation.email}>
         <div><strong className="invitation-email">{invitation.email}</strong>
+          <small>Tier: {invitation.tier_name || 'Tier belum ditentukan (legacy)'}</small>
           <small>{new Date(invitation.created_at).toLocaleString('id-ID')}</small>
           {!invitation.can_delete && <small>{invitation.status === 'pending' ? 'Tunggu hingga pengiriman selesai.' : 'Akun sudah aktif atau perlu diperiksa administrator.'}</small>}
         </div>
