@@ -9,6 +9,8 @@ import {
   type AvailabilityDraftRange,
 } from '../lib/mentor/availability'
 import { parseMentorInvitationInput } from '../lib/admin/mentor-invitation-input'
+import { managedMentorName, managedMentorSetup, managedMentorTier } from '../lib/mentor/admin'
+import type { ManagedMentor } from '../lib/supabase/database.types'
 
 const range = (
   key: string,
@@ -95,5 +97,23 @@ test('mentor invitation input requires a valid email and tier UUID on the server
   assert.deepEqual(parseMentorInvitationInput(' Mentor@Example.test ', tierId), {
     email: 'mentor@example.test',
     tierId,
+  })
+})
+
+test('admin mentor rows expose honest identity, tier, and setup labels', () => {
+  const mentor: ManagedMentor = {
+    user_id: 'mentor-id', email: 'mentor@example.test', first_name: 'Navira', last_name: 'Putri',
+    username: 'navira', avatar_url: null, tier_id: null, tier_code: null, tier_name: null,
+    timezone: 'Asia/Jakarta', mentor_setup_completed_at: null, created_at: '2026-09-13T00:00:00Z',
+    availability_configured: false,
+  }
+  assert.equal(managedMentorName(mentor), 'Navira Putri')
+  assert.equal(managedMentorTier(mentor), 'Tier belum ditentukan')
+  assert.deepEqual(managedMentorSetup(mentor), { label: 'Menunggu pengaturan akun', tone: 'pending' })
+  assert.equal(managedMentorName({ ...mentor, first_name: null, last_name: null }), 'navira')
+  assert.equal(managedMentorName({ ...mentor, first_name: null, last_name: null, username: null }), 'mentor@example.test')
+  assert.equal(managedMentorTier({ ...mentor, tier_name: 'Top Student' }), 'Top Student')
+  assert.deepEqual(managedMentorSetup({ ...mentor, mentor_setup_completed_at: '2026-09-13T01:00:00Z' }), {
+    label: 'Aktif', tone: 'active',
   })
 })
