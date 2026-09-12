@@ -1,3 +1,5 @@
+import type { MentorAvailabilityRule } from '@/lib/supabase/database.types'
+
 export type DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export type AvailabilityDraftRange = {
@@ -76,4 +78,13 @@ export function groupAvailabilityByDay(ranges: AvailabilityDraftRange[]) {
     }
   }
   return grouped
+}
+
+export function availabilityRulesToDraft(rules: MentorAvailabilityRule[]): AvailabilityDraftRange[] {
+  return rules.map(rule => ({
+    key: rule.id,
+    dayOfWeek: rule.day_of_week,
+    startTime: rule.start_time.slice(0, 5),
+    endTime: rule.end_time.slice(0, 5),
+  }))
 }

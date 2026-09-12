@@ -10,6 +10,7 @@ import type { ManagedMentor, MentorTier } from '@/lib/supabase/database.types'
 import { MentorInviteForm } from './mentor-invite-form'
 import { MentorInvitations } from './mentor-invitations'
 import { MentorTierSelect } from './mentor-tier-select'
+import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
 
 export function MentorManagement() {
   const [mentors, setMentors] = useState<ManagedMentor[]>([])
@@ -166,6 +167,20 @@ export function MentorManagement() {
         <div><dt>Zona waktu</dt><dd>{selectedMentor.timezone}</dd></div>
         <div><dt>Status akun</dt><dd>{managedMentorSetup(selectedMentor).label}</dd></div>
       </dl>
+      <div className="mentor-manage-availability">
+        <div>
+          <p className="kicker">Ketersediaan mingguan</p>
+          <h3>Atur waktu operasional mentor.</h3>
+          <p>Perubahan disimpan sebagai satu jadwal utuh agar rentang lama tidak tertinggal.</p>
+        </div>
+        <MentorAvailabilityEditor
+          mentorId={selectedMentor.user_id}
+          mode="admin"
+          onSaved={configured => setMentors(records => records.map(record => record.user_id === selectedMentor.user_id
+            ? { ...record, availability_configured: configured }
+            : record))}
+        />
+      </div>
     </section>}
   </div>
 }

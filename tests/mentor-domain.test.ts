@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   DAYS_OF_WEEK,
+  availabilityRulesToDraft,
   groupAvailabilityByDay,
   toAvailabilityPayload,
   validateAvailabilityDraft,
@@ -81,6 +82,16 @@ test('availability validation permits adjacent ranges and grouping includes empt
   assert.deepEqual(grouped[6], adjacent)
   assert.deepEqual(grouped[7], [])
   assert.deepEqual(Object.keys(grouped), ['1', '2', '3', '4', '5', '6', '7'])
+})
+
+test('persisted availability rows round-trip into editable minute values', () => {
+  assert.deepEqual(availabilityRulesToDraft([
+    {
+      id: 'rule-1', mentor_id: 'mentor-id', day_of_week: 3,
+      start_time: '18:00:00', end_time: '21:00:00',
+      created_at: '2026-09-13T00:00:00Z', updated_at: '2026-09-13T00:00:00Z',
+    },
+  ]), [range('rule-1', 3, '18:00', '21:00')])
 })
 
 test('mentor invitation input requires a valid email and tier UUID on the server', () => {
