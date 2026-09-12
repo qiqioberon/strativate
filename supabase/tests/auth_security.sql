@@ -164,12 +164,12 @@ select test_security.assert((select onboarding_step = 2 from public.mentee_profi
 reset role;
 
 -- The registry is trusted server-only, and only an actual Auth invitation consumes it.
-insert into public.mentor_invites (email, invited_by) values
-  ('mentor@test.invalid', '10000000-0000-0000-0000-000000000001'),
-  ('race@test.invalid', '10000000-0000-0000-0000-000000000001'),
-  ('bob@test.invalid', '10000000-0000-0000-0000-000000000001');
-insert into public.mentor_invites (email, invited_by, status) values
-  ('failed@test.invalid', '10000000-0000-0000-0000-000000000001', 'failed');
+insert into public.mentor_invites (email, invited_by, tier_id) values
+  ('mentor@test.invalid', '10000000-0000-0000-0000-000000000001', '81000000-0000-0000-0000-000000000001'),
+  ('race@test.invalid', '10000000-0000-0000-0000-000000000001', '81000000-0000-0000-0000-000000000002'),
+  ('bob@test.invalid', '10000000-0000-0000-0000-000000000001', '81000000-0000-0000-0000-000000000001');
+insert into public.mentor_invites (email, invited_by, status, tier_id) values
+  ('failed@test.invalid', '10000000-0000-0000-0000-000000000001', 'failed', '81000000-0000-0000-0000-000000000002');
 -- Match the real GoTrue /invite transaction: INSERT, then trusted UPDATE.
 insert into auth.users (id, email) values
   ('10000000-0000-0000-0000-000000000005', 'mentor@test.invalid'),
