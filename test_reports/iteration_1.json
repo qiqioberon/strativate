@@ -1,0 +1,44 @@
+{
+  "iteration": 1,
+  "mode": "generate",
+  "summary": "4/4 acceptance criteria verified via browser checks against the live preview URL. No backend test lane applicable (app is a Next.js + Supabase project, not FastAPI/Vite; no custom API server to hit with httpx). SUPABASE_SECRET_KEY was never printed or used; only public browser-side Supabase client and negative-login flow were exercised.",
+  "passed": 4,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [],
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Current Emergent Preview loads successfully",
+      "name": "preview-home-loads",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET https://git-bridge-strat.preview.emergentagent.com -> HTTP 200, page title present, body visible, screenshot captured (home-loaded)."
+    },
+    {
+      "criterion": "The /auth page loads and is interactive",
+      "name": "auth-page-interactive",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET /auth -> HTTP 200. Email and Kata sandi (password) inputs plus Masuk button visible and fillable; email field accepted value 'tscheck-interactive@example.invalid'. No hydration failure, no blocked /_next assets observed."
+    },
+    {
+      "criterion": "Normal Supabase browser client initializes without server secret",
+      "name": "auth-invalid-login-rejected",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Submitted preview-check@example.invalid + invalid password from the browser; observed POST to Supabase /auth/v1/token -> 400 response, and the UI rendered the exact Indonesian rejection message 'Email atau kata sandi tidak sesuai.' (matches lib/auth/errors.ts invalid_credentials mapping). Only NEXT_PUBLIC_SUPABASE_URL/PUBLISHABLE_KEY were exercised; SUPABASE_SECRET_KEY not touched."
+    },
+    {
+      "criterion": "Protected route remains guarded without privileged operations",
+      "name": "admin-route-guarded",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Anonymous GET /admin redirected to /auth (server-side requireAccount() guard in app/admin/layout.tsx); Masuk button visible after redirect confirming the auth page rendered, not a broken state. No mentor invitation/importer/secret-key-dependent operation attempted."
+    }
+  ],
+  "notes": [
+    "Repo is a Next.js 16 + Supabase app (app/, components/, lib/supabase) rather than the generic FastAPI backend + Vite frontend template; supervisor's 'backend'/'frontend' programs are FATAL because /app/backend and /app/frontend directories don't exist in this project, but the actual app is served independently on port 3000 and reachable at the public preview URL, so this does not affect functional coverage.",
+    "No backend pytest lane was created: there is no custom REST API server in this project to test with httpx (auth/data operations go directly through the Supabase JS SDK from the browser), so all 4 UI-facing criteria were covered by browser checks only, per the acceptance matrix and spec_deviations noting privileged/secret-key flows are intentionally excluded."
+  ]
+}
