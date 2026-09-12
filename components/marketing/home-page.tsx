@@ -3,14 +3,12 @@ import {
   ArrowRight,
   BookOpenCheck,
   CircleHelp,
-  Compass,
   MoveRight,
   Quote,
   Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 
-import { BrandLogo } from '@/components/brand/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
 import {
   selectDigitalProducts,
@@ -25,14 +23,17 @@ import {
   productPlaceholders,
 } from '@/lib/content/marketing-content'
 import { socialProof } from '@/lib/content/brand'
-import { featuredMentors } from '@/lib/content/mentors'
+import { mentors } from '@/lib/content/mentors'
 import { cn } from '@/lib/utils'
+import { featureFlags } from '@/lib/features'
+import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 
 import { AssetMedia } from './asset-media'
-import { MentorCard } from './mentor-card'
 import { ProgramCard, type MarketingProgram } from './program-card'
+import { HeroCarousel } from './hero-carousel'
+import { MentorMarquee } from './mentor-marquee'
 
-export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductSummary[] }) {
+export function HomePage({ catalogProducts, heroPosters }: { catalogProducts: CatalogProductSummary[]; heroPosters: MarketingHeroPosterView[] }) {
   const featuredPrograms = selectHomepagePrograms(catalogProducts)
   const homePrograms: MarketingProgram[] = featuredPrograms.map(toMarketingProgram)
   const hasPublishedBigClass = catalogProducts.some(product => product.productType === 'big_class')
@@ -53,34 +54,23 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
 
   return (
     <main>
-      <section className="marketing-hero">
+      <section className="marketing-hero" data-reveal data-testid="homepage-hero-section">
         <div className="marketing-container marketing-hero__grid">
           <div className="marketing-hero__copy">
             <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
             <h1>Bangun cara berpikir.<br /><em>Temukan langkahmu.</em></h1>
             <p className="marketing-hero__lede">Bimbingan personal dan program persiapan yang membantumu mengurai tantangan, berlatih dengan fokus, dan bergerak dengan arah yang lebih jelas.</p>
             <div className="marketing-hero__actions">
-              <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">
+              <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program" data-testid="hero-program-link">
                 Temukan programmu <ArrowRight data-icon="arrow" aria-hidden="true" size={17} />
               </Link>
-              <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/mentor">
+              <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/mentor" data-testid="hero-mentor-link">
                 Kenali mentor <MoveRight data-icon="arrow" aria-hidden="true" size={17} />
               </Link>
             </div>
           </div>
 
-          <div className="marketing-hero__visual" aria-label="Identitas visual Strativate">
-            <div className="marketing-hero__visual-head">
-              <span>STRATIVATE / 01</span>
-              <Compass aria-hidden="true" size={22} />
-            </div>
-            <div className="marketing-hero__brand-art"><BrandLogo variant="mark" priority /></div>
-            <div className="marketing-hero__visual-foot">
-              <strong>Ruang untuk<br />bertumbuh.</strong>
-              <p>Pelatihan bisnis, akuntansi, dan persiapan kompetisi dengan pendekatan praktis.</p>
-              <ArrowDownRight aria-hidden="true" size={28} />
-            </div>
-          </div>
+          <HeroCarousel posters={heroPosters} />
         </div>
         <p className="marketing-container marketing-proof-context">Siswa kami berasal dari</p>
         <div className="marketing-container marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
@@ -93,14 +83,14 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
         </div>
       </section>
 
-      <section className="marketing-section marketing-programs" aria-labelledby="program-heading">
+      <section className="marketing-section marketing-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
         <div className="marketing-container">
           <div className="marketing-section-head is-wide">
             <div>
               <p className="marketing-kicker">Pilih bekal unggulmu</p>
               <h2 id="program-heading">Pilih cara belajarmu.<br /><em>Dengan ritme yang kamu pilih.</em></h2>
             </div>
-            <Link className="marketing-text-link" href="/program">Lihat semua program <ArrowRight data-icon="arrow" size={16} /></Link>
+            <Link className="marketing-text-link" href="/program" data-testid="all-programs-link">Lihat semua program <ArrowRight data-icon="arrow" size={16} /></Link>
           </div>
           <div className="marketing-program-grid">
             {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
@@ -108,20 +98,20 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
         </div>
       </section>
 
-      <section className="marketing-statement">
+      <section className="marketing-statement" data-reveal data-testid="homepage-approach-section">
         <div className="marketing-container marketing-statement__grid">
           <Quote aria-hidden="true" size={34} />
           <div>
             <p className="marketing-kicker">Cara kerja kami</p>
             <h2>Persiapan yang baik bukan tentang terlihat paling siap. <em>Ia membuat langkah berikutnya terasa jelas.</em></h2>
           </div>
-          <Link className={buttonVariants({ variant: 'dark', size: 'marketing' })} href="/tentang-kami">
+          <Link className={buttonVariants({ variant: 'dark', size: 'marketing' })} href="/tentang-kami" data-testid="approach-about-link">
             Tentang pendekatan kami <ArrowRight data-icon="arrow" size={16} />
           </Link>
         </div>
       </section>
 
-      <section className="marketing-section marketing-mentors" aria-labelledby="mentor-heading">
+      <section className="marketing-section marketing-mentors" aria-labelledby="mentor-heading" data-reveal data-testid="homepage-mentors-section">
         <div className="marketing-container">
           <div className="marketing-section-head">
             <div>
@@ -130,16 +120,14 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
             </div>
             <div className="marketing-section-head__note">
               <p>Kenali pengalaman, pencapaian, dan fokus keahlian mentor yang tercantum dalam data Strativate.</p>
-              <Link className="marketing-text-link" href="/mentor">Buka direktori mentor <ArrowRight data-icon="arrow" size={16} /></Link>
+              <Link className="marketing-text-link" href="/mentor" data-testid="mentor-directory-link">Buka direktori mentor <ArrowRight data-icon="arrow" size={16} /></Link>
             </div>
           </div>
-          <div className="marketing-mentor-grid">
-            {featuredMentors.map((mentor, index) => <MentorCard mentor={mentor} index={index} key={mentor.slug} />)}
-          </div>
+          <MentorMarquee mentors={mentors} />
         </div>
       </section>
 
-      <section className="marketing-section marketing-products" aria-labelledby="product-heading">
+      {featureFlags.digitalProducts ? <section className="marketing-section marketing-products" aria-labelledby="product-heading" data-reveal data-testid="homepage-products-section">
         <div className="marketing-container marketing-products__grid">
           <div className="marketing-products__intro">
             <p className="marketing-kicker">Produk digital</p>
@@ -147,7 +135,7 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
             <p>{digitalProducts.length > 0
               ? 'Pilih materi mandiri yang telah dipublikasikan langsung dari katalog Strativate.'
               : 'Sampul, nama, format, dan harga final belum dipublikasikan. Slot ini sudah disiapkan agar katalog dapat diperbarui langsung dari data dan registry aset.'}</p>
-            <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/produk-digital">
+            <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/produk-digital" data-testid="digital-products-link">
               Lihat ruang produk <ArrowRight data-icon="arrow" size={16} />
             </Link>
           </div>
@@ -166,9 +154,9 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
             ))}
           </div>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="marketing-section marketing-about-preview" aria-labelledby="about-heading">
+      <section className="marketing-section marketing-about-preview" aria-labelledby="about-heading" data-reveal data-testid="homepage-about-section">
         <div className="marketing-container marketing-about-preview__grid">
           <div className="marketing-about-preview__title">
             <BookOpenCheck aria-hidden="true" size={28} />
@@ -177,18 +165,18 @@ export function HomePage({ catalogProducts }: { catalogProducts: CatalogProductS
           </div>
           <div className="marketing-about-preview__copy">
             <p>Kami merancang ruang belajar untuk membantu peserta menyusun prioritas, menguji pemikiran, dan memperbaiki hasil kerja secara bertahap.</p>
-            <Link className="marketing-text-link" href="/tentang-kami">Baca tentang Strativate <ArrowRight data-icon="arrow" size={16} /></Link>
+            <Link className="marketing-text-link" href="/tentang-kami" data-testid="about-preview-link">Baca tentang Strativate <ArrowRight data-icon="arrow" size={16} /></Link>
           </div>
         </div>
       </section>
 
-      <section className="marketing-section marketing-faq-preview" aria-labelledby="faq-heading">
+      <section className="marketing-section marketing-faq-preview" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section">
         <div className="marketing-container marketing-faq-preview__grid">
           <div>
             <CircleHelp aria-hidden="true" size={26} />
             <p className="marketing-kicker">Tanya jawab</p>
             <h2 id="faq-heading">Mulai dengan<br /><em>pertanyaan yang tepat.</em></h2>
-            <Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/tanya-jawab">
+            <Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/tanya-jawab" data-testid="faq-preview-link">
               Buka semua jawaban <ArrowRight data-icon="arrow" size={16} />
             </Link>
           </div>

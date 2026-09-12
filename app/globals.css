@@ -5,13 +5,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-poppins), 'Arial', sans-serif;
+  --font-sans: var(--font-dm-sans), sans-serif; --font-heading: var(--font-outfit), sans-serif; --font-mono: var(--font-ibm-plex), monospace;
   --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --radius-lg: 1.25rem; --radius-md: .8rem; --radius-sm: .55rem;
 }
 :root { --background: #fdfdfd; --foreground: #000000; --card: #ffffff; --card-foreground: #000000; --primary: #ff7a00; --primary-foreground: #fff; --muted: #fff5e8; --muted-foreground: #695f59; --border: #eadfd7; --red: #dc0d16; --deep-red: #b3151c; --yellow: #ffe79d; --navy: #27364a; --white: #fdfdfd; }
 * { box-sizing: border-box; }
 html { background: var(--background); scroll-behavior: smooth; }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); line-height: 1.5; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 button { font: inherit; cursor: pointer; }
 button, input { border: 0; }
 .site-shell { min-height: 100vh; overflow: hidden; }
@@ -78,3 +79,24 @@ footer { max-width: 1120px; margin: 0 auto; padding: 35px 32px; display: flex; a
 .workspace-brand .brand-logo, .role-brand .brand-logo { width: 142px; height: auto; }
 .workspace-loading-mark { width: 48px; height: auto; border-radius: 0; background: transparent; }
 .auth-card .brand-logo { width: 160px; height: auto; }
+
+.admin-section-switcher { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: flex; gap: 4px; padding: 5px; border: 1px solid #dfe3e6; border-radius: 13px; background: rgba(255,255,255,.94); box-shadow: 0 12px 30px #2431401f; backdrop-filter: blur(12px); }
+.admin-section-switcher a { padding: 9px 12px; border-radius: 9px; color: #56616c; font-size: 10px; font-weight: 800; text-decoration: none; }
+.admin-section-switcher a:hover, .admin-section-switcher a:focus-visible { color: var(--foreground); background: #fff0e5; outline: none; }
+.admin-marketing-page { min-height: 100vh; padding: 72px clamp(20px, 5vw, 72px) 110px; background: #f7f8fa; }
+.hero-poster-admin { width: min(1180px, 100%); margin: 0 auto; }
+.hero-poster-admin__layout { display: grid; grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); gap: 18px; align-items: start; }
+.hero-poster-form { display: grid; gap: 14px; position: sticky; top: 24px; }
+.hero-poster-form > label { display: grid; gap: 6px; color: #67717b; font-size: 10px; font-weight: 700; }
+.hero-poster-form input:not([type='checkbox']) { min-width: 0; padding: 10px; border: 1px solid #dfe3e6; border-radius: 8px; background: #fafbfc; font: inherit; font-size: 10px; }
+.hero-poster-list { display: grid; gap: 0; }
+.hero-poster-row { display: grid; grid-template-columns: 118px minmax(0, 1fr) auto; align-items: center; gap: 15px; padding: 16px 0; border-top: 1px solid #e8ebee; }
+.hero-poster-row__image { position: relative; width: 118px; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 5px 13px 5px 5px; background: #eceff2; }
+.hero-poster-row__image img { object-fit: cover; }
+.hero-poster-row__copy { display: grid; gap: 5px; min-width: 0; }
+.hero-poster-row__copy strong { font-size: 12px; }
+.hero-poster-row__copy span, .hero-poster-row__copy small { overflow: hidden; color: #7b858d; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.hero-poster-row__actions { display: flex; align-items: center; gap: 5px; }
+.hero-poster-row__actions button { display: grid; min-width: 30px; min-height: 30px; place-items: center; padding: 0 8px; border: 1px solid #dfe3e6; border-radius: 8px; color: #56616c; background: #fff; font-size: 9px; font-weight: 800; }
+.hero-poster-row__actions button:disabled { cursor: not-allowed; opacity: .4; }
+@media (max-width: 800px) { .hero-poster-admin__layout { grid-template-columns: 1fr; }.hero-poster-form { position: static; }.hero-poster-row { grid-template-columns: 86px 1fr; }.hero-poster-row__image { width: 86px; }.hero-poster-row__actions { grid-column: 1 / -1; justify-content: flex-end; } }

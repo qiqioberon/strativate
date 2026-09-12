@@ -1,0 +1,76 @@
+{
+  "iteration": 2,
+  "mode": "generate",
+  "summary": "8/8 acceptance criteria verified via browser checks. Next.js dev server was not running at session start (backend/frontend supervisor programs are FATAL as expected for this Next.js-only app); started `next dev` on :3000 manually to test. No backend pytest lane: app is Next.js + Supabase with no custom FastAPI/API route, matching spec_deviations.",
+  "passed": 8,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [
+    "Next.js dev server (port 3000) is not auto-started by supervisor in this environment (backend/frontend programs FATAL because /app/backend and /app/frontend don't exist for this Next.js project); it was started manually for this test run via `npx next dev -p 3000 -H 0.0.0.0`. If preview access relies on supervisor autostart, confirm the actual deployment/preview process starts `next dev`/`next start` independently."
+  ],
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Preview publik dan homepage marketing dapat dimuat",
+      "name": "homepage-loads-hero-fallback",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET / -> 200, body visible, brand fallback image (strativate-wordmark) rendered since marketing_hero_posters returns PGRST205 (confirmed in dev server log: 'Hero posters are unavailable; using the approved brand fallback. { code: 'PGRST205' }'). Screenshot: home."
+    },
+    {
+      "criterion": "Digital Products tersembunyi secara global dan reversibel melalui feature flag",
+      "name": "digital-products-hidden-and-redirect",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Homepage body text does not contain 'Produk Digital'. GET /produk-digital redirected to /program (URL matched /\\/program$/). Screenshot: redirected-to-program."
+    },
+    {
+      "criterion": "Route dan nama mentoring sudah distandardisasi",
+      "name": "explore-redirects-and-mentoring-names",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET /explore redirected to /program; page body contains both 'Private Mentoring' and 'Intensive Mentoring'. Screenshot: program-page."
+    },
+    {
+      "criterion": "WhatsApp CTA global bersifat kontekstual",
+      "name": "whatsapp-cta-contextual",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "wa.me/whatsapp link visible on both / and /program; href text params differed between the two contexts (decoded hrefs not equal). Screenshot: wa-program."
+    },
+    {
+      "criterion": "Direktori mentor yang didesain ulang berfungsi",
+      "name": "mentor-directory-search-filter-dialog",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET /mentor rendered directory; search for 'Navira Putri' surfaced matching card text; profile button opened a role=dialog which became visible, then closed via close button/Escape and became hidden. Screenshots: directory, dialog-open."
+    },
+    {
+      "criterion": "Halaman Program, About, dan Q&A yang didesain ulang dapat digunakan",
+      "name": "program-about-qna-pages-load",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET /program shows Private/Intensive Mentoring text; GET /tentang-kami loads with visible body; GET /tanya-jawab loads, search filled with 'mentoring', and an FAQ accordion trigger (excluding the mobile nav toggle) was clicked successfully. Screenshots: about, qna."
+    },
+    {
+      "criterion": "Navigasi marketing responsif dan tidak overflow",
+      "name": "nav-responsive-no-overflow",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "At 1280x720: header and footer visible, no horizontal overflow (scrollWidth <= clientWidth). At 390x844: no overflow, mobile menu toggle (data-testid=mobile-menu-toggle-button) opened menu, Program link clicked and navigated to /program. Screenshots: desktop, mobile-nav-program."
+    },
+    {
+      "criterion": "Auth dan proteksi admin tetap terjaga",
+      "name": "admin-guard-redirects-to-auth",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "GET /admin and /admin/marketing both redirected anonymous user to /auth. Auth page email input visible and fillable ('tscheck-guard@example.invalid'). Page HTML did not contain 'REPLACE_MANUALLY' or 'SUPABASE_SECRET_KEY'. Screenshot: auth-guarded."
+    }
+  ],
+  "notes": [
+    "App is Next.js 16 + Supabase (app/, components/, lib/supabase), not the generic FastAPI+Vite template; there is no custom REST API to test with httpx, consistent with spec_deviations. All coverage is via browser checks.",
+    "One selector fix during this run: initial accordion-open attempt in program-about-qna-pages-load matched the mobile nav menu toggle (also aria-expanded=false) instead of an FAQ item; fixed by excluding data-testid=mobile-menu-toggle-button, then reran and passed.",
+    "SUPABASE_SECRET_KEY was never printed, logged, or used in any check.",
+    "No admin credentials were available or used; admin CRUD/hero-poster-upload flows described in spec_deviations were intentionally not exercised end-to-end."
+  ]
+}

@@ -68,6 +68,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn('marketing-nav__link', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
+                data-testid={`desktop-nav-${item.icon}-link`}
               >
                 <Icon aria-hidden="true" size={16} strokeWidth={1.9} />
                 <span>{item.label}</span>
@@ -77,11 +78,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="marketing-header__actions">
-          <Link className="marketing-login" href="/auth">
+          <Link className="marketing-login" href="/auth" data-testid="desktop-login-link">
             <LogIn aria-hidden="true" size={16} />
             <span>Masuk</span>
           </Link>
-          <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-start')} href="/program">
+          <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-start')} href="/program" data-testid="desktop-start-learning-link">
             Mulai belajar
             <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
           </Link>
@@ -92,6 +93,7 @@ export function SiteHeader() {
             aria-expanded={mobileOpen}
             aria-controls="marketing-mobile-navigation"
             onClick={() => setMobileOpen((open) => !open)}
+            data-testid="mobile-menu-toggle-button"
           >
             {mobileOpen ? <X aria-hidden="true" size={21} /> : <Menu aria-hidden="true" size={21} />}
           </button>
@@ -110,6 +112,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn('marketing-mobile-link', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
+                data-testid={`mobile-nav-${item.icon}-link`}
               >
                 <span className="marketing-mobile-link__icon"><Icon aria-hidden="true" size={17} /></span>
                 <span>{item.label}</span>
@@ -118,10 +121,10 @@ export function SiteHeader() {
             )
           })}
           <div className="marketing-mobile-panel__actions">
-            <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/auth">
+            <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/auth" data-testid="mobile-login-link">
               <LogIn aria-hidden="true" size={16} /> Masuk
             </Link>
-            <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">
+            <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program" data-testid="mobile-start-learning-link">
               Mulai belajar <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
             </Link>
           </div>

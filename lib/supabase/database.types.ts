@@ -62,6 +62,17 @@ export type MasterOption = {
   created_at: string
   updated_at: string
 }
+export type MarketingHeroPoster = {
+  id: string
+  image_path: string
+  alt_text: string
+  title: string | null
+  url: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
 export type MentorInvite = {
   email: string
   invited_by: string
@@ -123,6 +134,7 @@ export type Database = {
       institutions: Table<Institution, Partial<Institution> & Pick<Institution, "name" | "type" | "source">>
       referral_sources: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
+      marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster, "image_path" | "alt_text">>
       mentee_interests: Table<{ user_id: string; interest_id: string; created_at: string }, { user_id: string; interest_id: string; created_at?: string }>
       mentor_invites: Table<MentorInvite, Partial<MentorInvite> & Pick<MentorInvite, "email" | "invited_by">>
       catalog_products: Table<CatalogProduct, Partial<CatalogProduct> & Pick<CatalogProduct, "code" | "slug" | "product_type" | "default_purchase_flow" | "title" | "short_description">>
@@ -177,6 +189,7 @@ export type Database = {
         p_intensive_scope?: CatalogIntensiveScope | null; p_sessions_per_month?: number | null
         p_is_conditional?: boolean; p_public_condition_summary?: string | null
       }; Returns: string }
+      reorder_marketing_hero_posters: { Args: { p_ids: string[] }; Returns: undefined }
     }
     Enums: {
       app_role: AppRole; institution_type: InstitutionType; institution_approval_status: ApprovalStatus

@@ -7,6 +7,7 @@ import { ServiceCard } from '@/components/marketing/service-card'
 import { buttonVariants } from '@/components/ui/button'
 import { listPublicCatalog } from '@/lib/catalog/public'
 import { connectServicesToCatalog } from '@/lib/content/services'
+import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 export default async function ProgramPage() {
   const services = connectServicesToCatalog(await listPublicCatalog())
@@ -20,10 +21,13 @@ export default async function ProgramPage() {
           description="Delapan layanan Strativate mendukung kebutuhan belajar, konsultasi, dan persiapan kompetisi. Detail komersial hanya ditampilkan untuk program yang telah tersedia di Product Master."
           aside={primaryProgram ? <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href={primaryProgram.href!}>{primaryProgram.detailLabel} <ArrowRight data-icon="arrow" size={16} /></Link> : undefined}
         />
-        <section className="marketing-page-section">
+        <section className="marketing-page-section" data-reveal data-testid="program-directory-section">
           <div className="marketing-container marketing-services-grid">
             {services.map((service, index) => <ServiceCard service={service} index={index} key={service.id} />)}
           </div>
+        </section>
+        <section className="marketing-consultation-band" data-reveal data-testid="program-consultation-section">
+          <div className="marketing-container"><div><p className="marketing-kicker">Belum yakin memilih?</p><h2>Ceritakan target dan tahap persiapanmu.</h2></div><a href={buildWhatsAppHref('Halo Strativate, saya ingin dibantu memilih program yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">Konsultasi via WhatsApp <ArrowRight aria-hidden="true" size={17} /></a></div>
         </section>
       </main>
     </MarketingShell>

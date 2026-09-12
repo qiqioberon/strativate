@@ -4,7 +4,6 @@ const navigation = [
   ['Beranda', '/'],
   ['Program', '/program'],
   ['Mentor', '/mentor'],
-  ['Produk Digital', '/produk-digital'],
   ['Tentang Kami', '/tentang-kami'],
   ['Tanya Jawab', '/tanya-jawab'],
 ] as const
@@ -20,9 +19,10 @@ test('homepage uses real dedicated marketing links and safe editorial previews',
   await expect(nav.getByRole('link', { name: 'Beranda', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('heading', { name: 'Pilih cara belajarmu.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Belajar dari pengalaman, bertumbuh dengan arahan.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Materi yang siap mengikuti ritmemu.' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Lihat Mentoring Privat' })).toHaveAttribute('href', '/program/private-mentoring')
-  await expect(page.locator('.marketing-program-card').filter({ hasText: 'Mentoring Privat' })).toContainText('Rp300.000')
+  await expect(page.getByRole('heading', { name: 'Materi yang siap mengikuti ritmemu.' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Lihat Private Mentoring' })).toHaveAttribute('href', '/program/private-mentoring')
+  await expect(page.locator('.marketing-program-card').filter({ hasText: 'Private Mentoring' })).toContainText('Rp300.000')
+  await expect(page.getByTestId('hero-poster-carousel').or(page.getByTestId('hero-poster-fallback'))).toHaveCount(1)
   await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
   await expect(page.getByText('2500+', { exact: true })).toBeVisible()
   await expect(page.getByText('Siswa kami berasal dari', { exact: true })).toBeVisible()
@@ -46,12 +46,17 @@ test('public mentor directory and protected mentor workspace remain distinct', a
   await page.getByPlaceholder('Cari nama atau keahlian').fill('Navira Putri')
   await expect(page.locator('.marketing-mentor-card')).toHaveCount(1)
   await expect(page.getByRole('heading', { name: 'Navira Putri' })).toBeVisible()
+  await page.getByTestId('mentor-navira-putri-detail-button').click()
+  await expect(page.getByTestId('mentor-detail-modal')).toHaveAttribute('open', '')
+  await expect(page.getByTestId('mentor-modal-name')).toHaveText('Navira Putri')
+  await page.getByTestId('mentor-modal-close-button').click()
+  await expect(page.getByTestId('mentor-detail-modal')).not.toHaveAttribute('open', '')
 
   await page.goto('/mentor/dashboard')
   await expect(page).toHaveURL(/\/auth$/)
 })
 
-test('program and digital directories preserve the marketing shell and honest catalog states', async ({ page }) => {
+test('program directory hides digital products and retired digital route redirects', async ({ page }) => {
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
   await expect(page.locator('.marketing-service-card')).toHaveCount(8)
@@ -59,10 +64,19 @@ test('program and digital directories preserve the marketing shell and honest ca
   await expect(page.getByRole('heading', { name: 'Community' })).toBeVisible()
   await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
 
+  await expect(page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Produk Digital' })).toHaveCount(0)
   await page.goto('/produk-digital')
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
-  await expect(page.getByText('Belum tersedia untuk pembelian')).toHaveCount(2)
-  await expect(page.getByText(/Rp59\.000|Rp79\.000|Rp89\.000|Rp99\.000/)).toHaveCount(0)
+  await expect(page).toHaveURL(/\/program$/)
+  await expect(page.getByTestId('program-directory-section')).toBeVisible()
+})
+
+test('FAQ search and contextual WhatsApp consultation remain usable', async ({ page }) => {
+  await page.goto('/tanya-jawab')
+  await page.getByTestId('faq-search-input').fill('mentor')
+  await expect(page.getByTestId('faq-result-count')).toHaveText('Menampilkan 1 jawaban')
+  await expect(page.getByTestId('faq-list').locator('details')).toHaveCount(1)
+  const whatsapp = new URL(await page.getByTestId('global-whatsapp-cta').getAttribute('href') ?? '')
+  expect(whatsapp.searchParams.get('text')).toContain('pertanyaan')
 })
 
 test('mobile menu is accessible, navigates natively, and avoids overflow', async ({ page }) => {

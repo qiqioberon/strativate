@@ -4,13 +4,15 @@ import { getPublicCatalogProduct, listPublicCatalog } from '@/lib/catalog/public
 import { resolveMentoringSlug } from '@/lib/program-routes'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { ProductDetail } from '@/components/programs/program-detail'
+import { catalogProductDisplayTitle } from '@/lib/catalog/presentation'
+import { featureFlags } from '@/lib/features'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const canonical = resolveMentoringSlug(slug) ?? slug
   const product = await getPublicCatalogProduct(canonical)
   return product
-    ? { title: product.title, description: product.shortDescription, alternates: { canonical: `/program/${canonical}` } }
+    ? { title: catalogProductDisplayTitle(product), description: product.shortDescription, alternates: { canonical: `/program/${canonical}` } }
     : {}
 }
 
@@ -20,5 +22,6 @@ export default async function ProgramDetail({ params }: { params: Promise<{ slug
   if (canonical && canonical !== slug) permanentRedirect(`/program/${canonical}`)
   const [product, comparisons] = await Promise.all([getPublicCatalogProduct(slug), listPublicCatalog()])
   if (!product) notFound()
+  if (!featureFlags.digitalProducts && product.productType === 'digital_product') permanentRedirect('/program')
   return <MarketingShell><ProductDetail product={product} comparisons={comparisons} /></MarketingShell>
 }

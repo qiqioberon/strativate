@@ -1,6 +1,9 @@
 // Display labels only. Stored values, route keys, and API payloads stay unchanged.
 const labels: Record<string, string> = {
-  'Private Mentoring': 'Mentoring Privat', 'Intensive Mentoring': 'Mentoring Intensif',
+  'Private Mentoring': 'Private Mentoring', 'Intensive Mentoring': 'Intensive Mentoring',
+  'Mentoring Privat': 'Private Mentoring', 'Mentoring Intensif': 'Intensive Mentoring',
+  'Mentoring Intensif Kasus Bisnis': 'Intensive Mentoring Kasus Bisnis',
+  'Tambahan Sesi Mentoring Privat': 'Tambahan Sesi Private Mentoring',
   'Big Class': 'Kelas Besar', 'Digital Products': 'Produk Digital', 'Digital Product': 'Produk Digital',
   All: 'Semua', Featured: 'Unggulan', 'Price low to high': 'Harga terendah', 'Price high to low': 'Harga tertinggi',
   Overview: 'Ringkasan', Orders: 'Pesanan', 'Mentor Assignment': 'Penugasan Mentor', Bookings: 'Jadwal Pesanan',
@@ -27,7 +30,7 @@ const labels: Record<string, string> = {
   'Competition Focused': 'Fokus Kompetisi', 'Career Growth': 'Pengembangan Karier', 'Build confidence': 'Membangun kepercayaan diri',
   'Let Strativate match me': 'Bantu pilihkan mentor', 'Weekday evenings': 'Malam hari kerja', 'Weekend mornings': 'Pagi akhir pekan',
   'Flexible scheduling': 'Jadwal fleksibel', bima_kemdiktisaintek: 'BIMA Kemdiktisaintek', school_pdf: 'Dokumen sekolah',
-  'Assigned Mentor': 'Mentor yang ditugaskan', 'Business Case Intensive': 'Mentoring Intensif Kasus Bisnis',
+  'Assigned Mentor': 'Mentor yang ditugaskan', 'Business Case Intensive': 'Intensive Mentoring Kasus Bisnis',
   'Business Case Big Class': 'Kelas Besar Kasus Bisnis', 'Case Cracking Playbook': 'Panduan Pemecahan Kasus',
   'Pitch Deck Starter Kit': 'Paket Awal Presentasi Bisnis',
 }

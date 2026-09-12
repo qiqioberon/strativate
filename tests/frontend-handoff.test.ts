@@ -85,6 +85,13 @@ test('the program overview contains exactly eight sourced services and only veri
   }
   const connected = content.connectServicesToCatalog([publishedPrivate])
   assert.equal(connected[0].href, '/program/private-custom')
-  assert.equal(connected[0].detailLabel, 'Lihat Mentoring Privat')
+  assert.equal(connected[0].detailLabel, 'Lihat Private Mentoring')
   assert.equal(connected[1].href, undefined)
+})
+
+test('legacy mentoring labels render with the standardized public names', async () => {
+  const { displayLabel } = await import('../lib/labels')
+  assert.equal(displayLabel('Mentoring Privat'), 'Private Mentoring')
+  assert.equal(displayLabel('Mentoring Intensif'), 'Intensive Mentoring')
+  assert.equal(displayLabel('Mentoring Intensif Kasus Bisnis'), 'Intensive Mentoring Kasus Bisnis')
 })

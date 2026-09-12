@@ -16,6 +16,10 @@ Apply [`202609090001_product_catalog_master.sql`](supabase/migrations/2026090900
 before deploying Product Master. The migration publishes the approved Private and
 Intensive Mentoring master, but intentionally seeds no Big Class or Digital Product.
 
+Apply [`202609120001_marketing_hero_posters.sql`](supabase/migrations/202609120001_marketing_hero_posters.sql)
+after Product Master to enable the admin-managed homepage poster carousel and its
+dedicated Supabase Storage bucket. Hosted application is not implied by this file.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
 ## Built with v0

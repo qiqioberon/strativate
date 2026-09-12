@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Compass, Users } from 'lucide-react'
 import { formatRupiah } from '@/lib/catalog/format'
-import { catalogPriceLabel, catalogProductTypeLabels, directCheckoutOfferings } from '@/lib/catalog/presentation'
+import { catalogPriceLabel, catalogProductDisplayTitle, catalogProductTypeLabels, directCheckoutOfferings } from '@/lib/catalog/presentation'
 import type { CatalogProductDetail, CatalogProductSummary } from '@/lib/catalog/types'
 import { commercialItemEditorial, competitionCategories, deliveryOptionEditorial, getProgramEditorial } from '@/lib/program-information'
 import { ProgramComparison } from './program-comparison'
 import { publicContact } from '@/lib/content/brand'
+import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 function FeatureList({ items }: { items: string[] }) {
   return <ul className="program-feature-list">{items.map((item) => <li key={item}><Check size={16} aria-hidden="true" /><span>{item}</span></li>)}</ul>
@@ -47,19 +48,21 @@ function MentoringProductDetail({ product, comparisons }: ProductDetailProps) {
   const isPrivate = product.productType === 'private_mentoring'
   const isIntensive = product.productType === 'intensive_mentoring'
   const allBenefits = Array.from(new Map(Object.values(product.benefitsByItemId).flat().map((benefit) => [benefit.id, benefit])).values())
+  const displayTitle = catalogProductDisplayTitle(product)
+  const whatsappHref = buildWhatsAppHref(`Halo Strativate, saya ingin berkonsultasi tentang ${displayTitle}.`)
 
   return <main className="detail-page program-information">
-    <nav className="program-breadcrumb" aria-label="Jejak navigasi"><Link href="/" className="back-link">Strativate</Link><Link href="/explore" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> Jelajahi program</Link></nav>
-    <section className="detail-hero"><div><p className="kicker">{editorial?.kicker ?? 'Program Strativate'}</p><h1>{product.title}</h1><p className="detail-lede">{editorial?.detail ?? product.description ?? product.shortDescription}</p><div className="detail-price"><strong>{catalogPriceLabel(product)}</strong><span>{product.defaultPurchaseFlow === 'consultation_offer' ? 'Pilih kebutuhanmu bersama tim Strativate' : 'Pembelian langsung'}</span></div><a href="#packages" className="primary-cta">Lihat paket <ArrowRight size={16} aria-hidden="true" /></a></div><aside className="detail-summary"><p className="kicker">Sekilas program</p>{editorial?.highlights.map((fact) => <div key={fact}><Check size={17} aria-hidden="true" /><span>{fact}</span></div>)}</aside></section>
-    {editorial && <section className="program-audience"><Compass size={30} aria-hidden="true" /><div><p className="kicker">Cocok untuk siapa?</p><h2>Mulai dari kebutuhanmu sekarang.</h2><p>{editorial.audience}</p></div></section>}
+    <nav className="program-breadcrumb" aria-label="Jejak navigasi" data-testid="program-breadcrumb"><Link href="/" className="back-link" data-testid="program-home-back-link">Strativate</Link><Link href="/program" className="back-link" data-testid="program-directory-back-link"><ArrowLeft size={15} aria-hidden="true" /> Kembali ke Program</Link></nav>
+    <section className="detail-hero" data-reveal data-testid="program-detail-hero"><div><p className="kicker">{editorial?.kicker ?? 'Program Strativate'}</p><h1 data-testid="program-detail-title">{displayTitle}</h1><p className="detail-lede">{editorial?.detail ?? product.description ?? product.shortDescription}</p><div className="detail-price"><strong>{catalogPriceLabel(product)}</strong><span>{product.defaultPurchaseFlow === 'consultation_offer' ? 'Pilih kebutuhanmu bersama tim Strativate' : 'Pembelian langsung'}</span></div><div className="program-hero-actions"><a href="#packages" className="primary-cta" data-testid="program-packages-link">Lihat paket <ArrowRight size={16} aria-hidden="true" /></a><a href={whatsappHref} target="_blank" rel="noreferrer" className="secondary-cta" data-testid="program-hero-whatsapp-link">Konsultasi dahulu</a></div></div><aside className="detail-summary"><p className="kicker">Sekilas program</p>{editorial?.highlights.map((fact) => <div key={fact}><Check size={17} aria-hidden="true" /><span>{fact}</span></div>)}</aside></section>
+    {editorial && <section className="program-audience" data-reveal><Compass size={30} aria-hidden="true" /><div><p className="kicker">Cocok untuk siapa?</p><h2>Mulai dari kebutuhanmu sekarang.</h2><p>{editorial.audience}</p></div></section>}
     {isPrivate && <><DeliveryOptions product={product} kind="learning_path" title="Mulai dari dasar atau fokus ke kompetisi tertentu." /><DeliveryOptions product={product} kind="focus_topic" title="Kerjakan hal yang paling penting." /></>}
-    {!!allBenefits.length && <section className="program-section"><div className="program-section-heading"><p className="kicker">Yang akan kamu dapatkan</p><h2>{isPrivate ? 'Masukan yang bisa langsung dipakai.' : 'Progres yang terlihat dari waktu ke waktu.'}</h2></div><FeatureList items={allBenefits.map((benefit) => benefit.label)} /></section>}
-    {editorial && <section className="program-section"><div className="program-section-heading"><p className="kicker">Cara kerja program</p><h2>Dari tujuan sampai langkah berikutnya.</h2></div><ol className="program-journey">{editorial.journey.map((step, index) => <li key={step.title}><span className="program-step-number" aria-hidden="true">0{index + 1}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol></section>}
-    <section id="packages" className="program-section"><div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>{isPrivate ? 'Pilih mentormu. Tentukan ritmemu.' : 'Pilih tingkat bimbinganmu.'}</h2></div>{isPrivate ? <PrivatePackages product={product} /> : <IntensivePackages product={product} />}</section>
+    {!!allBenefits.length && <section className="program-section program-section--surface" data-reveal><div className="program-section-heading"><p className="kicker">Yang akan kamu dapatkan</p><h2>{isPrivate ? 'Masukan yang bisa langsung dipakai.' : 'Progres yang terlihat dari waktu ke waktu.'}</h2></div><FeatureList items={allBenefits.map((benefit) => benefit.label)} /></section>}
+    {editorial && <section className="program-section" data-reveal><div className="program-section-heading"><p className="kicker">Cara kerja program</p><h2>Dari tujuan sampai langkah berikutnya.</h2></div><ol className="program-journey">{editorial.journey.map((step, index) => <li key={step.title}><span className="program-step-number" aria-hidden="true">0{index + 1}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol></section>}
+    <section id="packages" className="program-section program-section--surface" data-reveal><div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>{isPrivate ? 'Pilih mentormu. Tentukan ritmemu.' : 'Pilih tingkat bimbinganmu.'}</h2></div>{isPrivate ? <PrivatePackages product={product} /> : <IntensivePackages product={product} />}</section>
     {isIntensive && <IntensiveExtras product={product} />}
     <section className="program-section"><div className="program-section-heading"><p className="kicker">Kategori kompetisi</p><h2>Dukungan lintas bidang.</h2></div><ul className="program-category-list">{competitionCategories.map((category) => <li key={category}>{category}</li>)}</ul></section>
     <ProgramComparison products={comparisons} />
-    <section className="program-contact"><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program sesuai tujuan, tahap persiapan, dan jadwalmu.</p><div className="program-contact-actions"><a href={publicContact.whatsapp} className="primary-cta">Konsultasi via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a><a href={publicContact.emailHref} className="back-link">{publicContact.email}</a></div></section>
+    <section className="program-contact" data-reveal><p className="kicker">Butuh bantuan memilih?</p><h2>Diskusikan tujuanmu.</h2><p>Tim Strativate dapat menjelaskan pilihan program sesuai tujuan, tahap persiapan, dan jadwalmu.</p><div className="program-contact-actions"><a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta" data-testid="program-contact-whatsapp-link">Konsultasi via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a><a href={publicContact.emailHref} className="back-link" data-testid="program-contact-email-link">{publicContact.email}</a></div></section>
   </main>
 }
 
@@ -67,11 +70,11 @@ function GeneralCatalogProductDetail({ product }: { product: CatalogProductDetai
   const checkoutOfferings = new Map(directCheckoutOfferings(product).map(item => [item.id, item]))
 
   return <main className="detail-page program-information">
-    <nav className="program-breadcrumb" aria-label="Jejak navigasi"><Link href="/" className="back-link">Strativate</Link><Link href="/explore" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> Jelajahi katalog</Link></nav>
+    <nav className="program-breadcrumb" aria-label="Jejak navigasi"><Link href="/" className="back-link">Strativate</Link><Link href="/program" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> Kembali ke Program</Link></nav>
     <section className="detail-hero">
       <div>
         <p className="kicker">{catalogProductTypeLabels[product.productType]}</p>
-        <h1>{product.title}</h1>
+        <h1>{catalogProductDisplayTitle(product)}</h1>
         <p className="detail-lede">{product.description ?? product.shortDescription}</p>
         {product.digitalDetails && <p className="program-conditions">Format: {product.digitalDetails.contentType === 'pdf' ? 'PDF' : 'Video'}</p>}
         <div className="detail-price"><strong>{catalogPriceLabel(product)}</strong><span>{product.defaultPurchaseFlow === 'direct_checkout' ? 'Pembelian langsung' : 'Sesuai konsultasi'}</span></div>
@@ -93,12 +96,12 @@ function GeneralCatalogProductDetail({ product }: { product: CatalogProductDetai
         </article>
       })}</div>}
     </section>
-    <section className="program-contact"><p className="kicker">Katalog Strativate</p><h2>Lihat pilihan lainnya.</h2><p>Bandingkan produk dan program yang telah dipublikasikan.</p><Link href="/explore" className="back-link">Kembali ke semua produk <ArrowRight size={16} aria-hidden="true" /></Link></section>
+    <section className="program-contact"><p className="kicker">Katalog Strativate</p><h2>Lihat pilihan lainnya.</h2><p>Bandingkan produk dan program yang telah dipublikasikan.</p><Link href="/program" className="back-link">Kembali ke semua program <ArrowRight size={16} aria-hidden="true" /></Link></section>
   </main>
 }
 
 function DeliveryOptions({ product, kind, title }: { product: CatalogProductDetail; kind: 'learning_path' | 'focus_topic'; title: string }) {
   const options = product.deliveryOptions.filter((option) => option.kind === kind)
   if (!options.length) return null
-  return <section className="program-section"><div className="program-section-heading"><p className="kicker">{kind === 'learning_path' ? 'Jalur belajar' : 'Fokus sesi'}</p><h2>{title}</h2></div><div className={kind === 'learning_path' ? 'program-comparison-grid' : 'program-three-grid'}>{options.map((option) => <article className="program-info-card" key={option.id}><h3>{option.label}</h3><p>{deliveryOptionEditorial[option.code]?.description}</p>{option.allowsCustomValue && <p className="program-conditions">Kamu dapat mengajukan topik lain saat konsultasi.</p>}</article>)}</div></section>
+  return <section className={`program-section ${kind === 'learning_path' ? '' : 'program-section--surface'}`} data-reveal><div className="program-section-heading"><p className="kicker">{kind === 'learning_path' ? 'Jalur belajar' : 'Fokus sesi'}</p><h2>{title}</h2></div><div className={kind === 'learning_path' ? 'program-comparison-grid' : 'program-three-grid'}>{options.map((option) => <article className="program-info-card" key={option.id}><h3>{option.label}</h3><p>{deliveryOptionEditorial[option.code]?.description}</p>{option.allowsCustomValue && <p className="program-conditions">Kamu dapat mengajukan topik lain saat konsultasi.</p>}</article>)}</div></section>
 }

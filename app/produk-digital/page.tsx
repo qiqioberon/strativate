@@ -8,8 +8,11 @@ import { buttonVariants } from '@/components/ui/button'
 import { selectDigitalProducts, toMarketingDigitalProduct } from '@/lib/catalog/presentation'
 import { listPublicCatalog } from '@/lib/catalog/public'
 import { productPlaceholders } from '@/lib/content/marketing-content'
+import { featureFlags } from '@/lib/features'
+import { permanentRedirect } from 'next/navigation'
 
 export default async function DigitalProductsPage() {
+  if (!featureFlags.digitalProducts) permanentRedirect('/program')
   const catalogProducts = await listPublicCatalog()
   const digitalProducts = selectDigitalProducts(catalogProducts).map(toMarketingDigitalProduct)
 

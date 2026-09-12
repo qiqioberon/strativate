@@ -1,6 +1,8 @@
 .program-information { max-width: 1240px; }
 .program-breadcrumb { display: flex; justify-content: space-between; gap: 20px; }
 .program-information .detail-hero { align-items: center; gap: 48px; padding: 60px 0 72px; }
+.program-information .detail-hero { position: relative; }
+.program-information .detail-hero::before { position: absolute; inset: 24px -28px 36px 54%; z-index: -1; border-radius: 5px 28px 28px 28px; background: #fff0e5; content: ''; }
 .program-information .detail-hero h1 { font-size: clamp(48px, 6vw, 78px); letter-spacing: -.075em; }
 .program-information .detail-price { flex-direction: column; gap: 8px; align-items: flex-start; }
 .program-information .detail-price span { font-size: 12px; line-height: 1.6; }
@@ -13,6 +15,7 @@
 .program-audience h2 { font-size: 30px; letter-spacing: -.055em; margin: 8px 0 12px; }
 .program-audience p:last-child { max-width: 850px; line-height: 1.8; font-size: 14px; color: #f2e8e1; }
 .program-section { padding: 54px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 32px; }
+.program-section--surface { margin: 16px -34px; padding: 54px 34px; border: 0; border-radius: 6px 28px 28px 28px; background: #fff7f1; }
 .program-section-heading { max-width: 750px; margin-bottom: 26px; }
 .program-section-heading h2, .program-contact h2 { font-size: clamp(28px, 3.3vw, 42px); letter-spacing: -.065em; line-height: 1.12; margin: 12px 0; }
 .program-section-heading > p:last-child:not(.kicker) { color: var(--muted-foreground); font-size: 14px; line-height: 1.8; }
@@ -88,3 +91,9 @@
   .program-breadcrumb .back-link { font-size: 10px; }
 }
 .program-contact-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 24px; }
+.program-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.program-hero-actions .secondary-cta { min-height: 46px; padding: 0 4px; color: var(--primary); }
+@media (max-width: 600px) {
+  .program-information .detail-hero::before { inset: auto -12px 10px 24%; height: 43%; }
+  .program-section--surface { margin-inline: -12px; padding-inline: 20px; }
+}

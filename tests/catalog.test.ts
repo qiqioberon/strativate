@@ -234,7 +234,7 @@ test('marketing selectors preserve Product Master order, featured state, and pro
   ]
 
   assert.deepEqual(selectProgramDirectory(products).map(product => product.id), ['not-featured', 'private', 'intensive', 'big'])
-  assert.deepEqual(selectDigitalProducts(products).map(product => product.id), ['digital'])
+  assert.deepEqual(selectDigitalProducts(products), [])
   assert.deepEqual(selectHomepagePrograms(products).map(product => product.id), ['private', 'intensive', 'big'])
 })
 
