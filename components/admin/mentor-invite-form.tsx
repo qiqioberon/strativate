@@ -60,7 +60,7 @@ export function MentorInviteForm({ onInvited }: { onInvited: () => void | Promis
         {tiers.map(tier => <option value={tier.id} key={tier.id}>{tier.name}</option>)}
       </select></label>
     </div>
-    <button className="button button-primary" disabled={busy || loadingTiers || tiers.length === 0}>
+    <button type="submit" className="button button-primary" disabled={busy || loadingTiers || tiers.length === 0}>
       {busy ? 'Mengirim…' : 'Kirim Undangan'}
     </button>
     {error && <p role="alert" className="form-error">{error}</p>}

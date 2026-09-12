@@ -10,11 +10,14 @@ begin
 end;
 $$;
 
-create function test_mentor.denied(command text, message text) returns void language plpgsql as $$
+create function test_mentor.denied(command text, expected_state text, message text) returns void language plpgsql as $$
 begin
   begin
     execute command;
   exception when others then
+    if sqlstate <> expected_state then
+      raise exception 'Wrong SQLSTATE for %: expected %, got % (%)', message, expected_state, sqlstate, sqlerrm;
+    end if;
     return;
   end;
   raise exception 'Unexpectedly allowed: %', message;
@@ -102,6 +105,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '82000000-0000-0000-0000-000000000001', true);
 select test_mentor.denied(
   $$select public.set_mentor_tier('82000000-0000-0000-0000-000000000003','81000000-0000-0000-0000-000000000001')$$,
+  '22023',
   'admin cannot assign an inactive tier'
 );
 reset role;
@@ -111,15 +115,18 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '82000000-0000-0000-0000-000000000002', true);
 select test_mentor.denied(
   $$select public.set_mentor_tier('82000000-0000-0000-0000-000000000002','81000000-0000-0000-0000-000000000001')$$,
+  '42501',
   'mentor cannot change own tier'
 );
 select test_mentor.denied(
   $$update public.mentor_profiles set tier_id = '81000000-0000-0000-0000-000000000001' where user_id = '82000000-0000-0000-0000-000000000002'$$,
+  '42501',
   'mentor has no direct tier mutation grant'
 );
 select set_config('request.jwt.claim.sub', '82000000-0000-0000-0000-000000000004', true);
 select test_mentor.denied(
   $$select public.set_mentor_tier('82000000-0000-0000-0000-000000000002','81000000-0000-0000-0000-000000000001')$$,
+  '42501',
   'mentee cannot change mentor tier'
 );
 reset role;
@@ -127,6 +134,7 @@ reset role;
 set local role service_role;
 select test_mentor.denied(
   $$insert into public.mentor_invites (email, invited_by) values ('missing-tier@mentor.test','82000000-0000-0000-0000-000000000001')$$,
+  '22023',
   'new invitation requires a tier at the database boundary'
 );
 reset role;
@@ -134,6 +142,7 @@ update public.mentor_tiers set is_active = false where id = '81000000-0000-0000-
 set local role service_role;
 select test_mentor.denied(
   $$insert into public.mentor_invites (email, invited_by, tier_id) values ('inactive-tier@mentor.test','82000000-0000-0000-0000-000000000001','81000000-0000-0000-0000-000000000001')$$,
+  '22023',
   'new invitation rejects an inactive tier at the database boundary'
 );
 reset role;
@@ -198,26 +207,32 @@ select test_mentor.assert(
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000003','[]'::jsonb)$$,
+  '42501',
   'mentor cannot modify another mentor availability'
 );
 select test_mentor.denied(
   $$insert into public.mentor_availability_rules (mentor_id,day_of_week,start_time,end_time) values ('82000000-0000-0000-0000-000000000002',2,'10:00','11:00')$$,
+  '42501',
   'mentor cannot bypass atomic availability RPC'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[{"day_of_week":0,"start_time":"10:00","end_time":"11:00"}]'::jsonb)$$,
+  '22023',
   'weekday outside Monday to Sunday is rejected'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[{"day_of_week":2,"start_time":"11:00","end_time":"11:00"}]'::jsonb)$$,
+  '22023',
   'equal start and end is rejected'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[{"day_of_week":2,"start_time":"12:00","end_time":"11:00"}]'::jsonb)$$,
+  '22023',
   'reversed availability range is rejected'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[{"day_of_week":1,"start_time":"18:00","end_time":"21:00"},{"day_of_week":1,"start_time":"20:00","end_time":"22:00"}]'::jsonb)$$,
+  '23P01',
   'overlapping availability ranges are rejected'
 );
 select test_mentor.assert(
@@ -226,21 +241,25 @@ select test_mentor.assert(
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','{}'::jsonb)$$,
+  '22023',
   'availability payload must be an array'
 );
 
 select set_config('request.jwt.claim.sub', '82000000-0000-0000-0000-000000000004', true);
 select test_mentor.assert(
   (select count(*) = 0 from public.mentor_profiles)
-  and (select count(*) = 0 from public.mentor_availability_rules),
+  and (select count(*) = 0 from public.mentor_availability_rules)
+  and (select count(*) = 0 from public.mentor_tiers),
   'mentee cannot read private mentor management data'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[]'::jsonb)$$,
+  '42501',
   'mentee cannot modify mentor availability'
 );
 select test_mentor.denied(
   $$select * from public.list_managed_mentors(0,'',null,'all')$$,
+  '42501',
   'mentee cannot list managed mentors'
 );
 
@@ -276,6 +295,7 @@ reset role;
 
 select test_mentor.denied(
   $$insert into public.mentor_profiles (user_id) values ('82000000-0000-0000-0000-000000000004')$$,
+  '22023',
   'non-mentor account cannot own a mentor profile'
 );
 select test_mentor.assert(

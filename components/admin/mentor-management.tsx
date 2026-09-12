@@ -174,6 +174,7 @@ export function MentorManagement() {
           <p>Perubahan disimpan sebagai satu jadwal utuh agar rentang lama tidak tertinggal.</p>
         </div>
         <MentorAvailabilityEditor
+          key={selectedMentor.user_id}
           mentorId={selectedMentor.user_id}
           mode="admin"
           onSaved={configured => setMentors(records => records.map(record => record.user_id === selectedMentor.user_id

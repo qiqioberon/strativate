@@ -39,11 +39,13 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadFailed, setLoadFailed] = useState(false)
   const [message, setMessage] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
+    setLoadFailed(false)
     try {
       const db = createClient()
       const [profileResult, rulesResult] = await Promise.all([
@@ -63,6 +65,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       setTimezone(profile.timezone)
       setRanges(availabilityRulesToDraft(rulesResult.data || []))
     } catch (error) {
+      setLoadFailed(true)
       setError(formError(error, 'Ketersediaan mentor belum dapat dimuat.'))
     } finally {
       setLoading(false)
@@ -117,6 +120,10 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
   }
 
   if (loading) return <p role="status">Memuat ketersediaan…</p>
+  if (loadFailed) return <div className="mentor-availability-load-error">
+    <p className="form-error" role="alert">{error}</p>
+    <button type="button" className="button button-outline" onClick={() => void load()}>Coba lagi</button>
+  </div>
 
   return <div className={`mentor-availability-editor ${mode}`}>
     <MentorDomainSummary tierName={tierName} timezone={timezone} />
@@ -150,7 +157,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p className="form-success" role="status">{message}</p>}
       <div className="availability-actions">
-        <button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan Ketersediaan'}</button>
+        <button type="submit" className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan Ketersediaan'}</button>
         <button type="button" className="button button-outline" disabled={busy} onClick={() => void load()}>Batalkan perubahan</button>
       </div>
     </form>

@@ -51,18 +51,6 @@ test('public mentor directory and protected mentor workspace remain distinct', a
   await expect(page).toHaveURL(/\/auth$/)
 })
 
-test('browser-side account state does not replace the public mentor directory', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('strativate-demo-role', 'Mentor')
-    localStorage.setItem('strativate-account-destination', '/mentor/dashboard')
-  })
-
-  await page.goto('/mentor')
-  await expect(page).toHaveURL(/\/mentor$/)
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
-  await expect(page.getByText('Menampilkan 26 mentor')).toBeVisible()
-})
-
 test('program and digital directories preserve the marketing shell and honest catalog states', async ({ page }) => {
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()

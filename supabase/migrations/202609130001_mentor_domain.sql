@@ -216,7 +216,7 @@ alter table public.mentor_profiles enable row level security;
 alter table public.mentor_availability_rules enable row level security;
 
 create policy mentor_tiers_read on public.mentor_tiers for select to authenticated using (
-  is_active or public.is_admin() or exists (
+  public.is_admin() or exists (
     select 1 from public.mentor_profiles
     where user_id = auth.uid() and tier_id = mentor_tiers.id
   )

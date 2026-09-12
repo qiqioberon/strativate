@@ -131,6 +131,7 @@ footer { max-width: 1120px; margin: 0 auto; padding: 35px 32px; display: flex; a
 .availability-remove { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #e3d7d2; border-radius: 8px; color: var(--red); background: #fff; }
 .availability-remove svg { width: 15px; }
 .availability-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.mentor-availability-load-error { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 
 @media (max-width: 1000px) {
   .mentor-account-row { grid-template-columns: 1fr 1fr; }
