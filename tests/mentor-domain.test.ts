@@ -8,6 +8,7 @@ import {
   validateAvailabilityDraft,
   type AvailabilityDraftRange,
 } from '../lib/mentor/availability'
+import { parseMentorInvitationInput } from '../lib/admin/mentor-invitation-input'
 
 const range = (
   key: string,
@@ -78,4 +79,21 @@ test('availability validation permits adjacent ranges and grouping includes empt
   assert.deepEqual(grouped[6], adjacent)
   assert.deepEqual(grouped[7], [])
   assert.deepEqual(Object.keys(grouped), ['1', '2', '3', '4', '5', '6', '7'])
+})
+
+test('mentor invitation input requires a valid email and tier UUID on the server', () => {
+  const tierId = '81000000-0000-0000-0000-000000000002'
+  assert.deepEqual(parseMentorInvitationInput(' Mentor@Example.test ', ''), {
+    error: 'Pilih tier mentor yang aktif.',
+  })
+  assert.deepEqual(parseMentorInvitationInput(' Mentor@Example.test ', 'not-a-tier-id'), {
+    error: 'Pilih tier mentor yang aktif.',
+  })
+  assert.deepEqual(parseMentorInvitationInput('not-an-email', tierId), {
+    error: 'Masukkan email mentor yang valid.',
+  })
+  assert.deepEqual(parseMentorInvitationInput(' Mentor@Example.test ', tierId), {
+    email: 'mentor@example.test',
+    tierId,
+  })
 })
