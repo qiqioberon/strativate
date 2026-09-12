@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { resolveMentoringSlug } from '@/lib/program-routes'
+import { isProtectedApplicationPath } from '@/lib/auth/routes'
 export async function proxy(request: NextRequest) {
   // These programs are informational. Even old checkout links should lead to
   // their public guide, before the authentication guard or demo order UI.
@@ -17,9 +18,7 @@ export async function proxy(request: NextRequest) {
     },
   } })
   const { data: { user } } = await supabase.auth.getUser()
-  const protectedPath = /^\/(admin|dashboard|onboarding|checkout)(\/|$)/.test(request.nextUrl.pathname)
-    || /^\/mentor\/dashboard(\/|$)/.test(request.nextUrl.pathname)
-  if (!user && protectedPath) {
+  if (!user && isProtectedApplicationPath(request.nextUrl.pathname)) {
     const redirect = NextResponse.redirect(new URL('/auth', request.url))
     response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie))
     return redirect
