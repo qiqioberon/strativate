@@ -56,6 +56,57 @@ test('homepage mentor marquee provides one accessible directory sequence and mot
   await expect(marquee).toHaveCSS('overflow-x', 'auto')
 })
 
+test('carousel fixture wires manual controls, swipe lifecycle, and scheduling reset', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('http://localhost:3001')
+  const carousel = page.getByTestId('hero-poster-carousel')
+  const title = page.getByTestId('hero-poster-title')
+  await expect(carousel).toHaveCSS('touch-action', 'pan-y pinch-zoom')
+  await expect(title).toHaveText('Poster satu')
+
+  await page.clock.fastForward(3000)
+  await page.getByTestId('hero-poster-next-button').click()
+  await expect(title).toHaveText('Poster dua')
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  await page.mouse.move(1200, 700)
+  await page.clock.fastForward(2500)
+  await expect(title).toHaveText('Poster dua')
+  await page.clock.fastForward(3000)
+  await expect(title).toHaveText('Poster tiga')
+
+  await page.getByTestId('hero-poster-previous-button').click()
+  await expect(title).toHaveText('Poster dua')
+  await page.getByTestId('hero-poster-indicator-3').click()
+  await expect(title).toHaveText('Poster tiga')
+  await carousel.press('ArrowLeft')
+  await expect(title).toHaveText('Poster dua')
+  await carousel.press('ArrowRight')
+  await expect(title).toHaveText('Poster tiga')
+
+  await carousel.dispatchEvent('pointerdown', { pointerType: 'touch', pointerId: 7, clientX: 260 })
+  await carousel.dispatchEvent('pointerup', { bubbles: true, pointerType: 'touch', pointerId: 7, clientX: 120 })
+  await expect(title).toHaveText('Poster satu')
+
+  await carousel.dispatchEvent('pointerdown', { pointerType: 'touch', pointerId: 8, clientX: 260 })
+  await carousel.dispatchEvent('pointercancel', { bubbles: true, pointerType: 'touch', pointerId: 8 })
+  await expect(title).toHaveText('Poster satu')
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  await page.mouse.move(1200, 700)
+  await page.waitForTimeout(50)
+  await page.clock.fastForward(5100)
+  await expect(title).toHaveText('Poster dua')
+
+  const box = await carousel.boundingBox()
+  if (!box) throw new Error('Expected carousel bounds')
+  await page.mouse.move(box.x + 20, box.y + 20)
+  await page.mouse.down()
+  await page.mouse.move(1, 1)
+  await page.mouse.up()
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  await page.clock.fastForward(5100)
+  await expect(title).toHaveText('Poster tiga')
+})
+
 for (const [label, href] of navigation.slice(1)) {
   test(`${label} has a dedicated public route and active navigation state`, async ({ page }) => {
     await page.goto(href)

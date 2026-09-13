@@ -63,13 +63,24 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
     selectCarousel('previous')
   }
 
-  function finishPointer(clientX: number | null) {
-    const result = finishCarouselPointer(pointer.current, clientX, posters.length)
-    pointer.current = { isActive: false, startX: null }
-    setIsPointerActive(result.isActive)
-    if (result.direction === 'next') selectCarousel('swipe-next')
-    if (result.direction === 'previous') selectCarousel('swipe-previous')
-  }
+  useEffect(() => {
+    const finishPointer = (clientX: number | null) => {
+      if (!pointer.current.isActive) return
+      const result = finishCarouselPointer(pointer.current, clientX, posters.length)
+      pointer.current = { isActive: false, startX: null }
+      setIsPointerActive(result.isActive)
+      if (result.direction === 'next') setSelection((current) => selectCarouselForAction(current, 'swipe-next', posters.length))
+      if (result.direction === 'previous') setSelection((current) => selectCarouselForAction(current, 'swipe-previous', posters.length))
+    }
+    const onPointerUp = (event: PointerEvent) => finishPointer(event.clientX)
+    const onPointerCancel = () => finishPointer(null)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
+    return () => {
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerCancel)
+    }
+  }, [posters.length])
 
   if (!posters.length) {
     return (
@@ -117,17 +128,6 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
       onPointerDown={(event) => {
         pointer.current = beginCarouselPointer(event.pointerType, event.clientX)
         setIsPointerActive(pointer.current.isActive)
-        event.currentTarget.setPointerCapture(event.pointerId)
-      }}
-      onPointerUp={(event) => {
-        finishPointer(event.clientX)
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-      }}
-      onPointerCancel={() => {
-        finishPointer(null)
-      }}
-      onLostPointerCapture={() => {
-        finishPointer(null)
       }}
       onKeyDown={(event) => {
         if (posters.length < 2) return

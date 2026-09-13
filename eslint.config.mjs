@@ -13,5 +13,5 @@ export default defineConfig([
     // Hard navigation after Auth cookie changes discards stale prefetched RSC state.
     '@next/next/no-location-assign-relative-destination': 'off',
   } },
-  globalIgnores(['.next/**', '.test-postgres/**', '.test-results/**', 'test-results/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'tests/fixtures/**/.next/**', '.test-postgres/**', '.test-results/**', 'test-results/**', 'next-env.d.ts']),
 ])

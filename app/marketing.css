@@ -421,7 +421,7 @@
 .marketing-mentor-grid--directory .marketing-mentor-card__content { display: flex; flex: 1; flex-direction: column; }
 .marketing-mentor-grid--directory .marketing-mentor-card__actions { margin-top: auto; padding-top: 18px; }
 
-.marketing-hero-carousel { display: block; isolation: isolate; touch-action: pan-y; background: #171314; }
+.marketing-hero-carousel { display: block; isolation: isolate; touch-action: pan-y pinch-zoom; background: #171314; }
 .marketing-hero-carousel > a { display: block; height: 100%; color: #fff; }
 .marketing-hero-carousel__media { position: relative; min-height: 520px; height: 100%; overflow: hidden; }
 .marketing-hero-carousel__media img { object-fit: contain; transition: transform 700ms cubic-bezier(.2,.7,.2,1); }
