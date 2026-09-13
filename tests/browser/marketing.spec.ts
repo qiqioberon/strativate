@@ -107,6 +107,19 @@ test('carousel fixture wires manual controls, swipe lifecycle, and scheduling re
   await expect(title).toHaveText('Poster tiga')
 })
 
+test('carousel disables autoplay when reduced motion is requested', async ({ page }) => {
+  await page.clock.install()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('http://localhost:3001')
+  const title = page.getByTestId('hero-poster-title')
+
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  await page.mouse.move(1200, 700)
+  await expect(title).toHaveText('Poster satu')
+  await page.clock.fastForward(10000)
+  await expect(title).toHaveText('Poster satu')
+})
+
 for (const [label, href] of navigation.slice(1)) {
   test(`${label} has a dedicated public route and active navigation state`, async ({ page }) => {
     await page.goto(href)
