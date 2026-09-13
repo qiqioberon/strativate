@@ -63,6 +63,9 @@ test('poster validation rejects missing alt text, unsafe links, invalid files, a
   assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type: 'image/gif', size: 100 }, hasStoredImage: false }).file, 'Gunakan gambar JPG, PNG, atau WebP.')
   assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type: 'image/png', size: 5 * 1024 * 1024 + 1 }, hasStoredImage: false }).file, 'Ukuran gambar maksimal 5 MB.')
   assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10.5', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).sortOrder, 'Urutan harus berupa bilangan bulat antara -100000 dan 100000.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '   ', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).sortOrder, 'Urutan wajib diisi.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/path with spaces', sortOrder: '10', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/\\evil.test', sortOrder: '10', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
   for (const type of ['image/jpeg', 'image/png', 'image/webp']) {
     assert.deepEqual(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type, size: 5 * 1024 * 1024 }, hasStoredImage: false }), {})
   }

@@ -148,8 +148,30 @@ export function HeroPosterManagement() {
     } catch (caught) {
       let cleanupWarning = ''
       if (uploadedPath) {
-        const { error: cleanupError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([uploadedPath])
-        if (cleanupError) cleanupWarning = ' Berkas baru juga perlu ditinjau manual di Storage.'
+        const { data: persisted, error: reconciliationError } = await supabase
+          .from('marketing_hero_posters')
+          .select('id,image_path')
+          .eq('image_path', uploadedPath)
+          .maybeSingle()
+
+        if (persisted) {
+          if (editing && editing.image_path !== uploadedPath) {
+            const { error: cleanupError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([editing.image_path])
+            if (cleanupError) cleanupWarning = ' Poster lama masih perlu ditinjau dan dihapus manual dari Storage.'
+          }
+          resetEditor()
+          form.reset()
+          setNotice(`${wasEditing ? 'Poster berhasil diperbarui.' : 'Poster berhasil ditambahkan.'}${cleanupWarning}`)
+          await load()
+          return
+        }
+
+        if (reconciliationError) {
+          cleanupWarning = ' Berkas baru tidak dihapus otomatis karena status penyimpanan database belum dapat dipastikan. Tinjau daftar poster dan Storage sebelum mencoba lagi.'
+        } else {
+          const { error: cleanupError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([uploadedPath])
+          if (cleanupError) cleanupWarning = ' Berkas baru juga perlu ditinjau manual di Storage.'
+        }
       }
       setError(`${formError(caught)}${cleanupWarning}`)
     } finally {

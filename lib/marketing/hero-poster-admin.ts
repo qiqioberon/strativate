@@ -79,11 +79,17 @@ export function validateHeroPosterDraft({
   if (file && !HERO_POSTER_ALLOWED_TYPES.has(file.type)) errors.file = 'Gunakan gambar JPG, PNG, atau WebP.'
   else if (file && file.size > HERO_POSTER_MAX_FILE_SIZE) errors.file = 'Ukuran gambar maksimal 5 MB.'
   if (!altText.trim()) errors.altText = 'Teks alternatif wajib diisi.'
-  if (url.trim() && (!url.trim().startsWith('/') || url.trim().startsWith('//'))) {
+  const trimmedUrl = url.trim()
+  if (trimmedUrl && (!trimmedUrl.startsWith('/') || trimmedUrl.startsWith('//'))) {
     errors.url = 'Gunakan path internal yang diawali / dan bukan //.'
+  } else if (trimmedUrl && !/^\/[A-Za-z0-9/?#&=._~-]*$/.test(trimmedUrl)) {
+    errors.url = 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.'
   }
-  const parsedOrder = Number(sortOrder)
-  if (!Number.isInteger(parsedOrder) || parsedOrder < -100000 || parsedOrder > 100000) {
+  const trimmedOrder = sortOrder.trim()
+  const parsedOrder = Number(trimmedOrder)
+  if (!trimmedOrder) {
+    errors.sortOrder = 'Urutan wajib diisi.'
+  } else if (!Number.isInteger(parsedOrder) || parsedOrder < -100000 || parsedOrder > 100000) {
     errors.sortOrder = 'Urutan harus berupa bilangan bulat antara -100000 dan 100000.'
   }
   return errors

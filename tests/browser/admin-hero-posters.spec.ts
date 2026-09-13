@@ -36,6 +36,7 @@ async function fulfillJson(route: Route, body: unknown, status = 200) {
 async function mockPosterBackend(page: Page, initial: Poster[]) {
   let posters = [...initial]
   const calls: Array<{ method: string; url: string; body: unknown }> = []
+  const operations: string[] = []
 
   await page.route('**/storage/v1/object/public/marketing-hero-posters/**', async route => {
     await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect width="640" height="400" fill="#171314"/></svg>' })
@@ -43,6 +44,7 @@ async function mockPosterBackend(page: Page, initial: Poster[]) {
   await page.route('**/rest/v1/rpc/reorder_marketing_hero_posters', async route => {
     const body = route.request().postDataJSON() as { p_ids: string[] }
     calls.push({ method: route.request().method(), url: route.request().url(), body })
+    operations.push('db:RPC')
     posters = body.p_ids.map((id, index) => ({ ...posters.find(item => item.id === id)!, sort_order: (index + 1) * 10 }))
     await route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } })
   })
@@ -51,13 +53,19 @@ async function mockPosterBackend(page: Page, initial: Poster[]) {
     if (request.method() === 'GET') return fulfillJson(route, posters)
     const body = request.postDataJSON() as Partial<Poster>
     calls.push({ method: request.method(), url: request.url(), body })
+    operations.push(`db:${request.method()}`)
     const id = new URL(request.url()).searchParams.get('id')?.replace('eq.', '')
     if (request.method() === 'PATCH' && id) posters = posters.map(item => item.id === id ? { ...item, ...body } : item)
     if (request.method() === 'DELETE' && id) posters = posters.filter(item => item.id !== id)
     await route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } })
   })
 
-  return { calls, posters: () => posters }
+  return {
+    calls,
+    operations,
+    posters: () => posters,
+    setPosters(next: Poster[]) { posters = next },
+  }
 }
 
 test('main admin navigation opens Hero Posters and closes the mobile sidebar', async ({ page }) => {
@@ -158,9 +166,36 @@ test('failed quick status writes keep server state and show safe feedback', asyn
   await expect(first.getByRole('switch', { name: 'Nonaktifkan Poster one' })).toHaveAttribute('aria-checked', 'true')
 })
 
+test('ambiguous database responses reconcile a committed upload before cleanup', async ({ page }) => {
+  const backend = await mockPosterBackend(page, [])
+  const storageMethods: string[] = []
+  await page.route('**/storage/v1/object/marketing-hero-posters/**', async route => {
+    storageMethods.push(route.request().method())
+    await fulfillJson(route, { Key: route.request().url() })
+  })
+  await page.route('**/rest/v1/marketing_hero_posters*', async route => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    const body = route.request().postDataJSON() as Partial<Poster>
+    backend.setPosters([{ ...makePoster('committed', true, 10), ...body }])
+    await route.abort('connectionreset')
+  })
+  await page.goto('http://localhost:3001/admin/marketing')
+
+  await page.getByTestId('hero-poster-file-input').setInputFiles({ name: 'new-poster.png', mimeType: 'image/png', buffer: Buffer.from('poster') })
+  await page.getByTestId('hero-poster-alt-input').fill('Poster yang sudah tersimpan')
+  await page.getByTestId('hero-poster-save-button').click()
+
+  await expect(page.getByText('Poster berhasil ditambahkan.')).toBeVisible()
+  await expect(page.getByTestId('hero-poster-row-committed')).toBeVisible()
+  expect(storageMethods).toEqual(['POST'])
+})
+
 test('delete removes the database row first and warns when Storage cleanup fails', async ({ page }) => {
   const backend = await mockPosterBackend(page, [makePoster('one', true, 10)])
-  await page.route('**/storage/v1/object/marketing-hero-posters/**', route => fulfillJson(route, { message: 'storage unavailable' }, 500))
+  await page.route('**/storage/v1/object/marketing-hero-posters*', route => {
+    backend.operations.push(`storage:${route.request().method()}`)
+    return fulfillJson(route, { message: 'storage unavailable' }, 500)
+  })
   page.on('dialog', dialog => void dialog.accept())
   await page.goto('http://localhost:3001/admin/marketing')
 
@@ -168,6 +203,7 @@ test('delete removes the database row first and warns when Storage cleanup fails
   await expect(page.getByText('Poster dihapus dari daftar, tetapi berkas Storage perlu ditinjau manual.')).toBeVisible()
   await expect(page.getByTestId('hero-poster-empty-state')).toBeVisible()
   expect(backend.calls.some(call => call.method === 'DELETE' && call.url.includes('id=eq.one'))).toBe(true)
+  expect(backend.operations.filter(operation => operation.includes('DELETE'))).toEqual(['db:DELETE', 'storage:DELETE'])
 })
 
 test('form validates content and revokes replacement previews when editing is cancelled', async ({ page }) => {
