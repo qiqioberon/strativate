@@ -173,6 +173,50 @@ test('editorial page intros use their dedicated motifs and exact WhatsApp consul
   }
 })
 
+test('editorial page intros keep their title and description inside every required viewport', async ({ page }) => {
+  const intros = [
+    ['/program', 'Pilih dukungan'],
+    ['/mentor', 'Belajar bersama mentor'],
+    ['/tentang-kami', 'Ambisi bertemu'],
+    ['/tanya-jawab', 'Mulai dari informasi'],
+  ] as const
+  const viewports = [
+    { width: 1440, height: 900 },
+    { width: 768, height: 900 },
+    { width: 390, height: 844 },
+  ] as const
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport)
+    for (const [route, readableTitle] of intros) {
+      await page.goto(route)
+      const title = page.getByTestId('marketing-page-title')
+      const description = page.getByTestId('marketing-page-description')
+      const [titleBox, descriptionBox] = await Promise.all([title.boundingBox(), description.boundingBox()])
+
+      expect(titleBox).not.toBeNull()
+      expect(descriptionBox).not.toBeNull()
+      expect(titleBox!.x).toBeGreaterThanOrEqual(0)
+      expect(descriptionBox!.x).toBeGreaterThanOrEqual(0)
+      expect(titleBox!.x + titleBox!.width).toBeLessThanOrEqual(viewport.width)
+      expect(descriptionBox!.x + descriptionBox!.width).toBeLessThanOrEqual(viewport.width)
+      await expect(title).toContainText(readableTitle)
+    }
+  }
+
+  await page.setViewportSize({ width: 360, height: 844 })
+  await page.goto('/mentor')
+  const [mentorTitle, mentorDescription] = await Promise.all([
+    page.getByTestId('marketing-page-title').boundingBox(),
+    page.getByTestId('marketing-page-description').boundingBox(),
+  ])
+  expect(mentorTitle).not.toBeNull()
+  expect(mentorDescription).not.toBeNull()
+  expect(mentorTitle!.x + mentorTitle!.width).toBeLessThanOrEqual(360)
+  expect(mentorDescription!.x + mentorDescription!.width).toBeLessThanOrEqual(360)
+  await expect(page.getByTestId('marketing-page-title')).toContainText('Belajar bersama mentor')
+})
+
 test('mobile menu is accessible, navigates natively, and avoids overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')

@@ -184,6 +184,7 @@
 
 .marketing-page-intro { position: relative; padding: clamp(80px, 8vw, 125px) 0 clamp(68px, 7vw, 105px); overflow: hidden; border-bottom: 1px solid var(--marketing-line); }
 .marketing-page-intro__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); align-items: end; gap: 80px; }
+.marketing-page-intro__grid > * { min-width: 0; }
 .marketing-page-intro h1 { margin-top: 19px; font-size: clamp(3.4rem, 6.6vw, 6.8rem); font-weight: 610; letter-spacing: -.08em; line-height: .92; }
 .marketing-page-intro__aside { display: grid; justify-items: start; gap: 27px; padding-bottom: 8px; }
 .marketing-page-intro__aside > p { max-width: 455px; color: var(--marketing-muted); font-size: .85rem; line-height: 1.72; }
@@ -364,7 +365,7 @@
   .marketing-footer__note { grid-column: auto; }
   .marketing-footer__bottom { flex-direction: column; gap: 7px; }
   .marketing-page-intro { padding-top: 70px; }
-  .marketing-page-intro h1 { font-size: clamp(3.15rem, 14vw, 4.35rem); }
+  .marketing-page-intro h1 { font-size: clamp(2.75rem, 11.5vw, 3.25rem); overflow-wrap: anywhere; }
   .marketing-page-intro__motif { display: none; }
   .marketing-products-directory { grid-template-columns: 1fr; }
   .marketing-about-page__statement { padding-block: 75px; }

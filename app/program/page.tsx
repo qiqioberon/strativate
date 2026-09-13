@@ -25,15 +25,15 @@ export default async function ProgramPage() {
         />
         <section className="marketing-page-section" data-reveal data-testid="program-directory-section">
           <div className="marketing-container marketing-services-hierarchy">
-            <div className="marketing-services-primary" data-testid="program-primary-services" aria-label="Program utama">
+            <section className="marketing-services-primary" data-testid="program-primary-services" aria-label="Program utama">
               {primaryServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="primary" key={service.id} />)}
-            </div>
-            {secondaryService ? <div className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Gambaran Big Class">
+            </section>
+            {secondaryService ? <section className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Gambaran Big Class">
               <ServiceCard service={secondaryService} index={services.indexOf(secondaryService)} variant="secondary" />
-            </div> : null}
-            <div className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Layanan pendukung">
+            </section> : null}
+            <section className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Layanan pendukung">
               {supportingServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="compact" key={service.id} />)}
-            </div>
+            </section>
           </div>
         </section>
         <section className="marketing-consultation-band" data-reveal data-testid="program-consultation-section">
