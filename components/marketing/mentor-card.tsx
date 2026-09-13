@@ -5,7 +5,7 @@ import type { Mentor } from '@/lib/content/mentors'
 
 export function MentorCard({ mentor, index, onSelect }: { mentor: Mentor; index: number; onSelect?: (mentor: Mentor) => void }) {
   return (
-    <article className="marketing-mentor-card" data-testid={`mentor-card-${mentor.slug}`}>
+    <article id={`mentor-${mentor.slug}`} className="marketing-mentor-card" data-testid={`mentor-card-${mentor.slug}`}>
       <div className="marketing-mentor-card__media">
         <AssetMedia assetKey={mentor.portrait} sizes="(max-width: 760px) 88vw, 28vw" priority={index < 4} />
         <span className="marketing-mentor-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
@@ -19,8 +19,8 @@ export function MentorCard({ mentor, index, onSelect }: { mentor: Mentor; index:
         </div>
         <div className="marketing-mentor-card__expertise">{mentor.expertise.map(item => <span key={item}>{item}</span>)}</div>
         <div className="marketing-mentor-card__actions">
-          {onSelect ? <button type="button" onClick={() => onSelect(mentor)} data-testid={`mentor-${mentor.slug}-detail-button`}>Lihat profil lengkap</button> : null}
-          {mentor.linkedIn && <a className="marketing-mentor-card__linkedin" href={mentor.linkedIn} target="_blank" rel="noreferrer" data-testid={`mentor-${mentor.slug}-linkedin-link`}><ExternalLink aria-hidden="true" size={14} /> LinkedIn</a>}
+          {onSelect ? <button type="button" onClick={() => onSelect(mentor)} aria-label={`Lihat profil lengkap ${mentor.name}`} data-testid={`mentor-${mentor.slug}-detail-button`}>Lihat profil lengkap</button> : null}
+          {mentor.linkedIn && <a className="marketing-mentor-card__linkedin" href={mentor.linkedIn} target="_blank" rel="noreferrer" aria-label={`LinkedIn ${mentor.name}`} data-testid={`mentor-${mentor.slug}-linkedin-link`}><ExternalLink aria-hidden="true" size={14} /> LinkedIn</a>}
         </div>
       </div>
     </article>

@@ -134,6 +134,72 @@ test('public mentor directory and protected mentor workspace remain distinct', a
   await expect(page).toHaveURL(/\/auth$/)
 })
 
+test('mentor directory filters, resets, and opens an accessible centered profile dialog', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 520 })
+  await page.goto('/mentor')
+
+  const directory = page.getByTestId('mentor-directory-grid')
+  await expect(directory.locator('.marketing-mentor-card')).toHaveCount(26)
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 26 mentor')
+  await expect(page.getByTestId('mentor-reset-button')).toHaveCount(0)
+  await expect(page.getByTestId('mentor-card-navira-putri')).toHaveAttribute('id', 'mentor-navira-putri')
+  await expect(page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'LinkedIn Navira Putri' })).toBeVisible()
+
+  await page.getByTestId('mentor-tier-top-student-button').click()
+  await page.getByTestId('mentor-search-input').fill('Alvaro Zhafran')
+  await expect(directory.locator('.marketing-mentor-card')).toHaveCount(1)
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 1 mentor')
+  await expect(page.getByTestId('mentor-reset-button')).toBeVisible()
+
+  await page.getByTestId('mentor-reset-button').click()
+  await expect(directory.locator('.marketing-mentor-card')).toHaveCount(26)
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 26 mentor')
+  await expect(page.getByTestId('mentor-reset-button')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' }).click()
+  const dialog = page.getByTestId('mentor-detail-modal')
+  await expect(dialog).toHaveAttribute('open', '')
+  const box = await dialog.boundingBox()
+  expect(box).not.toBeNull()
+  expect(Math.abs(box!.x + box!.width / 2 - 720)).toBeLessThanOrEqual(2)
+  expect(Math.abs(box!.y + box!.height / 2 - 260)).toBeLessThanOrEqual(2)
+  await expect(dialog).toHaveCSS('overflow-y', 'auto')
+  const scrollBounds = await dialog.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+    return { clientHeight: element.clientHeight, scrollHeight: element.scrollHeight, scrollTop: element.scrollTop }
+  })
+  expect(scrollBounds.scrollHeight).toBeGreaterThan(scrollBounds.clientHeight)
+  expect(scrollBounds.scrollTop).toBe(scrollBounds.scrollHeight - scrollBounds.clientHeight)
+  await expect(dialog.locator('[data-testid="mentor-modal-expertise-section"] svg')).toHaveCount(1)
+  await expect(dialog.locator('[data-testid="mentor-modal-credentials-section"] svg')).toHaveCount(1)
+  await expect(dialog.getByTestId('mentor-modal-linkedin-link')).toHaveAttribute('href', /linkedin\.com/)
+  await expect(dialog.getByTestId('mentor-modal-whatsapp-link')).toHaveCount(0)
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).not.toHaveAttribute('open', '')
+  await page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' }).click()
+  await page.getByTestId('mentor-modal-close-button').click()
+  await expect(dialog).not.toHaveAttribute('open', '')
+})
+
+test('mentor dialog is single-column, scrollable, and overflow-safe on mobile with a missing photo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/mentor')
+  await page.getByTestId('mentor-search-input').fill('Ivonne Qiu')
+  await page.getByRole('button', { name: 'Lihat profil lengkap Ivonne Qiu' }).click()
+
+  const dialog = page.getByTestId('mentor-detail-modal')
+  await expect(dialog).toHaveAttribute('open', '')
+  const mobileColumns = await dialog.locator('.marketing-mentor-dialog__panel').evaluate((panel) => getComputedStyle(panel).gridTemplateColumns)
+  expect(mobileColumns.trim().split(/\s+/)).toHaveLength(1)
+  await expect(dialog.locator('.asset-media')).toContainText('Foto belum tersedia')
+  await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
+
+  await page.mouse.click(8, 8)
+  await expect(dialog).not.toHaveAttribute('open', '')
+})
+
 test('program directory hides digital products and retired digital route redirects', async ({ page }) => {
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()

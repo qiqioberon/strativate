@@ -1,6 +1,6 @@
 'use client'
 
-import { Search } from 'lucide-react'
+import { RotateCcw, Search } from 'lucide-react'
 import { useState } from 'react'
 
 import { MentorCard } from './mentor-card'
@@ -21,6 +21,12 @@ export function MentorDirectory({ mentors }: { mentors: Mentor[] }) {
     const haystack = [mentor.name, mentor.title, ...mentor.expertise, ...mentor.credentials].filter(Boolean).join(' ').toLocaleLowerCase('id')
     return matchesTier && (!normalized || haystack.includes(normalized))
   })
+  const hasActiveFilters = Boolean(normalized) || tier !== 'Semua'
+
+  function resetFilters() {
+    setQuery('')
+    setTier('Semua')
+  }
 
   return (
     <div>
@@ -29,8 +35,9 @@ export function MentorDirectory({ mentors }: { mentors: Mentor[] }) {
         <div className="marketing-mentor-filters" aria-label="Filter kategori mentor" data-testid="mentor-tier-filter-group">
           {tiers.map((option) => <button aria-pressed={tier === option} className={cn(tier === option && 'is-active')} onClick={() => setTier(option)} type="button" key={option} data-testid={`mentor-tier-${option.toLowerCase().replaceAll(' ', '-')}-button`}>{option}</button>)}
         </div>
+        {hasActiveFilters ? <button className="marketing-mentor-reset" type="button" onClick={resetFilters} data-testid="mentor-reset-button"><RotateCcw aria-hidden="true" size={15} /> Atur ulang</button> : null}
+        <p className="marketing-mentor-result" aria-live="polite" data-testid="mentor-result-count">Menampilkan {filtered.length} mentor</p>
       </div>
-      <p className="marketing-mentor-result" aria-live="polite" data-testid="mentor-result-count">Menampilkan {filtered.length} mentor</p>
       {filtered.length ? <div className="marketing-mentor-grid marketing-mentor-grid--directory" data-testid="mentor-directory-grid">{filtered.map((mentor, index) => <MentorCard mentor={mentor} index={index} onSelect={setSelected} key={mentor.slug} />)}</div> : <p className="marketing-mentor-empty" data-testid="mentor-empty-state">Belum ada mentor yang cocok dengan pencarian ini.</p>}
       <MentorDetailModal mentor={selected} onClose={() => setSelected(null)} />
     </div>
