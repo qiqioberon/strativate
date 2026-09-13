@@ -421,7 +421,7 @@
 .marketing-mentor-grid--directory .marketing-mentor-card__content { display: flex; flex: 1; flex-direction: column; }
 .marketing-mentor-grid--directory .marketing-mentor-card__actions { margin-top: auto; padding-top: 18px; }
 
-.marketing-hero-carousel { display: block; isolation: isolate; background: #171314; }
+.marketing-hero-carousel { display: block; isolation: isolate; touch-action: pan-y; background: #171314; }
 .marketing-hero-carousel > a { display: block; height: 100%; color: #fff; }
 .marketing-hero-carousel__media { position: relative; min-height: 520px; height: 100%; overflow: hidden; }
 .marketing-hero-carousel__media img { object-fit: contain; transition: transform 700ms cubic-bezier(.2,.7,.2,1); }
@@ -432,8 +432,10 @@
 .marketing-hero-carousel__caption strong { max-width: 480px; font-size: clamp(1.55rem, 2.5vw, 2.65rem); letter-spacing: -.045em; line-height: 1.04; }
 .marketing-hero-carousel__link { display: inline-flex; align-items: center; gap: 7px; font-size: .75rem; font-weight: 800; }
 .marketing-hero-carousel__controls { position: absolute; right: 25px; bottom: 23px; left: 25px; z-index: 3; display: flex; align-items: center; gap: 7px; }
-.marketing-hero-carousel__controls button { width: 28px; height: 4px; padding: 0; border: 0; border-radius: 99px; background: rgba(255,255,255,.48); transition: width 180ms ease, background-color 180ms ease; }
-.marketing-hero-carousel__controls button[aria-current='true'] { width: 48px; background: #fff; }
+.marketing-hero-carousel__controls button:not(.marketing-hero-carousel__arrow) { position: relative; width: 28px; height: 32px; padding: 0; border: 0; background: transparent; transition: width 180ms ease; }
+.marketing-hero-carousel__controls button:not(.marketing-hero-carousel__arrow)::after { position: absolute; top: 14px; right: 0; left: 0; height: 4px; border-radius: 99px; background: rgba(255,255,255,.48); content: ''; transition: background-color 180ms ease; }
+.marketing-hero-carousel__controls button:not(.marketing-hero-carousel__arrow)[aria-current='true'] { width: 48px; }
+.marketing-hero-carousel__controls button:not(.marketing-hero-carousel__arrow)[aria-current='true']::after { background: #fff; }
 .marketing-hero-carousel__controls .marketing-hero-carousel__arrow { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; color: #fff; background: rgba(12,12,12,.32); }
 .marketing-hero-carousel__controls button:focus-visible, .marketing-hero-carousel:focus-visible { outline: 3px solid #ffe79d; outline-offset: 4px; }
 

@@ -9,21 +9,25 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 import {
   CAROUSEL_AUTOPLAY_DELAY,
+  beginCarouselPointer,
+  finishCarouselPointer,
   getNextCarouselIndex,
-  getPreviousCarouselIndex,
   hasCarouselControls,
+  selectCarouselForAction,
   shouldScheduleCarousel,
+  type CarouselManualAction,
+  type CarouselPointer,
 } from '@/lib/marketing/carousel'
 
 export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }) {
-  const [active, setActive] = useState(0)
+  const [selection, setSelection] = useState({ index: 0, scheduleVersion: 0 })
   const [isHovering, setIsHovering] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
   const [isPointerActive, setIsPointerActive] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [selectionVersion, setSelectionVersion] = useState(0)
-  const touchStart = useRef<number | null>(null)
+  const pointer = useRef<CarouselPointer>({ isActive: false, startX: null })
   const paused = isHovering || isFocusWithin || isPointerActive
+  const active = selection.index
 
   useEffect(() => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -35,27 +39,36 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
 
   useEffect(() => {
     if (!shouldScheduleCarousel({ posterCount: posters.length, paused, reducedMotion })) return
-    const timer = window.setTimeout(() => setActive((current) => getNextCarouselIndex(current, posters.length)), CAROUSEL_AUTOPLAY_DELAY)
+    const timer = window.setTimeout(() => setSelection((current) => ({ ...current, index: getNextCarouselIndex(current.index, posters.length) })), CAROUSEL_AUTOPLAY_DELAY)
     return () => window.clearTimeout(timer)
-  }, [active, paused, posters.length, reducedMotion, selectionVersion])
+  }, [active, paused, posters.length, reducedMotion, selection.scheduleVersion])
 
   useEffect(() => {
-    if (active >= posters.length) setActive(0)
-  }, [active, posters.length])
+    setSelection((current) => current.index >= posters.length ? { ...current, index: 0 } : current)
+  }, [posters.length])
+
+  function selectCarousel(action: CarouselManualAction, dotIndex?: number) {
+    setSelection((current) => selectCarouselForAction(current, action, posters.length, dotIndex))
+  }
 
   function selectPoster(index: number) {
-    setActive(index)
-    setSelectionVersion((version) => version + 1)
+    selectCarousel('dot', index)
   }
 
   function selectNextPoster() {
-    setActive((index) => getNextCarouselIndex(index, posters.length))
-    setSelectionVersion((version) => version + 1)
+    selectCarousel('next')
   }
 
   function selectPreviousPoster() {
-    setActive((index) => getPreviousCarouselIndex(index, posters.length))
-    setSelectionVersion((version) => version + 1)
+    selectCarousel('previous')
+  }
+
+  function finishPointer(clientX: number | null) {
+    const result = finishCarouselPointer(pointer.current, clientX, posters.length)
+    pointer.current = { isActive: false, startX: null }
+    setIsPointerActive(result.isActive)
+    if (result.direction === 'next') selectCarousel('swipe-next')
+    if (result.direction === 'previous') selectCarousel('swipe-previous')
   }
 
   if (!posters.length) {
@@ -102,32 +115,29 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
         if (!event.currentTarget.contains(event.relatedTarget)) setIsFocusWithin(false)
       }}
       onPointerDown={(event) => {
-        setIsPointerActive(true)
-        touchStart.current = event.pointerType === 'touch' ? event.clientX : null
+        pointer.current = beginCarouselPointer(event.pointerType, event.clientX)
+        setIsPointerActive(pointer.current.isActive)
+        event.currentTarget.setPointerCapture(event.pointerId)
       }}
       onPointerUp={(event) => {
-        setIsPointerActive(false)
-        if (touchStart.current === null || posters.length < 2) return
-        const distance = event.clientX - touchStart.current
-        if (Math.abs(distance) > 45) {
-          if (distance < 0) selectNextPoster()
-          else selectPreviousPoster()
-        }
-        touchStart.current = null
+        finishPointer(event.clientX)
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
       }}
       onPointerCancel={() => {
-        setIsPointerActive(false)
-        touchStart.current = null
+        finishPointer(null)
+      }}
+      onLostPointerCapture={() => {
+        finishPointer(null)
       }}
       onKeyDown={(event) => {
         if (posters.length < 2) return
         if (event.key === 'ArrowLeft') {
           event.preventDefault()
-          selectPreviousPoster()
+          selectCarousel('keyboard-previous')
         }
         if (event.key === 'ArrowRight') {
           event.preventDefault()
-          selectNextPoster()
+          selectCarousel('keyboard-next')
         }
       }}
     >
