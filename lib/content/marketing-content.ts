@@ -1,4 +1,5 @@
 import type { AssetKey } from './asset-registry'
+import { publicContact } from './brand'
 import { featureFlags } from '@/lib/features'
 
 export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help'
@@ -103,7 +104,7 @@ export const faqPreview = [
   {
     category: 'Dukungan',
     question: 'Bagaimana menghubungi Strativate?',
-    answer: 'Hubungi Strativate melalui WhatsApp di +62 851-8775-4671 atau email strativateid@gmail.com.',
+    answer: `Hubungi Strativate melalui WhatsApp di ${publicContact.phone} atau email ${publicContact.email}.`,
     source: 'public-contact',
   },
   {

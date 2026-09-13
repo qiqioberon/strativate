@@ -109,6 +109,23 @@ test('FAQ directory has source-backed Program, Mentor, Akun, and Dukungan answer
   }
 })
 
+test('FAQ contact answer reuses the approved public contact record', async () => {
+  const [brand, content, contentSource] = await Promise.all([
+    import('../lib/content/brand'),
+    import('../lib/content/marketing-content'),
+    readProjectFile('lib/content/marketing-content.ts'),
+  ])
+  const contactAnswer = content.faqPreview.find(item => item.question === 'Bagaimana menghubungi Strativate?')
+
+  assert.ok(contactAnswer)
+  assert.equal(contactAnswer.answer, `Hubungi Strativate melalui WhatsApp di ${brand.publicContact.phone} atau email ${brand.publicContact.email}.`)
+  assert.equal(contentSource.includes('+62 851-8775-4671'), false)
+  assert.equal(contentSource.includes('strativateid@gmail.com'), false)
+  assert.match(contentSource, /import\s*{\s*publicContact\s*}\s*from\s*['"]\.\/brand['"]/)
+  assert.match(contentSource, /publicContact\.phone/)
+  assert.match(contentSource, /publicContact\.email/)
+})
+
 test('homepage intentionally limits the expanded FAQ directory to three previews', async () => {
   const homePage = await readProjectFile('components/marketing/home-page.tsx')
 
