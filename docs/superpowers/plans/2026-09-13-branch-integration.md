@@ -261,7 +261,8 @@ for table/bucket/policy tests. Do not claim hosted state from repository files.
 
 ```powershell
 git status --short
-git grep -n -e '<<<<<<<' -e '=======' -e '>>>>>>>'
+$conflictTokens = @(('<' * 7), ('=' * 7), ('>' * 7))
+$conflictTokens | ForEach-Object { git grep -n --fixed-strings $_ }
 git diff --check
 git diff origin/main...HEAD --stat
 git log --oneline origin/main..HEAD

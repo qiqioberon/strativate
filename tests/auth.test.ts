@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { destinationFor, passwordError, usernameError } from '../lib/auth/rules'
+import { isProtectedApplicationPath } from '../lib/auth/routes'
+
+test('route protection keeps public marketing paths separate from workspaces', () => {
+  for (const path of ['/', '/mentor', '/mentor/navira-putri', '/program', '/produk-digital']) {
+    assert.equal(isProtectedApplicationPath(path), false, `${path} should remain public`)
+  }
+
+  for (const path of ['/admin', '/admin/users', '/mentor/dashboard', '/mentor/dashboard/calendar', '/dashboard', '/onboarding', '/checkout/item']) {
+    assert.equal(isProtectedApplicationPath(path), true, `${path} should require authentication`)
+  }
+})
 
 test('routes only known roles and enforces persisted onboarding/setup', () => {
   assert.equal(destinationFor({ role: 'admin' }, null), '/admin')
