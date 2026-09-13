@@ -1,5 +1,4 @@
-import { ArrowRight } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowRight, MessageCircle } from 'lucide-react'
 
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
@@ -11,7 +10,9 @@ import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 export default async function ProgramPage() {
   const services = connectServicesToCatalog(await listPublicCatalog())
-  const primaryProgram = services.find(service => service.productType === 'private_mentoring' && service.href)
+  const primaryServices = services.filter(service => service.id === 'private-mentoring' || service.id === 'intensive-mentoring')
+  const secondaryService = services.find(service => service.id === 'big-class')
+  const supportingServices = services.filter(service => !primaryServices.includes(service) && service !== secondaryService)
   return (
     <MarketingShell>
       <main>
@@ -19,11 +20,20 @@ export default async function ProgramPage() {
           eyebrow="Program Strativate"
           title={<>Pilih dukungan yang<br /><em>sesuai tahapmu.</em></>}
           description="Delapan layanan Strativate mendukung kebutuhan belajar, konsultasi, dan persiapan kompetisi. Detail komersial hanya ditampilkan untuk program yang telah tersedia di Product Master."
-          aside={primaryProgram ? <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href={primaryProgram.href!}>{primaryProgram.detailLabel} <ArrowRight data-icon="arrow" size={16} /></Link> : undefined}
+          motif="program"
+          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk memilih program Strativate yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-intro-whatsapp-link">Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />
         <section className="marketing-page-section" data-reveal data-testid="program-directory-section">
-          <div className="marketing-container marketing-services-grid">
-            {services.map((service, index) => <ServiceCard service={service} index={index} key={service.id} />)}
+          <div className="marketing-container marketing-services-hierarchy">
+            <div className="marketing-services-primary" data-testid="program-primary-services" aria-label="Program utama">
+              {primaryServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="primary" key={service.id} />)}
+            </div>
+            {secondaryService ? <div className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Gambaran Big Class">
+              <ServiceCard service={secondaryService} index={services.indexOf(secondaryService)} variant="secondary" />
+            </div> : null}
+            <div className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Layanan pendukung">
+              {supportingServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="compact" key={service.id} />)}
+            </div>
           </div>
         </section>
         <section className="marketing-consultation-band" data-reveal data-testid="program-consultation-section">

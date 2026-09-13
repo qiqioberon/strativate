@@ -378,9 +378,19 @@
 }
 
 .marketing-services-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.marketing-services-hierarchy { display: grid; gap: 16px; }
+.marketing-services-primary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.marketing-services-secondary { max-width: min(100%, 680px); }
+.marketing-services-supporting { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
 .marketing-service-card { display: flex; min-height: 285px; flex-direction: column; padding: 25px; border: 1px solid var(--marketing-line); border-radius: 6px 24px 24px 24px; background: #fffdfa; }
 .marketing-service-card:nth-child(3n + 2) { background: #fff5e8; }
 .marketing-service-card:nth-child(3n) { background: #fff8d9; }
+.marketing-service-card--primary { min-height: 325px; padding: clamp(25px, 3vw, 38px); }
+.marketing-service-card--secondary { min-height: 270px; background: #fff8d9; }
+.marketing-service-card--compact { min-height: 215px; padding: 20px; border-radius: 6px 18px 18px 18px; }
+.marketing-service-card--compact h2 { margin-top: 19px; font-size: 1rem; }
+.marketing-service-card--compact p { font-size: .66rem; }
+.marketing-service-card--compact .marketing-service-card__icon { width: 38px; height: 38px; border-radius: 12px; }
 .marketing-service-card__top { display: flex; align-items: center; justify-content: space-between; }
 .marketing-service-card__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: #fff; background: var(--marketing-orange); }
 .marketing-service-card__number { color: #a48f80; font-size: .66rem; font-weight: 800; letter-spacing: .12em; }
@@ -405,9 +415,9 @@
 .marketing-mentor-empty { padding: 70px 20px; border: 1px dashed var(--marketing-line); color: var(--marketing-muted); text-align: center; }
 .marketing-footer__contact { display: grid; gap: 5px; margin-top: 12px; font-size: .68rem; }
 
-@media (max-width: 1080px) { .marketing-services-grid, .marketing-mentor-grid--directory { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1080px) { .marketing-services-grid, .marketing-services-supporting, .marketing-mentor-grid--directory { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
-  .marketing-services-grid, .marketing-mentor-grid--directory { grid-template-columns: 1fr; }
+  .marketing-services-grid, .marketing-services-primary, .marketing-services-supporting, .marketing-mentor-grid--directory { grid-template-columns: 1fr; }
   .marketing-mentor-toolbar { align-items: stretch; flex-direction: column; }
   .marketing-mentor-search { width: 100%; }
 }

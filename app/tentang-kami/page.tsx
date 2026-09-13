@@ -1,5 +1,4 @@
-import { ArrowRight, Focus, Repeat2, Waypoints } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowRight, Focus, MessageCircle, Repeat2, Waypoints } from 'lucide-react'
 
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
@@ -17,7 +16,8 @@ export default function AboutPage() {
           eyebrow="Tentang Strativate"
           title={<>Ambisi bertemu<br /><em>persiapan yang terarah.</em></>}
           description="Strativate adalah platform akselerasi untuk mengembangkan keterampilan masa depan melalui pelatihan bisnis, akuntansi, dan persiapan kompetisi dengan pendekatan praktis."
-          aside={<Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">Temukan program <ArrowRight data-icon="arrow" size={16} /></Link>}
+          motif="about"
+          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin mengetahui lebih lanjut tentang layanan dan pendekatan Strativate.')} target="_blank" rel="noreferrer" data-testid="about-page-intro-whatsapp-link">Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />
         <section className="marketing-page-section marketing-about-page" data-reveal data-testid="about-story-section">
           <div className="marketing-container marketing-about-page__statement">

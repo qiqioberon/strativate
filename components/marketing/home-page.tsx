@@ -194,7 +194,7 @@ export function HomePage({ catalogProducts, heroPosters }: { catalogProducts: Ca
             </Link>
           </div>
           <div className="marketing-faq-list">
-            {faqPreview.map((item, index) => (
+            {faqPreview.slice(0, 3).map((item, index) => (
               <details key={item.question} open={index === 0}>
                 <summary><span>0{index + 1}</span>{item.question}<ArrowDownRight aria-hidden="true" size={18} /></summary>
                 <p>{item.answer}</p>

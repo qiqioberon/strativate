@@ -3,10 +3,12 @@ import Link from 'next/link'
 
 import type { ConnectedServiceOverview } from '@/lib/content/services'
 
-export function ServiceCard({ service, index }: { service: ConnectedServiceOverview; index: number }) {
+type ServiceCardVariant = 'primary' | 'secondary' | 'compact'
+
+export function ServiceCard({ service, index, variant }: { service: ConnectedServiceOverview; index: number; variant: ServiceCardVariant }) {
   const Icon = service.icon
   return (
-    <article className="marketing-service-card" data-testid={`service-card-${service.id}`}>
+    <article className={`marketing-service-card marketing-service-card--${variant}`} data-testid={`service-card-${service.id}`} data-variant={variant}>
       <div className="marketing-service-card__top">
         <span className="marketing-service-card__icon"><Icon aria-hidden="true" size={22} /></span>
         <span className="marketing-service-card__number">{String(index + 1).padStart(2, '0')}</span>

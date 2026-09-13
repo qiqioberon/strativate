@@ -90,6 +90,31 @@ test('placeholder marketing content excludes unresolved production claims', asyn
   assert.equal(content.productPlaceholders.every(item => item.contentStatus === 'placeholder'), true)
 })
 
+test('FAQ directory has source-backed Program, Mentor, Akun, and Dukungan answers only', async () => {
+  const content = await import('../lib/content/marketing-content')
+  const allowedCategories = new Set(['Program', 'Mentor', 'Akun', 'Dukungan'])
+
+  assert.ok(content.faqPreview.length >= 8 && content.faqPreview.length <= 12)
+  assert.equal(new Set(content.faqPreview.map(item => item.question)).size, content.faqPreview.length)
+
+  for (const item of content.faqPreview) {
+    assert.ok(allowedCategories.has(item.category), `${item.category} is not an approved FAQ category`)
+    assert.match(item.answer, /\S/)
+    assert.match(item.source, /^(services|mentor-directory|auth|public-contact)$/)
+  }
+
+  const serialized = JSON.stringify(content.faqPreview)
+  for (const unresolved of ['Rp450.000', 'Laboratorium Kepemimpinan', 'Landasan Karier', 'jaminan kemenangan', 'refund', 'mitra']) {
+    assert.equal(serialized.toLocaleLowerCase('id').includes(unresolved.toLocaleLowerCase('id')), false, `FAQ must not publish unresolved ${unresolved}`)
+  }
+})
+
+test('homepage intentionally limits the expanded FAQ directory to three previews', async () => {
+  const homePage = await readProjectFile('components/marketing/home-page.tsx')
+
+  assert.match(homePage, /faqPreview\.slice\(0,\s*3\)\.map/)
+})
+
 test('asset registry separates supplied production assets from explicit fallbacks', async () => {
   let assets: typeof import('../lib/content/asset-registry')
   try {

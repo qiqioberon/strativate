@@ -39,6 +39,27 @@ test('retired Explore route redirects and the program directory opens Intensive 
   await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
 })
 
+test('program overview gives the two connected mentoring services equal priority', async ({ page }) => {
+  await page.goto('/program')
+
+  const primary = page.getByTestId('program-primary-services')
+  await expect(primary.getByTestId(/service-card-/)).toHaveCount(2)
+  await expect(primary.getByTestId('service-card-private-mentoring')).toHaveAttribute('data-variant', 'primary')
+  await expect(primary.getByTestId('service-card-intensive-mentoring')).toHaveAttribute('data-variant', 'primary')
+  await expect(primary.getByTestId('service-private-mentoring-link')).toHaveAttribute('href', '/program/private-mentoring')
+  await expect(primary.getByTestId('service-intensive-mentoring-link')).toHaveAttribute('href', '/program/intensive-mentoring')
+
+  const secondary = page.getByTestId('program-secondary-service')
+  await expect(secondary.getByTestId(/service-card-/)).toHaveCount(1)
+  await expect(secondary.getByTestId('service-card-big-class')).toHaveAttribute('data-variant', 'secondary')
+  await expect(secondary.getByText('Gambaran layanan')).toBeVisible()
+
+  const supporting = page.getByTestId('program-supporting-services')
+  await expect(supporting.getByTestId(/service-card-/)).toHaveCount(5)
+  await expect(supporting.locator('[data-variant="compact"]')).toHaveCount(5)
+  await expect(page.locator('.marketing-service-card')).toHaveCount(8)
+})
+
 test('old mentoring URLs and direct checkout entries lead to public program information', async ({ page }) => {
   for (const [path, destination] of [
     ['/program/brandstorm-coaching', 'private-mentoring'],

@@ -150,11 +150,27 @@ test('program directory hides digital products and retired digital route redirec
 
 test('FAQ search and contextual WhatsApp consultation remain usable', async ({ page }) => {
   await page.goto('/tanya-jawab')
-  await page.getByTestId('faq-search-input').fill('mentor')
+  await page.getByTestId('faq-search-input').fill('LinkedIn')
   await expect(page.getByTestId('faq-result-count')).toHaveText('Menampilkan 1 jawaban')
   await expect(page.getByTestId('faq-list').locator('details')).toHaveCount(1)
   const whatsapp = new URL(await page.getByTestId('global-whatsapp-cta').getAttribute('href') ?? '')
   expect(whatsapp.searchParams.get('text')).toContain('pertanyaan')
+})
+
+test('editorial page intros use their dedicated motifs and exact WhatsApp consultation messages', async ({ page }) => {
+  const intros = [
+    ['/program', 'program', 'program-page-intro-whatsapp-link', 'Halo Strativate, saya ingin konsultasi untuk memilih program Strativate yang sesuai.'],
+    ['/mentor', 'mentor', 'mentor-page-intro-whatsapp-link', 'Halo Strativate, saya ingin konsultasi untuk memilih mentor yang sesuai dengan kebutuhan saya.'],
+    ['/tentang-kami', 'about', 'about-page-intro-whatsapp-link', 'Halo Strativate, saya ingin mengetahui lebih lanjut tentang layanan dan pendekatan Strativate.'],
+    ['/tanya-jawab', 'faq', 'faq-page-intro-whatsapp-link', 'Halo Strativate, saya masih memiliki pertanyaan tentang layanan Strativate. Bisa dibantu?'],
+  ] as const
+
+  for (const [route, motifName, linkTestId, message] of intros) {
+    await page.goto(route)
+    await expect(page.getByTestId('marketing-page-intro-motif')).toHaveAttribute('data-motif', motifName)
+    const href = new URL(await page.getByTestId(linkTestId).getAttribute('href') ?? '')
+    expect(href.searchParams.get('text')).toBe(message)
+  }
 })
 
 test('mobile menu is accessible, navigates natively, and avoids overflow', async ({ page }) => {
