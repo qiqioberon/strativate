@@ -7,6 +7,7 @@ import type {
   CatalogProductType,
   FixedPriceCatalogItem,
 } from './types'
+import { featureFlags } from '@/lib/features'
 
 export type CatalogMarketingProgram = {
   id: string
@@ -36,8 +37,8 @@ export type CatalogMarketingDigitalProduct = {
 export type FixedCatalogOffering = FixedPriceCatalogItem & { kind: 'offering' }
 
 export const catalogProductTypeLabels: Record<CatalogProductType, string> = {
-  private_mentoring: 'Mentoring Privat',
-  intensive_mentoring: 'Mentoring Intensif',
+  private_mentoring: 'Private Mentoring',
+  intensive_mentoring: 'Intensive Mentoring',
   big_class: 'Big Class',
   digital_product: 'Produk Digital',
 }
@@ -77,7 +78,14 @@ export function selectProgramDirectory(products: CatalogProductSummary[]) {
 }
 
 export function selectDigitalProducts(products: CatalogProductSummary[]) {
+  if (!featureFlags.digitalProducts) return []
   return products.filter(product => product.productType === 'digital_product').sort(byCatalogOrder)
+}
+
+export function catalogProductDisplayTitle(product: Pick<CatalogProductSummary, 'productType' | 'title'>) {
+  return product.productType === 'private_mentoring' || product.productType === 'intensive_mentoring'
+    ? catalogProductTypeLabels[product.productType]
+    : product.title
 }
 
 export function toMarketingProgram(product: CatalogProductSummary, index: number): CatalogMarketingProgram {
@@ -89,7 +97,7 @@ export function toMarketingProgram(product: CatalogProductSummary, index: number
   return {
     id: product.id,
     number: String(index + 1).padStart(2, '0'),
-    title: product.title,
+    title: catalogProductDisplayTitle(product),
     kicker: editorial?.kicker ?? catalogProductTypeLabels[product.productType],
     description: product.shortDescription,
     highlights: editorial?.highlights ?? [],

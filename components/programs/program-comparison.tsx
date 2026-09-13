@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { CatalogProductSummary } from '@/lib/catalog/types'
 import { getProgramEditorial } from '@/lib/program-information'
+import { catalogProductDisplayTitle } from '@/lib/catalog/presentation'
 
 export function ProgramComparison({ products }: { products: CatalogProductSummary[] }) {
   const mentoringProducts = products.filter((product) =>
@@ -14,9 +15,9 @@ export function ProgramComparison({ products }: { products: CatalogProductSummar
       const editorial = getProgramEditorial(product.code)
       return <article className="program-info-card" key={product.id}>
         <p className="kicker">{product.productType === 'private_mentoring' ? 'Fleksibel sesuai kebutuhan' : 'Pendampingan berkelanjutan'}</p>
-        <h3>{product.title}</h3><p>{product.shortDescription}</p>
+        <h3>{catalogProductDisplayTitle(product)}</h3><p>{product.shortDescription}</p>
         {editorial && <ul>{editorial.highlights.map((item) => <li key={item}>{item}</li>)}</ul>}
-        <Link className="catalog-card-link" href={`/program/${product.slug}`}>Jelajahi {product.title}</Link>
+        <Link className="catalog-card-link" href={`/program/${product.slug}`} data-testid={`compare-${product.slug}-link`}>Jelajahi {catalogProductDisplayTitle(product)}</Link>
       </article>
     })}</div>
   </section>

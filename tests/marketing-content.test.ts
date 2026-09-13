@@ -15,11 +15,11 @@ test('marketing navigation exposes the approved dedicated routes', async () => {
       { label: 'Beranda', href: '/' },
       { label: 'Program', href: '/program' },
       { label: 'Mentor', href: '/mentor' },
-      { label: 'Produk Digital', href: '/produk-digital' },
       { label: 'Tentang Kami', href: '/tentang-kami' },
       { label: 'Tanya Jawab', href: '/tanya-jawab' },
     ],
   )
+  assert.equal(content.marketingNavigation.some(item => item.href === '/produk-digital'), false)
 })
 
 test('placeholder marketing content excludes unresolved production claims', async () => {

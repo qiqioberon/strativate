@@ -14,8 +14,8 @@ export type CatalogProductFilters = {
 }
 
 export const catalogProductTypeLabels: Record<CatalogProductType, string> = {
-  private_mentoring: 'Mentoring Privat',
-  intensive_mentoring: 'Mentoring Intensif',
+  private_mentoring: 'Private Mentoring',
+  intensive_mentoring: 'Intensive Mentoring',
   big_class: 'Kelas Besar',
   digital_product: 'Produk Digital',
 }

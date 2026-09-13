@@ -28,10 +28,10 @@ const programIcons = {
 
 export function ProgramCard({ program }: { program: MarketingProgram }) {
   const Icon = programIcons[program.tone]
-  const isPlaceholder = false
+  const isPlaceholder = program.status === 'overview'
 
-  return (
-    <article className={cn('marketing-program-card', `is-${program.tone}`, isPlaceholder && 'is-placeholder')}>
+  const content = (
+    <>
       <div className="marketing-program-card__rail" aria-hidden="true">
         <span>{program.number}</span>
         <i />
@@ -59,13 +59,9 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
             <small>{program.priceContext ?? 'Menunggu master program dari Strativate'}</small>
           </div>
           {program.href ? (
-            <Link
-              href={program.href}
-              className={cn(buttonVariants({ variant: 'dark', size: 'icon' }), 'marketing-program-card__action')}
-              aria-label={`Lihat ${program.title}`}
-            >
+            <span className={cn(buttonVariants({ variant: 'dark', size: 'icon' }), 'marketing-program-card__action')} aria-hidden="true">
               <ArrowRight data-icon="arrow" aria-hidden="true" size={18} />
-            </Link>
+            </span>
           ) : (
             <span className="marketing-program-card__pending" aria-label="Program belum tersedia">
               <Clock3 aria-hidden="true" size={17} />
@@ -73,6 +69,13 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
           )}
         </div>
       </div>
-    </article>
+    </>
+  )
+
+  const className = cn('marketing-program-card', `is-${program.tone}`, isPlaceholder && 'is-placeholder')
+  return program.href ? (
+    <Link href={program.href} className={className} aria-label={`Lihat ${program.title}`} data-testid={`program-card-${program.id}-link`}>{content}</Link>
+  ) : (
+    <article className={className} data-testid={`program-card-${program.id}`}>{content}</article>
   )
 }

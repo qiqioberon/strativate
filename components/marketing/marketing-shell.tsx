@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 
 import { SiteFooter } from './site-footer'
 import { SiteHeader } from './site-header'
+import { MarketingMotion } from './marketing-motion'
+import { WhatsAppCta } from './whatsapp-cta'
 
 export function MarketingShell({ children }: { children: ReactNode }) {
   return (
@@ -9,6 +11,8 @@ export function MarketingShell({ children }: { children: ReactNode }) {
       <SiteHeader />
       {children}
       <SiteFooter />
+      <WhatsAppCta />
+      <MarketingMotion />
     </div>
   )
 }

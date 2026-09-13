@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test'
 
 test('homepage and program overview link to guidebook information without a demo purchase', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: 'Lihat Mentoring Privat', exact: true })).toHaveAttribute('href', '/program/private-mentoring')
+  await expect(page.getByRole('link', { name: 'Lihat Private Mentoring', exact: true })).toHaveAttribute('href', '/program/private-mentoring')
   await page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Program', exact: true }).click()
   await expect(page.getByText('Demo flow:', { exact: false })).toHaveCount(0)
-  await page.locator('.marketing-service-card').filter({ hasText: 'Private Mentoring' }).getByRole('link', { name: 'Lihat Mentoring Privat', exact: true }).click()
+  await page.locator('.marketing-service-card').filter({ hasText: 'Private Mentoring' }).getByRole('link', { name: 'Lihat Private Mentoring', exact: true }).click()
   await expect(page).toHaveURL(/\/program\/private-mentoring$/)
-  await expect(page).toHaveTitle('Mentoring Privat | Strativate')
+  await expect(page).toHaveTitle('Private Mentoring | Strativate')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://strativate.id/program/private-mentoring')
   await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
   await page.getByRole('link', { name: 'Lihat paket', exact: true }).click()
@@ -20,16 +20,15 @@ test('homepage and program overview link to guidebook information without a demo
   await expect(page.getByRole('button', { name: /bayar|pesan|beli/i })).toHaveCount(0)
 })
 
-test('Explore filters the two mentoring programs and opens intensive packages', async ({ page }) => {
+test('retired Explore route redirects and the program directory opens Intensive Mentoring', async ({ page }) => {
   await page.goto('/explore')
-  await expect(page.locator('.catalog-card')).toHaveCount(2)
+  await expect(page).toHaveURL(/\/program$/)
+  await expect(page.locator('.marketing-service-card')).toHaveCount(8)
   await expect(page.getByText('Panduan Pemecahan Kasus')).toHaveCount(0)
   await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Mentoring Intensif', exact: true }).click()
-  await expect(page.locator('.catalog-card')).toHaveCount(1)
-  await page.getByRole('link', { name: 'Lihat program' }).click()
+  await page.locator('.marketing-service-card').filter({ hasText: 'Intensive Mentoring' }).getByRole('link', { name: 'Lihat Intensive Mentoring', exact: true }).click()
   await expect(page).toHaveURL(/\/program\/intensive-mentoring$/)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mentoring Intensif')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Intensive Mentoring')
   await expect(page.locator('#packages')).toContainText('Rp1.150.000')
   await expect(page.locator('#packages')).toContainText('Rp2.200.000')
   await expect(page.locator('#packages')).toContainText('4 sesi per bulan')

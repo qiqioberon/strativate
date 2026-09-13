@@ -3,6 +3,7 @@ import { LegacyCheckout } from '@/components/checkout/legacy-checkout'
 import { toLegacyCheckoutItem } from '@/lib/catalog/compatibility'
 import { getPublicCatalogProduct } from '@/lib/catalog/public'
 import { resolveMentoringSlug } from '@/lib/program-routes'
+import { featureFlags } from '@/lib/features'
 
 export default async function CheckoutPage({
   params,
@@ -17,6 +18,7 @@ export default async function CheckoutPage({
 
   const product = await getPublicCatalogProduct(slug)
   if (!product) notFound()
+  if (!featureFlags.digitalProducts && product.productType === 'digital_product') permanentRedirect('/program')
   if (product.defaultPurchaseFlow !== 'direct_checkout') permanentRedirect(`/program/${product.slug}`)
 
   const requestedId = (await searchParams).item

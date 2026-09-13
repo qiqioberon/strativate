@@ -1,0 +1,47 @@
+'use client'
+
+import { ExternalLink, MessageCircle, X } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+
+import { AssetMedia } from './asset-media'
+import type { Mentor } from '@/lib/content/mentors'
+import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
+
+export function MentorDetailModal({ mentor, onClose }: { mentor: Mentor | null; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (mentor && !dialog.open) dialog.showModal()
+    if (!mentor && dialog.open) dialog.close()
+  }, [mentor])
+
+  return (
+    <dialog ref={dialogRef} className="marketing-mentor-dialog" onClose={onClose} data-testid="mentor-detail-modal">
+      {mentor ? (
+        <div className="marketing-mentor-dialog__panel">
+          <button className="marketing-mentor-dialog__close" type="button" onClick={() => dialogRef.current?.close()} aria-label="Tutup detail mentor" data-testid="mentor-modal-close-button"><X aria-hidden="true" size={20} /></button>
+          <div className="marketing-mentor-dialog__media"><AssetMedia assetKey={mentor.portrait} sizes="(max-width: 620px) 90vw, 35vw" /></div>
+          <div className="marketing-mentor-dialog__content">
+            <span data-testid="mentor-modal-tier">{mentor.tier ?? 'Mentor Strativate'}</span>
+            <h2 data-testid="mentor-modal-name">{mentor.name}</h2>
+            {mentor.title ? <p data-testid="mentor-modal-title">{mentor.title}</p> : null}
+            <div className="marketing-mentor-dialog__section">
+              <h3>Fokus keahlian</h3>
+              <div className="marketing-mentor-card__expertise">{mentor.expertise.map((item) => <span key={item}>{item}</span>)}</div>
+            </div>
+            <div className="marketing-mentor-dialog__section">
+              <h3>Pengalaman dan pencapaian</h3>
+              <ul>{mentor.credentials.map((credential) => <li key={credential}>{credential}</li>)}</ul>
+            </div>
+            <div className="marketing-mentor-dialog__actions">
+              <a href={buildWhatsAppHref(`Halo Strativate, saya ingin berkonsultasi tentang mentoring bersama ${mentor.name}.`)} target="_blank" rel="noreferrer" data-testid="mentor-modal-whatsapp-link"><MessageCircle aria-hidden="true" size={16} /> Konsultasi</a>
+              {mentor.linkedIn ? <a href={mentor.linkedIn} target="_blank" rel="noreferrer" data-testid="mentor-modal-linkedin-link"><ExternalLink aria-hidden="true" size={16} /> LinkedIn</a> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </dialog>
+  )
+}

@@ -11,6 +11,7 @@ import type {
   CatalogSessionPackage,
 } from '@/lib/supabase/database.types'
 import { CatalogStructures } from './catalog-structures'
+import { featureFlags } from '@/lib/features'
 
 type EditorData = {
   products: CatalogAdminProduct[]
@@ -44,8 +45,10 @@ export function CatalogManagement() {
         db.from('catalog_session_packages').select('*').order('sort_order'),
       ])
       for (const result of [products, items, tiers, packages]) if (result.error) throw result.error
+      const visibleProducts = (products.data ?? []).filter((product) => featureFlags.digitalProducts || product.product_type !== 'digital_product')
+      const visibleIds = new Set(visibleProducts.map((product) => product.id))
       const next = {
-        products: products.data ?? [], items: items.data ?? [],
+        products: visibleProducts, items: (items.data ?? []).filter((item) => visibleIds.has(item.product_id)),
         tiers: tiers.data ?? [], packages: packages.data ?? [],
       }
       setData(next)
@@ -123,7 +126,7 @@ export function CatalogManagement() {
 }
 
 function ProductForm({ product, busy, onSubmit }: { product: CatalogAdminProduct | null; busy: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  return <form className="editor-panel catalog-product-form" onSubmit={onSubmit}><div className="role-card-heading"><div><p className="kicker">{product ? `Identitas ${product.code}` : 'Produk baru'}</p><h2>{product ? product.title : 'Buat produk draf'}</h2></div><span className="status-pill">{product ? catalogStatusLabels[product.status] : 'Draf'}</span></div><div className="catalog-form-grid"><label>Jenis produk<select name="product_type" defaultValue={product?.product_type ?? 'private_mentoring'} disabled={!!product}><option value="private_mentoring">Mentoring Privat</option><option value="intensive_mentoring">Mentoring Intensif</option><option value="big_class">Kelas Besar</option><option value="digital_product">Produk Digital</option></select></label><label>Kode stabil<input name="code" pattern="[a-z][a-z0-9_]*" defaultValue={product?.code ?? ''} disabled={!!product} required /></label><label>Slug<input name="slug" defaultValue={product?.slug ?? ''} required /></label><label>Judul<input name="title" defaultValue={product?.title ?? ''} required maxLength={160} /></label><label className="catalog-wide">Deskripsi singkat<input name="short_description" defaultValue={product?.short_description ?? ''} required maxLength={500} /></label><label className="catalog-wide">Deskripsi<textarea name="description" defaultValue={product?.description ?? ''} rows={4} /></label><label>Urutan<input name="sort_order" type="number" defaultValue={product?.sort_order ?? 0} /></label><label className="option-label"><input name="is_public" type="checkbox" defaultChecked={product?.is_public ?? false} />Tampil di publik</label><label className="option-label"><input name="is_featured" type="checkbox" defaultChecked={product?.is_featured ?? false} />Produk unggulan</label></div><button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan produk'}</button></form>
+  return <form className="editor-panel catalog-product-form" onSubmit={onSubmit}><div className="role-card-heading"><div><p className="kicker">{product ? `Identitas ${product.code}` : 'Produk baru'}</p><h2>{product ? product.title : 'Buat produk draf'}</h2></div><span className="status-pill">{product ? catalogStatusLabels[product.status] : 'Draf'}</span></div><div className="catalog-form-grid"><label>Jenis produk<select name="product_type" defaultValue={product?.product_type ?? 'private_mentoring'} disabled={!!product}><option value="private_mentoring">Private Mentoring</option><option value="intensive_mentoring">Intensive Mentoring</option><option value="big_class">Kelas Besar</option>{featureFlags.digitalProducts ? <option value="digital_product">Produk Digital</option> : null}</select></label><label>Kode stabil<input name="code" pattern="[a-z][a-z0-9_]*" defaultValue={product?.code ?? ''} disabled={!!product} required /></label><label>Slug<input name="slug" defaultValue={product?.slug ?? ''} required /></label><label>Judul<input name="title" defaultValue={product?.title ?? ''} required maxLength={160} /></label><label className="catalog-wide">Deskripsi singkat<input name="short_description" defaultValue={product?.short_description ?? ''} required maxLength={500} /></label><label className="catalog-wide">Deskripsi<textarea name="description" defaultValue={product?.description ?? ''} rows={4} /></label><label>Urutan<input name="sort_order" type="number" defaultValue={product?.sort_order ?? 0} /></label><label className="option-label"><input name="is_public" type="checkbox" defaultChecked={product?.is_public ?? false} />Tampil di publik</label><label className="option-label"><input name="is_featured" type="checkbox" defaultChecked={product?.is_featured ?? false} />Produk unggulan</label></div><button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan produk'}</button></form>
 }
 
 function CommercialItems({ product, items, tiers, packages, busy, run }: { product: CatalogAdminProduct; items: CatalogAdminCommercialItem[]; tiers: CatalogMentorTier[]; packages: CatalogSessionPackage[]; busy: boolean; run: (action: () => Promise<void>, success: string) => Promise<void> }) {

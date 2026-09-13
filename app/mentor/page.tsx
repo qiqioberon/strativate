@@ -17,7 +17,7 @@ export default function MentorPage() {
           description="Temukan mentor berdasarkan kategori dan keahlian yang tercantum dalam data mentor Strativate. Profil tanpa foto menggunakan penanda yang jelas."
           aside={<Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">Pilih program dahulu <ArrowRight data-icon="arrow" size={16} /></Link>}
         />
-        <section className="marketing-page-section">
+        <section className="marketing-page-section" data-reveal data-testid="mentor-directory-section">
           <div className="marketing-container">
             <MentorDirectory mentors={mentors} />
           </div>

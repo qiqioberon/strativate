@@ -1,8 +1,9 @@
 import type { AssetKey } from './asset-registry'
+import { featureFlags } from '@/lib/features'
 
 export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help'
 
-export const marketingNavigation = [
+const marketingNavigationItems = [
   { label: 'Beranda', href: '/', icon: 'house' },
   { label: 'Program', href: '/program', icon: 'compass' },
   { label: 'Mentor', href: '/mentor', icon: 'users' },
@@ -10,6 +11,10 @@ export const marketingNavigation = [
   { label: 'Tentang Kami', href: '/tentang-kami', icon: 'sparkles' },
   { label: 'Tanya Jawab', href: '/tanya-jawab', icon: 'help' },
 ] as const satisfies ReadonlyArray<{ label: string; href: string; icon: NavigationIcon }>
+
+export const marketingNavigation = marketingNavigationItems.filter(
+  (item) => featureFlags.digitalProducts || item.href !== '/produk-digital',
+)
 
 export const preparationPrinciples = [
   { number: '01', title: 'Mulai dari kebutuhanmu', description: 'Pilih dukungan berdasarkan tahap persiapan dan fokus yang sedang kamu kerjakan.' },
@@ -47,14 +52,17 @@ export const productPlaceholders: ProductPreview[] = [
 
 export const faqPreview = [
   {
+    category: 'Program',
     question: 'Di mana saya bisa membandingkan program?',
     answer: 'Halaman Program merangkum pilihan yang tersedia dan mengarahkanmu ke informasi setiap program.',
   },
   {
+    category: 'Mentor',
     question: 'Bagaimana memilih mentor?',
     answer: 'Gunakan pencarian dan filter pada halaman Mentor untuk melihat kategori, keahlian, dan pengalaman yang tercantum pada setiap profil.',
   },
   {
+    category: 'Dukungan',
     question: 'Bagaimana menghubungi Strativate?',
     answer: 'Hubungi Strativate melalui WhatsApp di +62 851-8775-4671 atau email strativateid@gmail.com.',
   },

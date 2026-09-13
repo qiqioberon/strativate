@@ -13,7 +13,7 @@ const legacyLabels: Record<string, string> = {
   'July 2026 Cohort': 'Angkatan Juli 2026',
   'Case Simulation': 'Simulasi Kasus',
   'Competition Prep Workbook': 'Buku Latihan Persiapan Kompetisi',
-  'Private Mentoring Session Top-up': 'Tambahan Sesi Mentoring Privat',
+  'Private Mentoring Session Top-up': 'Tambahan Sesi Private Mentoring',
   'Digital download': 'Unduhan digital',
   'Just now': 'Baru saja',
   'this program': 'program ini',
@@ -54,7 +54,7 @@ export function displayDemoLabel(value: string): string {
 }
 
 const notificationCopy: Record<string, string> = {
-  'Your Private Mentoring engagement has an upcoming session.': 'Paket Mentoring Privat Anda memiliki sesi mendatang.',
+  'Your Private Mentoring engagement has an upcoming session.': 'Paket Private Mentoring Anda memiliki sesi mendatang.',
   'Your product is now available in My Library.': 'Produk Anda kini tersedia di Pustaka Saya.',
   'Your enrollment is ready for the next step.': 'Program Anda siap untuk langkah berikutnya.',
 }

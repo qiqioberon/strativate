@@ -69,6 +69,6 @@ export function connectServicesToCatalog(products: CatalogProductSummary[]): Con
   return services.map((service) => {
     if (!service.productType) return service
     const product = products.find(item => item.productType === service.productType)
-    return product ? { ...service, href: `/program/${product.slug}`, detailLabel: `Lihat ${product.title}` } : service
+    return product ? { ...service, href: `/program/${product.slug}`, detailLabel: `Lihat ${service.name}` } : service
   })
 }

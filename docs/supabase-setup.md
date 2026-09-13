@@ -20,8 +20,10 @@ Jalankan migrasi berurutan di Supabase SQL Editor, masing-masing sebagai satu tr
 1. `supabase/migrations/202609060001_auth_onboarding.sql`
 2. `supabase/migrations/202609060002_institution_import.sql`
 3. `supabase/migrations/202609060003_invite_management_auth_ux.sql`
+4. `supabase/migrations/202609090001_product_catalog_master.sql`
+5. `supabase/migrations/202609120001_marketing_hero_posters.sql`
 
-Untuk project yang sudah menjalankan 001 dan 002, jalankan **hanya 003 sebelum deployment revisi ini**. Migrasi 003 menambahkan pengelolaan undangan khusus admin dan mewajibkan minat dari daftar master. Jawaban minat bebas yang lama tidak dihapus massal; kolom historis dikosongkan ketika langkah minat disimpan ulang. Pilihan "Lainnya" pada sumber informasi/referral tetap tersedia.
+Untuk project yang sudah menjalankan migrasi 001–003, lanjutkan dengan migrasi Product Master lalu hero poster sesuai urutan di atas. Migrasi hero poster membuat tabel `marketing_hero_posters`, bucket publik `marketing-hero-posters`, RLS admin, kebijakan Storage, dan RPC pengurutan. Jangan menganggap migrasi hosted sudah terpasang sebelum tabel, bucket, serta kebijakannya diperiksa pada project Supabase tujuan.
 
 Alternatif dengan PostgreSQL CLI dan `SUPABASE_DB_URL` yang disimpan sebagai environment variable:
 
@@ -29,6 +31,8 @@ Alternatif dengan PostgreSQL CLI dan `SUPABASE_DB_URL` yang disimpan sebagai env
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060001_auth_onboarding.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060002_institution_import.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060003_invite_management_auth_ux.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609090001_product_catalog_master.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609120001_marketing_hero_posters.sql
 ```
 
 `psql` tidak otomatis membaca `.env`; ekspor `SUPABASE_DB_URL` ke shell atau gunakan koneksi CLI dari menu **Connect** Supabase. Jangan menjalankan ulang migration 001 yang sudah diterapkan. Pada project yang memakai Supabase CLI, gunakan `supabase db push` sesuai riwayat migrasinya. Jika SQL Editor sudah dipakai terlebih dahulu, sinkronkan migration history sebelum beralih ke CLI.
