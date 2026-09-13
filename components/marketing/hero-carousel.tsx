@@ -1,27 +1,86 @@
 'use client'
 
-import { ArrowDownRight, ArrowUpRight, Compass } from 'lucide-react'
+import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Compass } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
+import {
+  CAROUSEL_AUTOPLAY_DELAY,
+  beginCarouselPointer,
+  finishCarouselPointer,
+  getNextCarouselIndex,
+  hasCarouselControls,
+  selectCarouselForAction,
+  shouldScheduleCarousel,
+  type CarouselManualAction,
+  type CarouselPointer,
+} from '@/lib/marketing/carousel'
 
 export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }) {
-  const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const touchStart = useRef<number | null>(null)
+  const [selection, setSelection] = useState({ index: 0, scheduleVersion: 0 })
+  const [isHovering, setIsHovering] = useState(false)
+  const [isFocusWithin, setIsFocusWithin] = useState(false)
+  const [isPointerActive, setIsPointerActive] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
+  const pointer = useRef<CarouselPointer>({ isActive: false, startX: null })
+  const paused = isHovering || isFocusWithin || isPointerActive
+  const active = selection.index
 
   useEffect(() => {
-    if (paused || posters.length < 2) return
-    const timer = window.setInterval(() => setActive((current) => (current + 1) % posters.length), 6000)
-    return () => window.clearInterval(timer)
-  }, [paused, posters.length])
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateReducedMotion = () => setReducedMotion(motionQuery.matches)
+    updateReducedMotion()
+    motionQuery.addEventListener('change', updateReducedMotion)
+    return () => motionQuery.removeEventListener('change', updateReducedMotion)
+  }, [])
 
   useEffect(() => {
-    if (active >= posters.length) setActive(0)
-  }, [active, posters.length])
+    if (!shouldScheduleCarousel({ posterCount: posters.length, paused, reducedMotion })) return
+    const timer = window.setTimeout(() => setSelection((current) => ({ ...current, index: getNextCarouselIndex(current.index, posters.length) })), CAROUSEL_AUTOPLAY_DELAY)
+    return () => window.clearTimeout(timer)
+  }, [active, paused, posters.length, reducedMotion, selection.scheduleVersion])
+
+  useEffect(() => {
+    setSelection((current) => current.index >= posters.length ? { ...current, index: 0 } : current)
+  }, [posters.length])
+
+  function selectCarousel(action: CarouselManualAction, dotIndex?: number) {
+    setSelection((current) => selectCarouselForAction(current, action, posters.length, dotIndex))
+  }
+
+  function selectPoster(index: number) {
+    selectCarousel('dot', index)
+  }
+
+  function selectNextPoster() {
+    selectCarousel('next')
+  }
+
+  function selectPreviousPoster() {
+    selectCarousel('previous')
+  }
+
+  useEffect(() => {
+    const finishPointer = (clientX: number | null) => {
+      if (!pointer.current.isActive) return
+      const result = finishCarouselPointer(pointer.current, clientX, posters.length)
+      pointer.current = { isActive: false, startX: null }
+      setIsPointerActive(result.isActive)
+      if (result.direction === 'next') setSelection((current) => selectCarouselForAction(current, 'swipe-next', posters.length))
+      if (result.direction === 'previous') setSelection((current) => selectCarouselForAction(current, 'swipe-previous', posters.length))
+    }
+    const onPointerUp = (event: PointerEvent) => finishPointer(event.clientX)
+    const onPointerCancel = () => finishPointer(null)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
+    return () => {
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerCancel)
+    }
+  }, [posters.length])
 
   if (!posters.length) {
     return (
@@ -59,21 +118,35 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
       aria-roledescription="carousel"
       aria-label="Poster informasi Strativate"
       data-testid="hero-poster-carousel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-      onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null }}
-      onTouchEnd={(event) => {
-        if (touchStart.current === null || posters.length < 2) return
-        const distance = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current
-        if (Math.abs(distance) > 45) setActive((currentIndex) => (currentIndex + (distance < 0 ? 1 : posters.length - 1)) % posters.length)
-        touchStart.current = null
+      tabIndex={0}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      onFocusCapture={() => setIsFocusWithin(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsFocusWithin(false)
+      }}
+      onPointerDown={(event) => {
+        pointer.current = beginCarouselPointer(event.pointerType, event.clientX)
+        setIsPointerActive(pointer.current.isActive)
+      }}
+      onKeyDown={(event) => {
+        if (posters.length < 2) return
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          selectCarousel('keyboard-previous')
+        }
+        if (event.key === 'ArrowRight') {
+          event.preventDefault()
+          selectCarousel('keyboard-next')
+        }
       }}
     >
       {current.url ? <Link href={current.url} data-testid="hero-poster-link">{poster}</Link> : poster}
-      {posters.length > 1 ? (
+      {hasCarouselControls(posters.length) ? (
         <div className="marketing-hero-carousel__controls" aria-label="Pilih poster">
+          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Poster sebelumnya" onClick={selectPreviousPoster} data-testid="hero-poster-previous-button">
+            <ArrowLeft aria-hidden="true" size={17} />
+          </button>
           {posters.map((item, index) => (
             <button
               key={item.id}
@@ -81,9 +154,12 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
               aria-label={`Tampilkan poster ${index + 1}`}
               aria-current={index === active ? 'true' : undefined}
               data-testid={`hero-poster-indicator-${index + 1}`}
-              onClick={() => setActive(index)}
+              onClick={() => selectPoster(index)}
             />
           ))}
+          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Poster berikutnya" onClick={selectNextPoster} data-testid="hero-poster-next-button">
+            <ArrowRight aria-hidden="true" size={17} />
+          </button>
         </div>
       ) : null}
     </div>

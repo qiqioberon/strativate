@@ -1,4 +1,5 @@
 import type { AssetKey } from './asset-registry'
+import { publicContact } from './brand'
 import { featureFlags } from '@/lib/features'
 
 export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help'
@@ -50,23 +51,69 @@ export const productPlaceholders: ProductPreview[] = [
   },
 ]
 
+export type MarketingFaq = {
+  category: 'Program' | 'Mentor' | 'Akun' | 'Dukungan'
+  question: string
+  answer: string
+  source: 'services' | 'mentor-directory' | 'auth' | 'public-contact'
+}
+
 export const faqPreview = [
   {
     category: 'Program',
     question: 'Di mana saya bisa membandingkan program?',
     answer: 'Halaman Program merangkum pilihan yang tersedia dan mengarahkanmu ke informasi setiap program.',
+    source: 'services',
+  },
+  {
+    category: 'Program',
+    question: 'Layanan apa saja yang tersedia di Strativate?',
+    answer: 'Halaman Program memuat Private Mentoring, Intensive Mentoring, Big Class, serta layanan pendukung untuk konsultasi, persiapan, dan komunitas.',
+    source: 'services',
+  },
+  {
+    category: 'Program',
+    question: 'Program mana yang sudah memiliki halaman informasi?',
+    answer: 'Private Mentoring dan Intensive Mentoring memiliki tautan ke halaman informasi program. Big Class saat ini ditampilkan sebagai gambaran layanan.',
+    source: 'services',
   },
   {
     category: 'Mentor',
     question: 'Bagaimana memilih mentor?',
     answer: 'Gunakan pencarian dan filter pada halaman Mentor untuk melihat kategori, keahlian, dan pengalaman yang tercantum pada setiap profil.',
+    source: 'mentor-directory',
+  },
+  {
+    category: 'Mentor',
+    question: 'Informasi apa yang tersedia pada profil mentor?',
+    answer: 'Setiap profil menampilkan informasi yang tersedia tentang kategori, keahlian, pengalaman, dan tautan LinkedIn bila tercantum.',
+    source: 'mentor-directory',
+  },
+  {
+    category: 'Akun',
+    question: 'Bagaimana cara mendaftar?',
+    answer: 'Di halaman Masuk, pilih Daftar lalu masukkan email untuk menerima tautan verifikasi dan melengkapi profil.',
+    source: 'auth',
+  },
+  {
+    category: 'Akun',
+    question: 'Bagaimana cara masuk ke akun?',
+    answer: 'Kamu dapat masuk dengan email dan kata sandi, atau melanjutkan dengan Google dari halaman Masuk.',
+    source: 'auth',
   },
   {
     category: 'Dukungan',
     question: 'Bagaimana menghubungi Strativate?',
-    answer: 'Hubungi Strativate melalui WhatsApp di +62 851-8775-4671 atau email strativateid@gmail.com.',
+    answer: `Hubungi Strativate melalui WhatsApp di ${publicContact.phone} atau email ${publicContact.email}.`,
+    source: 'public-contact',
   },
-] as const
+  {
+    category: 'Dukungan',
+    question: 'Saya belum yakin memilih program. Apa yang bisa dilakukan?',
+    answer: 'Sampaikan kebutuhanmu melalui WhatsApp agar tim Strativate dapat membantu mengarahkan percakapan tentang program yang sesuai.',
+    source: 'public-contact',
+  },
+] as const satisfies ReadonlyArray<MarketingFaq>
 
 export const bigClassPlaceholder = {
   title: 'Big Class',

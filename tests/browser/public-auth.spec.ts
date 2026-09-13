@@ -70,6 +70,46 @@ test('registration starts with only email and can return to login', async ({ pag
   await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible()
 })
 
+test('auth shell places one icon back link before its heading and presents a full-width account mode switch', async ({ page }) => {
+  await page.goto('/auth')
+
+  const shell = page.locator('.auth-card')
+  const homeControls = shell.getByRole('link', { name: 'Kembali ke beranda' })
+  const backLink = page.getByTestId('auth-back-link')
+  const heading = page.locator('.auth-heading')
+  const switcher = page.getByTestId('auth-mode-switch')
+
+  await expect(homeControls).toHaveCount(1)
+  await expect(shell.locator(':scope > .auth-brand + [data-testid="auth-back-link"]')).toHaveCount(1)
+  await expect(backLink).toHaveAttribute('href', '/')
+  await expect(backLink.locator('.auth-back__icon')).toHaveCount(1)
+  await expect(switcher).toHaveClass(/button-outline/)
+
+  const [backBox, headingBox, switchBox, formBox] = await Promise.all([
+    backLink.boundingBox(),
+    heading.boundingBox(),
+    switcher.boundingBox(),
+    page.locator('.auth-form').boundingBox(),
+  ])
+  expect(backBox).not.toBeNull()
+  expect(headingBox).not.toBeNull()
+  expect(switchBox).not.toBeNull()
+  expect(formBox).not.toBeNull()
+  expect(backBox!.y + backBox!.height).toBeLessThanOrEqual(headingBox!.y)
+  expect(Math.abs(switchBox!.width - formBox!.width)).toBeLessThanOrEqual(1)
+})
+
+test('auth visual panel uses an inaccessible animated grid that respects reduced motion', async ({ page }) => {
+  await page.goto('/auth')
+
+  const visualGrid = page.getByTestId('auth-visual-grid')
+  await expect(visualGrid).toHaveAttribute('aria-hidden', 'true')
+  expect(await visualGrid.evaluate((element) => getComputedStyle(element).animationName)).not.toBe('none')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(visualGrid).toHaveCSS('animation-name', 'none')
+})
+
 for (const path of ['/admin', '/mentor/dashboard', '/dashboard', '/onboarding', '/auth/setup', '/checkout/private-hsbc']) {
   test(`anonymous route guard rejects ${path} even with a forged demo role`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('strativate-demo-role', 'Admin'))

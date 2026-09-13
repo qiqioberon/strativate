@@ -1,5 +1,40 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import test from 'node:test'
+
+const projectRoot = path.resolve(import.meta.dirname, '..')
+
+async function readProjectFile(relativePath: string) {
+  return readFile(path.join(projectRoot, relativePath), 'utf8')
+}
+
+test('shared typography loads Poppins once and exposes it through every CSS font token', async () => {
+  const [layout, globals, marketing] = await Promise.all([
+    readProjectFile('app/layout.tsx'),
+    readProjectFile('app/globals.css'),
+    readProjectFile('app/marketing.css'),
+  ])
+  const sharedSources = `${layout}\n${globals}\n${marketing}`
+
+  assert.match(layout, /import\s*{\s*Poppins\s*}\s*from\s*['\"]next\/font\/google['\"]/)
+  assert.match(layout, /Poppins\([^)]*variable:\s*['\"]--font-poppins['\"][^)]*\)/)
+  assert.match(globals, /--font-sans:\s*var\(--font-poppins\),\s*sans-serif/)
+  assert.match(globals, /--font-heading:\s*var\(--font-poppins\),\s*sans-serif/)
+  assert.match(globals, /--font-mono:\s*var\(--font-poppins\),\s*sans-serif/)
+
+  for (const retiredFont of ['DM_Sans', 'Outfit', 'IBM_Plex_Mono', '--font-dm-sans', '--font-outfit', '--font-ibm-plex']) {
+    assert.equal(sharedSources.includes(retiredFont), false, `${retiredFont} must not remain in shared typography`)
+  }
+})
+
+test('PageIntro provides an inaccessible decorative motif hook', async () => {
+  const pageIntro = await readProjectFile('components/marketing/page-intro.tsx')
+
+  assert.match(pageIntro, /motif\??:\s*['\"]program['\"]\s*\|\s*['\"]mentor['\"]\s*\|\s*['\"]about['\"]\s*\|\s*['\"]faq['\"]/)
+  assert.match(pageIntro, /data-testid=['\"]marketing-page-intro-motif['\"]/)
+  assert.match(pageIntro, /aria-hidden=['\"]true['\"]/)
+})
 
 test('marketing navigation exposes the approved dedicated routes', async () => {
   let content: typeof import('../lib/content/marketing-content')
@@ -53,6 +88,48 @@ test('placeholder marketing content excludes unresolved production claims', asyn
   }
 
   assert.equal(content.productPlaceholders.every(item => item.contentStatus === 'placeholder'), true)
+})
+
+test('FAQ directory has source-backed Program, Mentor, Akun, and Dukungan answers only', async () => {
+  const content = await import('../lib/content/marketing-content')
+  const allowedCategories = new Set(['Program', 'Mentor', 'Akun', 'Dukungan'])
+
+  assert.ok(content.faqPreview.length >= 8 && content.faqPreview.length <= 12)
+  assert.equal(new Set(content.faqPreview.map(item => item.question)).size, content.faqPreview.length)
+
+  for (const item of content.faqPreview) {
+    assert.ok(allowedCategories.has(item.category), `${item.category} is not an approved FAQ category`)
+    assert.match(item.answer, /\S/)
+    assert.match(item.source, /^(services|mentor-directory|auth|public-contact)$/)
+  }
+
+  const serialized = JSON.stringify(content.faqPreview)
+  for (const unresolved of ['Rp450.000', 'Laboratorium Kepemimpinan', 'Landasan Karier', 'jaminan kemenangan', 'refund', 'mitra']) {
+    assert.equal(serialized.toLocaleLowerCase('id').includes(unresolved.toLocaleLowerCase('id')), false, `FAQ must not publish unresolved ${unresolved}`)
+  }
+})
+
+test('FAQ contact answer reuses the approved public contact record', async () => {
+  const [brand, content, contentSource] = await Promise.all([
+    import('../lib/content/brand'),
+    import('../lib/content/marketing-content'),
+    readProjectFile('lib/content/marketing-content.ts'),
+  ])
+  const contactAnswer = content.faqPreview.find(item => item.question === 'Bagaimana menghubungi Strativate?')
+
+  assert.ok(contactAnswer)
+  assert.equal(contactAnswer.answer, `Hubungi Strativate melalui WhatsApp di ${brand.publicContact.phone} atau email ${brand.publicContact.email}.`)
+  assert.equal(contentSource.includes('+62 851-8775-4671'), false)
+  assert.equal(contentSource.includes('strativateid@gmail.com'), false)
+  assert.match(contentSource, /import\s*{\s*publicContact\s*}\s*from\s*['"]\.\/brand['"]/)
+  assert.match(contentSource, /publicContact\.phone/)
+  assert.match(contentSource, /publicContact\.email/)
+})
+
+test('homepage intentionally limits the expanded FAQ directory to three previews', async () => {
+  const homePage = await readProjectFile('components/marketing/home-page.tsx')
+
+  assert.match(homePage, /faqPreview\.slice\(0,\s*3\)\.map/)
 })
 
 test('asset registry separates supplied production assets from explicit fallbacks', async () => {

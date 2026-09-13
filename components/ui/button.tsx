@@ -10,6 +10,7 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-[#e95700]',
         primary: 'bg-primary text-primary-foreground hover:bg-[#e95700]',
+        whatsapp: 'bg-[#25d366] text-[#052e16] hover:bg-[#1ebe5d] focus-visible:border-[#128c3e] focus-visible:ring-[#25d366]/45',
         outline:
           'border-border bg-background/70 text-foreground hover:border-foreground/25 hover:bg-white aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
@@ -28,6 +29,7 @@ const buttonVariants = cva(
         sm: "h-9 gap-1.5 rounded-xl px-3 text-[0.8rem] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3.5",
         lg: 'h-11 gap-2 px-5',
         marketing: 'h-12 gap-2.5 px-5 text-sm',
+        whatsapp: 'h-12 gap-2.5 rounded-[13px] px-5 text-sm',
         icon: 'size-10',
         'icon-xs':
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",

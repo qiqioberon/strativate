@@ -40,6 +40,6 @@ export function AuthForm() {
     {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     <button className="button button-primary full-button" disabled={busy}>{busy ? 'Memproses…' : register ? 'Kirim tautan email' : 'Masuk'}<ArrowRight size={16} /></button>
     <button className="button button-outline full-button" type="button" onClick={google} disabled={busy}>Lanjutkan dengan Google</button>
-    <button className="text-link" type="button" disabled={busy} onClick={() => { setRegister(!register); setError(''); setMessage('') }}>{register ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}</button>
+    <button className="button button-outline full-button auth-mode-switch" type="button" disabled={busy} onClick={() => { setRegister(!register); setError(''); setMessage('') }} data-testid="auth-mode-switch">{register ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}</button>
   </form></>
 }
