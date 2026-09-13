@@ -37,7 +37,7 @@ for (const viewport of [
 
     await page.goto('/auth')
     await page.waitForLoadState('networkidle')
-    await expect(page.getByRole('img', { name: 'Strativate' })).toBeVisible()
+    await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
     await page.screenshot({ path: `output/playwright/handoff-auth-${viewport.label}.png`, fullPage: true })
 
     await page.goto('/program')
