@@ -25,8 +25,34 @@ test('homepage uses real dedicated marketing links and safe editorial previews',
   await expect(page.getByTestId('hero-poster-carousel').or(page.getByTestId('hero-poster-fallback'))).toHaveCount(1)
   await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
   await expect(page.getByText('2500+', { exact: true })).toBeVisible()
-  await expect(page.getByText('Siswa kami berasal dari', { exact: true })).toBeVisible()
+  const socialProof = page.getByTestId('homepage-social-proof')
+  await expect(socialProof.getByText('Siswa kami berasal dari', { exact: true })).toBeVisible()
+  await expect(socialProof.locator('.marketing-hero__principles article')).toHaveCount(3)
+  const heroWhatsapp = new URL(await page.getByTestId('hero-whatsapp-link').getAttribute('href') ?? '')
+  expect(heroWhatsapp.searchParams.get('text')).toBe('Halo Strativate, saya ingin konsultasi untuk menentukan program yang paling sesuai dengan kebutuhan saya.')
+  await expect(page.getByTestId('hero-poster-fallback')).toBeVisible()
+  await expect(page.getByTestId('hero-poster-fallback').getByRole('button')).toHaveCount(0)
   await expect(page.getByText(/Alvin Haryanto|Universitas mitra|15\+ kemenangan|di 4 negara/)).toHaveCount(0)
+})
+
+test('homepage mentor marquee provides one accessible directory sequence and motion-safe fallback', async ({ page }) => {
+  await page.goto('/')
+
+  const marquee = page.getByTestId('mentor-infinite-marquee')
+  await expect(marquee.locator('.marketing-mentor-marquee__group')).toHaveCount(2)
+  await expect(marquee.locator('.marketing-mentor-marquee__group[aria-hidden="true"] a')).toHaveCount(0)
+  await expect(marquee.locator('.marketing-mentor-marquee__group:not([aria-hidden]) a')).toHaveCount(26)
+  await expect(marquee.locator('.marketing-mentor-marquee__card').first()).toHaveAttribute('href', /^\/mentor#mentor-/)
+  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-duration', '140s')
+  await marquee.hover()
+  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-play-state', 'paused')
+  await marquee.locator('.marketing-mentor-marquee__card').first().focus()
+  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-play-state', 'paused')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-name', 'none')
+  await expect(marquee.locator('.marketing-mentor-marquee__group[aria-hidden="true"]')).toBeHidden()
+  await expect(marquee).toHaveCSS('overflow-x', 'auto')
 })
 
 for (const [label, href] of navigation.slice(1)) {

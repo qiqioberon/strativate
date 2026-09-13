@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BookOpenCheck,
   CircleHelp,
+  MessageCircle,
   MoveRight,
   Quote,
   Sparkles,
@@ -27,6 +28,7 @@ import { mentors } from '@/lib/content/mentors'
 import { cn } from '@/lib/utils'
 import { featureFlags } from '@/lib/features'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
+import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 import { AssetMedia } from './asset-media'
 import { ProgramCard, type MarketingProgram } from './program-card'
@@ -67,19 +69,30 @@ export function HomePage({ catalogProducts, heroPosters }: { catalogProducts: Ca
               <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/mentor" data-testid="hero-mentor-link">
                 Kenali mentor <MoveRight data-icon="arrow" aria-hidden="true" size={17} />
               </Link>
+              <a
+                className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })}
+                href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk menentukan program yang paling sesuai dengan kebutuhan saya.')}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="hero-whatsapp-link"
+              >
+                Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} />
+              </a>
             </div>
           </div>
 
           <HeroCarousel posters={heroPosters} />
         </div>
-        <p className="marketing-container marketing-proof-context">Siswa kami berasal dari</p>
-        <div className="marketing-container marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
-          {socialProof.map((proof) => (
-            <article key={proof.label}>
-              <span>{proof.value}</span>
-              <div><strong>{proof.label}</strong></div>
-            </article>
-          ))}
+        <div className="marketing-container marketing-social-proof" data-testid="homepage-social-proof">
+          <p className="marketing-proof-context">Siswa kami berasal dari</p>
+          <div className="marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
+            {socialProof.map((proof) => (
+              <article key={proof.label}>
+                <span>{proof.value}</span>
+                <div><strong>{proof.label}</strong></div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
