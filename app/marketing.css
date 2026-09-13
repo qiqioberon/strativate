@@ -20,19 +20,19 @@
 .marketing-site em { color: var(--marketing-orange); font-style: normal; }
 
 .marketing-header { position: relative; z-index: 50; border-bottom: 1px solid color-mix(in srgb, var(--marketing-line) 82%, transparent); background: color-mix(in srgb, var(--marketing-paper) 94%, transparent); backdrop-filter: blur(14px); }
-.marketing-header__inner { display: flex; align-items: center; width: min(100% - 48px, 1400px); min-height: 80px; margin-inline: auto; gap: 20px; }
+.marketing-header__inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; width: min(100% - 48px, 1400px); min-height: 80px; margin-inline: auto; gap: 20px; }
 .marketing-brand { display: inline-flex; flex: 0 0 auto; align-items: center; border-radius: 10px; outline: none; }
 .marketing-brand img { width: 153px; height: auto; }
 .brand-logo { display: block; height: auto; }
 .marketing-brand:focus-visible, .marketing-login:focus-visible, .marketing-nav__link:focus-visible, .marketing-menu-button:focus-visible, .marketing-mobile-link:focus-visible, .marketing-text-link:focus-visible, .marketing-footer a:focus-visible { outline: 3px solid color-mix(in srgb, var(--marketing-orange) 30%, transparent); outline-offset: 4px; }
-.marketing-nav { display: flex; align-items: center; justify-content: center; gap: 3px; margin-left: auto; padding: 5px; border: 1px solid var(--marketing-line); border-radius: 15px; background: color-mix(in srgb, #fff 69%, transparent); box-shadow: 0 8px 28px rgba(83, 46, 23, .045); }
+.marketing-nav { display: flex; align-items: center; justify-self: center; gap: 3px; padding: 5px; border: 1px solid var(--marketing-line); border-radius: 15px; background: color-mix(in srgb, #fff 69%, transparent); box-shadow: 0 8px 28px rgba(83, 46, 23, .045); }
 .marketing-nav__link { position: relative; display: inline-flex; align-items: center; min-height: 36px; gap: 6px; padding: 0 10px; border-radius: 10px; color: #695e58; font-size: .72rem; font-weight: 650; white-space: nowrap; transition: color 180ms ease, background-color 180ms ease, transform 180ms ease; }
 .marketing-nav__link svg { color: #9b8e85; transition: color 180ms ease; }
 .marketing-nav__link:hover { color: var(--marketing-ink); background: #f8eee5; }
 .marketing-nav__link.is-active { color: #9e3500; background: #ffeadc; }
 .marketing-nav__link.is-active svg { color: var(--marketing-orange); }
 .marketing-nav__link.is-active::after { position: absolute; right: 9px; bottom: 3px; left: 9px; height: 1px; background: color-mix(in srgb, var(--marketing-orange) 45%, transparent); content: ''; }
-.marketing-header__actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.marketing-header__actions { display: flex; justify-self: end; align-items: center; gap: 8px; }
 .marketing-login { display: inline-flex; align-items: center; min-height: 42px; gap: 7px; padding: 0 9px; border-radius: 10px; color: #594f4a; font-size: .75rem; font-weight: 700; transition: color 180ms ease, background-color 180ms ease; }
 .marketing-login:hover { color: var(--marketing-orange-dark); background: #fff0e5; }
 .marketing-start { box-shadow: 0 8px 18px rgba(196, 62, 0, .12); }
@@ -182,11 +182,21 @@
 .marketing-footer__note > p { max-width: 300px; margin-top: 20px; color: #9f918a; font-size: .64rem; line-height: 1.65; }
 .marketing-footer__bottom { display: flex; justify-content: space-between; gap: 30px; padding-block: 20px; border-top: 1px solid rgba(255, 255, 255, .12); color: #8f827b; font-size: .6rem; }
 
-.marketing-page-intro { padding: clamp(80px, 8vw, 125px) 0 clamp(68px, 7vw, 105px); border-bottom: 1px solid var(--marketing-line); }
-.marketing-page-intro__grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); align-items: end; gap: 80px; }
+.marketing-page-intro { position: relative; padding: clamp(80px, 8vw, 125px) 0 clamp(68px, 7vw, 105px); overflow: hidden; border-bottom: 1px solid var(--marketing-line); }
+.marketing-page-intro__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); align-items: end; gap: 80px; }
 .marketing-page-intro h1 { margin-top: 19px; font-size: clamp(3.4rem, 6.6vw, 6.8rem); font-weight: 610; letter-spacing: -.08em; line-height: .92; }
 .marketing-page-intro__aside { display: grid; justify-items: start; gap: 27px; padding-bottom: 8px; }
 .marketing-page-intro__aside > p { max-width: 455px; color: var(--marketing-muted); font-size: .85rem; line-height: 1.72; }
+.marketing-page-intro__motif { position: absolute; top: 50%; right: clamp(24px, 8vw, 160px); display: grid; width: min(27vw, 300px); aspect-ratio: 1; place-items: center; opacity: .22; pointer-events: none; transform: translateY(-50%) rotate(-8deg); }
+.marketing-page-intro__motif span { position: absolute; display: block; border: 2px solid var(--marketing-orange); }
+.marketing-page-intro__motif span:nth-child(1) { width: 70%; height: 70%; border-radius: 20% 50% 20% 50%; }
+.marketing-page-intro__motif span:nth-child(2) { width: 44%; height: 44%; border-color: var(--marketing-red); border-radius: 50%; }
+.marketing-page-intro__motif span:nth-child(3) { width: 88%; height: 1px; border: 0; background: var(--marketing-orange); transform: rotate(45deg); }
+.marketing-page-intro__motif[data-motif='program'] span:nth-child(1), .marketing-page-intro__motif[data-motif='program'] span:nth-child(2) { border-radius: 6px; }
+.marketing-page-intro__motif[data-motif='mentor'] span:nth-child(1) { border-radius: 50%; }
+.marketing-page-intro__motif[data-motif='about'] span:nth-child(1), .marketing-page-intro__motif[data-motif='about'] span:nth-child(2) { border-width: 0 0 2px 0; border-radius: 0; transform: rotate(-32deg); }
+.marketing-page-intro__motif[data-motif='faq'] span:nth-child(1) { border-radius: 48% 48% 48% 8%; }
+.marketing-page-intro__motif[data-motif='faq'] span:nth-child(2) { width: 16%; height: 16%; transform: translate(105%, 105%); }
 .marketing-page-section { padding: clamp(70px, 8vw, 120px) 0; }
 .marketing-content-notice { display: flex; align-items: flex-start; gap: 14px; max-width: 630px; margin: 0 0 38px auto; padding: 18px 20px; border-left: dashed 3px var(--marketing-orange); color: #604e42; background: #fff0e5; }
 .marketing-content-notice > svg { flex: 0 0 auto; color: var(--marketing-orange-dark); }
@@ -355,6 +365,7 @@
   .marketing-footer__bottom { flex-direction: column; gap: 7px; }
   .marketing-page-intro { padding-top: 70px; }
   .marketing-page-intro h1 { font-size: clamp(3.15rem, 14vw, 4.35rem); }
+  .marketing-page-intro__motif { display: none; }
   .marketing-products-directory { grid-template-columns: 1fr; }
   .marketing-about-page__statement { padding-block: 75px; }
   .marketing-about-page__principles { grid-template-columns: 1fr; }

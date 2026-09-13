@@ -95,6 +95,33 @@ test('mobile menu is accessible, navigates natively, and avoids overflow', async
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 
+test('desktop header keeps navigation centered between left brand and right actions', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+
+  const [brandBox, navBox, actionsBox] = await Promise.all([
+    page.getByRole('banner').locator('.marketing-brand').boundingBox(),
+    page.getByRole('navigation', { name: 'Navigasi utama' }).boundingBox(),
+    page.locator('.marketing-header__actions').boundingBox(),
+  ])
+
+  expect(brandBox).not.toBeNull()
+  expect(navBox).not.toBeNull()
+  expect(actionsBox).not.toBeNull()
+  expect(Math.abs(navBox!.x + navBox!.width / 2 - 720)).toBeLessThanOrEqual(2)
+  expect(brandBox!.x + brandBox!.width).toBeLessThan(navBox!.x)
+  expect(actionsBox!.x).toBeGreaterThan(navBox!.x + navBox!.width)
+})
+
+test('page intro motif is decorative and absent from the accessibility tree', async ({ page }) => {
+  await page.goto('/program')
+
+  const motif = page.getByTestId('marketing-page-intro-motif')
+  await expect(motif).toHaveAttribute('aria-hidden', 'true')
+  await expect(motif).toHaveAttribute('data-motif', 'program')
+  await expect(page.getByRole('img', { name: /program/i })).toHaveCount(0)
+})
+
 test('marketing footer spans the viewport and stacks its content rows', async ({ page }) => {
   for (const viewport of [
     { width: 1440, height: 900 },

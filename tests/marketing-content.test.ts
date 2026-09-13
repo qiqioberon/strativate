@@ -1,5 +1,40 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import test from 'node:test'
+
+const projectRoot = path.resolve(import.meta.dirname, '..')
+
+async function readProjectFile(relativePath: string) {
+  return readFile(path.join(projectRoot, relativePath), 'utf8')
+}
+
+test('shared typography loads Poppins once and exposes it through every CSS font token', async () => {
+  const [layout, globals, marketing] = await Promise.all([
+    readProjectFile('app/layout.tsx'),
+    readProjectFile('app/globals.css'),
+    readProjectFile('app/marketing.css'),
+  ])
+  const sharedSources = `${layout}\n${globals}\n${marketing}`
+
+  assert.match(layout, /import\s*{\s*Poppins\s*}\s*from\s*['\"]next\/font\/google['\"]/)
+  assert.match(layout, /Poppins\([^)]*variable:\s*['\"]--font-poppins['\"][^)]*\)/)
+  assert.match(globals, /--font-sans:\s*var\(--font-poppins\),\s*sans-serif/)
+  assert.match(globals, /--font-heading:\s*var\(--font-poppins\),\s*sans-serif/)
+  assert.match(globals, /--font-mono:\s*var\(--font-poppins\),\s*sans-serif/)
+
+  for (const retiredFont of ['DM_Sans', 'Outfit', 'IBM_Plex_Mono', '--font-dm-sans', '--font-outfit', '--font-ibm-plex']) {
+    assert.equal(sharedSources.includes(retiredFont), false, `${retiredFont} must not remain in shared typography`)
+  }
+})
+
+test('PageIntro provides an inaccessible decorative motif hook', async () => {
+  const pageIntro = await readProjectFile('components/marketing/page-intro.tsx')
+
+  assert.match(pageIntro, /motif\??:\s*['\"]program['\"]\s*\|\s*['\"]mentor['\"]\s*\|\s*['\"]about['\"]\s*\|\s*['\"]faq['\"]/)
+  assert.match(pageIntro, /data-testid=['\"]marketing-page-intro-motif['\"]/)
+  assert.match(pageIntro, /aria-hidden=['\"]true['\"]/)
+})
 
 test('marketing navigation exposes the approved dedicated routes', async () => {
   let content: typeof import('../lib/content/marketing-content')

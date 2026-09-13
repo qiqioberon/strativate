@@ -1,8 +1,21 @@
 import type { ReactNode } from 'react'
 
-export function PageIntro({ eyebrow, title, description, aside }: { eyebrow: string; title: ReactNode; description: string; aside?: ReactNode }) {
+type PageIntroProps = {
+  eyebrow: string
+  title: ReactNode
+  description: string
+  aside?: ReactNode
+  motif?: 'program' | 'mentor' | 'about' | 'faq'
+}
+
+export function PageIntro({ eyebrow, title, description, aside, motif = 'program' }: PageIntroProps) {
   return (
     <section className="marketing-page-intro" data-reveal>
+      <div className="marketing-page-intro__motif" data-testid="marketing-page-intro-motif" data-motif={motif} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
       <div className="marketing-container marketing-page-intro__grid">
         <div>
           <p className="marketing-kicker" data-testid="marketing-page-eyebrow">{eyebrow}</p>
