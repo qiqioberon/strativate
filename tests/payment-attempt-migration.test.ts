@@ -25,7 +25,7 @@ test('payment hardening is a forward migration with explicit token validity and 
   assert.match(sql, /add column snap_creation_claim_expires_at timestamptz/i)
   assert.match(sql, /create (or replace )?function public\.claim_midtrans_snap_creation/i)
   assert.match(sql, /create (or replace )?function public\.release_midtrans_snap_creation/i)
-  assert.match(sql, /create function public\.store_midtrans_snap_token\(p_attempt_id uuid, p_claim_token uuid, p_snap_token text\)/i)
+  assert.match(sql, /create function public\.store_midtrans_snap_token\s*\(\s*p_attempt_id uuid,\s*p_claim_token uuid,\s*p_snap_token text\s*\)/i)
   assert.match(sql, /interval '24 hours'/i)
   assert.match(sql, /interval '2 minutes'/i)
 })
