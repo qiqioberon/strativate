@@ -1,10 +1,11 @@
 'use client'
 
+import { ChevronLeft, ChevronRight, RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+
+import { formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorInviteSummary } from '@/lib/supabase/database.types'
-import { formError } from '@/lib/auth/errors'
 
 const statuses = { pending: 'Sedang dikirim', sent: 'Terkirim', failed: 'Gagal dikirim' }
 
@@ -50,7 +51,7 @@ export function MentorInvitations({ refreshKey, onDeleted }: { refreshKey: numbe
   return <section className="mentor-invitations" aria-label="Daftar undangan mentor">
     <div className="mentor-invitation-heading">
       <h3>Undangan mentor</h3>
-      <p>Hapus undangan gagal atau salah email sebelum akun diaktifkan.</p>
+      <p>Kelola undangan yang gagal atau salah alamat sebelum akun mentor diaktifkan.</p>
     </div>
     {error && <p role="alert" className="form-error">{error}</p>}
     {message && <p role="status">{message}</p>}
@@ -62,18 +63,20 @@ export function MentorInvitations({ refreshKey, onDeleted }: { refreshKey: numbe
             <small>{new Date(invitation.created_at).toLocaleString('id-ID')}</small>
             {!invitation.can_delete && <small>{invitation.status === 'pending' ? 'Tunggu hingga pengiriman selesai.' : 'Akun sudah aktif atau perlu diperiksa administrator.'}</small>}
           </div>
-          <span className={`status-pill ${invitation.status === 'sent' ? 'green' : ''} ${invitation.status === 'failed' ? 'mentor-invitation-status-failed' : ''}`}>{statuses[invitation.status]}</span>
-          <button type="button" className="button button-outline" aria-label={`Hapus undangan ${invitation.email}`}
-            disabled={!invitation.can_delete || removing !== null} onClick={() => void remove(invitation)}>
-            <Trash2 size={16} aria-hidden="true" />{removing === invitation.email ? 'Menghapus…' : 'Hapus'}
-          </button>
+          <div className="mentor-invitation-record-actions">
+            <span className={`status-pill mentor-invitation-status-pill ${invitation.status === 'sent' ? 'green' : ''} ${invitation.status === 'failed' ? 'mentor-invitation-status-failed' : ''}`}>{statuses[invitation.status]}</span>
+            <button type="button" className="button button-outline mentor-invitation-delete-button" aria-label={`Hapus undangan ${invitation.email}`}
+              disabled={!invitation.can_delete || removing !== null} onClick={() => void remove(invitation)}>
+              <Trash2 size={15} aria-hidden="true" />{removing === invitation.email ? 'Menghapus…' : 'Hapus'}
+            </button>
+          </div>
         </div>)}
       {!loading && !error && invitations.length === 0 && <p>Belum ada undangan.</p>}
     </div>
-    <div className="button-row mentor-invitation-pagination">
-      <button type="button" className="button button-outline" disabled={page === 0 || loading || removing !== null} onClick={() => setPage(value => value - 1)}>Undangan sebelumnya</button>
-      <button type="button" className="button button-outline" disabled={invitations.length < 25 || loading || removing !== null} onClick={() => setPage(value => value + 1)}>Undangan berikutnya</button>
-      <button type="button" className="text-link" disabled={loading || removing !== null} onClick={() => void load()}>Muat ulang undangan</button>
+    <div className="button-row mentor-invitation-pagination mentor-pagination-actions">
+      <button type="button" className="button button-outline" disabled={page === 0 || loading || removing !== null} onClick={() => setPage(value => value - 1)}><ChevronLeft size={14} aria-hidden="true" />Sebelumnya</button>
+      <button type="button" className="button button-outline" disabled={invitations.length < 25 || loading || removing !== null} onClick={() => setPage(value => value + 1)}>Berikutnya<ChevronRight size={14} aria-hidden="true" /></button>
+      <button type="button" className="text-link mentor-pagination-reload" disabled={loading || removing !== null} onClick={() => void load()}><RefreshCw size={14} aria-hidden="true" />Muat ulang</button>
     </div>
   </section>
 }
