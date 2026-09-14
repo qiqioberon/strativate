@@ -1,4 +1,4 @@
-const protectedRoots = ['/admin', '/dashboard', '/onboarding', '/checkout'] as const
+const protectedRoots = ['/admin', '/dashboard', '/onboarding', '/checkout', '/cart'] as const
 
 function isAtOrBelow(pathname: string, root: string) {
   return pathname === root || pathname.startsWith(`${root}/`)
