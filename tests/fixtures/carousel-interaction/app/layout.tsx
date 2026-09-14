@@ -1,3 +1,4 @@
+import '../../../../app/globals.css'
 import '../../../../app/marketing.css'
 
 export default function CarouselFixtureLayout({ children }: Readonly<{ children: React.ReactNode }>) {

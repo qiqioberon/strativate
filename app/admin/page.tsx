@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, ChevronRight, LayoutDashboard, Menu, Search, X } from 'lucide-react'
+import { Bell, ChevronRight, Images, LayoutDashboard, Menu, Search, X } from 'lucide-react'
 import { DemoOrder, mentorOptions, readOrders, readState, writeState } from '@/lib/demo-store'
 import { InstitutionManagement } from '@/components/admin/institutions'
 import { MasterOptions } from '@/components/admin/master-options'
 import { MenteeManagement } from '@/components/admin/people'
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { CatalogManagement } from '@/components/admin/catalog-management'
+import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { useAccount } from '@/components/auth/account-provider'
 import { SignOut } from '@/components/auth/sign-out'
 import { displayName } from '@/lib/auth/rules'
@@ -16,9 +17,98 @@ import { displayDemoLabel } from '@/lib/demo-labels'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { featureFlags } from '@/lib/features'
 
-const groups = [{ label: 'Operasional', items: ['Overview', 'Orders', 'Mentor Assignment', 'Bookings'] }, { label: 'Pengguna', items: ['Mentees', 'Mentors'] }, { label: 'Produk', items: ['Katalog Produk', ...(featureFlags.digitalProducts ? ['Resources'] : [])] }, { label: 'Bisnis', items: ['Payments', 'Reports'] }, { label: 'Data master', items: ['Institutions', 'Referral Sources', 'Competition Interests'] }]
+const groups = [
+  { label: 'Operasional', items: ['Overview', 'Orders', 'Mentor Assignment', 'Bookings'] },
+  { label: 'Pengguna', items: ['Mentees', 'Mentors'] },
+  { label: 'Produk', items: ['Katalog Produk', ...(featureFlags.digitalProducts ? ['Resources'] : [])] },
+  { label: 'Konten', items: ['Hero Posters'] },
+  { label: 'Bisnis', items: ['Payments', 'Reports'] },
+  { label: 'Data master', items: ['Institutions', 'Referral Sources', 'Competition Interests'] },
+]
 
-export default function AdminDashboard() { const account = useAccount(); const [section, setSection] = useState('Overview'); const [orders, setOrders] = useState<DemoOrder[]>([]); const [mobile, setMobile] = useState(false); const [query, setQuery] = useState(''); const [filter, setFilter] = useState('All'); useEffect(() => setOrders(readOrders()), []); const pending = useMemo(() => orders.filter((o) => o.status === 'ASSIGNMENT_PENDING'), [orders]); const filtered = useMemo(() => orders.filter((o) => `${o.id} ${o.customer} ${displayDemoLabel(o.title)}`.toLowerCase().includes(query.toLowerCase())).filter((o) => filter === 'All' || (filter === 'Paid' ? o.paymentStatus === 'Paid' : o.status === filter)), [orders, query, filter]); const assign = (id: string, mentor: string) => { const state = readState(); const next = { ...state, orders: state.orders.map((o) => o.id === id ? { ...o, mentor, status: 'MENTOR_ASSIGNED' as const } : o), engagements: state.engagements.map((e) => e.orderId === id ? { ...e, mentor, assignmentStatus: 'Assigned' as const } : e), notifications: [{ id: `N-${id}`, title: `${mentor} telah ditugaskan.`, body: `${mentor} ditugaskan untuk ${state.orders.find((o) => o.id === id)?.subject || 'program ini'}.`, role: 'mentee' as const, read: false, createdAt: 'Baru saja', orderId: id }, ...state.notifications] }; writeState(next); setOrders(next.orders) }; const navigate = (value: string) => { setSection(value); setMobile(false) }; return <div className="role-shell admin-shell"><aside className={`role-sidebar ${mobile ? 'open' : ''}`}><div className="role-brand"><BrandLogo /> <button onClick={() => setMobile(false)} className="role-close"><X /></button></div><div className="role-person"><span className="role-avatar red">OP</span><div><strong>{displayName(account)}</strong><small>Kantor pusat Strativate</small></div></div><nav>{groups.map((group) => <div className="nav-group" key={group.label}><small>{group.label}</small>{group.items.map((item) => <button className={section === item ? 'active' : ''} key={item} onClick={() => navigate(item)}><LayoutDashboard />{displayLabel(item)}{item === 'Mentor Assignment' && pending.length > 0 && <b>{pending.length}</b>}</button>)}</div>)}</nav><div className="role-sidebar-bottom"><button>Bantuan &amp; dukungan</button><SignOut /></div></aside>{mobile && <button className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu" />}<main className="role-main"><header className="role-topbar"><button className="role-menu" onClick={() => setMobile(true)}><Menu /></button><span className="role-context">{displayLabel(section)}</span><div className="role-actions"><Bell /><span className="role-avatar red small">OP</span></div></header><div className="role-content">{section === 'Overview' && <Overview orders={orders} pending={pending} navigate={navigate} />}{section === 'Orders' && <Orders orders={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} />}{section === 'Mentor Assignment' && <Assignment orders={pending.length ? pending : orders} assign={assign} />}{section === 'Katalog Produk' && <CatalogManagement />}{section === 'Resources' && <Resources />}{section === 'Payments' && <Payments orders={orders} />}{section === 'Reports' && <Reports orders={orders} />}{section === 'Bookings' && <PeopleSection title={section} orders={orders} />}{section === 'Mentors' && <MentorManagement />}{section === 'Mentees' && <MenteeManagement />}{section === 'Institutions' && <InstitutionManagement />}{section === 'Referral Sources' && <MasterOptions key="referral" table="referral_sources" />}{section === 'Competition Interests' && <MasterOptions key="interests" table="interests" />}</div></main></div> }
+export default function AdminDashboard() {
+  const account = useAccount()
+  const [section, setSection] = useState('Overview')
+  const [orders, setOrders] = useState<DemoOrder[]>([])
+  const [mobile, setMobile] = useState(false)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState('All')
+  useEffect(() => setOrders(readOrders()), [])
+  const pending = useMemo(() => orders.filter((order) => order.status === 'ASSIGNMENT_PENDING'), [orders])
+  const filtered = useMemo(() => orders
+    .filter((order) => `${order.id} ${order.customer} ${displayDemoLabel(order.title)}`.toLowerCase().includes(query.toLowerCase()))
+    .filter((order) => filter === 'All' || (filter === 'Paid' ? order.paymentStatus === 'Paid' : order.status === filter)), [orders, query, filter])
+
+  const assign = (id: string, mentor: string) => {
+    const state = readState()
+    const next = {
+      ...state,
+      orders: state.orders.map((order) => order.id === id ? { ...order, mentor, status: 'MENTOR_ASSIGNED' as const } : order),
+      engagements: state.engagements.map((engagement) => engagement.orderId === id ? { ...engagement, mentor, assignmentStatus: 'Assigned' as const } : engagement),
+      notifications: [{
+        id: `N-${id}`,
+        title: `${mentor} telah ditugaskan.`,
+        body: `${mentor} ditugaskan untuk ${state.orders.find((order) => order.id === id)?.subject || 'program ini'}.`,
+        role: 'mentee' as const,
+        read: false,
+        createdAt: 'Baru saja',
+        orderId: id,
+      }, ...state.notifications],
+    }
+    writeState(next)
+    setOrders(next.orders)
+  }
+
+  const navigate = (value: string) => {
+    setSection(value)
+    setMobile(false)
+  }
+
+  return <div className="role-shell admin-shell">
+    <aside id="admin-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
+      <div className="role-brand">
+        <BrandLogo />
+        <button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Tutup menu admin"><X aria-hidden="true" /></button>
+      </div>
+      <div className="role-person"><span className="role-avatar red">OP</span><div><strong>{displayName(account)}</strong><small>Kantor pusat Strativate</small></div></div>
+      <nav aria-label="Navigasi admin">
+        {groups.map((group) => <div className="nav-group" key={group.label}>
+          <small>{group.label}</small>
+          {group.items.map((item) => <button type="button" className={section === item ? 'active' : ''} key={item} onClick={() => navigate(item)}>
+            {item === 'Hero Posters' ? <Images aria-hidden="true" /> : <LayoutDashboard aria-hidden="true" />}
+            {displayLabel(item)}
+            {item === 'Mentor Assignment' && pending.length > 0 && <b>{pending.length}</b>}
+          </button>)}
+        </div>)}
+      </nav>
+      <div className="role-sidebar-bottom"><button>Bantuan &amp; dukungan</button><SignOut /></div>
+    </aside>
+    {mobile && <button className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu" />}
+    <main className="role-main">
+      <header className="role-topbar">
+        <button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu admin" aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true" /></button>
+        <span className="role-context">{displayLabel(section)}</span>
+        <div className="role-actions"><Bell aria-hidden="true" /><span className="role-avatar red small">OP</span></div>
+      </header>
+      <div className="role-content">
+        {section === 'Overview' && <Overview orders={orders} pending={pending} navigate={navigate} />}
+        {section === 'Orders' && <Orders orders={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} />}
+        {section === 'Mentor Assignment' && <Assignment orders={pending.length ? pending : orders} assign={assign} />}
+        {section === 'Katalog Produk' && <CatalogManagement />}
+        {section === 'Hero Posters' && <HeroPosterManagement />}
+        {section === 'Resources' && <Resources />}
+        {section === 'Payments' && <Payments orders={orders} />}
+        {section === 'Reports' && <Reports orders={orders} />}
+        {section === 'Bookings' && <PeopleSection title={section} orders={orders} />}
+        {section === 'Mentors' && <MentorManagement />}
+        {section === 'Mentees' && <MenteeManagement />}
+        {section === 'Institutions' && <InstitutionManagement />}
+        {section === 'Referral Sources' && <MasterOptions key="referral" table="referral_sources" />}
+        {section === 'Competition Interests' && <MasterOptions key="interests" table="interests" />}
+      </div>
+    </main>
+  </div>
+}
 function Title({ eyebrow, title, detail }: { eyebrow: string; title: string; detail: string }) { return <div className="role-page-title"><p className="kicker">{eyebrow}</p><h2>{title}</h2><p>{detail}</p></div> }
 function Metric({ label, value }: { label: string; value: string }) { return <section className="metric-card"><span>{label}</span><strong>{value}</strong><small>Baru diperbarui</small></section> }
 function Overview({ orders, pending, navigate }: { orders: DemoOrder[]; pending: DemoOrder[]; navigate: (s: string) => void }) { return <><div className="role-title"><div><p className="kicker">Senin, 17 Agustus 2026</p><h1>Ringkasan operasional.</h1><p>Pantau pesanan, kapasitas mentor, dan pelaksanaan sesi hari ini.</p></div><button className="button button-primary" onClick={() => navigate('Reports')}>Buat laporan</button></div><div className="metric-grid six"><Metric label="Pesanan baru" value={String(orders.length)} /><Metric label="Menunggu penugasan" value={String(pending.length)} /><Metric label="Sesi hari ini" value="8" /><Metric label="Program aktif" value="36" /><Metric label="Pendapatan" value="Rp 18,4 juta" /><Metric label="Mentor aktif" value="14" /></div><div className="attention-grid"><section className="role-card attention-card"><div className="role-card-heading"><div><p className="kicker">Perlu perhatian</p><h2>Tuntaskan antrean tugas.</h2></div></div>{[['Pesanan perlu penugasan mentor', 'Mentor Assignment'], ['Masalah pembayaran', 'Payments'], ['Jadwal sesi hari ini', 'Bookings']].map(([label, target], i) => <button key={label} onClick={() => navigate(target)}><span className={`attention-number n${i}`}>{i + 1}</span><strong>{label}</strong><ChevronRight /></button>)}</section><section className="role-card revenue-card"><p className="kicker">Pendapatan bulan ini</p><h2>Rp 18,4 juta</h2><div className="revenue-bars">{[44, 60, 53, 79, 68, 92, 75].map((height, i) => <span style={{ height: `${height}%` }} key={i} />)}</div><small>+18,6% dari bulan lalu</small></section></div></> }
