@@ -6,8 +6,10 @@ const page = readFileSync('app/checkout/page.tsx', 'utf8')
 const embed = readFileSync('components/commerce/midtrans-embed.tsx', 'utf8')
 const legacy = readFileSync('app/checkout/[slug]/page.tsx', 'utf8')
 
-test('shared checkout represents an Order and renders immutable snapshots', () => {
-  assert.match(page, /createOrderFromCart|getOrderWithItems/)
+test('shared checkout GET is read-only and renders an existing Order snapshot', () => {
+  assert.match(page, /getOrderWithItems/)
+  assert.doesNotMatch(page, /createOrderFromCart|getActiveCart/)
+  assert.match(page, /if\s*\(!requestedOrderId\)[\s\S]*redirect\(['"]\/cart['"]\)/)
   assert.match(page, /order\.items/)
   assert.match(page, /formatRupiah\(item\.unit_price_amount\)/)
   assert.match(page, /formatRupiah\(order\.total_amount\)/)
