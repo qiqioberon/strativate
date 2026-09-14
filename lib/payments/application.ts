@@ -12,33 +12,12 @@ import {
   type MidtransStatus,
 } from './midtrans'
 import { parseIdrGrossAmount } from './midtrans-model'
+import type { SanitizedCheckout } from './types'
 
 export type CheckoutCustomer = {
   email: string
   firstName?: string
   lastName?: string
-}
-
-export type SanitizedCheckout = {
-  order: {
-    id: string
-    status: OrderWithItems['status']
-    currencyCode: 'IDR'
-    totalAmount: number
-    paidAt: string | null
-  }
-  items: Array<{
-    id: string
-    kind: string
-    name: string
-    slug: string
-    unitPriceAmount: number
-  }>
-  payment: null | {
-    attemptId: string
-    status: PaymentAttempt['status']
-    snapToken: string | null
-  }
 }
 
 function sanitize(order: OrderWithItems, attempt: PaymentAttempt | null): SanitizedCheckout {
