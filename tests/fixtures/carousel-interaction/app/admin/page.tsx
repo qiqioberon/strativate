@@ -20,7 +20,7 @@ const profile: Profile = {
 
 export default function AdminDashboardFixture() {
   return (
-    <AccountProvider profile={profile}>
+    <AccountProvider profile={profile} email="admin@fixture.test">
       <AdminDashboard />
     </AccountProvider>
   )
