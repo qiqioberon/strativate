@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - feat/phase-3-private-mentoring
+      - fix/private-mentoring-content-boundary
   workflow_dispatch:
 
 jobs:
@@ -63,6 +64,10 @@ jobs:
             echo 'Forbidden mentee scheduling workflow found.' >&2
             exit 1
           fi
+          if grep -RInE 'private_mentoring_programs|private_mentoring_highlights|private_mentoring_journey_steps' app components lib; then
+            echo 'Private Mentoring marketing CMS runtime reference found.' >&2
+            exit 1
+          fi
       - name: Build with Digital Products disabled
         env:
           FEATURE_DIGITAL_PRODUCTS: 'false'
@@ -104,3 +109,5 @@ jobs:
           FEATURE_DIGITAL_PRODUCTS: 'true'
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
         run: pnpm exec playwright test
+      - name: Diff check
+        run: git diff --check origin/main...HEAD

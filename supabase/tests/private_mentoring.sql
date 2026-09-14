@@ -13,7 +13,7 @@ $$;
 create function test_private_mentoring.denied(command text, message text) returns void language plpgsql as $$
 begin
   begin execute command;
-  exception when insufficient_privilege or check_violation or unique_violation or foreign_key_violation or invalid_parameter_value or raise_exception then return;
+  exception when insufficient_privilege or check_violation or unique_violation or foreign_key_violation or invalid_parameter_value or undefined_table or undefined_column or raise_exception then return;
   end;
   raise exception 'UNEXPECTEDLY ALLOWED: %', message;
 end;
@@ -21,7 +21,13 @@ $$;
 
 grant execute on all functions in schema test_private_mentoring to anon, authenticated, service_role;
 
-select test_private_mentoring.assert((select count(*) = 1 from public.private_mentoring_programs), 'one Private Mentoring program seed');
+select test_private_mentoring.assert(to_regclass('public.private_mentoring_programs') is null, 'marketing program CMS table is removed');
+select test_private_mentoring.assert(to_regclass('public.private_mentoring_highlights') is null, 'marketing highlights CMS table is removed');
+select test_private_mentoring.assert(to_regclass('public.private_mentoring_journey_steps') is null, 'marketing journey CMS table is removed');
+select test_private_mentoring.assert(
+  not exists (select 1 from information_schema.columns where table_schema='public' and table_name in ('private_mentoring_learning_paths','private_mentoring_session_focuses') and column_name='program_id'),
+  'catalog masters do not retain obsolete marketing-program foreign keys'
+);
 select test_private_mentoring.assert((select count(*) = 2 from public.private_mentoring_learning_paths), 'exact two learning paths');
 select test_private_mentoring.assert((select count(*) = 6 from public.private_mentoring_session_focuses), 'exact six session focuses');
 select test_private_mentoring.assert((select count(*) = 9 from public.competition_categories), 'exact nine competition categories');
@@ -44,11 +50,17 @@ select test_private_mentoring.assert(
   (select count(*) = 10 from public.commerce_items where item_kind = 'private_mentoring' and is_available),
   'active packages register as available shared Commerce Items'
 );
+select test_private_mentoring.assert(
+  (select description = 'Private Mentoring package' from public.resolve_commerce_item('97300000-0000-0000-0000-000000000002')),
+  'Shared Commerce resolver no longer depends on marketing copy'
+);
 
 set local role anon;
-select test_private_mentoring.assert((select count(*) = 1 from public.private_mentoring_programs where is_active), 'anon can read active program information');
+select test_private_mentoring.assert((select count(*) = 2 from public.private_mentoring_learning_paths where is_active), 'anon can read active learning paths');
+select test_private_mentoring.assert((select count(*) = 6 from public.private_mentoring_session_focuses where is_active), 'anon can read active session topics');
+select test_private_mentoring.assert((select count(*) = 9 from public.competition_categories where is_active), 'anon can read active competition categories');
 select test_private_mentoring.assert((select count(*) = 10 from public.private_mentoring_packages where is_active), 'anon can read active package prices');
-select test_private_mentoring.denied($$update public.private_mentoring_programs set title = 'Tampered'$$, 'anon cannot mutate program content');
+select test_private_mentoring.denied($$update public.private_mentoring_packages set price_amount = 1$$, 'anon cannot mutate package catalog');
 reset role;
 
 insert into auth.users (id, email, encrypted_password) values
@@ -212,4 +224,4 @@ select test_private_mentoring.assert((select count(*) = 0 from public.get_active
 reset role;
 
 rollback;
-select 'PASS: Phase 3 Private Mentoring domain, commerce, enrollment, sessions, and security' as result;
+select 'PASS: corrected Private Mentoring catalog, commerce, enrollment, sessions, and security boundary' as result;

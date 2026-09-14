@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import test from 'node:test'
 
-const migrationPath = 'supabase/migrations/202609140011_digital_product_content_delivery.sql'
+const migrationPath = 'supabase/migrations/202609140014_digital_product_content_delivery.sql'
 const adminHelpers = readFileSync('lib/digital-products/admin.ts', 'utf8')
 const config = readFileSync('lib/digital-products/config.ts', 'utf8')
 const layout = readFileSync('app/layout.tsx', 'utf8')

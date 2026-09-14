@@ -13,20 +13,12 @@ const mentorTiers = [
   { id: '81000000-0000-0000-0000-000000000001', code: 'TOP_STUDENT', name: 'Top Student', description: 'Top Student', sort_order: 1, is_active: true, created_at: now, updated_at: now },
   { id: '81000000-0000-0000-0000-000000000002', code: 'YOUNG_PROFESSIONAL', name: 'Young Professional', description: 'Young Professional', sort_order: 2, is_active: true, created_at: now, updated_at: now },
 ]
-const pmProgram = { id: '97000000-0000-0000-0000-000000000001', slug: 'private-mentoring', title: 'Private Mentoring', short_description: 'A flexible per-session mentoring service designed to help students solve a specific challenge, improve a selected deliverable, or prepare for an upcoming competition stage.', kicker: 'Personalized Mentoring, Focused Sessions, Measurable Progress.', detail: 'Book a focused session whenever you need targeted guidance, practical feedback, and mentoring support. Each session works on one specific topic or challenge with direct practical guidance, applied examples, and actionable support.', audience: 'For beginners learning from the basics, individuals or teams preparing for a competition, and students who need focused feedback on an idea, proposal, deck, model, analysis, or pitch.', is_active: true, created_at: now, updated_at: now }
-const pmHighlights = ['Focused on Your Goal', 'Belajar bersama mentor pilihan', 'Hands-On Practical'].map((text, index) => ({ id: `97010000-0000-0000-0000-00000000000${index + 1}`, program_id: pmProgram.id, text, sort_order: index + 1, is_active: true, created_at: now, updated_at: now }))
-const pmJourney = [
-  ['Initial Consultation', 'Tell us your goals, current progress, materials, and the areas where you need support.'],
-  ['Mentor Match & Plan', 'We match you with the right mentor and set the focus for a productive session.'],
-  ['Live Mentoring Session', 'Engage in a 75 minutes interactive session with your mentor to discuss, analyze, and solve.'],
-  ['Action Plan & Next Steps', 'We wrap up with a clear action plan so you know exactly what to do next.'],
-].map(([title, description], index) => ({ id: `97020000-0000-0000-0000-00000000000${index + 1}`, program_id: pmProgram.id, title, description, sort_order: index + 1, is_active: true, created_at: now, updated_at: now }))
 const pmPaths = [
   { id: '97100000-0000-0000-0000-000000000001', code: 'END_TO_END', slug: 'end-to-end-learning', name: 'End-to-End Learning', description: 'Best for students who want to learn from the ground up.', sort_order: 1 },
   { id: '97100000-0000-0000-0000-000000000002', code: 'COMPETITION_FOCUSED', slug: 'competition-focused-mentoring', name: 'Competition-Focused Mentoring', description: 'Best for students who already have a competition target.', sort_order: 2 },
-].map(row => ({ ...row, program_id: pmProgram.id, is_active: true, created_at: now, updated_at: now }))
+].map(row => ({ ...row, is_active: true, created_at: now, updated_at: now }))
 const focusNames = ['Idea & Problem Framing', 'Business Analysis & Case Structuring', 'Proposal Writing & Storyline', 'Financial Analysis & Valuation', 'Slide Deck & Visual Design', 'Pitching & Presentation Skills']
-const pmFocuses = focusNames.map((name, index) => ({ id: `97200000-0000-0000-0000-00000000000${index + 1}`, program_id: pmProgram.id, code: name.toUpperCase().replaceAll(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, ''), slug: name.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, description: `${name} focused mentoring.`, sort_order: index + 1, is_active: true, created_at: now, updated_at: now }))
+const pmFocuses = focusNames.map((name, index) => ({ id: `97200000-0000-0000-0000-00000000000${index + 1}`, code: name.toUpperCase().replaceAll(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, ''), slug: name.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, description: `${name} focused mentoring.`, sort_order: index + 1, is_active: true, created_at: now, updated_at: now }))
 const categoryNames = ['Business Plan Competition', 'Business Case Competition', 'Scientific Paper Competition', 'Marketing Competition', 'Accounting and Finance Competition', 'Pitching Competition', 'Business Essay Competition', 'Equity Research Competition', 'Economic & Policy Case Competition']
 const categories = categoryNames.map((name, index) => ({ id: `97400000-0000-0000-0000-00000000000${index + 1}`, code: `CATEGORY_${index + 1}`, slug: `category-${index + 1}`, name, sort_order: index + 1, is_active: true, created_at: now, updated_at: now }))
 const packagePrices = [
@@ -71,9 +63,6 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/rest/v1/digital_products' && req.method === 'GET') { if (state.productDeleted) return postgrest(req, res, []); const slug = filterEq(url, 'slug'); return postgrest(req, res, slug && slug !== state.product.slug ? [] : [state.product]) }
   if (url.pathname === '/rest/v1/orders' && req.method === 'GET') { const id = filterEq(url, 'id'); return postgrest(req, res, state.order && (!id || id === state.order.id) ? [state.order] : []) }
   if (url.pathname === '/rest/v1/order_items' && req.method === 'GET') { const orderId = filterEq(url, 'order_id'); return postgrest(req, res, orderId === ids.order ? state.orderItems : []) }
-  if (url.pathname === '/rest/v1/private_mentoring_programs' && req.method === 'GET') return postgrest(req, res, [pmProgram])
-  if (url.pathname === '/rest/v1/private_mentoring_highlights' && req.method === 'GET') return postgrest(req, res, pmHighlights)
-  if (url.pathname === '/rest/v1/private_mentoring_journey_steps' && req.method === 'GET') return postgrest(req, res, pmJourney)
   if (url.pathname === '/rest/v1/private_mentoring_learning_paths' && req.method === 'GET') return postgrest(req, res, pmPaths)
   if (url.pathname === '/rest/v1/private_mentoring_session_focuses' && req.method === 'GET') return postgrest(req, res, pmFocuses)
   if (url.pathname === '/rest/v1/competition_categories' && req.method === 'GET') return postgrest(req, res, categories)

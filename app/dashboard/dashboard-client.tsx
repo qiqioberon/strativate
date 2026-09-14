@@ -16,7 +16,7 @@ import type { ActiveCart, OrderWithItems, OwnedDigitalProductView } from '@/lib/
 import { DemoState, readState } from '@/lib/demo-store'
 import { displayDemoLabel, displayDemoNotification } from '@/lib/demo-labels'
 import { displayLabel } from '@/lib/labels'
-import type { PrivateMentoringPublicView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
+import type { PrivateMentoringSessionFocusView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
 
 type Section = 'overview' | 'mentoring' | 'schedule' | 'programs' | 'library' | 'cart' | 'orders' | 'notifications' | 'profile' | 'support'
 
@@ -45,7 +45,7 @@ export function DashboardClient({
   cart: ActiveCart
   commerceOrders: OrderWithItems[]
   privateMentoringSessions?: PrivateMentoringSessionView[]
-  sessionFocuses?: PrivateMentoringPublicView['sessionFocuses']
+  sessionFocuses?: PrivateMentoringSessionFocusView[]
 }) {
   const account = useAccount()
   const accountName = displayName(account)

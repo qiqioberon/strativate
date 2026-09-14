@@ -1,14 +1,11 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import type { PrivateMentoringPublicView, PrivateMentoringSessionView } from './types'
+import type { PrivateMentoringCatalogView, PrivateMentoringSessionView } from './types'
 
-export async function getPublicPrivateMentoring(): Promise<PrivateMentoringPublicView | null> {
+export async function getPublicPrivateMentoringCatalog(): Promise<PrivateMentoringCatalogView | null> {
   const supabase = await createClient()
-  const [programResult, highlightsResult, journeyResult, pathsResult, focusesResult, categoriesResult, packagesResult, tiersResult] = await Promise.all([
-    supabase.from('private_mentoring_programs').select('*').eq('slug', 'private-mentoring').eq('is_active', true).maybeSingle(),
-    supabase.from('private_mentoring_highlights').select('*').eq('is_active', true).order('sort_order').order('id'),
-    supabase.from('private_mentoring_journey_steps').select('*').eq('is_active', true).order('sort_order').order('id'),
+  const [pathsResult, focusesResult, categoriesResult, packagesResult, tiersResult] = await Promise.all([
     supabase.from('private_mentoring_learning_paths').select('*').eq('is_active', true).order('sort_order').order('id'),
     supabase.from('private_mentoring_session_focuses').select('*').eq('is_active', true).order('sort_order').order('id'),
     supabase.from('competition_categories').select('*').eq('is_active', true).order('sort_order').order('id'),
@@ -16,16 +13,16 @@ export async function getPublicPrivateMentoring(): Promise<PrivateMentoringPubli
     supabase.from('mentor_tiers').select('*').eq('is_active', true).order('sort_order').order('id'),
   ])
 
-  const results = [programResult, highlightsResult, journeyResult, pathsResult, focusesResult, categoriesResult, packagesResult, tiersResult]
-  if (results.some(result => result.error) || !programResult.data) {
-    console.error('Private Mentoring public data unavailable', results.find(result => result.error)?.error?.message ?? 'Program row missing')
+  const results = [pathsResult, focusesResult, categoriesResult, packagesResult, tiersResult]
+  const failed = results.find(result => result.error)
+  if (failed?.error) {
+    console.error('Private Mentoring catalog unavailable', failed.error.message)
     return null
   }
 
   const tiers = tiersResult.data ?? []
-  const packageRows = packagesResult.data ?? []
   const tierById = new Map(tiers.map(tier => [tier.id, tier]))
-  const packages = packageRows.flatMap(packageRow => {
+  const packages = (packagesResult.data ?? []).flatMap(packageRow => {
     const tier = tierById.get(packageRow.mentor_tier_id)
     if (!tier) return []
     return [{
@@ -44,15 +41,6 @@ export async function getPublicPrivateMentoring(): Promise<PrivateMentoringPubli
   })
 
   return {
-    id: programResult.data.id,
-    slug: 'private-mentoring',
-    title: programResult.data.title,
-    shortDescription: programResult.data.short_description,
-    kicker: programResult.data.kicker,
-    detail: programResult.data.detail,
-    audience: programResult.data.audience,
-    highlights: (highlightsResult.data ?? []).map(row => ({ id: row.id, text: row.text, sortOrder: row.sort_order })),
-    journeySteps: (journeyResult.data ?? []).map(row => ({ id: row.id, title: row.title, description: row.description, sortOrder: row.sort_order })),
     learningPaths: (pathsResult.data ?? []).map(row => ({ id: row.id, code: row.code, slug: row.slug, name: row.name, description: row.description, sortOrder: row.sort_order })),
     sessionFocuses: (focusesResult.data ?? []).map(row => ({ id: row.id, code: row.code, slug: row.slug, name: row.name, description: row.description, sortOrder: row.sort_order })),
     competitionCategories: (categoriesResult.data ?? []).map(row => ({ id: row.id, code: row.code, slug: row.slug, name: row.name, sortOrder: row.sort_order })),

@@ -15,9 +15,24 @@ export type ProgramEditorial = {
   assetKey: 'programs.private.cover' | 'programs.intensive.cover'
 }
 
-// Phase 3 deliberately removes Private Mentoring business/editorial runtime truth from this static module.
-// Intensive Mentoring remains static until its own domain migration.
-export const programEditorial = {
+export const programEditorial: Record<MentoringSlug, ProgramEditorial> = {
+  'private-mentoring': {
+    slug: 'private-mentoring',
+    title: 'Private Mentoring',
+    shortDescription: 'Mentoring fleksibel untuk individu atau tim kecil yang disesuaikan dengan kebutuhan, target, dan timeline peserta.',
+    kicker: 'Sesi fleksibel dan terarah',
+    detail: 'Mulai dengan satu sesi terarah dan lanjutkan sesuai kebutuhan. Perkuat dasar pengetahuan, pertajam proposal, tingkatkan analisis, atau latih presentasimu dengan masukan praktis sesuai tujuanmu.',
+    audience: 'Untuk pemula yang belajar dari dasar, individu atau tim yang bersiap mengikuti kompetisi, serta peserta yang membutuhkan evaluasi atau latihan terarah.',
+    highlights: ['Pilih fokus sesuai kebutuhan', 'Belajar bersama mentor pilihan', 'Persiapan individu atau tim'],
+    journey: [
+      { title: 'Konsultasi awal', description: 'Ceritakan tujuan, perkembangan, materi, dan bagian yang membutuhkan dukungan.' },
+      { title: 'Pemilihan mentor dan perencanaan', description: 'Temukan mentor yang tepat dan tentukan agenda sesi yang terarah.' },
+      { title: 'Sesi mentoring langsung', description: 'Gunakan waktu interaktif untuk berdiskusi, menganalisis, dan menyelesaikan tantanganmu.' },
+      { title: 'Rencana tindakan dan langkah berikutnya', description: 'Dapatkan prioritas tindakan, sumber belajar yang bermanfaat, dan saran topik lanjutan bila diperlukan.' },
+    ],
+    tone: 'orange',
+    assetKey: 'programs.private.cover',
+  },
   'intensive-mentoring': {
     slug: 'intensive-mentoring',
     title: 'Intensive Mentoring',
@@ -36,12 +51,11 @@ export const programEditorial = {
     ],
     tone: 'red',
     assetKey: 'programs.intensive.cover',
-  } satisfies ProgramEditorial,
+  },
 }
 
-export const mentoringProgramEditorial: ProgramEditorial[] = [programEditorial['intensive-mentoring']]
+export const mentoringProgramEditorial = Object.values(programEditorial)
 
-// Used only by the still-static Intensive Mentoring information page.
 export const competitionCategories = [
   'Rencana Bisnis', 'Studi Kasus Bisnis', 'Esai Bisnis', 'Riset Ekuitas',
   'Karya Tulis Ilmiah', 'Pemasaran', 'Akuntansi dan Keuangan',
@@ -49,5 +63,7 @@ export const competitionCategories = [
 ]
 
 export function getProgramEditorialBySlug(slug: string): ProgramEditorial | null {
-  return slug === 'intensive-mentoring' ? programEditorial['intensive-mentoring'] : null
+  return Object.hasOwn(programEditorial, slug)
+    ? programEditorial[slug as MentoringSlug]
+    : null
 }
