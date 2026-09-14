@@ -2,6 +2,7 @@ import { CheckCircle2, LockKeyhole } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
+import { ContextBackButton } from '@/components/commerce/context-back-button'
 import { MidtransEmbed } from '@/components/commerce/midtrans-embed'
 import { buttonVariants } from '@/components/ui/button'
 import { requireAccount } from '@/lib/auth/server'
@@ -29,17 +30,12 @@ async function loadOwnedOrder(orderId: string) {
   }
 }
 
-export default async function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ order?: string | string[] }>
-}) {
+export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ order?: string | string[] }> }) {
   if (!isDigitalProductsEnabled()) redirect('/dashboard')
   const account = await requireAccount('/dashboard')
   const params = await searchParams
   const requestedOrderId = typeof params.order === 'string' ? params.order : null
-
-  if (!requestedOrderId) redirect('/cart')
+  if (!requestedOrderId) return redirect('/cart')
 
   const order = await loadOwnedOrder(requestedOrderId)
   const midtrans = getMidtransPublicConfig()
@@ -48,68 +44,23 @@ export default async function CheckoutPage({
   return (
     <main className="checkout-page">
       <div className="checkout-page__container">
+        <ContextBackButton fallbackHref="/cart" />
         <header className="checkout-header">
-          <div>
-            <p>Shared Commerce</p>
-            <h1>Checkout</h1>
-          </div>
-          <div className="checkout-header__status">
-            <LockKeyhole aria-hidden="true" size={16} />
-            <span>{statusLabel(order.status)}</span>
-          </div>
+          <div><p>Shared Commerce</p><h1>Checkout</h1></div>
+          <div className="checkout-header__status"><LockKeyhole aria-hidden="true" size={16} /><span>{statusLabel(order.status)}</span></div>
         </header>
-
         <div className="checkout-grid">
           <div className="checkout-main">
             <section className="checkout-order" aria-labelledby="order-heading">
-              <div className="checkout-section-heading">
-                <span>Pesanan</span>
-                <h2 id="order-heading">Ringkasan item</h2>
-              </div>
+              <div className="checkout-section-heading"><span>Pesanan</span><h2 id="order-heading">Ringkasan item</h2></div>
               <div className="checkout-order__items">
-                {order.items.map((item) => (
-                  <article key={item.id}>
-                    <div>
-                      <span>{item.item_kind_snapshot === 'digital_product' ? 'Produk Digital' : 'Item'}</span>
-                      <h3>{item.name_snapshot}</h3>
-                    </div>
-                    <strong>{formatRupiah(item.unit_price_amount)}</strong>
-                  </article>
-                ))}
+                {order.items.map(item => <article key={item.id}><div><span>{item.item_kind_snapshot === 'digital_product' ? 'Produk Digital' : item.item_kind_snapshot === 'private_mentoring' ? 'Private Mentoring' : 'Item'}</span><h3>{item.name_snapshot}</h3></div><strong>{formatRupiah(item.unit_price_amount)}</strong></article>)}
               </div>
-              <div className="checkout-order__total">
-                <span>Total</span>
-                <strong>{formatRupiah(order.total_amount)}</strong>
-              </div>
+              <div className="checkout-order__total"><span>Total</span><strong>{formatRupiah(order.total_amount)}</strong></div>
             </section>
-
-            {order.status === 'paid' ? (
-              <section className="checkout-paid-state">
-                <CheckCircle2 aria-hidden="true" size={28} />
-                <h2>Pembayaran sudah terverifikasi.</h2>
-                <p>Produk Digital yang dibeli sudah tercatat di Dashboard → Produk Digital.</p>
-                <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/dashboard">
-                  Buka Dashboard
-                </Link>
-              </section>
-            ) : (
-              <MidtransEmbed
-                orderId={order.id}
-                clientKey={midtrans.clientKey}
-                snapScriptUrl={midtrans.snapScriptUrl}
-              />
-            )}
+            {order.status === 'paid' ? <section className="checkout-paid-state"><CheckCircle2 aria-hidden="true" size={28} /><h2>Pembayaran sudah terverifikasi.</h2><p>Produk atau sesi yang dibeli sudah tercatat pada dashboard akunmu.</p><Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/dashboard">Buka Dashboard</Link></section> : <MidtransEmbed orderId={order.id} clientKey={midtrans.clientKey} snapScriptUrl={midtrans.snapScriptUrl} />}
           </div>
-
-          <aside className="checkout-customer">
-            <span>Pelanggan</span>
-            <strong>{displayName}</strong>
-            <p>{account.user.email ?? 'Email akun tidak tersedia'}</p>
-            <dl>
-              <div><dt>Order</dt><dd>{order.id}</dd></div>
-              <div><dt>Status</dt><dd>{statusLabel(order.status)}</dd></div>
-            </dl>
-          </aside>
+          <aside className="checkout-customer"><span>Pelanggan</span><strong>{displayName}</strong><p>{account.user.email ?? 'Email akun tidak tersedia'}</p><dl><div><dt>Order</dt><dd>{order.id}</dd></div><div><dt>Status</dt><dd>{statusLabel(order.status)}</dd></div></dl></aside>
         </div>
       </div>
     </main>

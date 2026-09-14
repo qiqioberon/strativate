@@ -1,10 +1,19 @@
 'use client'
 
+import { CalendarDays, CheckCircle2, Clock3, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/client'
 import type { PrivateMentoringSessionFocusView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
+
+function sessionStatus(status: string) {
+  if (status === 'awaiting_focus') return { label: 'Menunggu fokus', tone: 'warning' }
+  if (status === 'awaiting_scheduling') return { label: 'Menunggu admin', tone: 'info' }
+  if (status === 'scheduled') return { label: 'Terjadwal', tone: 'positive' }
+  if (status === 'completed') return { label: 'Selesai', tone: 'neutral' }
+  return { label: status.replaceAll('_', ' '), tone: 'neutral' }
+}
 
 export function PrivateMentoringSessions({ sessions, sessionFocuses }: { sessions: PrivateMentoringSessionView[]; sessionFocuses: PrivateMentoringSessionFocusView[] }) {
   const router = useRouter()
@@ -25,26 +34,24 @@ export function PrivateMentoringSessions({ sessions, sessionFocuses }: { session
 
   if (sessions.length === 0) return <section className="workspace-card"><p className="kicker">Private Mentoring</p><h3>Belum ada sesi aktif.</h3><p className="muted">Sesi akan muncul setelah pembayaran paket Private Mentoring terverifikasi.</p></section>
 
-  return <div className="engagement-list">
+  return <div className="engagement-list mentoring-groups">
     {enrollmentIds.map(enrollmentId => {
       const rows = sessions.filter(session => session.enrollmentId === enrollmentId)
       const purchased = rows[0]?.purchasedSessions ?? rows.length
       const used = rows.filter(session => session.status === 'completed').length
       const remaining = Math.max(0, purchased - used)
-      return <section className="workspace-card engagement-card" key={enrollmentId}>
-        <div className="card-heading"><div><p className="kicker">Private Mentoring · {rows[0]?.mentorTierName}</p><h3>{purchased} sesi</h3></div><span className="status-chip">{remaining} tersisa</span></div>
-        <div className="confirmation-grid"><div><span>Dibeli</span><strong>{purchased} sesi</strong></div><div><span>Selesai</span><strong>{used} sesi</strong></div><div><span>Sisa</span><strong>{remaining} sesi</strong></div><div><span>Tier mentor</span><strong>{rows[0]?.mentorTierName}</strong></div></div>
-        <div className="program-list">{rows.map(session => {
+      return <section className="workspace-card mentoring-group" key={enrollmentId}>
+        <div className="mentoring-group__header"><div><p className="kicker">Private Mentoring · {rows[0]?.mentorTierName}</p><h3>{purchased} sesi mentoring</h3><p>{used} selesai · {remaining} tersisa</p></div><span className="ops-status ops-status--info">{rows[0]?.mentorTierName}</span></div>
+        <div className="mentoring-session-list">{rows.map(session => {
           const canChooseFocus = session.status === 'awaiting_focus' || session.status === 'awaiting_scheduling'
-          return <article className="focus-row" key={session.sessionId}>
-            <span className="program-number orange">{session.sessionNumber}</span>
-            <div style={{ flex: 1 }}>
-              <strong>Sesi {session.sessionNumber}</strong>
-              {canChooseFocus ? <label className="form-label">Fokus sesi<select disabled={busyId === session.sessionId} value={session.sessionFocusId ?? ''} onChange={event => chooseFocus(session.sessionId, event.target.value)}><option value="">Pilih fokus</option>{sessionFocuses.map(focus => <option value={focus.id} key={focus.id}>{focus.name}</option>)}</select></label> : <span>Fokus: {session.focusName ?? '—'}</span>}
-              <span>Mentor: {session.mentorName ?? 'Menunggu penjadwalan admin'}</span>
-              <span>Jadwal: {session.scheduledStartAt ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(session.scheduledStartAt)) : 'Menunggu penjadwalan admin'}</span>
+          const status = sessionStatus(session.status)
+          return <article className="mentoring-session-card" key={session.sessionId}>
+            <div className="mentoring-session-card__number"><span>Sesi</span><strong>{session.sessionNumber}</strong></div>
+            <div className="mentoring-session-card__body">
+              <div className="mentoring-session-card__top"><h4>{session.focusName ?? 'Fokus belum dipilih'}</h4><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></div>
+              {canChooseFocus ? <label className="ops-field"><span>Fokus / topik sesi</span><select disabled={busyId === session.sessionId} value={session.sessionFocusId ?? ''} onChange={event => chooseFocus(session.sessionId, event.target.value)}><option value="">Pilih fokus</option>{sessionFocuses.map(focus => <option value={focus.id} key={focus.id}>{focus.name}</option>)}</select></label> : null}
+              <div className="mentoring-session-card__meta"><span><UserRound aria-hidden="true" />{session.mentorName ?? 'Mentor menunggu penugasan admin'}</span><span><CalendarDays aria-hidden="true" />{session.scheduledStartAt ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(session.scheduledStartAt)) : 'Jadwal menunggu admin'}</span><span>{session.status === 'completed' ? <CheckCircle2 aria-hidden="true" /> : <Clock3 aria-hidden="true" />}{status.label}</span></div>
             </div>
-            <span className="status-chip">{session.status.replaceAll('_', ' ')}</span>
           </article>
         })}</div>
       </section>
