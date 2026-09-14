@@ -3,6 +3,7 @@ import 'server-only'
 import {
   normalizeMidtransStatus,
   parseIdrGrossAmount,
+  toMidtransItemName,
   verifyMidtransSignature,
   type NormalizedPaymentStatus,
 } from './midtrans-model'
@@ -123,7 +124,7 @@ export async function createMidtransSnapTransaction(input: {
   items: MidtransItem[]
   customer: MidtransCustomer
 }) {
-  if (!Number.isSafeInteger(input.grossAmount) || input.grossAmount < 0) throw new Error('Invalid trusted Order total.')
+  if (!Number.isSafeInteger(input.grossAmount) || input.grossAmount <= 0) throw new Error('Invalid trusted Order total.')
   if (!input.providerOrderId || input.providerOrderId.length > 49) throw new Error('Invalid Midtrans provider order ID.')
   if (!input.items.length) throw new Error('Midtrans payment requires at least one Order Item.')
 
@@ -151,7 +152,7 @@ export async function createMidtransSnapTransaction(input: {
         id: item.id,
         price: item.price,
         quantity: 1,
-        name: item.name,
+        name: toMidtransItemName(item.name),
       })),
       customer_details: {
         email: input.customer.email,
@@ -181,7 +182,7 @@ function parseStatusRecord(payload: Record<string, unknown>): MidtransStatus {
     fraudStatus,
     paymentType: optionalString(payload.payment_type, 'payment_type'),
     signatureKey: optionalString(payload.signature_key, 'signature_key'),
-    normalizedStatus: normalizeMidtransStatus(transactionStatus, fraudStatus),
+    normalizedStatus: normalizeMidtransStatus(statusCode, transactionStatus, fraudStatus),
   }
 }
 
