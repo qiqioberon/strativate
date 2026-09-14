@@ -1,0 +1,101 @@
+.marketing-mentor-marquee__card {
+  grid-template-columns: 108px 320px;
+  align-items: center;
+  width: 476px;
+  min-height: 166px;
+  overflow: hidden;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.marketing-mentor-marquee__card:hover, .marketing-mentor-marquee__card:focus-visible {
+  transform: translateY(-2px);
+}
+.marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media {
+  width: 108px;
+  height: 132px;
+}
+.marketing-mentor-marquee__content {
+  position: relative;
+  display: block !important;
+  min-width: 0;
+  height: 132px;
+}
+.marketing-mentor-marquee__identity {
+  display: grid;
+  gap: 5px;
+  transform: translateY(36px);
+  transform-origin: left top;
+  transition: transform 220ms ease;
+}
+.marketing-mentor-marquee__card .marketing-mentor-marquee__tier {
+  color: var(--marketing-orange-dark);
+  font-size: .69rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transition: font-size 220ms ease, letter-spacing 220ms ease;
+}
+.marketing-mentor-marquee__card .marketing-mentor-marquee__name {
+  display: block;
+  overflow: hidden;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: font-size 220ms ease, letter-spacing 220ms ease;
+}
+.marketing-mentor-marquee__details {
+  display: grid;
+  gap: 5px;
+  margin-top: 13px;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 180ms ease 30ms, transform 220ms ease;
+}
+.marketing-mentor-marquee__details .marketing-mentor-marquee__title,
+.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials,
+.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { opacity: 1; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials { gap: 2px; margin-top: 0; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { display: flex; flex-wrap: nowrap; gap: 4px; overflow: hidden; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise span {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #8d3915;
+  background: #fff0e5;
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-transform: none;
+}
+.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__identity,
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__identity { transform: translateY(0); }
+.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__tier,
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__tier { font-size: .52rem; letter-spacing: .08em; }
+.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__name,
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__name { font-size: .9rem; letter-spacing: -.025em; }
+.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__details,
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__details { opacity: 1; transform: translateY(0); }
+@media (max-width: 640px) {
+  .marketing-mentor-marquee__card { grid-template-columns: 92px 260px; width: 382px; min-height: 150px; }
+  .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media { width: 92px; height: 116px; }
+  .marketing-mentor-marquee__content { height: 116px; }
+  .marketing-mentor-marquee__identity { transform: translateY(29px); }
+  .marketing-mentor-marquee__card .marketing-mentor-marquee__name { font-size: 1.15rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing-mentor-marquee__card,
+  .marketing-mentor-marquee__identity,
+  .marketing-mentor-marquee__tier,
+  .marketing-mentor-marquee__name,
+  .marketing-mentor-marquee__details { transition: none; }
+}
