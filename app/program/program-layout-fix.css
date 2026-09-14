@@ -1,0 +1,107 @@
+.program-page .marketing-services-primary {
+  align-items: stretch;
+}
+
+.program-page .marketing-service-card--primary {
+  min-height: 280px;
+  padding: 27px;
+}
+
+.program-page .marketing-service-card--primary .marketing-service-card__action {
+  justify-content: flex-start;
+  width: fit-content;
+  padding-top: 18px;
+}
+
+.program-page .marketing-service-card--primary .marketing-service-card__action-icon {
+  width: 31px;
+  height: 31px;
+}
+
+.program-page .marketing-service-card--secondary {
+  min-height: 235px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, .42fr);
+  padding: 28px;
+}
+
+.program-page .marketing-service-card--secondary .marketing-service-card__overview {
+  grid-column: 1;
+  justify-self: start;
+  align-self: end;
+  margin-top: 12px;
+  padding: 10px 14px;
+}
+
+.program-page .marketing-service-card--secondary::after {
+  right: 2%;
+  bottom: -54%;
+  width: 230px;
+}
+
+.program-page .marketing-services-supporting {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.program-page .marketing-services-supporting > .marketing-service-card {
+  flex: 0 1 calc((100% - 24px) / 3);
+  min-width: 0;
+}
+
+.program-page .marketing-service-card--compact {
+  min-height: 205px;
+  padding: 19px;
+}
+
+.program-page .marketing-service-card--compact h2 {
+  margin-top: 16px;
+  font-size: 1.04rem;
+  line-height: 1.12;
+}
+
+.program-page .marketing-service-card--compact .marketing-service-card__copy > p {
+  font-size: .68rem;
+  line-height: 1.58;
+}
+
+.program-page .marketing-service-card--compact .marketing-service-card__overview {
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: .58rem;
+}
+
+.program-page .program-journey__steps strong {
+  font-size: .76rem;
+}
+
+.program-page .program-journey__steps p {
+  font-size: .61rem;
+}
+
+@media (max-width: 1080px) {
+  .program-page .marketing-services-supporting > .marketing-service-card {
+    flex-basis: calc((100% - 12px) / 2);
+  }
+}
+
+@media (max-width: 760px) {
+  .program-page .marketing-service-card--primary,
+  .program-page .marketing-service-card--secondary,
+  .program-page .marketing-service-card--compact {
+    min-height: 0;
+  }
+
+  .program-page .marketing-services-supporting > .marketing-service-card {
+    flex-basis: 100%;
+  }
+
+  .program-page .marketing-service-card--secondary {
+    grid-template-columns: 1fr;
+  }
+
+  .program-page .marketing-service-card--secondary .marketing-service-card__overview {
+    grid-column: auto;
+  }
+}
