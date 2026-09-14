@@ -1,0 +1,106 @@
+name: Phase 3 Private Mentoring Verify
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - feat/phase-3-private-mentoring
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+      SUPABASE_SECRET_KEY: test-secret-key
+      APP_URL: http://localhost:3000
+      MIDTRANS_ENV: sandbox
+      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: test-midtrans-client-key
+      MIDTRANS_SERVER_KEY: test-midtrans-server-key
+      FEATURE_DIGITAL_PRODUCTS: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pnpm
+        run: npm install --global pnpm@10.17.1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Lint
+        run: pnpm lint
+      - name: Runtime architecture checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE 'private_mentoring_requests|private_mentoring_offerings|commerce_offers|custom_focus_text|mentor_focus_expertise' app components lib supabase/migrations; then
+            echo 'Forbidden Phase 3 architecture found.' >&2
+            exit 1
+          fi
+          if grep -RInE 'catalog_products|catalog_commercial_items|catalog_digital_product_details|catalog_offerings|catalog_bundles|public_catalog_' app components lib scripts; then
+            echo 'Legacy Product Catalog runtime reference found.' >&2
+            exit 1
+          fi
+          if grep -RInE 'preferred_start_at|requested_start_at|requested_schedule|reschedule_request_id' app components lib supabase/migrations; then
+            echo 'Forbidden mentee scheduling workflow found.' >&2
+            exit 1
+          fi
+      - name: Build with Digital Products disabled
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'false'
+        run: pnpm build
+      - name: Build with Digital Products enabled
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'true'
+        run: |
+          rm -rf .next
+          pnpm build
+      - name: Database bootstrap and SQL tests
+        env:
+          PGPASSWORD: postgres
+          TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55439/strativate_test_phase3
+        run: |
+          createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_phase3
+          pnpm test:db -- --bootstrap
+      - name: Start deterministic Supabase fixture
+        run: |
+          node tests/fixtures/commerce-backend/server.mjs > /tmp/commerce-fixture.log 2>&1 &
+          echo $! > /tmp/commerce-fixture.pid
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:54321/health && exit 0
+            sleep 1
+          done
+          cat /tmp/commerce-fixture.log
+          exit 1
+      - name: Rebuild browser target against deterministic fixture
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'true'
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+        run: |
+          rm -rf .next
+          pnpm build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser tests
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'true'
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+        run: pnpm exec playwright test

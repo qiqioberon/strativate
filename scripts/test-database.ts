@@ -16,7 +16,7 @@ async function main() {
         console.log(`Migration passed: ${filename}`)
       }
     }
-    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql', 'marketing_hero_posters.sql', 'mentor_domain.sql', 'mentor_weekly_controls.sql', 'catalog_removal.sql', 'digital_products.sql', 'shared_commerce.sql', 'payment_attempts.sql']) {
+    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql', 'marketing_hero_posters.sql', 'mentor_domain.sql', 'mentor_weekly_controls.sql', 'catalog_removal.sql', 'digital_products.sql', 'shared_commerce.sql', 'payment_attempts.sql', 'private_mentoring.sql']) {
       const sql = readFileSync(`supabase/tests/${filename}`, 'utf8')
       await db.query(sql)
       console.log(`Passed: ${filename}`)
