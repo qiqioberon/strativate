@@ -1,11 +1,17 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, RefreshCw, Search, UserRoundCheck, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Power, RefreshCw, Search, Trash2, UserRoundCheck, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
 import { formError } from '@/lib/auth/errors'
-import { managedMentorName, managedMentorSetup, managedMentorTier } from '@/lib/mentor/admin'
+import {
+  managedMentorAccountStatus,
+  managedMentorAvailability,
+  managedMentorName,
+  managedMentorSetup,
+  managedMentorTier,
+} from '@/lib/mentor/admin'
 import { createClient } from '@/lib/supabase/client'
 import type { ManagedMentor, MentorTier } from '@/lib/supabase/database.types'
 import { MentorInviteForm } from './mentor-invite-form'
@@ -17,12 +23,14 @@ export function MentorManagement() {
   const [tiers, setTiers] = useState<MentorTier[]>([])
   const [query, setQuery] = useState('')
   const [tierFilter, setTierFilter] = useState('')
+  const [accountFilter, setAccountFilter] = useState('all')
   const [setupFilter, setSetupFilter] = useState('all')
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [accountAction, setAccountAction] = useState<'status' | 'delete' | null>(null)
   const [invitationRefresh, setInvitationRefresh] = useState(0)
 
   const loadMentors = useCallback(async () => {
@@ -33,6 +41,7 @@ export function MentorManagement() {
         p_offset: page * 25,
         p_query: query.trim(),
         p_tier_id: tierFilter || null,
+        p_account_status: accountFilter,
         p_setup_status: setupFilter,
       })
       if (error) throw error
@@ -46,7 +55,7 @@ export function MentorManagement() {
     } finally {
       setLoading(false)
     }
-  }, [page, query, setupFilter, tierFilter])
+  }, [accountFilter, page, query, setupFilter, tierFilter])
 
   const loadTiers = useCallback(async () => {
     try {
@@ -82,6 +91,53 @@ export function MentorManagement() {
       : record))
     setMessage(`Tier ${mentor ? managedMentorName(mentor) : 'mentor'} telah diperbarui.`)
     setError('')
+  }
+
+  async function setMentorActive(mentor: ManagedMentor, isActive: boolean) {
+    setAccountAction('status')
+    setMessage('')
+    setError('')
+    try {
+      const { error } = await createClient().rpc('set_mentor_active', {
+        p_mentor_id: mentor.user_id,
+        p_is_active: isActive,
+      })
+      if (error) throw error
+      setMentors(records => records.map(record => record.user_id === mentor.user_id
+        ? { ...record, is_active: isActive }
+        : record))
+      setMessage(`Akun ${managedMentorName(mentor)} telah ${isActive ? 'diaktifkan' : 'dinonaktifkan'}.`)
+    } catch (error) {
+      setError(formError(error, 'Status akun mentor belum dapat diperbarui.'))
+    } finally {
+      setAccountAction(null)
+    }
+  }
+
+  async function deleteMentor(mentor: ManagedMentor) {
+    const name = managedMentorName(mentor)
+    const confirmed = window.confirm(
+      `Hapus akun mentor ${name} (${mentor.email}) secara permanen? Identitas login, profil mentor, ketersediaan, dan undangan terkait akun ini akan dihapus. Tindakan ini tidak dapat dibatalkan.`,
+    )
+    if (!confirmed) return
+
+    setAccountAction('delete')
+    setMessage('')
+    setError('')
+    try {
+      const { error } = await createClient().rpc('delete_mentor_account', {
+        p_mentor_id: mentor.user_id,
+      })
+      if (error) throw error
+      setMentors(records => records.filter(record => record.user_id !== mentor.user_id))
+      setSelectedId(null)
+      setInvitationRefresh(value => value + 1)
+      setMessage(`Akun mentor ${name} telah dihapus permanen.`)
+    } catch (error) {
+      setError(formError(error, 'Akun mentor belum dapat dihapus. Tidak ada perubahan yang diklaim berhasil.'))
+    } finally {
+      setAccountAction(null)
+    }
   }
 
   return <div className="mentor-management mentor-management-root">
@@ -126,10 +182,15 @@ export function MentorManagement() {
           <option value="">Semua tier</option>
           {tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name}</option>)}
         </select></label>
-        <label>Status akun<select value={setupFilter} onChange={event => { setSetupFilter(event.target.value); setPage(0) }}>
+        <label>Status akun<select value={accountFilter} onChange={event => { setAccountFilter(event.target.value); setPage(0) }}>
           <option value="all">Semua status</option>
-          <option value="complete">Aktif</option>
-          <option value="pending">Menunggu pengaturan akun</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Nonaktif</option>
+        </select></label>
+        <label>Setup akun<select value={setupFilter} onChange={event => { setSetupFilter(event.target.value); setPage(0) }}>
+          <option value="all">Semua setup</option>
+          <option value="complete">Selesai</option>
+          <option value="pending">Belum selesai</option>
         </select></label>
       </div>
 
@@ -141,8 +202,9 @@ export function MentorManagement() {
       <div className="mentor-account-list mentor-account-list-surface">
         {mentors.map(mentor => {
           const name = managedMentorName(mentor)
-          const setup = managedMentorSetup(mentor)
-          const accountStatusClass = setup.tone === 'active' ? 'status-pill green' : 'status-pill'
+          const account = managedMentorAccountStatus(mentor)
+          const availability = managedMentorAvailability(mentor)
+          const accountStatusClass = account.tone === 'active' ? 'status-pill green' : 'status-pill'
           const availabilityStatusClass = mentor.availability_configured ? 'status-pill green' : 'status-pill'
           return <article className="mentor-account-row mentor-account-row-responsive" key={mentor.user_id}>
             <div className="mentor-account-identity mentor-account-identity-responsive">
@@ -158,8 +220,8 @@ export function MentorManagement() {
               onSaved={tierId => tierSaved(mentor.user_id, tierId)}
               onFailure={async failure => { setMessage(''); setError(failure); await loadMentors() }}
             />
-            <div className="mentor-account-status mentor-account-status-block mentor-account-status--account"><span>Status akun</span><strong className={`${accountStatusClass} mentor-account-status-pill`}>{setup.label}</strong></div>
-            <div className="mentor-account-status mentor-account-status-block mentor-account-status--availability"><span>Ketersediaan</span><strong className={`${availabilityStatusClass} mentor-account-status-pill`}>{mentor.availability_configured ? 'Sudah diatur' : 'Belum diatur'}</strong></div>
+            <div className="mentor-account-status mentor-account-status-block mentor-account-status--account"><span>Status akun</span><strong className={`${accountStatusClass} mentor-account-status-pill`}>{account.label}</strong></div>
+            <div className="mentor-account-status mentor-account-status-block mentor-account-status--availability"><span>Ketersediaan</span><strong className={`${availabilityStatusClass} mentor-account-status-pill`}>{availability}</strong></div>
             <button type="button" className="button button-outline mentor-account-manage-button" onClick={() => setSelectedId(mentor.user_id)}>Kelola</button>
           </article>
         })}
@@ -181,20 +243,49 @@ export function MentorManagement() {
         <div><dt>Email</dt><dd>{selectedMentor.email}</dd></div>
         <div><dt>Tier</dt><dd>{managedMentorTier(selectedMentor)}</dd></div>
         <div><dt>Zona waktu</dt><dd>{selectedMentor.timezone}</dd></div>
-        <div><dt>Status akun</dt><dd>{managedMentorSetup(selectedMentor).label}</dd></div>
+        <div><dt>Status akun</dt><dd>{managedMentorAccountStatus(selectedMentor).label}</dd></div>
+        <div><dt>Setup akun</dt><dd>{managedMentorSetup(selectedMentor).label}</dd></div>
       </dl>
+
+      <div className="mentor-account-lifecycle-actions">
+        <div>
+          <p className="kicker">Kontrol akun</p>
+          <h3>{selectedMentor.is_active ? 'Akun mentor sedang aktif.' : 'Akun mentor sedang nonaktif.'}</h3>
+          <p>Mentor nonaktif tetap tersimpan, tetapi tidak dapat masuk ke dashboard mentor sampai admin mengaktifkannya kembali.</p>
+        </div>
+        <div className="button-row mentor-account-lifecycle-buttons">
+          <button
+            type="button"
+            className="button button-outline"
+            disabled={accountAction !== null}
+            onClick={() => void setMentorActive(selectedMentor, !selectedMentor.is_active)}
+          ><Power size={15} aria-hidden="true" />{accountAction === 'status' ? 'Menyimpan…' : selectedMentor.is_active ? 'Nonaktifkan akun' : 'Aktifkan akun'}</button>
+          <button
+            type="button"
+            className="button button-outline mentor-delete-button"
+            disabled={accountAction !== null}
+            onClick={() => void deleteMentor(selectedMentor)}
+          ><Trash2 size={15} aria-hidden="true" />{accountAction === 'delete' ? 'Menghapus…' : 'Hapus akun mentor'}</button>
+        </div>
+      </div>
+
       <div className="mentor-manage-availability">
         <div>
-          <p className="kicker">Ketersediaan mingguan</p>
+          <p className="kicker">Ketersediaan minggu ini & depan</p>
           <h3>Atur waktu operasional mentor.</h3>
-          <p>Perubahan disimpan sebagai satu jadwal utuh agar rentang lama tidak tertinggal.</p>
+          <p>Masing-masing minggu disimpan terpisah. Mengubah satu minggu tidak menghapus jadwal minggu lainnya.</p>
         </div>
         <MentorAvailabilityEditor
           key={selectedMentor.user_id}
           mentorId={selectedMentor.user_id}
           mode="admin"
           onSaved={configured => setMentors(records => records.map(record => record.user_id === selectedMentor.user_id
-            ? { ...record, availability_configured: configured }
+            ? {
+              ...record,
+              availability_current_week_configured: configured.current,
+              availability_next_week_configured: configured.next,
+              availability_configured: configured.current || configured.next,
+            }
             : record))}
         />
       </div>
