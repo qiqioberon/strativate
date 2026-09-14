@@ -1,10 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { ImagePlus, PackageOpen, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { ImagePlus, PackageOpen, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 
-import { CatalogManagement } from '@/components/admin/catalog-management'
 import { formError } from '@/lib/auth/errors'
 import {
   buildDigitalProductImagePath,
@@ -20,6 +19,7 @@ import {
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
+import dataStyles from './data-management.module.css'
 import styles from './digital-product-management.module.css'
 
 const migrationName = '202609140003_digital_product_domain.sql'
@@ -32,6 +32,10 @@ type Draft = {
 }
 
 const emptyDraft: Draft = { name: '', slug: '', description: '', price: '' }
+
+function formatUpdatedAt(value: string) {
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+}
 
 export function DigitalProductManagement() {
   const supabase = useMemo(() => createClient(), [])
@@ -58,6 +62,11 @@ export function DigitalProductManagement() {
     [products, selectedId],
   )
   const selectedImagePath = selected?.image_path ?? null
+  const filteredProducts = useMemo(() => {
+    const term = query.trim().toLocaleLowerCase('id-ID')
+    if (!term) return products
+    return products.filter(product => `${product.name} ${product.slug} ${product.description} ${product.price_amount}`.toLocaleLowerCase('id-ID').includes(term))
+  }, [products, query])
 
   const load = useCallback(async (autoSelect = true) => {
     setLoading(true)
@@ -335,19 +344,17 @@ export function DigitalProductManagement() {
   const parsedPrice = parseDigitalProductPriceInput(draft.price)
   const editorPreviewUrl = localPreviewUrl ?? storedPreviewUrl
   const previewSource = localPreviewUrl ? 'local' : storedPreviewUrl ? 'stored' : 'empty'
-  const itemList = products.map(product => ({
-    id: product.id,
-    title: product.name,
-    meta: `${formatDigitalProductPrice(product.price_amount)} · /${product.slug}`,
-  }))
   const showDedicatedEmptyState = !loading && !setupRequired && !loadFailed && !creating && products.length === 0
 
   const pageHeader = (
-    <div className={styles.pageHeader}>
-      <p className="kicker">Produk · Digital Product</p>
-      <h2>Digital Products</h2>
-      <p>Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini.</p>
-    </div>
+    <header className={dataStyles.pageHeader}>
+      <div className={dataStyles.pageHeaderCopy}>
+        <p className="kicker">Produk · Digital Product</p>
+        <h2>Digital Products</h2>
+        <p>Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini.</p>
+      </div>
+      {!loading && !setupRequired && !loadFailed && products.length > 0 ? <span className={dataStyles.countPill}><PackageOpen aria-hidden="true" />{products.length} produk</span> : null}
+    </header>
   )
 
   const editor = (creating || selected) ? (
@@ -357,7 +364,6 @@ export function DigitalProductManagement() {
           <p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p>
           <h2>{creating ? 'Buat Digital Product' : selected?.name}</h2>
         </div>
-        {!creating ? <button type="button" className="button button-outline" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button> : null}
       </div>
 
       <section className={styles.formSection} aria-labelledby="digital-product-information-heading">
@@ -432,7 +438,7 @@ export function DigitalProductManagement() {
   ) : (
     <div className={styles.stateCard} data-testid="digital-product-empty-editor">
       <h3>Pilih Digital Product untuk mulai mengelola.</h3>
-      <p>Pilih produk dari navigator atau buat Digital Product baru.</p>
+      <p>Pilih produk dari tabel atau buat Digital Product baru.</p>
       <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Digital Product baru</button>
       {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
     </div>
@@ -440,7 +446,7 @@ export function DigitalProductManagement() {
 
   if (loading) {
     return (
-      <section className={styles.management} data-testid="digital-product-management" aria-busy="true">
+      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy="true">
         {pageHeader}
         <div className={styles.stateCard} role="status"><RefreshCw aria-hidden="true" /><h3>Memuat Digital Products…</h3><p>Menyiapkan daftar produk, cover, dan editor.</p></div>
       </section>
@@ -449,7 +455,7 @@ export function DigitalProductManagement() {
 
   if (setupRequired) {
     return (
-      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
         {pageHeader}
         <div className={styles.stateCard} role="alert" data-testid="digital-product-setup-required">
           <PackageOpen aria-hidden="true" />
@@ -463,7 +469,7 @@ export function DigitalProductManagement() {
 
   if (loadFailed) {
     return (
-      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
         {pageHeader}
         <div className={styles.stateCard} role="alert" data-testid="digital-product-load-error">
           <RefreshCw aria-hidden="true" />
@@ -477,7 +483,7 @@ export function DigitalProductManagement() {
 
   if (showDedicatedEmptyState) {
     return (
-      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
         {pageHeader}
         <div className={styles.emptyState} data-testid="digital-product-empty-state">
           <div className={styles.emptyContent}>
@@ -499,7 +505,7 @@ export function DigitalProductManagement() {
 
   if (creating && products.length === 0) {
     return (
-      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
         {pageHeader}
         <div className={styles.singleEditor}>{editor}</div>
       </section>
@@ -507,22 +513,60 @@ export function DigitalProductManagement() {
   }
 
   return (
-    <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
-      <CatalogManagement
-        eyebrow="Produk · Digital Product"
-        title="Digital Products"
-        description="Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini."
-        items={itemList}
-        selectedId={selectedId ?? undefined}
-        query={query}
-        onQueryChange={setQuery}
-        onSelect={beginEdit}
-        editor={editor}
-        listLabel="Digital Products"
-        itemNoun="produk"
-        searchLabel="Cari produk"
-        searchPlaceholder="Cari nama, harga, atau slug…"
-      />
+    <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
+      {pageHeader}
+
+      <div className={dataStyles.surface} data-testid="digital-product-list-surface">
+        <div className={dataStyles.surfaceHeader}>
+          <div className={dataStyles.surfaceHeaderCopy}>
+            <p className="kicker">Daftar produk</p>
+            <h3>{products.length} Digital Product</h3>
+            <p>Gunakan pencarian untuk mempersempit daftar, lalu pilih Kelola untuk membuka editor.</p>
+          </div>
+          <button type="button" className="button button-primary" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button>
+        </div>
+
+        <div className={dataStyles.toolbar}>
+          <label className={dataStyles.searchField}>Cari produk
+            <span className={dataStyles.searchControl}><Search aria-hidden="true" /><input
+              type="search"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder="Cari nama, slug, deskripsi, atau harga"
+            /></span>
+          </label>
+        </div>
+
+        {filteredProducts.length === 0 ? <div className={dataStyles.empty}>Tidak ada Digital Product yang sesuai dengan pencarian.</div> : <div className={dataStyles.tableScroll} data-testid="digital-product-table-scroll">
+          <table className={`${dataStyles.table} ${dataStyles.productTable}`} data-testid="digital-product-table">
+            <thead>
+              <tr>
+                <th scope="col">Produk</th>
+                <th scope="col">Slug</th>
+                <th scope="col">Harga</th>
+                <th scope="col">Cover</th>
+                <th scope="col">Terakhir diperbarui</th>
+                <th scope="col" className={dataStyles.actionCell}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map(product => <tr key={product.id} data-selected={selectedId === product.id ? 'true' : undefined} data-testid="digital-product-row">
+                <td><div className={dataStyles.identityText}>
+                  <strong className={dataStyles.primaryText}>{product.name}</strong>
+                  <span className={dataStyles.descriptionText}>{product.description}</span>
+                </div></td>
+                <td><span className={dataStyles.mono}>/{product.slug}</span></td>
+                <td><strong className={dataStyles.primaryText}>{formatDigitalProductPrice(product.price_amount)}</strong></td>
+                <td><span className={`${dataStyles.badge} ${product.image_path ? dataStyles.successBadge : dataStyles.warningBadge}`} title={product.image_path || undefined}>{product.image_path ? 'Tersimpan' : 'Belum ada'}</span></td>
+                <td><time className={dataStyles.dateCell} dateTime={product.updated_at}>{formatUpdatedAt(product.updated_at)}</time></td>
+                <td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => beginEdit(product.id)} data-testid={`digital-product-manage-${product.id}`}>Kelola</button></td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>}
+      </div>
+
+      <div className={styles.singleEditor}>{editor}</div>
     </section>
   )
 }

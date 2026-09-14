@@ -1,0 +1,117 @@
+.table :global(.mentor-tier-control) {
+  display: grid;
+  min-width: 155px;
+  gap: 4px;
+}
+
+.table :global(.mentor-tier-control > label) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.table :global(.mentor-tier-control select) {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 28px 6px 9px;
+  border: 1px solid #dce2e7;
+  border-radius: 8px;
+  background: #fff;
+  color: #27313a;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.table :global(.mentor-tier-control small) {
+  color: #7a848d;
+  font-size: 8px;
+}
+
+.dialog {
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 1080px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: 0 24px 70px #11182035;
+}
+
+.dialog::backdrop {
+  background: #17202a8f;
+  backdrop-filter: blur(3px);
+}
+
+.dialogPanel {
+  display: grid;
+  max-height: calc(100dvh - 32px);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #e1e5e8;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid #e8ebee;
+  background: #fff;
+}
+
+.dialogHeader > div {
+  min-width: 0;
+}
+
+.dialogHeader h2 {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(22px, 2.8vw, 30px);
+  letter-spacing: -.055em;
+}
+
+.closeButton {
+  flex: 0 0 auto;
+}
+
+.dialogBody {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+  padding: 20px 22px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 700px) {
+  .dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+
+  .dialogPanel {
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+
+  .dialogHeader {
+    padding: 16px 16px 13px;
+  }
+
+  .dialogBody {
+    gap: 16px;
+    padding: 16px;
+  }
+}

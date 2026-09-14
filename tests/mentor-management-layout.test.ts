@@ -3,69 +3,70 @@ import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const managementPath = 'components/admin/mentor-management.tsx'
-const invitationsPath = 'components/admin/mentor-invitations.tsx'
-const layoutPath = 'app/layout.tsx'
-const stylesPath = 'app/mentor-management.css'
+const sharedStylesPath = 'components/admin/data-management.module.css'
+const modalStylesPath = 'components/admin/mentor-management.module.css'
 
-test('mentor management owns a scoped one-column role-card reset and intentional invite composition', () => {
-  assert.equal(existsSync(stylesPath), true, 'mentor management should own scoped layout styles')
-  if (!existsSync(stylesPath)) return
-
+test('mentor accounts render as a semantic data table with the real management columns', () => {
   const management = readFileSync(managementPath, 'utf8')
-  const layout = readFileSync(layoutPath, 'utf8')
-  const styles = readFileSync(stylesPath, 'utf8')
 
-  assert.match(layout, /import '\.\/mentor-management\.css'/)
-  assert.match(management, /mentor-management-surface/)
-  assert.match(management, /mentor-invite-layout/)
-  assert.match(styles, /\.mentor-management-root \.mentor-management-section,[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
-  assert.match(styles, /\.mentor-management-root \.mentor-invite-layout\s*\{[^}]*grid-template-columns:/)
+  assert.match(management, /data-testid="mentor-management-table"/)
+  assert.match(management, /<table/)
+  assert.match(management, /<th scope="col">Mentor<\/th>/)
+  assert.match(management, /<th scope="col">Tier<\/th>/)
+  assert.match(management, /<th scope="col">Status akun<\/th>/)
+  assert.match(management, /<th scope="col">Setup akun<\/th>/)
+  assert.match(management, /<th scope="col">Ketersediaan<\/th>/)
+  assert.match(management, /<MentorTierSelect/)
+  assert.doesNotMatch(management, /mentor-account-row-responsive/)
 })
 
-test('mentor account rows expose named responsive regions and overflow-safe identities', () => {
+test('Kelola opens mentor detail in a native modal dialog instead of an inline detail section', () => {
   const management = readFileSync(managementPath, 'utf8')
-  const styles = readFileSync(stylesPath, 'utf8')
 
-  assert.match(management, /mentor-account-row-responsive/)
-  assert.match(management, /mentor-account-status--account/)
-  assert.match(management, /mentor-account-status--availability/)
-  assert.match(styles, /@media \(max-width: 1100px\)/)
-  assert.match(styles, /@media \(max-width: 800px\)/)
-  assert.match(styles, /@media \(max-width: 520px\)/)
-  assert.match(styles, /overflow-wrap:\s*anywhere/)
+  assert.match(management, /useRef<HTMLDialogElement>/)
+  assert.match(management, /dialog\.showModal\(\)/)
+  assert.match(management, /<dialog[\s\S]*data-testid="mentor-management-dialog"/)
+  assert.match(management, /onClose=\{\(\) => setSelectedId\(null\)\}/)
+  assert.match(management, /data-testid="mentor-management-dialog-close"/)
+  assert.match(management, /window\.innerWidth - document\.documentElement\.clientWidth/)
+  assert.match(management, /document\.body\.style\.paddingRight/)
+  assert.doesNotMatch(management, /<section className="role-card mentor-manage-panel/)
 })
 
-test('mentor invitation and account pagination share the compact action footer pattern', () => {
+test('mentor modal keeps lifecycle and weekly availability controls in the management flow', () => {
   const management = readFileSync(managementPath, 'utf8')
-  const invitations = readFileSync(invitationsPath, 'utf8')
-  const styles = readFileSync(stylesPath, 'utf8')
 
-  assert.match(management, /mentor-pagination-actions/)
-  assert.match(invitations, /mentor-pagination-actions/)
-  assert.match(styles, /\.mentor-management-root \.mentor-pagination-actions\s*\{[^}]*flex-wrap:\s*wrap/)
-  assert.match(styles, /\.mentor-management-root \.mentor-pagination-reload/)
+  assert.match(management, /set_mentor_active/)
+  assert.match(management, /delete_mentor_account/)
+  assert.match(management, /Hapus akun mentor/)
+  assert.match(management, /<MentorAvailabilityEditor/)
+  assert.match(management, /availability_current_week_configured/)
+  assert.match(management, /availability_next_week_configured/)
+  assert.match(management, /Setup akun/)
 })
 
-test('mentor management polish uses concise Indonesian copy', () => {
-  const management = readFileSync(managementPath, 'utf8')
-  const invitations = readFileSync(invitationsPath, 'utf8')
+test('mentor table and modal own responsive overflow containment', () => {
+  assert.equal(existsSync(sharedStylesPath), true)
+  assert.equal(existsSync(modalStylesPath), true)
+  const sharedStyles = readFileSync(sharedStylesPath, 'utf8')
+  const modalStyles = readFileSync(modalStylesPath, 'utf8')
 
-  assert.match(management, /Manajemen Mentor/)
-  assert.match(management, /Undang mentor baru/)
-  assert.match(management, /Daftar akun mentor/)
-  assert.match(management, />Kelola<\/button>/)
-  assert.doesNotMatch(management, /Invite Mentor|Active mentor accounts|>Manage<\/button>/)
+  assert.match(sharedStyles, /\.tableScroll\s*\{[\s\S]*overflow-x:\s*auto/)
+  assert.match(sharedStyles, /\.mentorTable\s*\{[\s\S]*min-width:/)
+  assert.match(modalStyles, /\.dialog\s*\{[\s\S]*max-height:\s*calc\(100dvh - 32px\)/)
+  assert.match(modalStyles, /\.dialogBody\s*\{[\s\S]*overflow-y:\s*auto/)
+  assert.match(modalStyles, /\.dialog::backdrop/)
+})
+
+test('mentor invitation and account pagination behavior remains reachable', () => {
+  const management = readFileSync(managementPath, 'utf8')
+  const invitations = readFileSync('components/admin/mentor-invitations.tsx', 'utf8')
+
+  assert.match(management, /<MentorInviteForm/)
+  assert.match(management, /<MentorInvitations/)
+  assert.match(management, />Sebelumnya<\/button>/)
+  assert.match(management, />Berikutnya/)
+  assert.match(management, />Muat ulang<\/button>/)
   assert.match(invitations, />Sebelumnya<\/button>/)
   assert.match(invitations, />Berikutnya/)
-  assert.match(invitations, />Muat ulang<\/button>/)
-  assert.doesNotMatch(invitations, /Undangan sebelumnya|Undangan berikutnya|Muat ulang undangan/)
-})
-
-test('mentor row metadata, status badges, and action expose readable sizing', () => {
-  const styles = readFileSync(stylesPath, 'utf8')
-
-  assert.match(styles, /\.mentor-management-root \.mentor-account-status-block > span\s*\{[^}]*font-size:\s*11px/)
-  assert.match(styles, /\.mentor-management-root \.mentor-account-status-pill\s*\{[\s\S]*?min-height:\s*28px/)
-  assert.match(styles, /\.mentor-management-root \.mentor-account-status-pill\s*\{[\s\S]*?padding:\s*6px 10px/)
-  assert.match(styles, /\.mentor-management-root \.mentor-account-manage-button\s*\{[^}]*min-height:\s*38px/)
 })

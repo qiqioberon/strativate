@@ -55,25 +55,26 @@ async function openDigitalProducts(page: Page) {
   await expect(page.getByTestId('digital-product-management')).toBeVisible()
 }
 
-test('admin navigation renders a searchable Digital Product navigator and selected editor', async ({ page }) => {
+test('admin navigation renders a searchable Digital Product table and selected editor', async ({ page }) => {
   await mockDigitalProductBackend(page, [
     product('one', 'Business Case Handbook', 'business-case-handbook', 75000),
     product('two', 'Pitching Guide', 'pitching-guide', 50000),
   ])
   await openDigitalProducts(page)
 
-  await expect(page.getByText('Produk', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Digital Products' })).toBeVisible()
-  await expect(page.locator('.catalog-admin-product').filter({ hasText: 'Business Case Handbook' })).toBeVisible()
-  await expect(page.getByText('Rp75.000 · /business-case-handbook', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('digital-product-edit-mode')).toBeVisible()
+  await expect(page.getByTestId('digital-product-table')).toBeVisible()
+  await expect(page.getByTestId('digital-product-table').getByRole('columnheader', { name: 'Slug' })).toBeVisible()
+  await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Business Case Handbook' })).toContainText('Rp75.000')
+  await expect(page.getByTestId('digital-product-edit-mode')).toContainText('Business Case Handbook')
 
   const search = page.getByLabel('Cari produk')
   await search.fill('Pitching')
-  await expect(page.getByText('Pitching Guide', { exact: true })).toBeVisible()
-  await expect(page.locator('.catalog-admin-product').filter({ hasText: 'Business Case Handbook' })).toHaveCount(0)
+  await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Pitching Guide' })).toBeVisible()
+  await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Business Case Handbook' })).toHaveCount(0)
 
-  await page.locator('.catalog-admin-product').filter({ hasText: 'Pitching Guide' }).click()
+  const pitchingRow = page.getByTestId('digital-product-row').filter({ hasText: 'Pitching Guide' })
+  await pitchingRow.getByRole('button', { name: 'Kelola' }).click()
   await expect(page.getByTestId('digital-product-edit-mode')).toContainText('Pitching Guide')
 })
 
@@ -86,7 +87,7 @@ test('zero products use dedicated onboarding and the primary CTA opens create mo
   await expect(emptyState.getByRole('heading', { name: 'Belum ada Digital Product' })).toBeVisible()
   await expect(emptyState.getByRole('button', { name: 'Buat Digital Product' })).toBeVisible()
   await expect(page.getByLabel('Cari produk')).toHaveCount(0)
-  await expect(page.locator('.catalog-admin-layout')).toHaveCount(0)
+  await expect(page.getByTestId('digital-product-table')).toHaveCount(0)
 
   await emptyState.getByRole('button', { name: 'Buat Digital Product' }).click()
   await expect(page.getByTestId('digital-product-create-mode')).toBeVisible()
@@ -99,7 +100,7 @@ test('zero products use dedicated onboarding and the primary CTA opens create mo
   await expect(page.getByTestId('digital-product-slug-input')).toHaveValue('custom-workbook')
 })
 
-test('Digital Product workspace has no horizontal overflow at desktop, tablet, and mobile widths', async ({ page }) => {
+test('Digital Product table stays page-overflow safe at desktop, tablet, and mobile widths', async ({ page }) => {
   await mockDigitalProductBackend(page, [product('one', 'Business Case Handbook', 'business-case-handbook-with-a-long-slug', 75000)])
   await page.setViewportSize({ width: 1440, height: 1000 })
   await openDigitalProducts(page)
@@ -107,7 +108,7 @@ test('Digital Product workspace has no horizontal overflow at desktop, tablet, a
   for (const width of [1440, 1024, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 })
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
-    await expect(page.getByTestId('digital-product-management')).toBeVisible()
+    await expect(page.getByTestId('digital-product-table-scroll')).toBeVisible()
   }
 })
 
