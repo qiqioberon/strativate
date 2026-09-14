@@ -13,6 +13,7 @@
   min-width: 0;
 }
 
-:global(.admin-shell .attention-card) {
+:global(.admin-shell .attention-card),
+:global(.mentor-shell .mentor-note) {
   grid-template-columns: minmax(0, 1fr);
 }
