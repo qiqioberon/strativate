@@ -67,7 +67,7 @@ export default function AdminDashboard() {
       <nav aria-label="Navigasi admin">
         {groups.map(group => <div className="nav-group" key={group.label}><small>{group.label}</small>{group.items.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => navigate(id)}><Icon aria-hidden="true" />{label}</button>)}</div>)}
       </nav>
-      <div className="role-sidebar-bottom"><span>Bantuan &amp; dukungan</span><DashboardSidebarUtilities /></div>
+      <div className="role-sidebar-bottom"><DashboardSidebarUtilities /></div>
     </aside>
     {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu" /> : null}
     <main className="role-main">

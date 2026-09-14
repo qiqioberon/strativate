@@ -65,3 +65,18 @@ test('admin commerce migration is guarded and reads shared commerce plus payment
   assert.match(migration, /get_admin_commerce_report/)
   assert.match(migration, /list_admin_cart_links_page/)
 })
+
+test('admin operations UI contains wide cards, stable table/dialog containment, and no support heading', () => {
+  const admin = read('app/admin/page.tsx')
+  const css = read('app/admin-layout-fixes.css')
+  const privateMentoring = read('components/admin/private-mentoring-management.tsx')
+
+  assert.doesNotMatch(admin, /Bantuan &amp; dukungan|Bantuan & dukungan/)
+  assert.match(admin, /DashboardSidebarUtilities/)
+  assert.match(css, /\.ops-page \.role-card\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s)
+  assert.match(css, /\.ops-metric > strong\s*\{[^}]*white-space:\s*nowrap/s)
+  assert.match(css, /\.ops-table-section\s*\{[^}]*width:\s*100%/s)
+  assert.match(css, /\.ops-dialog\s*\{[^}]*position:\s*fixed[^}]*margin:\s*auto/s)
+  assert.match(privateMentoring, /private-mentoring-admin-page/)
+  assert.match(css, /\.private-mentoring-admin-page \.unassigned-row\s*\{[^}]*display:\s*grid/s)
+})

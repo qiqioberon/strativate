@@ -1,0 +1,189 @@
+/* Scoped containment fixes for admin operational pages.
+   globals.css defines .role-card as a 3-column auth card; admin operational cards
+   are content containers and must explicitly reset that inherited grid. */
+
+.ops-page,
+.mentoring-admin-page,
+.private-mentoring-admin-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ops-page .role-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.mentoring-admin-page .role-card,
+.cart-link-create,
+.private-mentoring-admin-page .role-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.ops-metric {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+
+.ops-metric > strong {
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
+  font-size: clamp(1rem, 1.65vw, 1.45rem);
+}
+
+.ops-table-section,
+.ops-table-wrap,
+.cart-link-create,
+.mentoring-admin-editor,
+.mentoring-admin-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ops-table-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ops-table-wrap {
+  overflow-x: auto;
+}
+
+.ops-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
+
+.ops-detail-grid strong,
+.ops-readonly-field strong {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.mentoring-form-section,
+.mentoring-form-grid,
+.mentoring-form-grid > * {
+  min-width: 0;
+}
+
+.private-mentoring-admin-page {
+  display: grid;
+  gap: 18px;
+}
+
+.private-mentoring-admin-page .role-page-title {
+  margin-bottom: 8px;
+}
+
+.private-mentoring-admin-page .role-card {
+  gap: 0;
+}
+
+.private-mentoring-admin-page .unassigned-row {
+  display: grid;
+  align-items: end;
+  width: 100%;
+  min-width: 0;
+  gap: 12px;
+}
+
+.private-mentoring-admin-page .private-mentoring-catalog-row {
+  grid-template-columns: minmax(240px, 1fr) minmax(90px, 110px) auto auto;
+}
+
+.private-mentoring-admin-page .private-mentoring-package-row {
+  grid-template-columns: minmax(190px, 1.35fr) repeat(3, minmax(110px, 1fr));
+}
+
+.private-mentoring-admin-page .unassigned-row > div,
+.private-mentoring-admin-page .unassigned-row > label {
+  min-width: 0;
+}
+
+.private-mentoring-admin-page .unassigned-row > div {
+  display: grid;
+  gap: 8px;
+}
+
+.private-mentoring-admin-page .unassigned-row label {
+  display: grid;
+  gap: 6px;
+  color: #6f7880;
+  font-size: .62rem;
+  font-weight: 750;
+}
+
+.private-mentoring-admin-page .unassigned-row input:not([type='checkbox']),
+.private-mentoring-admin-page .unassigned-row textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #dfe3e7;
+  border-radius: 9px;
+  outline: 0;
+  background: #fff;
+  color: #201a17;
+  font: inherit;
+  font-size: .72rem;
+}
+
+.private-mentoring-admin-page .unassigned-row input:not([type='checkbox']) {
+  min-height: 40px;
+}
+
+.private-mentoring-admin-page .unassigned-row textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.private-mentoring-admin-page .unassigned-row input:focus,
+.private-mentoring-admin-page .unassigned-row textarea:focus {
+  border-color: #f0a56e;
+  box-shadow: 0 0 0 3px #ff7a0017;
+}
+
+.private-mentoring-admin-page .unassigned-row input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  accent-color: #ff7a00;
+}
+
+.private-mentoring-admin-page .unassigned-row .text-link {
+  justify-self: start;
+  align-self: center;
+}
+
+@media (max-width: 1000px) {
+  .private-mentoring-admin-page .private-mentoring-package-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .private-mentoring-admin-page .private-mentoring-catalog-row {
+    grid-template-columns: minmax(0, 1fr) minmax(90px, 120px);
+  }
+}
+
+@media (max-width: 600px) {
+  .private-mentoring-admin-page .private-mentoring-package-row,
+  .private-mentoring-admin-page .private-mentoring-catalog-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .private-mentoring-admin-page .unassigned-row {
+    align-items: stretch;
+  }
+}

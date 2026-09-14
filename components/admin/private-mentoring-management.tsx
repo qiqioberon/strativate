@@ -81,7 +81,7 @@ export function PrivateMentoringManagement() {
     setMessage(error ? error.message : `${catalogLabels[row.table]} tersimpan.`)
   }
 
-  return <>
+  return <div className="private-mentoring-admin-page">
     <div className="role-page-title">
       <p className="kicker">Produk · domain Private Mentoring</p>
       <h2>Private Mentoring Catalog</h2>
@@ -91,7 +91,7 @@ export function PrivateMentoringManagement() {
     {(['private_mentoring_learning_paths', 'private_mentoring_session_focuses', 'competition_categories'] as CatalogTable[]).map(table => (
       <section className="role-card" key={table}>
         <p className="kicker">{catalogLabels[table]}</p>
-        {catalog.filter(row => row.table === table).map(row => <div className="unassigned-row" key={row.id}>
+        {catalog.filter(row => row.table === table).map(row => <div className="unassigned-row private-mentoring-catalog-row" key={row.id}>
           <div style={{ flex: 1 }}>
             <input value={row.label} aria-label={`${catalogLabels[table]} name`} onChange={event => updateCatalog(row.id, { label: event.target.value })} />
             {row.description !== '' ? <textarea value={row.description} aria-label={`${catalogLabels[table]} description`} onChange={event => updateCatalog(row.id, { description: event.target.value })} /> : null}
@@ -105,7 +105,7 @@ export function PrivateMentoringManagement() {
 
     <section className="role-card">
       <p className="kicker">Paket &amp; harga</p>
-      {packages.map(row => <div className="unassigned-row" key={row.id}>
+      {packages.map(row => <div className="unassigned-row private-mentoring-package-row" key={row.id}>
         <div><strong>{tierName(row.mentor_tier_id)} · {row.session_count} sesi</strong><small>Tier dan jumlah sesi terkunci</small></div>
         <label>Harga<input type="number" min="1" value={row.price_amount} onChange={event => updatePackage(row.id, { price_amount: Number(event.target.value) })} /></label>
         <label>Harga referensi<input type="number" min="0" value={row.reference_price_amount ?? ''} onChange={event => updatePackage(row.id, { reference_price_amount: event.target.value === '' ? null : Number(event.target.value) })} /></label>
@@ -118,5 +118,5 @@ export function PrivateMentoringManagement() {
     </section>
 
     {message ? <p className="muted" role="status">{message}</p> : null}
-  </>
+  </div>
 }
