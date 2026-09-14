@@ -2,36 +2,62 @@ import { ArrowRight, PackageOpen } from 'lucide-react'
 import Link from 'next/link'
 import { permanentRedirect } from 'next/navigation'
 
-import { AssetMedia } from '@/components/marketing/asset-media'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { buttonVariants } from '@/components/ui/button'
-import { productPlaceholders } from '@/lib/content/marketing-content'
-import { featureFlags } from '@/lib/features'
+import { formatRupiah } from '@/lib/commerce/money'
+import { listPublicDigitalProducts } from '@/lib/commerce/server'
+import { isDigitalProductsEnabled } from '@/lib/features'
 
-export default function DigitalProductsPage() {
-  if (!featureFlags.digitalProducts) permanentRedirect('/program')
+export default async function DigitalProductsPage() {
+  if (!isDigitalProductsEnabled()) permanentRedirect('/program')
+  const products = await listPublicDigitalProducts()
 
   return (
-    <MarketingShell>
+    <MarketingShell digitalProductsEnabled>
       <main>
         <PageIntro
           eyebrow="Produk digital"
-          title={<>Materi mandiri,<br /><em>tanpa informasi rekaan.</em></>}
-          description="Nama, format, harga, sampul, dan file produk final belum dipublikasikan. Ruang produk tetap tersedia sebagai fondasi visual sampai detail yang disetujui siap ditampilkan."
+          title={<>Materi mandiri,<br /><em>langsung dari Strativate.</em></>}
+          description="Jelajahi Produk Digital yang saat ini tersedia. Informasi yang ditampilkan berasal dari data produk yang dikelola Strativate."
           aside={<Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/program">Jelajahi program <ArrowRight data-icon="arrow" size={16} /></Link>}
         />
         <section className="marketing-page-section">
-          <div className="marketing-container marketing-products-directory">
-            {productPlaceholders.map((product, index) => (
-              <article key={product.id}>
-                <AssetMedia assetKey={product.cover} sizes="(max-width: 760px) 92vw, 38vw" />
-                <div><span>{product.eyebrow}</span><strong>0{index + 1}</strong></div>
-                <h2>{product.title}</h2>
-                <p>{product.description}</p>
-                <small><PackageOpen aria-hidden="true" size={15} /> Belum tersedia untuk pembelian</small>
-              </article>
-            ))}
+          <div className="marketing-container">
+            {products.length === 0 ? (
+              <div className="digital-products-empty">
+                <PackageOpen aria-hidden="true" size={28} />
+                <h2>Belum ada Produk Digital yang tersedia.</h2>
+                <p>Produk yang sudah dipublikasikan oleh Strativate akan muncul di halaman ini.</p>
+              </div>
+            ) : (
+              <div className="marketing-products-directory digital-products-directory">
+                {products.map((product) => (
+                  <article key={product.id} className="digital-product-card">
+                    <Link className="digital-product-cover" href={`/produk-digital/${product.slug}`} aria-label={`Lihat ${product.name}`}>
+                      {product.imageUrl ? (
+                        // Public covers are marketing assets served by Supabase Storage.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={product.imageUrl} alt={`Sampul ${product.name}`} />
+                      ) : (
+                        <div className="digital-product-cover__fallback" aria-hidden="true">Strativate</div>
+                      )}
+                    </Link>
+                    <div className="digital-product-card__body">
+                      <span className="marketing-kicker">Produk Digital</span>
+                      <h2>{product.name}</h2>
+                      <p>{product.description}</p>
+                      <div className="digital-product-card__footer">
+                        <strong>{formatRupiah(product.price_amount)}</strong>
+                        <Link className="marketing-text-link" href={`/produk-digital/${product.slug}`}>
+                          Lihat detail <ArrowRight aria-hidden="true" size={16} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>
