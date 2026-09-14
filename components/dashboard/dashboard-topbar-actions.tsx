@@ -85,7 +85,6 @@ export function DashboardTopbarActions({
         onClick={() => toggle('notification')}
       >
         <Bell aria-hidden="true" />
-        <span className={styles.notificationDot} aria-hidden="true" />
       </button>
 
       <button
