@@ -36,7 +36,7 @@ insert into public.carts(id, user_id, status) values ('98100000-0000-0000-0000-0
 insert into public.orders(id, user_id, cart_id, status, total_amount, paid_at, created_at) values
   ('98200000-0000-0000-0000-000000000001','98000000-0000-0000-0000-000000000002','98100000-0000-0000-0000-000000000001','paid',885000,'2026-09-10 09:00+07','2026-09-10 08:58+07');
 insert into public.order_items(id, order_id, commerce_item_id, item_kind_snapshot, name_snapshot, slug_snapshot, unit_price_amount) values
-  ('98300000-0000-0000-0000-000000000001','98200000-0000-0000-0000-000000000002'::uuid,'97300000-0000-0000-0000-000000000002','private_mentoring','Private Mentoring - Top Student - 3 Sessions','private-mentoring-top-student-3-sessions',885000);
+  ('98300000-0000-0000-0000-000000000001','98200000-0000-0000-0000-000000000001','97300000-0000-0000-0000-000000000002','private_mentoring','Private Mentoring - Top Student - 3 Sessions','private-mentoring-top-student-3-sessions',885000);
 insert into public.private_mentoring_enrollments(id, mentee_id, order_item_id, package_id, purchased_sessions, created_at) values
   ('98400000-0000-0000-0000-000000000001','98000000-0000-0000-0000-000000000002','98300000-0000-0000-0000-000000000001','97300000-0000-0000-0000-000000000002',3,'2026-09-10 09:00+07');
 insert into public.private_mentoring_sessions(id, enrollment_id, session_number, status, session_focus_id, mentor_id, scheduled_start_at, scheduled_end_at) values
