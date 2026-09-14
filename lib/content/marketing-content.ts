@@ -1,10 +1,9 @@
 import type { AssetKey } from './asset-registry'
 import { publicContact } from './brand'
-import { featureFlags } from '@/lib/features'
 
 export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help'
 
-const marketingNavigationItems = [
+export const marketingNavigationItems = [
   { label: 'Beranda', href: '/', icon: 'house' },
   { label: 'Program', href: '/program', icon: 'compass' },
   { label: 'Mentor', href: '/mentor', icon: 'users' },
@@ -13,9 +12,13 @@ const marketingNavigationItems = [
   { label: 'Tanya Jawab', href: '/tanya-jawab', icon: 'help' },
 ] as const satisfies ReadonlyArray<{ label: string; href: string; icon: NavigationIcon }>
 
-export const marketingNavigation = marketingNavigationItems.filter(
-  (item) => featureFlags.digitalProducts || item.href !== '/produk-digital',
-)
+export function getMarketingNavigation(digitalProductsEnabled: boolean) {
+  return marketingNavigationItems.filter(
+    item => digitalProductsEnabled || item.href !== '/produk-digital',
+  )
+}
+
+export const marketingNavigation = getMarketingNavigation(false)
 
 export const preparationPrinciples = [
   { number: '01', title: 'Mulai dari kebutuhanmu', description: 'Pilih dukungan berdasarkan tahap persiapan dan fokus yang sedang kamu kerjakan.' },

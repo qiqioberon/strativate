@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
-import { marketingNavigation, type NavigationIcon } from '@/lib/content/marketing-content'
+import type { NavigationIcon, marketingNavigationItems } from '@/lib/content/marketing-content'
 import { cn } from '@/lib/utils'
 
 const icons = {
@@ -34,7 +34,7 @@ function isActiveRoute(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function SiteHeader() {
+export function SiteHeader({ navigation }: { navigation: typeof marketingNavigationItems }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   useEffect(() => {
@@ -58,7 +58,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="marketing-nav" aria-label="Navigasi utama">
-          {marketingNavigation.map((item) => {
+          {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
 
@@ -102,7 +102,7 @@ export function SiteHeader() {
 
       <div className={cn('marketing-mobile-panel', mobileOpen && 'is-open')} id="marketing-mobile-navigation">
         <nav aria-label="Navigasi seluler">
-          {marketingNavigation.map((item) => {
+          {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
 

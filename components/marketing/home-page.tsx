@@ -9,16 +9,17 @@ import {
   Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { buttonVariants } from '@/components/ui/button'
 import {
   bigClassPlaceholder,
   faqPreview,
-  productPlaceholders,
 } from '@/lib/content/marketing-content'
+import { formatRupiah } from '@/lib/commerce/money'
+import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { socialProof } from '@/lib/content/brand'
 import { mentors } from '@/lib/content/mentors'
-import { featureFlags } from '@/lib/features'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import { mentoringProgramEditorial } from '@/lib/program-information'
@@ -30,7 +31,15 @@ import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kine
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 
-export function HomePage({ heroPosters }: { heroPosters: MarketingHeroPosterView[] }) {
+export function HomePage({
+  heroPosters,
+  digitalProducts,
+  digitalProductsEnabled,
+}: {
+  heroPosters: MarketingHeroPosterView[]
+  digitalProducts: PublicDigitalProduct[]
+  digitalProductsEnabled: boolean
+}) {
   const homePrograms: MarketingProgram[] = mentoringProgramEditorial.map((program, index) => ({
     id: program.slug,
     number: String(index + 1).padStart(2, '0'),
@@ -146,28 +155,31 @@ export function HomePage({ heroPosters }: { heroPosters: MarketingHeroPosterView
         </div>
       </section>
 
-      {featureFlags.digitalProducts ? <section className="marketing-section marketing-products" aria-labelledby="product-heading" data-reveal data-testid="homepage-products-section">
+      {digitalProductsEnabled ? <section className="marketing-section marketing-products" aria-labelledby="product-heading" data-reveal data-testid="homepage-products-section">
         <div className="marketing-container marketing-products__grid">
           <div className="marketing-products__intro">
             <p className="marketing-kicker">Produk digital</p>
             <h2 id="product-heading">Materi yang siap<br /><em>mengikuti ritmemu.</em></h2>
-            <p>Nama, format, harga, sampul, dan file produk final belum dipublikasikan. Ruang ini tetap disiapkan agar detail yang telah disetujui dapat ditampilkan tanpa mengubah komposisi halaman.</p>
+            <p>Temukan materi mandiri yang dikelola langsung melalui katalog Produk Digital Strativate.</p>
             <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/produk-digital" data-testid="digital-products-link">
-              Lihat ruang produk <ArrowRight data-icon="arrow" size={16} />
+              Lihat Produk Digital <ArrowRight data-icon="arrow" size={16} />
             </Link>
           </div>
           <div className="marketing-product-stack">
-            {productPlaceholders.map((product, index) => (
+            {digitalProducts.slice(0, 2).map((product, index) => (
               <article className="marketing-product-card" key={product.id}>
-                <AssetMedia assetKey={product.cover} decorative sizes="(max-width: 760px) 32vw, 13vw" />
+                <div className="marketing-product-card__cover">
+                  <Image src={product.imageUrl} alt={`Sampul ${product.name}`} fill sizes="(max-width: 760px) 32vw, 13vw" unoptimized />
+                </div>
                 <div>
-                  <span>{product.eyebrow}</span>
-                  <h3>{product.title}</h3>
+                  <span>Produk Digital · {formatRupiah(product.price_amount)}</span>
+                  <h3>{product.name}</h3>
                   <p>{product.description}</p>
                 </div>
                 <strong aria-hidden="true">0{index + 1}</strong>
               </article>
             ))}
+            {digitalProducts.length === 0 ? <p className="marketing-products__empty">Belum ada Produk Digital yang dipublikasikan.</p> : null}
           </div>
         </div>
       </section> : null}
