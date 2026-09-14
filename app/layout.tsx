@@ -8,6 +8,7 @@ import './globals.css'
 import './auth/auth.css'
 import './program-information.css'
 import './marketing.css'
+import './hero-kinetic.css'
 import './error-page.css'
 import './mentor-marquee.css'
 

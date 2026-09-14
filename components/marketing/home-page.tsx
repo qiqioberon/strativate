@@ -33,6 +33,7 @@ import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import { AssetMedia } from './asset-media'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { HeroCarousel } from './hero-carousel'
+import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
 
 export function HomePage({ catalogProducts, heroPosters }: { catalogProducts: CatalogProductSummary[]; heroPosters: MarketingHeroPosterView[] }) {
@@ -53,47 +54,52 @@ export function HomePage({ catalogProducts, heroPosters }: { catalogProducts: Ca
     })
   }
   const digitalProducts = selectDigitalProducts(catalogProducts).map(toMarketingDigitalProduct)
+  const whatsappHref = buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk menentukan program yang paling sesuai dengan kebutuhan saya.')
 
   return (
     <main>
       <section className="marketing-hero" data-reveal data-testid="homepage-hero-section">
-        <div className="marketing-container marketing-hero__grid">
-          <div className="marketing-hero__copy">
-            <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
-            <h1>Bangun cara berpikir.<br /><em>Temukan langkahmu.</em></h1>
-            <p className="marketing-hero__lede">Bimbingan personal dan program persiapan yang membantumu mengurai tantangan, berlatih dengan fokus, dan bergerak dengan arah yang lebih jelas.</p>
-            <div className="marketing-hero__actions">
-              <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program" data-testid="hero-program-link">
-                Temukan programmu <ArrowRight data-icon="arrow" aria-hidden="true" size={17} />
-              </Link>
-              <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/mentor" data-testid="hero-mentor-link">
-                Kenali mentor <MoveRight data-icon="arrow" aria-hidden="true" size={17} />
-              </Link>
-              <a
-                className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })}
-                href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk menentukan program yang paling sesuai dengan kebutuhan saya.')}
-                target="_blank"
-                rel="noreferrer"
-                data-testid="hero-whatsapp-link"
-              >
-                Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} />
-              </a>
+        <HeroKineticSurface>
+          <div className="marketing-container marketing-hero__grid">
+            <div className="marketing-hero__copy">
+              <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
+              <h1 className="marketing-hero__headline">
+                <span className="marketing-hero__headline-line">Bangun cara berpikir.</span>
+                <em className="marketing-hero__headline-line marketing-hero__headline-line--accent">Temukan langkahmu.</em>
+              </h1>
+              <p className="marketing-hero__lede">Bimbingan personal dan program persiapan yang membantumu mengurai tantangan, berlatih dengan fokus, dan bergerak dengan arah yang lebih jelas.</p>
+              <div className="marketing-hero__actions">
+                <MagneticAction className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program" testId="hero-program-link">
+                  Temukan programmu <ArrowRight data-icon="arrow" aria-hidden="true" size={17} />
+                </MagneticAction>
+                <MagneticAction className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-hero__mentor-action')} href="/mentor" testId="hero-mentor-link">
+                  Kenali mentor <MoveRight data-icon="arrow" aria-hidden="true" size={17} />
+                </MagneticAction>
+                <MagneticAction
+                  className={cn(buttonVariants({ variant: 'whatsapp', size: 'marketing' }), 'marketing-hero__whatsapp-action')}
+                  href={whatsappHref}
+                  testId="hero-whatsapp-link"
+                  external
+                >
+                  Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} />
+                </MagneticAction>
+              </div>
+            </div>
+
+            <HeroVisualStage><HeroCarousel posters={heroPosters} /></HeroVisualStage>
+          </div>
+          <div className="marketing-container marketing-social-proof" data-testid="homepage-social-proof">
+            <p className="marketing-proof-context">Siswa kami berasal dari</p>
+            <div className="marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
+              {socialProof.map((proof) => (
+                <article key={proof.label}>
+                  <span>{proof.value}</span>
+                  <div><strong>{proof.label}</strong></div>
+                </article>
+              ))}
             </div>
           </div>
-
-          <HeroCarousel posters={heroPosters} />
-        </div>
-        <div className="marketing-container marketing-social-proof" data-testid="homepage-social-proof">
-          <p className="marketing-proof-context">Siswa kami berasal dari</p>
-          <div className="marketing-hero__principles" aria-label="Jangkauan peserta Strativate">
-            {socialProof.map((proof) => (
-              <article key={proof.label}>
-                <span>{proof.value}</span>
-                <div><strong>{proof.label}</strong></div>
-              </article>
-            ))}
-          </div>
-        </div>
+        </HeroKineticSurface>
       </section>
 
       <section className="marketing-section marketing-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
