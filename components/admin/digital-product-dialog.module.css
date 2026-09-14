@@ -1,0 +1,81 @@
+.dialog {
+  width: min(940px, calc(100vw - 32px));
+  max-width: 940px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: 0 24px 70px #11182035;
+}
+
+.dialog::backdrop {
+  background: #17202a8f;
+  backdrop-filter: blur(3px);
+}
+
+.panel {
+  display: grid;
+  max-height: calc(100dvh - 32px);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #e1e5e8;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid #e8ebee;
+}
+
+.header > div {
+  min-width: 0;
+}
+
+.header h2 {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(22px, 2.8vw, 30px);
+  letter-spacing: -.055em;
+}
+
+.closeButton {
+  flex: 0 0 auto;
+}
+
+.body {
+  min-width: 0;
+  padding: 20px 22px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 700px) {
+  .dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+
+  .panel {
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+
+  .header {
+    padding: 16px 16px 13px;
+  }
+
+  .body {
+    padding: 16px;
+  }
+}

@@ -162,6 +162,7 @@ export type Database = {
     Functions: {
       list_mentor_invites: { Args: { p_offset?: number }; Returns: MentorInviteSummary[] }
       list_managed_mentors: { Args: { p_offset: number; p_query: string; p_tier_id: string | null; p_account_status: string; p_setup_status: string }; Returns: ManagedMentor[] }
+      count_managed_mentors: { Args: { p_query: string; p_tier_id: string | null; p_account_status: string; p_setup_status: string }; Returns: number }
       set_mentor_tier: { Args: { p_mentor_id: string; p_tier_id: string }; Returns: MentorProfile }
       set_mentor_active: { Args: { p_mentor_id: string; p_is_active: boolean }; Returns: MentorProfile }
       save_mentor_availability: { Args: { p_mentor_id: string; p_week_start_date: string; p_rules: Json }; Returns: MentorAvailabilityRule[] }
