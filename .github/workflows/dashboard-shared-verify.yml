@@ -38,8 +38,7 @@ jobs:
         run: npm install --global pnpm@10.17.1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Full unit suite baseline check
-        continue-on-error: true
+      - name: Unit tests
         run: pnpm test
       - name: Dashboard regression tests
         run: pnpm exec tsx --test tests/dashboard-digital-products.test.ts tests/dashboard-shared-navigation.test.ts
