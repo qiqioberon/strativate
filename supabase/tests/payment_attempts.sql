@@ -92,8 +92,11 @@ select test_payments.assert(
   'matching claim stores a bounded Snap token and releases the claim'
 );
 
+-- Age both token timestamps together so the fixture represents a genuinely expired
+-- 24-hour token while still satisfying the production timing invariant.
 update public.payment_attempts
-set snap_token_expires_at = now() - interval '1 minute'
+set snap_token_created_at = now() - interval '25 hours',
+    snap_token_expires_at = now() - interval '1 hour'
 where id = current_setting('test.first_attempt')::uuid;
 select public.reserve_midtrans_payment_attempt((select id from public.orders where user_id = '95000000-0000-0000-0000-000000000001'));
 select test_payments.assert(
@@ -126,8 +129,11 @@ select test_payments.assert(
   ),
   'non-owner cannot release another request creation claim'
 );
+-- Age both claim timestamps together to model a stale claim without creating an
+-- impossible row that violates the claim-timing constraint.
 update public.payment_attempts
-set snap_creation_claim_expires_at = now() - interval '1 second'
+set snap_creation_claimed_at = now() - interval '3 minutes',
+    snap_creation_claim_expires_at = now() - interval '1 minute'
 where id = current_setting('test.retry_attempt')::uuid;
 select test_payments.assert(
   public.claim_midtrans_snap_creation(
