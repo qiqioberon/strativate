@@ -4,7 +4,7 @@ import { afterEach, test } from 'node:test'
 import {
   createMidtransSnapTransaction,
   getMidtransTransactionStatus,
-} from '../lib/payments/midtrans'
+} from '../lib/payments/midtrans-server'
 
 const originalFetch = globalThis.fetch
 const originalEnvironment = process.env.MIDTRANS_ENV
