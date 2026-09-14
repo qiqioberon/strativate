@@ -44,15 +44,14 @@ update public.mentee_profiles set onboarding_completed_at = now() where user_id 
   '94000000-0000-0000-0000-000000000003'
 );
 
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '94000000-0000-0000-0000-000000000001', true);
+-- Fixture setup runs as the disposable database owner because production admin clients
+-- intentionally cannot choose primary-key UUIDs directly.
 insert into public.digital_products (
   id, name, slug, description, image_path, price_amount,
   content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, is_published
 ) values
   ('94100000-0000-0000-0000-000000000001', 'Business Case Handbook', 'business-case-handbook', 'Panduan latihan kasus bisnis.', 'products/business-case-handbook.webp', 75000, 'pdf', 'products/handbook/business-case.pdf', 'application/pdf', 'business-case.pdf', 1024, 20, true),
   ('94100000-0000-0000-0000-000000000002', 'Pitch Deck Workbook', 'pitch-deck-workbook', 'Workbook presentasi bisnis.', 'products/pitch-deck-workbook.webp', 50000, 'pdf', 'products/workbook/pitch-deck.pdf', 'application/pdf', 'pitch-deck.pdf', 2048, 18, true);
-reset role;
 
 select test_commerce.assert(
   (select count(*) = 2 and bool_and(item_kind = 'digital_product' and is_available) from public.commerce_items where id in (
