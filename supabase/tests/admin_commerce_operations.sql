@@ -21,8 +21,13 @@ insert into auth.users (id, email, encrypted_password) values
 update public.profiles set role = 'admin' where id = '99000000-0000-0000-0000-000000000001';
 update public.mentee_profiles set onboarding_completed_at = now() where user_id = '99000000-0000-0000-0000-000000000002';
 
-insert into public.digital_products (id, name, slug, description, image_path, price_amount, is_published)
-values ('99010000-0000-0000-0000-000000000001', 'Ops Test Guide', 'ops-test-guide', 'Fixture only.', 'products/ops-test.webp', 99000, true);
+insert into public.digital_products (
+  id, name, slug, description, image_path, price_amount,
+  content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, is_published
+) values (
+  '99010000-0000-0000-0000-000000000001', 'Ops Test Guide', 'ops-test-guide', 'Fixture only.', 'products/ops-test.webp', 99000,
+  'pdf', 'products/ops-test/guide.pdf', 'application/pdf', 'guide.pdf', 1024, 1, true
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '99000000-0000-0000-0000-000000000002', true);
