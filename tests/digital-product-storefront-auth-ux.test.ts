@@ -46,13 +46,16 @@ test('public product list is purchase-aware and uses compact reusable add-to-car
   assert.match(styles, /object-fit: contain/)
 })
 
-test('product detail keeps purchase and cart actions contextual', () => {
+test('product detail keeps purchase actions contextual and reports cart state through global toast feedback', () => {
   assert.match(detailPage, /resolveDigitalPurchaseMode\(account\)/)
   assert.match(detailPage, /digital-product-detail__purchase/)
   assert.match(detailPage, /purchaseMode === 'mentee'/)
   assert.match(addToCart, /if \(pending\) return/)
-  assert.match(addToCart, /setAdded\(true\)/)
-  assert.match(addToCart, /href="\/cart"/)
+  assert.match(addToCart, /useToast/)
+  assert.match(addToCart, /Produk berhasil ditambahkan ke keranjang\./)
+  assert.match(addToCart, /Produk ini sudah ada di keranjang Anda\./)
+  assert.doesNotMatch(addToCart, /setAdded\(/)
+  assert.doesNotMatch(addToCart, /digital-product-inline-cart-link/)
 })
 
 test('dashboard keeps owned-content behavior while compacting library and order history', () => {
