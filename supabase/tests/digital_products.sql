@@ -24,11 +24,11 @@ select test_digital_products.assert(
   exists (
     select 1 from storage.buckets
     where id = 'digital-product-images'
-      and public = false
+      and public = true
       and file_size_limit = 5242880
       and allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp']
   ),
-  'private Digital Product cover bucket is configured'
+  'public Digital Product cover bucket is configured'
 );
 select test_digital_products.assert(to_regclass('public.catalog_products') is null, 'legacy catalog_products is not recreated');
 select test_digital_products.assert(to_regclass('public.catalog_commercial_items') is null, 'legacy catalog_commercial_items is not recreated');
@@ -99,18 +99,20 @@ update storage.objects set name = 'products/admin-cover-renamed.webp' where buck
 select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images' and name = 'products/admin-cover-renamed.webp'), 'admin can update a Digital Product cover object');
 delete from storage.objects where bucket_id = 'digital-product-images' and name = 'products/admin-cover-renamed.webp';
 select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-images'), 'admin can delete a Digital Product cover object');
+insert into storage.objects (bucket_id, name, owner_id)
+values ('digital-product-images', 'products/public-cover.webp', '93000000-0000-0000-0000-000000000001');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000002', true);
-select test_digital_products.assert((select count(*) = 0 from public.digital_products), 'mentee cannot directly select Digital Products');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentee can read public Digital Products');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized mentee', 'unauthorized-mentee', 'Unauthorized.', 'products/unauthorized-mentee.webp', 1)
 $q$, 'mentee insert');
 update public.digital_products set name = 'Unauthorized mentee update';
 delete from public.digital_products;
-select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-images'), 'mentee cannot read private cover objects');
+select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images'), 'mentee can read public cover objects');
 select test_digital_products.rejected($q$
   insert into storage.objects (bucket_id, name, owner_id)
   values ('digital-product-images', 'products/unauthorized-mentee.webp', '93000000-0000-0000-0000-000000000002')
@@ -119,7 +121,7 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000003', true);
-select test_digital_products.assert((select count(*) = 0 from public.digital_products), 'mentor cannot directly select Digital Products');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentor can read public Digital Products');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized mentor', 'unauthorized-mentor', 'Unauthorized.', 'products/unauthorized-mentor.webp', 1)
@@ -133,14 +135,14 @@ $q$, 'mentor storage upload');
 reset role;
 
 set local role anon;
-select test_digital_products.rejected($q$select * from public.digital_products$q$, 'anonymous select');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'anonymous visitor can read Digital Products');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized anonymous', 'unauthorized-anonymous', 'Unauthorized.', 'products/unauthorized-anonymous.webp', 1)
 $q$, 'anonymous insert');
 select test_digital_products.rejected($q$update public.digital_products set name = 'Unauthorized anonymous update'$q$, 'anonymous update');
 select test_digital_products.rejected($q$delete from public.digital_products$q$, 'anonymous delete');
-select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-images'), 'anonymous cannot read private cover objects');
+select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images'), 'anonymous visitor can read public cover objects');
 reset role;
 
 set local role authenticated;

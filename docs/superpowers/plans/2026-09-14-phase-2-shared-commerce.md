@@ -32,7 +32,7 @@
 - Test: `tests/shared-commerce-migration.test.ts`
 
 **Interfaces:**
-- Produces: `commerce_items`, `carts`, `cart_items`, `orders`, `order_items`; `resolve_commerce_item(uuid)`; `get_or_create_active_cart()`; `add_cart_item(uuid)`; `remove_cart_item(uuid)`; `get_active_cart()`; `create_order_from_cart()`; `list_owned_digital_products()`.
+- Produces: `commerce_items`, `carts`, `cart_items`, `orders`, `order_items`; `resolve_commerce_item(uuid)`; `get_or_create_active_cart()`; `add_cart_item(uuid)`; `remove_cart_item(uuid)`; `get_active_cart()`; `create_order_from_cart(uuid)`; `list_owned_digital_products()`.
 - Consumes: `digital_products`, `profiles`, `mentee_profiles`, `touch_updated_at()`, `is_admin()`, and `auth.uid()`.
 
 - [ ] Write static and SQL tests proving the migration is forward-only, makes product records/covers publicly readable without public writes, backfills/synchronizes commerce identity, and leaves legacy catalog objects absent.
