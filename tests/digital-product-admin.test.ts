@@ -10,6 +10,7 @@ import {
   normalizeDigitalProductSlug,
   parseDigitalProductPriceInput,
   safeDigitalProductFileName,
+  validateDigitalProductContentFile,
   validateDigitalProductDraft,
 } from '../lib/digital-products/admin'
 
@@ -63,6 +64,22 @@ test('draft validation rejects malformed business fields and invalid covers whil
     file: null,
     hasStoredImage: true,
   }), {})
+})
+
+test('protected content validation rejects filename extensions that disagree with the selected type', () => {
+  const disguisedPdf = { name: 'lesson.exe', type: 'application/pdf', size: 1024 }
+  const disguisedVideo = { name: 'lesson.pdf', type: 'video/mp4', size: 1024 }
+
+  assert.equal(validateDigitalProductContentFile({
+    file: disguisedPdf,
+    contentType: 'pdf',
+    hasStoredContent: false,
+  }), 'Materi PDF harus menggunakan file PDF dengan ekstensi .pdf.')
+  assert.equal(validateDigitalProductContentFile({
+    file: disguisedVideo,
+    contentType: 'video',
+    hasStoredContent: false,
+  }), 'Materi Video harus menggunakan file MP4 atau WebM dengan ekstensi yang sesuai.')
 })
 
 test('cover filenames and generated object paths stay inside the products namespace', () => {
