@@ -19,7 +19,7 @@ test('mentor management owns a scoped one-column role-card reset and intentional
   assert.match(management, /mentor-management-surface/)
   assert.match(management, /mentor-invite-layout/)
   assert.match(styles, /\.mentor-management-root \.mentor-management-section,[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
-  assert.match(styles, /\.mentor-management-root \.mentor-invite-layout\s*\{[^}]*grid-template-columns:/s)
+  assert.match(styles, /\.mentor-management-root \.mentor-invite-layout\s*\{[^}]*grid-template-columns:/)
 })
 
 test('mentor account rows expose named responsive regions and overflow-safe identities', () => {
@@ -42,5 +42,5 @@ test('mentor invitation and account pagination have scoped wrapping hooks', () =
 
   assert.match(management, /mentor-pagination-wrap/)
   assert.match(invitations, /mentor-invitation-pagination/)
-  assert.match(styles, /\.mentor-management-root \.mentor-invitation-pagination\s*\{[^}]*flex-wrap:\s*wrap/s)
+  assert.match(styles, /\.mentor-management-root \.mentor-invitation-pagination\s*\{[^}]*flex-wrap:\s*wrap/)
 })
