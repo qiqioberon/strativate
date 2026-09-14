@@ -2,13 +2,13 @@ import { DashboardClient } from './dashboard-client'
 
 import { listOwnedDigitalProducts } from '@/lib/commerce/server'
 import { isDigitalProductsEnabled } from '@/lib/features'
-import { getPublicPrivateMentoring, listMyPrivateMentoringSessions } from '@/lib/private-mentoring/server'
+import { getPublicPrivateMentoringCatalog, listMyPrivateMentoringSessions } from '@/lib/private-mentoring/server'
 
 export default async function MenteeDashboard() {
   const digitalProductsEnabled = isDigitalProductsEnabled()
-  const [ownedDigitalProducts, privateMentoring, privateMentoringSessions] = await Promise.all([
+  const [ownedDigitalProducts, privateMentoringCatalog, privateMentoringSessions] = await Promise.all([
     digitalProductsEnabled ? listOwnedDigitalProducts() : Promise.resolve([]),
-    getPublicPrivateMentoring(),
+    getPublicPrivateMentoringCatalog(),
     listMyPrivateMentoringSessions(),
   ])
   return (
@@ -16,7 +16,7 @@ export default async function MenteeDashboard() {
       digitalProductsEnabled={digitalProductsEnabled}
       ownedDigitalProducts={ownedDigitalProducts}
       privateMentoringSessions={privateMentoringSessions}
-      sessionFocuses={privateMentoring?.sessionFocuses ?? []}
+      sessionFocuses={privateMentoringCatalog?.sessionFocuses ?? []}
     />
   )
 }

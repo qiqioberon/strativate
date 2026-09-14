@@ -29,11 +29,8 @@ export type MentorAvailabilityRule = { id:string; mentor_id:string; week_start_d
 export type ManagedMentor = { user_id:string; email:string; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; tier_id:string|null; tier_code:string|null; tier_name:string|null; timezone:string; is_active:boolean; mentor_setup_completed_at:string|null; created_at:string; availability_configured:boolean; availability_current_week_configured:boolean; availability_next_week_configured:boolean }
 
 export type CompetitionCategory = { id:string; code:string; slug:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type PrivateMentoringProgram = { id:string; slug:string; title:string; short_description:string; kicker:string; detail:string; audience:string; is_active:boolean; created_at:string; updated_at:string }
-export type PrivateMentoringHighlight = { id:string; program_id:string; text:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type PrivateMentoringJourneyStep = { id:string; program_id:string; title:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type PrivateMentoringLearningPath = { id:string; program_id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type PrivateMentoringSessionFocus = { id:string; program_id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type PrivateMentoringLearningPath = { id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type PrivateMentoringSessionFocus = { id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type PrivateMentoringPackage = { id:string; mentor_tier_id:string; session_count:number; price_amount:number; reference_price_amount:number|null; duration_minutes:number; max_participants:number; is_active:boolean; sort_order:number; created_at:string; updated_at:string }
 export type CommerceCartLink = { id:string; mentee_id:string; token_hash:string; status:'active'|'claimed'|'revoked'; claimed_cart_id:string|null; created_by:string; claimed_at:string|null; created_at:string; updated_at:string }
 export type CommerceCartLinkItem = { cart_link_id:string; commerce_item_id:string; created_at:string }
@@ -71,11 +68,8 @@ export type Database = {
       mentor_profiles: Table<MentorProfile, Partial<MentorProfile> & Pick<MentorProfile,"user_id">>
       mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule,"mentor_id"|"week_start_date"|"day_of_week"|"start_time"|"end_time">>
       competition_categories: Table<CompetitionCategory, Partial<CompetitionCategory> & Pick<CompetitionCategory,'code'|'slug'|'name'|'sort_order'>>
-      private_mentoring_programs: Table<PrivateMentoringProgram, Partial<PrivateMentoringProgram> & Pick<PrivateMentoringProgram,'slug'|'title'|'short_description'|'kicker'|'detail'|'audience'>>
-      private_mentoring_highlights: Table<PrivateMentoringHighlight, Partial<PrivateMentoringHighlight> & Pick<PrivateMentoringHighlight,'program_id'|'text'|'sort_order'>>
-      private_mentoring_journey_steps: Table<PrivateMentoringJourneyStep, Partial<PrivateMentoringJourneyStep> & Pick<PrivateMentoringJourneyStep,'program_id'|'title'|'description'|'sort_order'>>
-      private_mentoring_learning_paths: Table<PrivateMentoringLearningPath, Partial<PrivateMentoringLearningPath> & Pick<PrivateMentoringLearningPath,'program_id'|'code'|'slug'|'name'|'description'|'sort_order'>>
-      private_mentoring_session_focuses: Table<PrivateMentoringSessionFocus, Partial<PrivateMentoringSessionFocus> & Pick<PrivateMentoringSessionFocus,'program_id'|'code'|'slug'|'name'|'description'|'sort_order'>>
+      private_mentoring_learning_paths: Table<PrivateMentoringLearningPath, Partial<PrivateMentoringLearningPath> & Pick<PrivateMentoringLearningPath,'code'|'slug'|'name'|'description'|'sort_order'>>
+      private_mentoring_session_focuses: Table<PrivateMentoringSessionFocus, Partial<PrivateMentoringSessionFocus> & Pick<PrivateMentoringSessionFocus,'code'|'slug'|'name'|'description'|'sort_order'>>
       private_mentoring_packages: Table<PrivateMentoringPackage, Partial<PrivateMentoringPackage> & Pick<PrivateMentoringPackage,'mentor_tier_id'|'session_count'|'price_amount'|'sort_order'>>
       commerce_cart_links: Table<CommerceCartLink, Partial<CommerceCartLink> & Pick<CommerceCartLink,'mentee_id'|'token_hash'|'created_by'>>
       commerce_cart_link_items: Table<CommerceCartLinkItem, Partial<CommerceCartLinkItem> & Pick<CommerceCartLinkItem,'cart_link_id'|'commerce_item_id'>>

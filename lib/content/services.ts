@@ -14,7 +14,7 @@ export const services: ServiceOverview[] = [
   {
     id: 'private-mentoring',
     name: 'Private Mentoring',
-    description: 'Informasi Private Mentoring dimuat dari data program aktif.',
+    description: 'Mentoring fleksibel untuk individu atau tim kecil yang disesuaikan dengan kebutuhan, target, dan timeline peserta.',
     icon: UsersRound,
     href: '/program/private-mentoring',
     detailLabel: 'Lihat Private Mentoring',
