@@ -4,7 +4,8 @@
 create table public.marketing_hero_posters (
   id uuid primary key default gen_random_uuid(),
   image_path text not null unique check (
-    image_path ~ '^posters/[A-Za-z0-9][A-Za-z0-9._/-]{0,499}$'
+    char_length(image_path) between 9 and 508
+    and image_path ~ '^posters/[A-Za-z0-9][A-Za-z0-9._/-]*$'
     and image_path !~ '(^|/)\.\.(/|$)'
   ),
   alt_text text not null check (char_length(btrim(alt_text)) between 1 and 240),
@@ -26,9 +27,13 @@ for each row execute function public.touch_updated_at();
 
 alter table public.marketing_hero_posters enable row level security;
 
-create policy marketing_hero_posters_public_read
+create policy marketing_hero_posters_public_active_read
 on public.marketing_hero_posters for select to anon, authenticated
-using (is_active or public.is_admin());
+using (is_active);
+
+create policy marketing_hero_posters_admin_read
+on public.marketing_hero_posters for select to authenticated
+using (public.is_admin());
 
 create policy marketing_hero_posters_admin_insert
 on public.marketing_hero_posters for insert to authenticated
@@ -44,7 +49,9 @@ using (public.is_admin());
 
 create function public.reorder_marketing_hero_posters(p_ids uuid[]) returns void
 language plpgsql security definer set search_path = '' as $$
-declare v_count integer;
+declare
+  v_matched_count integer;
+  v_total_count integer;
 begin
   if not public.is_admin() then
     raise exception 'Admin account required' using errcode = '42501';
@@ -52,10 +59,19 @@ begin
   if p_ids is null or cardinality(p_ids) = 0 or cardinality(p_ids) > 100 then
     raise exception 'Provide a valid poster order' using errcode = '22023';
   end if;
-  select count(*) into v_count from public.marketing_hero_posters where id = any(p_ids);
-  if v_count <> cardinality(p_ids) or v_count <> (select count(distinct id) from unnest(p_ids) id) then
-    raise exception 'Poster order contains missing or duplicate identities' using errcode = '22023';
+
+  lock table public.marketing_hero_posters in share row exclusive mode;
+  select count(*) into v_total_count from public.marketing_hero_posters;
+  select count(*) into v_matched_count
+  from public.marketing_hero_posters
+  where id = any(p_ids);
+
+  if v_total_count <> cardinality(p_ids)
+    or v_matched_count <> cardinality(p_ids)
+    or v_matched_count <> (select count(distinct input_id) from unnest(p_ids) input_ids(input_id)) then
+    raise exception 'Poster order is stale or contains missing or duplicate identities' using errcode = '22023';
   end if;
+
   update public.marketing_hero_posters poster
   set sort_order = ordering.ordinality * 10
   from unnest(p_ids) with ordinality ordering(id, ordinality)

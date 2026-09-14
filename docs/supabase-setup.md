@@ -22,10 +22,8 @@ Jalankan migrasi berurutan di Supabase SQL Editor, masing-masing sebagai satu tr
 3. `supabase/migrations/202609060003_invite_management_auth_ux.sql`
 4. `supabase/migrations/202609090001_product_catalog_master.sql`
 5. `supabase/migrations/202609120001_marketing_hero_posters.sql`
-6. `supabase/migrations/202609140001_marketing_hero_poster_public_read.sql`
-7. `supabase/migrations/202609140002_marketing_hero_poster_order_safety.sql`
 
-Untuk project yang sudah menjalankan migrasi 001–003, lanjutkan dengan migrasi Product Master lalu ketiga migrasi hero poster sesuai urutan di atas. Migrasi hero poster pertama membuat tabel `marketing_hero_posters`, bucket publik `marketing-hero-posters`, RLS admin, kebijakan Storage, dan RPC pengurutan. Migrasi berikutnya memisahkan kebijakan baca poster aktif untuk publik dari kebijakan baca admin agar role anonim tidak memerlukan akses ke helper admin. Migrasi terakhir membuat RPC pengurutan menolak daftar identitas yang sudah basi akibat perubahan katalog bersamaan. Jangan menganggap migrasi hosted sudah terpasang sebelum tabel, bucket, serta kebijakannya diperiksa pada project Supabase tujuan.
+Untuk project yang sudah menjalankan migrasi 001–003, lanjutkan dengan migrasi Product Master lalu migrasi Hero Poster. Migrasi Hero Poster membuat tabel `marketing_hero_posters`, bucket publik `marketing-hero-posters`, RLS admin, kebijakan Storage, kebijakan baca poster aktif yang aman untuk publik, dan RPC pengurutan yang menolak daftar identitas basi akibat perubahan bersamaan. Jangan menganggap migrasi hosted sudah terpasang sebelum tabel, bucket, serta kebijakannya diperiksa pada project Supabase tujuan.
 
 Alternatif dengan PostgreSQL CLI dan `SUPABASE_DB_URL` yang disimpan sebagai environment variable:
 
@@ -35,8 +33,6 @@ psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/mi
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060003_invite_management_auth_ux.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609090001_product_catalog_master.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609120001_marketing_hero_posters.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140001_marketing_hero_poster_public_read.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140002_marketing_hero_poster_order_safety.sql
 ```
 
 `psql` tidak otomatis membaca `.env`; ekspor `SUPABASE_DB_URL` ke shell atau gunakan koneksi CLI dari menu **Connect** Supabase. Jangan menjalankan ulang migration 001 yang sudah diterapkan. Pada project yang memakai Supabase CLI, gunakan `supabase db push` sesuai riwayat migrasinya. Jika SQL Editor sudah dipakai terlebih dahulu, sinkronkan migration history sebelum beralih ke CLI.
