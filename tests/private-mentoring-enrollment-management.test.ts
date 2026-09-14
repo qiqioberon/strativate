@@ -5,7 +5,7 @@ import test from 'node:test'
 const read = (path: string) => { assert.equal(existsSync(path), true, `${path} must exist`); return readFileSync(path, 'utf8') }
 
 test('admin mentoring sessions is enrollment-first with paginated filters and modal management', () => {
-  const source = read('components/admin/private-mentoring-session-management.tsx')
+  const source = read('components/admin/private-mentoring-enrollment-management.tsx')
   assert.match(source, /list_admin_private_mentoring_enrollments_page/)
   assert.match(source, /get_admin_private_mentoring_enrollment_sessions/)
   assert.match(source, /<table className="ops-table/)
