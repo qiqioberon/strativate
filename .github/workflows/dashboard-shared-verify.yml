@@ -12,6 +12,10 @@ on:
       - 'components/auth/**'
       - 'components/dashboard/**'
       - 'tests/dashboard-*.test.ts'
+      - 'tests/browser/dashboard-shared-navigation.spec.ts'
+      - 'tests/fixtures/carousel-interaction/app/admin/**'
+      - 'tests/fixtures/carousel-interaction/app/mentor/**'
+      - 'tests/fixtures/carousel-interaction/app/dashboard/**'
       - '.github/workflows/dashboard-shared-verify.yml'
 
 jobs:
@@ -53,3 +57,9 @@ jobs:
         run: |
           rm -rf .next
           pnpm build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Dashboard browser verification
+        env:
+          TEST_BASE_URL: http://localhost:3000
+        run: pnpm exec playwright test tests/browser/dashboard-shared-navigation.spec.ts
