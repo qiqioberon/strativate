@@ -1,6 +1,13 @@
-export function destinationFor(profile: { role: string; mentor_setup_completed_at?: string | null }, mentee: { onboarding_completed_at: string | null } | null): string {
+export function destinationFor(
+  profile: { role: string; mentor_setup_completed_at?: string | null },
+  mentee: { onboarding_completed_at: string | null } | null,
+  mentor?: { is_active: boolean } | null,
+): string {
   if (profile.role === 'admin') return '/admin'
-  if (profile.role === 'mentor') return profile.mentor_setup_completed_at ? '/mentor/dashboard' : '/auth/setup'
+  if (profile.role === 'mentor') {
+    if (mentor?.is_active === false) return '/auth/inactive'
+    return profile.mentor_setup_completed_at ? '/mentor/dashboard' : '/auth/setup'
+  }
   if (profile.role === 'mentee') return mentee?.onboarding_completed_at ? '/dashboard' : '/onboarding'
   return '/auth/error'
 }
