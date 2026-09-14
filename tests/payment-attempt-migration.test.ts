@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
-const migrationPath = 'supabase/migrations/202609140006_midtrans_payment_attempts.sql'
+const migrationPath = 'supabase/migrations/202609140007_midtrans_payment_attempts.sql'
 
-test('payment attempts are server-owned and separate from Orders', () => {
+test('payment attempts follow shared commerce and are server-owned', () => {
+  assert.equal(existsSync('supabase/migrations/202609140006_shared_commerce.sql'), true)
   assert.equal(existsSync(migrationPath), true)
   const sql = readFileSync(migrationPath, 'utf8')
   assert.match(sql, /create table public\.payment_attempts/i)
