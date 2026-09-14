@@ -120,7 +120,7 @@ function sessionLabel(status: string) {
 function Overview({ name, open, sessions, products, orders, cart, digitalProductsEnabled }: { name: string; open: (section: Section) => void; sessions: PrivateMentoringSessionView[]; products: OwnedDigitalProductView[]; orders: OrderWithItems[]; cart: ActiveCart; digitalProductsEnabled: boolean }) {
   const awaitingFocus = sessions.filter(session => session.status === 'awaiting_focus').length
   const pendingPayments = orders.filter(order => order.status === 'pending_payment').length
-  const nextSession = sessions.filter(session => session.scheduledStartAt && new Date(session.scheduledStartAt).getTime() >= Date.now()).sort((a, b) => new Date(a.scheduledStartAt!).getTime() - new Date(b.scheduledStartAt!).getTime())[0]
+  const nextSession = sessions.filter(session => session.status === 'scheduled' && session.scheduledStartAt).sort((a, b) => new Date(a.scheduledStartAt!).getTime() - new Date(b.scheduledStartAt!).getTime())[0]
   const latestOrder = orders[0]
   return <>
     <Title eyebrow="Ruang belajar" title={`Selamat datang, ${name}.`} detail="Ringkasan ini mengambil data dari mentoring, produk digital, keranjang, dan pesanan yang sudah ada." />
