@@ -1,3 +1,109 @@
+.program-page .marketing-page-intro {
+  padding: clamp(74px, 7vw, 104px) 0 clamp(46px, 4vw, 60px);
+}
+
+.program-page .marketing-page-intro__grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+  align-items: center;
+  gap: clamp(46px, 5vw, 82px);
+}
+
+.program-page .marketing-page-intro h1 {
+  max-width: 850px;
+  font-size: clamp(3.55rem, 4.8vw, 5.1rem);
+  line-height: .91;
+}
+
+.program-page .marketing-page-intro__aside {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+  padding-bottom: 0;
+}
+
+.program-page .marketing-page-intro__aside > p {
+  max-width: 500px;
+}
+
+.program-page .marketing-page-intro__motif {
+  top: auto;
+  right: clamp(22px, 3vw, 60px);
+  bottom: 28px;
+  width: min(18vw, 210px);
+  opacity: .28;
+  transform: rotate(-6deg);
+}
+
+.program-page .program-intro-panel {
+  max-width: 520px;
+  gap: 18px;
+}
+
+.program-page .program-directory {
+  padding-top: clamp(30px, 3vw, 44px);
+}
+
+.program-page .program-journey {
+  grid-template-columns: 1fr;
+  gap: 22px;
+  margin-bottom: 30px;
+  padding: 22px 0 28px;
+}
+
+.program-page .program-journey__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.program-page .program-journey__heading > strong {
+  max-width: 420px;
+  font-size: 1.02rem;
+}
+
+.program-page .program-journey__steps {
+  gap: clamp(26px, 4vw, 64px);
+}
+
+.program-page .program-journey__steps::before {
+  top: 20px;
+  right: calc(33.333% - 20px);
+  left: 20px;
+}
+
+.program-page .program-journey__steps article {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 40px auto;
+  gap: 13px;
+  padding-right: 0;
+}
+
+.program-page .program-journey__steps article > span {
+  position: relative;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+}
+
+.program-page .program-journey__steps article > div {
+  max-width: 290px;
+}
+
+.program-page .program-journey__steps strong {
+  margin-top: 0;
+  font-size: .82rem;
+  line-height: 1.25;
+}
+
+.program-page .program-journey__steps p {
+  max-width: 270px;
+  margin-top: 7px;
+  font-size: .64rem;
+  line-height: 1.58;
+}
+
 .program-page .marketing-services-primary {
   align-items: stretch;
 }
@@ -72,21 +178,96 @@
   font-size: .58rem;
 }
 
-.program-page .program-journey__steps strong {
-  font-size: .76rem;
-}
-
-.program-page .program-journey__steps p {
-  font-size: .61rem;
-}
-
 @media (max-width: 1080px) {
+  .program-page .marketing-page-intro__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(330px, .82fr);
+    gap: 42px;
+  }
+
+  .program-page .marketing-page-intro h1 {
+    font-size: clamp(3.3rem, 6vw, 4.5rem);
+  }
+
+  .program-page .marketing-page-intro__motif {
+    width: 160px;
+    opacity: .2;
+  }
+
   .program-page .marketing-services-supporting > .marketing-service-card {
     flex-basis: calc((100% - 12px) / 2);
   }
 }
 
+@media (max-width: 880px) {
+  .program-page .marketing-page-intro {
+    padding-bottom: 44px;
+  }
+
+  .program-page .marketing-page-intro__grid {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 34px;
+  }
+
+  .program-page .marketing-page-intro h1 {
+    max-width: 720px;
+  }
+
+  .program-page .marketing-page-intro__aside {
+    max-width: 620px;
+  }
+
+  .program-page .marketing-page-intro__motif {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
+  .program-page .program-directory {
+    padding-top: 26px;
+  }
+
+  .program-page .program-journey {
+    gap: 20px;
+    padding-block: 20px 24px;
+  }
+
+  .program-page .program-journey__heading {
+    display: grid;
+    gap: 8px;
+  }
+
+  .program-page .program-journey__steps {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .program-page .program-journey__steps::before {
+    top: 20px;
+    right: auto;
+    bottom: 20px;
+    left: 20px;
+    width: 1px;
+    height: auto;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+
+  .program-page .program-directory.is-visible .program-journey__steps::before {
+    transform: scaleY(1);
+  }
+
+  .program-page .program-journey__steps article {
+    grid-template-columns: 40px 1fr;
+    grid-template-rows: auto;
+    gap: 13px;
+  }
+
+  .program-page .program-journey__steps article > div {
+    max-width: none;
+    padding-top: 2px;
+  }
+
   .program-page .marketing-service-card--primary,
   .program-page .marketing-service-card--secondary,
   .program-page .marketing-service-card--compact {
