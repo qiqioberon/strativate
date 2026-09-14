@@ -87,7 +87,7 @@ test('availability validation permits adjacent ranges and grouping includes empt
 test('persisted availability rows round-trip into editable minute values', () => {
   assert.deepEqual(availabilityRulesToDraft([
     {
-      id: 'rule-1', mentor_id: 'mentor-id', day_of_week: 3,
+      id: 'rule-1', mentor_id: 'mentor-id', week_start_date: '2026-09-14', day_of_week: 3,
       start_time: '18:00:00', end_time: '21:00:00',
       created_at: '2026-09-13T00:00:00Z', updated_at: '2026-09-13T00:00:00Z',
     },
@@ -115,16 +115,17 @@ test('admin mentor rows expose honest identity, tier, and setup labels', () => {
   const mentor: ManagedMentor = {
     user_id: 'mentor-id', email: 'mentor@example.test', first_name: 'Navira', last_name: 'Putri',
     username: 'navira', avatar_url: null, tier_id: null, tier_code: null, tier_name: null,
-    timezone: 'Asia/Jakarta', mentor_setup_completed_at: null, created_at: '2026-09-13T00:00:00Z',
-    availability_configured: false,
+    timezone: 'Asia/Jakarta', is_active: true, mentor_setup_completed_at: null,
+    created_at: '2026-09-13T00:00:00Z', availability_configured: false,
+    availability_current_week_configured: false, availability_next_week_configured: false,
   }
   assert.equal(managedMentorName(mentor), 'Navira Putri')
   assert.equal(managedMentorTier(mentor), 'Tier belum ditentukan')
-  assert.deepEqual(managedMentorSetup(mentor), { label: 'Menunggu pengaturan akun', tone: 'pending' })
+  assert.deepEqual(managedMentorSetup(mentor), { label: 'Belum selesai', tone: 'pending' })
   assert.equal(managedMentorName({ ...mentor, first_name: null, last_name: null }), 'navira')
   assert.equal(managedMentorName({ ...mentor, first_name: null, last_name: null, username: null }), 'mentor@example.test')
   assert.equal(managedMentorTier({ ...mentor, tier_name: 'Top Student' }), 'Top Student')
   assert.deepEqual(managedMentorSetup({ ...mentor, mentor_setup_completed_at: '2026-09-13T01:00:00Z' }), {
-    label: 'Aktif', tone: 'active',
+    label: 'Selesai', tone: 'active',
   })
 })
