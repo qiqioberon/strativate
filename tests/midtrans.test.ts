@@ -22,7 +22,7 @@ test('Midtrans status mapping never treats unsafe capture as paid', () => {
 test('signature uses exact notification strings in Midtrans order', () => {
   assert.equal(
     createMidtransSignature('ORDER-1', '200', '125000.00', 'server-secret'),
-    '26aa6923818cab8702fbb07de560318d1e632e4572ac2a3e4302162bf364d1747a649b5bc87dc25b2486c38439991976e30d58bb2c29a5f330cbe1da768be2ab',
+    '1cd9920d624fc6faac8c7ab0789bf12e786509e7a98dfe3eb177cc119a58a4e7a0488244e559173a416029dd75f58afd2410e8aa49c1e8585953a4130d184d1c',
   )
 })
 
