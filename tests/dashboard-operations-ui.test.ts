@@ -48,7 +48,7 @@ test('order details, reports, cart links, mentoring sessions, and institutions u
   assert.match(institutions, /TablePagination/)
   assert.match(institutions, /Plus/)
 
-  const sessions = read('components/admin/private-mentoring-session-management.tsx')
+  const sessions = read('components/admin/private-mentoring-enrollment-management.tsx')
   assert.match(sessions, /Session Information/)
   assert.match(sessions, /Mentor Assignment/)
   assert.match(sessions, /Schedule/)
