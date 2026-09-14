@@ -1,0 +1,91 @@
+.pagination {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pages {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pageButton {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #e0e4e7;
+  border-radius: 9px;
+  color: #56616a;
+  background: #fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: #f0bd95;
+  background: #fff8f2;
+}
+
+.activePage {
+  border-color: #ff7a00;
+  color: #fff;
+  background: #ff7a00;
+}
+
+.pageButton:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.ellipsis {
+  display: inline-grid;
+  min-width: 24px;
+  height: 34px;
+  place-items: center;
+  color: #8a949d;
+  font-size: 11px;
+}
+
+.edgeButton {
+  min-height: 34px !important;
+  padding: 7px 10px !important;
+  font-size: 9px !important;
+}
+
+.summary {
+  margin-left: auto;
+  color: #7a848d;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .pagination {
+    align-items: stretch;
+  }
+
+  .pages {
+    order: 3;
+    width: 100%;
+  }
+
+  .edgeButton {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+
+  .summary {
+    order: 4;
+    width: 100%;
+    margin-left: 0;
+  }
+}

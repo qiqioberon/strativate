@@ -20,6 +20,16 @@ test('mentor accounts render as a semantic data table with the real management c
   assert.doesNotMatch(management, /mentor-account-row-responsive/)
 })
 
+test('mentor listing uses exact filtered count and numbered pagination', () => {
+  const management = readFileSync(managementPath, 'utf8')
+
+  assert.match(management, /rpc\('count_managed_mentors'/)
+  assert.match(management, /const \[listResult, countResult\] = await Promise\.all/)
+  assert.match(management, /<TablePagination/)
+  assert.match(management, /totalItems=\{totalMentors\}/)
+  assert.match(management, /label="Pagination mentor"/)
+})
+
 test('Kelola opens mentor detail in a native modal dialog instead of an inline detail section', () => {
   const management = readFileSync(managementPath, 'utf8')
 
@@ -58,14 +68,12 @@ test('mentor table and modal own responsive overflow containment', () => {
   assert.match(modalStyles, /\.dialog::backdrop/)
 })
 
-test('mentor invitation and account pagination behavior remains reachable', () => {
+test('mentor invitation flow and reload remain reachable', () => {
   const management = readFileSync(managementPath, 'utf8')
   const invitations = readFileSync('components/admin/mentor-invitations.tsx', 'utf8')
 
   assert.match(management, /<MentorInviteForm/)
   assert.match(management, /<MentorInvitations/)
-  assert.match(management, />Sebelumnya<\/button>/)
-  assert.match(management, />Berikutnya/)
   assert.match(management, />Muat ulang<\/button>/)
   assert.match(invitations, />Sebelumnya<\/button>/)
   assert.match(invitations, />Berikutnya/)

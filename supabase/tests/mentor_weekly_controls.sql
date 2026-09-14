@@ -52,12 +52,26 @@ select test_mentor_weekly.assert(
     where user_id = '83000000-0000-0000-0000-000000000002' and is_active = false),
   'admin list filters by actual account status'
 );
+select test_mentor_weekly.assert(
+  (select email = 'mentor@mentor-weekly.test' from public.list_managed_mentors(0, '', null, 'inactive', 'all')
+    where user_id = '83000000-0000-0000-0000-000000000002'),
+  'managed mentor listing returns auth email through its declared text contract'
+);
+select test_mentor_weekly.assert(
+  public.count_managed_mentors('', null, 'inactive', 'all') = 1,
+  'admin can count the same filtered managed mentor result set for pagination'
+);
 
 select set_config('request.jwt.claim.sub', '83000000-0000-0000-0000-000000000002', true);
 select test_mentor_weekly.denied(
   $$select public.set_mentor_active('83000000-0000-0000-0000-000000000002', true)$$,
   '42501',
   'mentor cannot reactivate own account'
+);
+select test_mentor_weekly.denied(
+  $$select public.count_managed_mentors('', null, 'all', 'all')$$,
+  '42501',
+  'mentor cannot count managed mentor accounts'
 );
 
 select set_config('request.jwt.claim.sub', '83000000-0000-0000-0000-000000000001', true);
