@@ -10,6 +10,8 @@ const originalFetch = globalThis.fetch
 const originalEnvironment = process.env.MIDTRANS_ENV
 const originalServerKey = process.env.MIDTRANS_SERVER_KEY
 
+type CapturedRequest = { input: RequestInfo | URL; init?: RequestInit }
+
 afterEach(() => {
   globalThis.fetch = originalFetch
   if (originalEnvironment === undefined) delete process.env.MIDTRANS_ENV
@@ -47,19 +49,21 @@ test('create Snap uses sandbox URL, Basic Auth, trusted totals, safe item names,
   configure('sandbox')
   const input = snapInput()
   const originalName = input.items[0].name
-  let request: { input: RequestInfo | URL; init?: RequestInit } | null = null
+  const requests: CapturedRequest[] = []
   globalThis.fetch = (async (fetchInput, init) => {
-    request = { input: fetchInput, init }
+    requests.push({ input: fetchInput, init })
     return new Response(JSON.stringify({ token: 'snap-token' }), { status: 201 })
   }) as typeof fetch
 
   const result = await createMidtransSnapTransaction(input)
+  const request = requests[0]
+  assert.ok(request)
 
   assert.deepEqual(result, { token: 'snap-token' })
-  assert.equal(String(request?.input), 'https://app.sandbox.midtrans.com/snap/v1/transactions')
-  assert.equal(new Headers(request?.init?.headers).get('Authorization'), `Basic ${Buffer.from('server-secret:').toString('base64')}`)
-  assert.ok(request?.init?.signal instanceof AbortSignal)
-  const body = JSON.parse(String(request?.init?.body)) as Record<string, unknown>
+  assert.equal(String(request.input), 'https://app.sandbox.midtrans.com/snap/v1/transactions')
+  assert.equal(new Headers(request.init?.headers).get('Authorization'), `Basic ${Buffer.from('server-secret:').toString('base64')}`)
+  assert.ok(request.init?.signal instanceof AbortSignal)
+  const body = JSON.parse(String(request.init?.body)) as Record<string, unknown>
   assert.deepEqual(body.transaction_details, { order_id: 'STV-ORDER-1', gross_amount: 125000 })
   assert.deepEqual(body.page_expiry, { duration: 24, unit: 'hour' })
   const item = (body.item_details as Array<{ name: string; price: number; quantity: number }>)[0]
@@ -138,9 +142,9 @@ test('create Snap rejects provider 4xx, 5xx, malformed JSON, blank token, and ne
 
 test('Get Status validates provider shape and uses the same trusted status mapping', async () => {
   configure('sandbox')
-  let request: { input: RequestInfo | URL; init?: RequestInit } | null = null
+  const requests: CapturedRequest[] = []
   globalThis.fetch = (async (fetchInput, init) => {
-    request = { input: fetchInput, init }
+    requests.push({ input: fetchInput, init })
     return new Response(JSON.stringify({
       order_id: 'STV-ORDER-1',
       status_code: '200',
@@ -152,9 +156,11 @@ test('Get Status validates provider shape and uses the same trusted status mappi
   }) as typeof fetch
 
   const status = await getMidtransTransactionStatus('STV-ORDER-1')
-  assert.equal(String(request?.input), 'https://api.sandbox.midtrans.com/v2/STV-ORDER-1/status')
-  assert.equal(new Headers(request?.init?.headers).get('Authorization'), `Basic ${Buffer.from('server-secret:').toString('base64')}`)
-  assert.ok(request?.init?.signal instanceof AbortSignal)
+  const request = requests[0]
+  assert.ok(request)
+  assert.equal(String(request.input), 'https://api.sandbox.midtrans.com/v2/STV-ORDER-1/status')
+  assert.equal(new Headers(request.init?.headers).get('Authorization'), `Basic ${Buffer.from('server-secret:').toString('base64')}`)
+  assert.ok(request.init?.signal instanceof AbortSignal)
   assert.equal(status.normalizedStatus, 'paid')
   assert.equal(status.transactionId, 'provider-tx-1')
 })
