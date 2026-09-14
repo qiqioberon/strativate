@@ -28,3 +28,25 @@ test('Digital Product controller owns Supabase CRUD and reuses CatalogManagement
   assert.match(manager, /digital-product-edit-mode/)
   assert.doesNotMatch(shell, /createClient|digital_products|DIGITAL_PRODUCT_IMAGE_BUCKET/)
 })
+
+test('Digital Product zero state is a dedicated onboarding surface instead of an empty list/editor shell', () => {
+  const manager = readFileSync('components/admin/digital-product-management.tsx', 'utf8')
+
+  assert.match(manager, /showDedicatedEmptyState/)
+  assert.match(manager, /data-testid="digital-product-empty-state"/)
+  assert.match(manager, /Belum ada Digital Product/)
+  assert.match(manager, /Buat Digital Product/)
+  assert.match(manager, /Storefront belum aktif/)
+})
+
+test('CatalogManagement supports Digital Product-specific navigator wording without owning domain behavior', () => {
+  const shell = readFileSync('components/admin/catalog-management.tsx', 'utf8')
+
+  assert.match(shell, /listLabel\?: string/)
+  assert.match(shell, /itemNoun\?: string/)
+  assert.match(shell, /searchLabel\?: string/)
+  assert.match(shell, /searchPlaceholder\?: string/)
+  assert.match(shell, /listLabel = 'Semua item'/)
+  assert.match(shell, /itemNoun = 'item'/)
+  assert.doesNotMatch(shell, /createClient|digital_products|DIGITAL_PRODUCT_IMAGE_BUCKET/)
+})
