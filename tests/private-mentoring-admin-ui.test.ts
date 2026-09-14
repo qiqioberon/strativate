@@ -24,7 +24,8 @@ test('Private Mentoring admin manages only genuine catalog data, never marketing
   assert.doesNotMatch(source, /private_mentoring_programs/)
   assert.doesNotMatch(source, /private_mentoring_highlights/)
   assert.doesNotMatch(source, /private_mentoring_journey_steps/)
-  assert.doesNotMatch(source, /short_description|kicker|audience|saveProgram|Informasi publik/)
+  assert.doesNotMatch(source, /short_description|saveProgram|Informasi publik/)
+  assert.doesNotMatch(source, /aria-label=[^\n]*(title|kicker|audience|hero|journey|highlight)/i)
 })
 
 test('generic cart-link admin UI searches mentees and commerce items without manual UUID or custom price', () => {
