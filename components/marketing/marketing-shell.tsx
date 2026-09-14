@@ -16,7 +16,7 @@ export async function MarketingShell({
   children: ReactNode
   digitalProductsEnabled?: boolean
 }) {
-  const account = digitalProductsEnabled ? await getAccount() : null
+  const account = await getAccount()
   const showCart = Boolean(
     digitalProductsEnabled
     && account?.profile.role === 'mentee'
@@ -25,7 +25,11 @@ export async function MarketingShell({
 
   return (
     <div className="marketing-site">
-      <SiteHeader navigation={getMarketingNavigation(digitalProductsEnabled)} showCart={showCart} />
+      <SiteHeader
+        navigation={getMarketingNavigation(digitalProductsEnabled)}
+        showCart={showCart}
+        accountHref={account?.destination ?? null}
+      />
       {children}
       <SiteFooter />
       <WhatsAppCta />
