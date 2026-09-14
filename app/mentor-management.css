@@ -33,11 +33,23 @@
   min-width: 0;
 }
 
+.mentor-management-root .mentor-section-heading > div {
+  display: grid;
+  gap: 6px;
+}
+
+.mentor-management-root .mentor-section-heading > div > p:last-child {
+  max-width: 650px;
+  color: #707982;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 .mentor-management-root .mentor-invite-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr);
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
   min-width: 0;
 }
 
@@ -46,8 +58,9 @@
   min-width: 0;
 }
 
-.mentor-management-root .mentor-invite-form,
+.mentor-management-root .mentor-invite-pane,
 .mentor-management-root .mentor-invitations {
+  height: 100%;
   min-width: 0;
   margin: 0;
   padding: 20px;
@@ -56,42 +69,64 @@
   background: #fafbfc;
 }
 
-.mentor-management-root .mentor-invite-form {
+.mentor-management-root .mentor-invite-pane {
   display: grid;
-  gap: 14px;
+  align-content: start;
+  gap: 18px;
 }
 
-.mentor-management-root .mentor-invite-fields {
-  grid-template-columns: minmax(0, 1.4fr) minmax(200px, .6fr);
-  gap: 12px;
-}
-
-.mentor-management-root .mentor-invite-form > .button {
-  min-width: 180px;
-  justify-self: start;
-}
-
-.mentor-management-root .mentor-invitations {
-  display: grid;
-  gap: 14px;
-}
-
+.mentor-management-root .mentor-pane-heading,
 .mentor-management-root .mentor-invitation-heading {
   display: grid;
   gap: 6px;
 }
 
+.mentor-management-root .mentor-pane-heading h3,
 .mentor-management-root .mentor-invitation-heading h3 {
   margin: 0;
   font-size: 16px;
   letter-spacing: -.03em;
 }
 
+.mentor-management-root .mentor-pane-heading p,
 .mentor-management-root .mentor-invitation-heading p {
   margin: 0;
   color: #707982;
-  font-size: 10px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.mentor-management-root .mentor-invite-form {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.mentor-management-root .mentor-invite-fields {
+  grid-template-columns: minmax(0, 1.35fr) minmax(190px, .65fr);
+  gap: 12px;
+}
+
+.mentor-management-root .mentor-invite-form input,
+.mentor-management-root .mentor-invite-form select {
+  min-height: 40px;
+}
+
+.mentor-management-root .mentor-invite-form > .button {
+  min-width: 164px;
+  min-height: 40px;
+  justify-self: start;
+  padding: 9px 18px;
+}
+
+.mentor-management-root .mentor-invitations {
+  display: grid;
+  align-content: start;
+  gap: 14px;
 }
 
 .mentor-management-root .mentor-invitation-list {
@@ -103,28 +138,28 @@
 .mentor-management-root .mentor-invitation-list > p {
   padding: 14px 0;
   color: #707982;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .mentor-management-root .mentor-invitations .admin-record {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   padding: 14px 0;
   border-top: 1px solid #e8ebee;
 }
 
-.mentor-management-root .mentor-invitations .admin-record > div {
+.mentor-management-root .mentor-invitations .admin-record > div:first-child {
   display: grid;
   min-width: 0;
-  gap: 3px;
+  gap: 4px;
 }
 
 .mentor-management-root .mentor-invitations .admin-record small {
   color: #7b858d;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.5;
 }
 
@@ -134,9 +169,30 @@
   font-size: 11px;
 }
 
-.mentor-management-root .mentor-invitations .admin-record > .button {
-  align-self: start;
-  padding: 9px 12px;
+.mentor-management-root .mentor-invitation-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 190px;
+}
+
+.mentor-management-root .mentor-invitation-status-pill,
+.mentor-management-root .mentor-account-status-pill {
+  min-height: 28px;
+  max-width: 100%;
+  padding: 6px 10px;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: left;
+}
+
+.mentor-management-root .mentor-invitation-delete-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
@@ -145,15 +201,34 @@
   background: #fbe9ea;
 }
 
-.mentor-management-root .mentor-invitation-pagination {
+.mentor-management-root .mentor-pagination-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding-top: 2px;
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid #e8ebee;
 }
 
-.mentor-management-root .mentor-invitation-pagination .button {
-  padding: 9px 12px;
+.mentor-management-root .mentor-pagination-actions .button {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+
+.mentor-management-root .mentor-pagination-reload {
+  min-height: 36px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.mentor-management-root .mentor-pagination-actions button:disabled {
+  cursor: default;
+  opacity: .5;
+  transform: none;
+  box-shadow: none;
 }
 
 .mentor-management-root .mentor-management-filter-surface {
@@ -172,8 +247,17 @@
   min-height: 40px;
 }
 
-.mentor-management-root .mentor-management-filter-surface > label {
+.mentor-management-root .mentor-management-filter-surface .search-field input {
+  font-size: 11px;
+}
+
+.mentor-management-root .mentor-management-filter-surface > label:not(.search-field),
+.mentor-management-root .mentor-account-row-responsive .mentor-tier-control {
   min-width: 0;
+  gap: 6px;
+  color: #68727d;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .mentor-management-root .mentor-management-filter-surface select,
@@ -181,6 +265,9 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 11px;
 }
 
 .mentor-management-root .mentor-account-list-surface {
@@ -192,9 +279,9 @@
 
 .mentor-management-root .mentor-account-row-responsive {
   display: grid;
-  grid-template-columns: minmax(230px, 1.55fr) minmax(160px, .85fr) minmax(120px, .65fr) minmax(120px, .65fr) auto;
+  grid-template-columns: minmax(230px, 1.5fr) minmax(160px, .85fr) minmax(125px, .65fr) minmax(135px, .7fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
   padding: 16px;
   border: 1px solid #e8ebee;
@@ -214,22 +301,34 @@
   max-width: 100%;
 }
 
-.mentor-management-root .mentor-account-status-pill {
-  max-width: 100%;
+.mentor-management-root .mentor-account-identity-responsive small {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.mentor-management-root .mentor-account-status-block {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 6px;
+}
+
+.mentor-management-root .mentor-account-status-block > span {
+  color: #68727d;
+  font-size: 11px;
+  font-weight: 700;
   line-height: 1.35;
-  white-space: normal;
-  text-align: left;
 }
 
 .mentor-management-root .mentor-account-manage-button {
-  align-self: center;
+  align-self: end;
   justify-self: end;
+  min-height: 38px;
+  padding: 8px 16px;
   white-space: nowrap;
 }
 
 .mentor-management-root .mentor-pagination-wrap {
-  flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: center;
 }
 
@@ -313,16 +412,16 @@
   }
 
   .mentor-management-root .mentor-account-row-responsive {
-    grid-template-columns: minmax(0, 1fr) minmax(160px, .7fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      'identity identity'
+      'identity manage'
       'tier tier'
-      'account availability'
-      'manage manage';
+      'account availability';
   }
 
   .mentor-management-root .mentor-account-manage-button {
-    justify-self: start;
+    align-self: center;
+    justify-self: end;
   }
 
   .mentor-management-root .mentor-detail-summary-responsive {
@@ -336,7 +435,7 @@
     gap: 18px;
   }
 
-  .mentor-management-root .mentor-invite-form,
+  .mentor-management-root .mentor-invite-pane,
   .mentor-management-root .mentor-invitations,
   .mentor-management-root .mentor-management-filter-surface,
   .mentor-management-root .mentor-account-row-responsive {
@@ -361,14 +460,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .mentor-management-root .mentor-invitations .admin-record > .status-pill,
-  .mentor-management-root .mentor-invitations .admin-record > .button {
-    justify-self: start;
-  }
-
-  .mentor-management-root .mentor-invitation-pagination .button,
-  .mentor-management-root .mentor-invitation-pagination .text-link {
-    width: 100%;
+  .mentor-management-root .mentor-invitation-record-actions {
+    justify-content: flex-start;
+    max-width: none;
   }
 
   .mentor-management-root .mentor-account-identity-responsive small {
@@ -389,13 +483,17 @@
   }
 
   .mentor-management-root .mentor-account-manage-button,
-  .mentor-management-root .mentor-pagination-wrap .button,
-  .mentor-management-root .mentor-pagination-wrap .text-link {
+  .mentor-management-root .mentor-pagination-actions .button,
+  .mentor-management-root .mentor-pagination-actions .text-link {
     width: 100%;
   }
 
-  .mentor-management-root .mentor-pagination-wrap {
-    justify-content: flex-start;
+  .mentor-management-root .mentor-account-manage-button {
+    justify-self: stretch;
+  }
+
+  .mentor-management-root .mentor-pagination-actions {
+    align-items: stretch;
   }
 
   .mentor-management-root .mentor-detail-summary-responsive {

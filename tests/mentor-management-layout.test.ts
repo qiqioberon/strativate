@@ -35,12 +35,37 @@ test('mentor account rows expose named responsive regions and overflow-safe iden
   assert.match(styles, /overflow-wrap:\s*anywhere/)
 })
 
-test('mentor invitation and account pagination have scoped wrapping hooks', () => {
+test('mentor invitation and account pagination share the compact action footer pattern', () => {
   const management = readFileSync(managementPath, 'utf8')
   const invitations = readFileSync(invitationsPath, 'utf8')
   const styles = readFileSync(stylesPath, 'utf8')
 
-  assert.match(management, /mentor-pagination-wrap/)
-  assert.match(invitations, /mentor-invitation-pagination/)
-  assert.match(styles, /\.mentor-management-root \.mentor-invitation-pagination\s*\{[^}]*flex-wrap:\s*wrap/)
+  assert.match(management, /mentor-pagination-actions/)
+  assert.match(invitations, /mentor-pagination-actions/)
+  assert.match(styles, /\.mentor-management-root \.mentor-pagination-actions\s*\{[^}]*flex-wrap:\s*wrap/)
+  assert.match(styles, /\.mentor-management-root \.mentor-pagination-reload/)
+})
+
+test('mentor management polish uses concise Indonesian copy', () => {
+  const management = readFileSync(managementPath, 'utf8')
+  const invitations = readFileSync(invitationsPath, 'utf8')
+
+  assert.match(management, /Manajemen Mentor/)
+  assert.match(management, /Undang mentor baru/)
+  assert.match(management, /Daftar akun mentor/)
+  assert.match(management, />Kelola<\/button>/)
+  assert.doesNotMatch(management, /Invite Mentor|Active mentor accounts|>Manage<\/button>/)
+  assert.match(invitations, />Sebelumnya<\/button>/)
+  assert.match(invitations, />Berikutnya/)
+  assert.match(invitations, />Muat ulang<\/button>/)
+  assert.doesNotMatch(invitations, /Undangan sebelumnya|Undangan berikutnya|Muat ulang undangan/)
+})
+
+test('mentor row metadata, status badges, and action expose readable sizing', () => {
+  const styles = readFileSync(stylesPath, 'utf8')
+
+  assert.match(styles, /\.mentor-management-root \.mentor-account-status-block > span\s*\{[^}]*font-size:\s*11px/)
+  assert.match(styles, /\.mentor-management-root \.mentor-account-status-pill\s*\{[\s\S]*?min-height:\s*28px/)
+  assert.match(styles, /\.mentor-management-root \.mentor-account-status-pill\s*\{[\s\S]*?padding:\s*6px 10px/)
+  assert.match(styles, /\.mentor-management-root \.mentor-account-manage-button\s*\{[^}]*min-height:\s*38px/)
 })
