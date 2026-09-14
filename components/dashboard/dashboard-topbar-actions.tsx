@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronDown, CircleUserRound, PencilLine } from 'lucide-react'
+import { Bell, ChevronDown, PencilLine } from 'lucide-react'
 import { useAccount } from '@/components/auth/account-provider'
 import { SignOut } from '@/components/auth/sign-out'
 import { displayName } from '@/lib/auth/rules'
