@@ -13,7 +13,13 @@ export const getAccount = cache(async () => {
     ? await supabase.from('mentee_profiles').select('*').eq('user_id', user.id).maybeSingle()
     : { data: null, error: null }
   if (menteeError) throw new Error('Progres pendaftaran belum dapat dimuat. Silakan coba lagi.')
-  return { user, profile, mentee, destination: destinationFor(profile, mentee) }
+  const { data: mentor, error: mentorError } = profile.role === 'mentor'
+    ? await supabase.from('mentor_profiles').select('*').eq('user_id', user.id).maybeSingle()
+    : { data: null, error: null }
+  if (mentorError || (profile.role === 'mentor' && !mentor)) {
+    throw new Error('Status akun mentor belum dapat dimuat. Hubungi administrator.')
+  }
+  return { user, profile, mentee, mentor, destination: destinationFor(profile, mentee, mentor) }
 })
 export async function requireAccount(destination?: string) {
   const account = await getAccount()
