@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildCommerceCsv, humanOrderTitle, type AdminCommerceOrder } from '../lib/admin/commerce-reporting.ts'
+import { buildCommerceCsv, humanOrderTitle, type AdminCommerceOrder } from '../lib/admin/commerce-reporting'
 
 test('humanOrderTitle uses first product and compact remainder', () => {
   assert.equal(humanOrderTitle(['Produk A', 'Produk B', 'Produk C']), 'Produk A +2 item lainnya')
