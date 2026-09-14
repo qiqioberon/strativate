@@ -1,0 +1,62 @@
+name: Phase 3 Migration Patch Helper
+
+on:
+  push:
+    branches:
+      - feat/phase-3-private-mentoring
+    paths:
+      - .github/workflows/phase3-migration-self-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/phase-3-private-mentoring
+          fetch-depth: 0
+      - name: Replace invalid composite INTO query
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('supabase/migrations/202609140009_phase3_private_mentoring.sql')
+          text = path.read_text()
+          old = """  select s.*, p.mentor_tier_id, p.duration_minutes
+            into v_session, v_required_tier, v_duration
+            from public.private_mentoring_sessions s
+            join public.private_mentoring_enrollments e on e.id=s.enrollment_id
+            join public.private_mentoring_packages p on p.id=e.package_id
+            where s.id=p_session_id
+            for update of s;
+            if not found then raise exception 'Private Mentoring session not found' using errcode = '22023'; end if;
+          """
+          new = """  select s.* into v_session
+            from public.private_mentoring_sessions s
+            where s.id=p_session_id
+            for update;
+            if not found then raise exception 'Private Mentoring session not found' using errcode = '22023'; end if;
+
+            select p.mentor_tier_id, p.duration_minutes into v_required_tier, v_duration
+            from public.private_mentoring_enrollments e
+            join public.private_mentoring_packages p on p.id=e.package_id
+            where e.id=v_session.enrollment_id;
+            if not found then raise exception 'Private Mentoring package entitlement is missing' using errcode = '23503'; end if;
+          """
+          if old not in text:
+              raise SystemExit('Expected migration block not found exactly')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+      - name: Commit executable migration
+        shell: bash
+        run: |
+          git config user.name "strativate-phase3-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add supabase/migrations/202609140009_phase3_private_mentoring.sql
+          git commit -m "fix: make private mentoring migration executable"
+          git push origin HEAD:feat/phase-3-private-mentoring
