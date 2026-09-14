@@ -30,7 +30,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
       - name: Enable pnpm
         run: corepack enable
       - name: Install dependencies
@@ -41,6 +40,16 @@ jobs:
         run: pnpm typecheck
       - name: Lint
         run: pnpm lint
+      - name: Runtime architecture checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE 'catalog_products|catalog_commercial_items|catalog_digital_product_details|public_catalog_|CatalogProduct|CatalogCommercialItem' app components lib scripts; then
+            echo 'Legacy Product Catalog runtime reference found.' >&2
+            exit 1
+          fi
+          grep -RIn 'digital_products' app components lib scripts supabase/migrations/202609140003_digital_product_domain.sql supabase/tests/digital_products.sql tests
+          grep -n 'digitalProducts: false' lib/features.ts
       - name: Build
         run: pnpm build
       - name: Database bootstrap and SQL tests
