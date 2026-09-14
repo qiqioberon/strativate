@@ -10,6 +10,7 @@ import { connectServicesToCatalog } from '@/lib/content/services'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 import './program-page.css'
+import './program-layout-fix.css'
 
 const journey = [
   { number: '01', title: 'Pilih kebutuhan', copy: 'Mulai dari target, tantangan, dan ritme persiapanmu.' },
