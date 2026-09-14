@@ -14,13 +14,19 @@ test('participant management renders profile records as a semantic table', () =>
   assert.doesNotMatch(participants, /className="admin-record"/)
 })
 
-test('participant search, Supabase listing, pagination, and reload remain available', () => {
+test('participant listing requests an exact total and renders numbered pagination', () => {
   assert.match(participants, /\.from\('profiles'\)/)
+  assert.match(participants, /\.select\('\*', \{ count: 'exact' \}\)/)
   assert.match(participants, /\.eq\('role', 'mentee'\)/)
+  assert.match(participants, /setTotalPeople\(nextTotal\)/)
+  assert.match(participants, /<TablePagination/)
+  assert.match(participants, /totalItems=\{totalPeople\}/)
+  assert.match(participants, /label="Pagination peserta"/)
+})
+
+test('participant current-page search and reload remain available', () => {
   assert.match(participants, /visiblePeople = people\.filter/)
   assert.match(participants, /Cari pada halaman ini/)
-  assert.match(participants, />Sebelumnya<\/button>/)
-  assert.match(participants, />Berikutnya/)
   assert.match(participants, />Muat ulang<\/button>/)
 })
 

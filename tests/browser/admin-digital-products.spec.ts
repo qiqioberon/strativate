@@ -55,7 +55,7 @@ async function openDigitalProducts(page: Page) {
   await expect(page.getByTestId('digital-product-management')).toBeVisible()
 }
 
-test('admin navigation renders a searchable Digital Product table and selected editor', async ({ page }) => {
+test('Digital Product table opens edit flow in a modal instead of an inline editor', async ({ page }) => {
   await mockDigitalProductBackend(page, [
     product('one', 'Business Case Handbook', 'business-case-handbook', 75000),
     product('two', 'Pitching Guide', 'pitching-guide', 50000),
@@ -64,35 +64,54 @@ test('admin navigation renders a searchable Digital Product table and selected e
 
   await expect(page.getByRole('heading', { name: 'Digital Products' })).toBeVisible()
   await expect(page.getByTestId('digital-product-table')).toBeVisible()
-  await expect(page.getByTestId('digital-product-table').getByRole('columnheader', { name: 'Slug' })).toBeVisible()
-  await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Business Case Handbook' })).toContainText('Rp75.000')
-  await expect(page.getByTestId('digital-product-edit-mode')).toContainText('Business Case Handbook')
+  await expect(page.getByTestId('digital-product-edit-mode')).toHaveCount(0)
+
+  const handbookRow = page.getByTestId('digital-product-row').filter({ hasText: 'Business Case Handbook' })
+  await expect(handbookRow).toContainText('Rp75.000')
+  await handbookRow.getByRole('button', { name: 'Kelola' }).click()
+  await expect(page.getByTestId('digital-product-dialog')).toBeVisible()
+  await expect(page.getByTestId('digital-product-edit-mode')).toBeVisible()
+  await expect(page.getByTestId('digital-product-dialog')).toContainText('Business Case Handbook')
+  await page.getByTestId('digital-product-dialog-close').click()
+  await expect(page.getByTestId('digital-product-dialog')).toHaveCount(0)
 
   const search = page.getByLabel('Cari produk')
   await search.fill('Pitching')
   await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Pitching Guide' })).toBeVisible()
   await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Business Case Handbook' })).toHaveCount(0)
-
-  const pitchingRow = page.getByTestId('digital-product-row').filter({ hasText: 'Pitching Guide' })
-  await pitchingRow.getByRole('button', { name: 'Kelola' }).click()
-  await expect(page.getByTestId('digital-product-edit-mode')).toContainText('Pitching Guide')
 })
 
-test('zero products use dedicated onboarding and the primary CTA opens create mode', async ({ page }) => {
+test('Digital Product table exposes numbered pagination', async ({ page }) => {
+  const products = Array.from({ length: 12 }, (_, index) => product(
+    `product-${index + 1}`,
+    `Product ${String(index + 1).padStart(2, '0')}`,
+    `product-${index + 1}`,
+    10000 + index,
+  ))
+  await mockDigitalProductBackend(page, products)
+  await openDigitalProducts(page)
+
+  await expect(page.getByRole('button', { name: 'Halaman 1' })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('button', { name: 'Halaman 2' })).toBeVisible()
+  await expect(page.getByTestId('digital-product-row')).toHaveCount(10)
+
+  await page.getByRole('button', { name: 'Halaman 2' }).click()
+  await expect(page.getByRole('button', { name: 'Halaman 2' })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByTestId('digital-product-row')).toHaveCount(2)
+  await expect(page.getByTestId('digital-product-row').filter({ hasText: 'Product 11' })).toBeVisible()
+})
+
+test('zero products use dedicated onboarding and the primary CTA opens create modal', async ({ page }) => {
   await mockDigitalProductBackend(page, [])
   await openDigitalProducts(page)
 
   const emptyState = page.getByTestId('digital-product-empty-state')
   await expect(emptyState).toBeVisible()
   await expect(emptyState.getByRole('heading', { name: 'Belum ada Digital Product' })).toBeVisible()
-  await expect(emptyState.getByRole('button', { name: 'Buat Digital Product' })).toBeVisible()
-  await expect(page.getByLabel('Cari produk')).toHaveCount(0)
-  await expect(page.getByTestId('digital-product-table')).toHaveCount(0)
-
   await emptyState.getByRole('button', { name: 'Buat Digital Product' }).click()
-  await expect(page.getByTestId('digital-product-create-mode')).toBeVisible()
-  await expect(emptyState).toHaveCount(0)
 
+  await expect(page.getByTestId('digital-product-dialog')).toBeVisible()
+  await expect(page.getByTestId('digital-product-create-mode')).toBeVisible()
   await page.getByTestId('digital-product-name-input').fill('Business Case Workbook')
   await expect(page.getByTestId('digital-product-slug-input')).toHaveValue('business-case-workbook')
   await page.getByTestId('digital-product-slug-input').fill('custom-workbook')
@@ -100,15 +119,20 @@ test('zero products use dedicated onboarding and the primary CTA opens create mo
   await expect(page.getByTestId('digital-product-slug-input')).toHaveValue('custom-workbook')
 })
 
-test('Digital Product table stays page-overflow safe at desktop, tablet, and mobile widths', async ({ page }) => {
+test('Digital Product table and modal stay page-overflow safe at desktop and mobile widths', async ({ page }) => {
   await mockDigitalProductBackend(page, [product('one', 'Business Case Handbook', 'business-case-handbook-with-a-long-slug', 75000)])
-  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.setViewportSize({ width: 1440, height: 900 })
   await openDigitalProducts(page)
 
-  for (const width of [1440, 1024, 768, 390]) {
-    await page.setViewportSize({ width, height: 1000 })
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport)
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
     await expect(page.getByTestId('digital-product-table-scroll')).toBeVisible()
+
+    await page.getByTestId('digital-product-row').getByRole('button', { name: 'Kelola' }).click()
+    await expect(page.getByTestId('digital-product-dialog')).toBeVisible()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+    await page.getByTestId('digital-product-dialog-close').click()
   }
 })
 

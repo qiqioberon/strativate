@@ -1,8 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { ImagePlus, PackageOpen, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { ImagePlus, PackageOpen, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { formError } from '@/lib/auth/errors'
 import {
@@ -20,9 +20,12 @@ import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
 import dataStyles from './data-management.module.css'
+import dialogStyles from './digital-product-dialog.module.css'
 import styles from './digital-product-management.module.css'
+import { TablePagination } from './table-pagination'
 
 const migrationName = '202609140003_digital_product_domain.sql'
+const PRODUCT_PAGE_SIZE = 10
 
 type Draft = {
   name: string
@@ -43,6 +46,7 @@ export function DigitalProductManagement() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [query, setQuery] = useState('')
+  const [productPage, setProductPage] = useState(0)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -56,6 +60,7 @@ export function DigitalProductManagement() {
   const [fieldErrors, setFieldErrors] = useState<DigitalProductDraftErrors>({})
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const dialogRef = useRef<HTMLDialogElement>(null)
 
   const selected = useMemo(
     () => products.find(product => product.id === selectedId) ?? null,
@@ -67,8 +72,13 @@ export function DigitalProductManagement() {
     if (!term) return products
     return products.filter(product => `${product.name} ${product.slug} ${product.description} ${product.price_amount}`.toLocaleLowerCase('id-ID').includes(term))
   }, [products, query])
+  const pagedProducts = useMemo(
+    () => filteredProducts.slice(productPage * PRODUCT_PAGE_SIZE, productPage * PRODUCT_PAGE_SIZE + PRODUCT_PAGE_SIZE),
+    [filteredProducts, productPage],
+  )
+  const editorOpen = creating || selectedId !== null
 
-  const load = useCallback(async (autoSelect = true) => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError('')
     setSetupRequired(false)
@@ -91,14 +101,17 @@ export function DigitalProductManagement() {
     } else {
       const next = data ?? []
       setProducts(next)
-      setSelectedId(current => current && next.some(product => product.id === current)
-        ? current
-        : autoSelect ? next[0]?.id ?? null : null)
+      setSelectedId(current => current && next.some(product => product.id === current) ? current : null)
     }
     setLoading(false)
   }, [supabase])
 
   useEffect(() => { void load() }, [load])
+
+  useEffect(() => {
+    const lastPage = Math.max(0, Math.ceil(filteredProducts.length / PRODUCT_PAGE_SIZE) - 1)
+    if (productPage > lastPage) setProductPage(lastPage)
+  }, [filteredProducts.length, productPage])
 
   useEffect(() => {
     if (creating || !selected) return
@@ -146,6 +159,26 @@ export function DigitalProductManagement() {
     return () => { cancelled = true }
   }, [creating, selectedImagePath, supabase])
 
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (editorOpen && !dialog.open) dialog.showModal()
+    if (!editorOpen && dialog.open) dialog.close()
+  }, [editorOpen])
+
+  useEffect(() => {
+    if (!editorOpen) return
+    const previousOverflow = document.body.style.overflow
+    const previousPaddingRight = document.body.style.paddingRight
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = 'hidden'
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.paddingRight = previousPaddingRight
+    }
+  }, [editorOpen])
+
   function beginCreate() {
     setCreating(true)
     setSelectedId(null)
@@ -167,23 +200,18 @@ export function DigitalProductManagement() {
     setNotice('')
   }
 
-  function cancelEdit() {
+  function closeEditor() {
+    if (busy) return
+    dialogRef.current?.close()
+  }
+
+  function resetEditorState() {
+    setCreating(false)
+    setSelectedId(null)
     setSelectedFile(null)
+    setStoredPreviewUrl(null)
     setFieldErrors({})
     setError('')
-    if (creating) {
-      setCreating(false)
-      setSelectedId(products[0]?.id ?? null)
-      return
-    }
-    if (selected) {
-      setDraft({
-        name: selected.name,
-        slug: selected.slug,
-        description: selected.description,
-        price: String(selected.price_amount),
-      })
-    }
   }
 
   function updateName(name: string) {
@@ -263,11 +291,11 @@ export function DigitalProductManagement() {
         if (cleanupError) cleanupWarning = ' Cover lama masih perlu ditinjau dan dihapus manual dari Storage.'
       }
 
-      setCreating(false)
       setSelectedFile(null)
       setSelectedId(authoritativeId)
       setNotice(`${editing ? 'Digital Product berhasil diperbarui.' : 'Digital Product berhasil dibuat.'}${cleanupWarning}`)
       await load()
+      setCreating(false)
     } catch (caught) {
       let cleanupWarning = ''
       if (uploadedPath && stage === 'database') {
@@ -282,11 +310,11 @@ export function DigitalProductManagement() {
             const { error: cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([oldImagePath])
             if (cleanupError) cleanupWarning = ' Cover lama masih perlu ditinjau dan dihapus manual dari Storage.'
           }
-          setCreating(false)
           setSelectedFile(null)
           setSelectedId(persisted.id)
           setNotice(`${editing ? 'Digital Product berhasil diperbarui.' : 'Digital Product berhasil dibuat.'}${cleanupWarning}`)
           await load()
+          setCreating(false)
           return
         }
 
@@ -333,7 +361,7 @@ export function DigitalProductManagement() {
       } else {
         setNotice('Digital Product berhasil dihapus.')
       }
-      await load(false)
+      await load()
     } catch (caught) {
       setError(formError(caught, 'Digital Product belum dapat dihapus. Periksa koneksi lalu coba lagi.'))
     } finally {
@@ -359,13 +387,6 @@ export function DigitalProductManagement() {
 
   const editor = (creating || selected) ? (
     <form className={styles.form} onSubmit={save} noValidate aria-busy={busy} data-testid={creating ? 'digital-product-create-mode' : 'digital-product-edit-mode'}>
-      <div className={styles.formHeader}>
-        <div>
-          <p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p>
-          <h2>{creating ? 'Buat Digital Product' : selected?.name}</h2>
-        </div>
-      </div>
-
       <section className={styles.formSection} aria-labelledby="digital-product-information-heading">
         <div className={styles.sectionHeading}>
           <h3 id="digital-product-information-heading">Informasi produk</h3>
@@ -429,20 +450,36 @@ export function DigitalProductManagement() {
 
       <div className={styles.formActions}>
         <button data-testid="digital-product-save-button" className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : creating ? 'Buat Digital Product' : 'Simpan perubahan'}</button>
-        <button type="button" className="button button-outline" onClick={cancelEdit} disabled={busy}>Batal</button>
+        <button type="button" className="button button-outline" onClick={closeEditor} disabled={busy}>Batal</button>
         {!creating && selected ? <button type="button" className={`button button-outline ${styles.deleteButton}`} onClick={() => void removeProduct(selected)} disabled={busy} data-testid="digital-product-delete-button"><Trash2 aria-hidden="true" /> Hapus</button> : null}
       </div>
       {error ? <p className={`${styles.feedback} ${styles.errorFeedback}`} role="alert" data-testid="digital-product-error">{error}</p> : null}
       {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
     </form>
-  ) : (
-    <div className={styles.stateCard} data-testid="digital-product-empty-editor">
-      <h3>Pilih Digital Product untuk mulai mengelola.</h3>
-      <p>Pilih produk dari tabel atau buat Digital Product baru.</p>
-      <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Digital Product baru</button>
-      {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
+  ) : null
+
+  const productDialog = editorOpen ? <dialog
+    ref={dialogRef}
+    className={dialogStyles.dialog}
+    aria-labelledby="digital-product-dialog-heading"
+    data-testid="digital-product-dialog"
+    onClose={resetEditorState}
+    onCancel={event => { if (busy) event.preventDefault() }}
+    onClick={event => {
+      if (event.target === event.currentTarget && !busy) event.currentTarget.close()
+    }}
+  >
+    <div className={dialogStyles.panel}>
+      <header className={dialogStyles.header}>
+        <div>
+          <p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p>
+          <h2 id="digital-product-dialog-heading">{creating ? 'Buat Digital Product' : selected?.name || 'Kelola Digital Product'}</h2>
+        </div>
+        <button type="button" className={`role-close ${dialogStyles.closeButton}`} onClick={closeEditor} disabled={busy} aria-label="Tutup editor Digital Product" data-testid="digital-product-dialog-close" autoFocus><X aria-hidden="true" /></button>
+      </header>
+      <div className={dialogStyles.body}>{editor}</div>
     </div>
-  )
+  </dialog> : null
 
   if (loading) {
     return (
@@ -503,15 +540,6 @@ export function DigitalProductManagement() {
     )
   }
 
-  if (creating && products.length === 0) {
-    return (
-      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
-        {pageHeader}
-        <div className={styles.singleEditor}>{editor}</div>
-      </section>
-    )
-  }
-
   return (
     <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
       {pageHeader}
@@ -531,7 +559,7 @@ export function DigitalProductManagement() {
             <span className={dataStyles.searchControl}><Search aria-hidden="true" /><input
               type="search"
               value={query}
-              onChange={event => setQuery(event.target.value)}
+              onChange={event => { setQuery(event.target.value); setProductPage(0) }}
               placeholder="Cari nama, slug, deskripsi, atau harga"
             /></span>
           </label>
@@ -550,7 +578,7 @@ export function DigitalProductManagement() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map(product => <tr key={product.id} data-selected={selectedId === product.id ? 'true' : undefined} data-testid="digital-product-row">
+              {pagedProducts.map(product => <tr key={product.id} data-testid="digital-product-row">
                 <td><div className={dataStyles.identityText}>
                   <strong className={dataStyles.primaryText}>{product.name}</strong>
                   <span className={dataStyles.descriptionText}>{product.description}</span>
@@ -564,9 +592,18 @@ export function DigitalProductManagement() {
             </tbody>
           </table>
         </div>}
+
+        <TablePagination
+          page={productPage}
+          pageSize={PRODUCT_PAGE_SIZE}
+          totalItems={filteredProducts.length}
+          onPageChange={setProductPage}
+          disabled={busy}
+          label="Pagination Digital Product"
+        />
       </div>
 
-      <div className={styles.singleEditor}>{editor}</div>
+      {productDialog}
     </section>
   )
 }

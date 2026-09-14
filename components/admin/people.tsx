@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, RefreshCw, Search, UsersRound } from 'lucide-react'
+import { RefreshCw, Search, UsersRound } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
 import { formError } from '@/lib/auth/errors'
@@ -9,9 +9,13 @@ import { displayLabel } from '@/lib/labels'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/supabase/database.types'
 import dataStyles from './data-management.module.css'
+import { TablePagination } from './table-pagination'
+
+const PAGE_SIZE = 25
 
 export function MenteeManagement() {
   const [people, setPeople] = useState<Profile[]>([])
+  const [totalPeople, setTotalPeople] = useState(0)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -21,9 +25,23 @@ export function MenteeManagement() {
     setLoading(true)
     setError('')
     try {
-      const { data, error } = await createClient().from('profiles').select('*').eq('role', 'mentee').order('created_at', { ascending: false }).range(page * 25, page * 25 + 24)
+      const { data, count, error } = await createClient()
+        .from('profiles')
+        .select('*', { count: 'exact' })
+        .eq('role', 'mentee')
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
       if (error) throw error
+
+      const nextTotal = count ?? 0
+      const lastPage = Math.max(0, Math.ceil(nextTotal / PAGE_SIZE) - 1)
+      if (page > lastPage) {
+        setPage(lastPage)
+        return
+      }
+
       setPeople(data || [])
+      setTotalPeople(nextTotal)
     } catch (error) {
       setError(formError(error))
     } finally {
@@ -44,7 +62,7 @@ export function MenteeManagement() {
         <h2>Peserta</h2>
         <p>Cari dan pantau akun peserta dalam tampilan data yang lebih mudah dipindai.</p>
       </div>
-      <span className={dataStyles.countPill}><UsersRound aria-hidden="true" />{people.length} pada halaman ini</span>
+      <span className={dataStyles.countPill}><UsersRound aria-hidden="true" />{totalPeople} peserta</span>
     </header>
 
     <div className={dataStyles.surface}>
@@ -101,9 +119,15 @@ export function MenteeManagement() {
         </table>
       </div>}
 
+      <TablePagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalItems={totalPeople}
+        onPageChange={setPage}
+        disabled={loading}
+        label="Pagination peserta"
+      />
       <div className={dataStyles.pagination}>
-        <button type="button" className="button button-outline" onClick={() => setPage(value => value - 1)} disabled={page === 0 || loading}><ChevronLeft size={14} aria-hidden="true" />Sebelumnya</button>
-        <button type="button" className="button button-outline" onClick={() => setPage(value => value + 1)} disabled={people.length < 25 || loading}>Berikutnya<ChevronRight size={14} aria-hidden="true" /></button>
         <button type="button" className={`text-link ${dataStyles.reload}`} onClick={() => void load()} disabled={loading}><RefreshCw size={14} aria-hidden="true" />Muat ulang</button>
       </div>
     </div>

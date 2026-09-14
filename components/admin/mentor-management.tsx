@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Power, RefreshCw, Search, Trash2, UserRoundCheck, X } from 'lucide-react'
+import { Power, RefreshCw, Search, Trash2, UserRoundCheck, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
@@ -19,9 +19,13 @@ import mentorStyles from './mentor-management.module.css'
 import { MentorInviteForm } from './mentor-invite-form'
 import { MentorInvitations } from './mentor-invitations'
 import { MentorTierSelect } from './mentor-tier-select'
+import { TablePagination } from './table-pagination'
+
+const PAGE_SIZE = 25
 
 export function MentorManagement() {
   const [mentors, setMentors] = useState<ManagedMentor[]>([])
+  const [totalMentors, setTotalMentors] = useState(0)
   const [tiers, setTiers] = useState<MentorTier[]>([])
   const [query, setQuery] = useState('')
   const [tierFilter, setTierFilter] = useState('')
@@ -40,19 +44,32 @@ export function MentorManagement() {
     setLoading(true)
     setError('')
     try {
-      const { data, error } = await createClient().rpc('list_managed_mentors', {
-        p_offset: page * 25,
+      const supabase = createClient()
+      const filters = {
         p_query: query.trim(),
         p_tier_id: tierFilter || null,
         p_account_status: accountFilter,
         p_setup_status: setupFilter,
-      })
-      if (error) throw error
-      if (!data?.length && page > 0) {
-        setPage(value => value - 1)
+      }
+      const [listResult, countResult] = await Promise.all([
+        supabase.rpc('list_managed_mentors', {
+          p_offset: page * PAGE_SIZE,
+          ...filters,
+        }),
+        supabase.rpc('count_managed_mentors', filters),
+      ])
+      if (listResult.error) throw listResult.error
+      if (countResult.error) throw countResult.error
+
+      const nextTotal = Number(countResult.data ?? 0)
+      const lastPage = Math.max(0, Math.ceil(nextTotal / PAGE_SIZE) - 1)
+      if (page > lastPage) {
+        setPage(lastPage)
         return
       }
-      setMentors(data || [])
+
+      setMentors(listResult.data || [])
+      setTotalMentors(nextTotal)
     } catch (error) {
       setError(formError(error, 'Daftar mentor belum dapat dimuat. Coba lagi.'))
     } finally {
@@ -114,6 +131,7 @@ export function MentorManagement() {
       : record))
     setMessage(`Tier ${mentor ? managedMentorName(mentor) : 'mentor'} telah diperbarui.`)
     setError('')
+    if (tierFilter && tierFilter !== tierId) void loadMentors()
   }
 
   async function setMentorActive(mentor: ManagedMentor, isActive: boolean) {
@@ -130,6 +148,7 @@ export function MentorManagement() {
         ? { ...record, is_active: isActive }
         : record))
       setMessage(`Akun ${managedMentorName(mentor)} telah ${isActive ? 'diaktifkan' : 'dinonaktifkan'}.`)
+      if (accountFilter !== 'all') await loadMentors()
     } catch (error) {
       setError(formError(error, 'Status akun mentor belum dapat diperbarui.'))
     } finally {
@@ -152,10 +171,13 @@ export function MentorManagement() {
         p_mentor_id: mentor.user_id,
       })
       if (error) throw error
+      const remainingOnPage = mentors.length - 1
       setMentors(records => records.filter(record => record.user_id !== mentor.user_id))
+      setTotalMentors(value => Math.max(0, value - 1))
       setSelectedId(null)
       setInvitationRefresh(value => value + 1)
       setMessage(`Akun mentor ${name} telah dihapus permanen.`)
+      if (remainingOnPage === 0 && page > 0) setPage(value => value - 1)
     } catch (error) {
       setError(formError(error, 'Akun mentor belum dapat dihapus. Tidak ada perubahan yang diklaim berhasil.'))
     } finally {
@@ -170,7 +192,7 @@ export function MentorManagement() {
         <h2>Manajemen Mentor</h2>
         <p>Kelola akun, tier operasional, dan ketersediaan mentor dari satu tempat.</p>
       </div>
-      <span className={dataStyles.countPill}><UserRoundCheck aria-hidden="true" />{mentors.length} pada halaman ini</span>
+      <span className={dataStyles.countPill}><UserRoundCheck aria-hidden="true" />{totalMentors} mentor</span>
     </header>
 
     <section className="role-card mentor-management-section mentor-management-surface" aria-labelledby="invite-mentor-heading">
@@ -282,9 +304,15 @@ export function MentorManagement() {
         </table>
       </div>}
 
+      <TablePagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalItems={totalMentors}
+        onPageChange={setPage}
+        disabled={loading}
+        label="Pagination mentor"
+      />
       <div className={dataStyles.pagination}>
-        <button type="button" className="button button-outline" disabled={page === 0 || loading} onClick={() => setPage(value => value - 1)}><ChevronLeft size={14} aria-hidden="true" />Sebelumnya</button>
-        <button type="button" className="button button-outline" disabled={mentors.length < 25 || loading} onClick={() => setPage(value => value + 1)}>Berikutnya<ChevronRight size={14} aria-hidden="true" /></button>
         <button type="button" className={`text-link ${dataStyles.reload}`} disabled={loading} onClick={() => void loadMentors()}><RefreshCw size={14} aria-hidden="true" />Muat ulang</button>
       </div>
     </section>
