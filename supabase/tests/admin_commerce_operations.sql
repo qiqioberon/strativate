@@ -45,7 +45,14 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '99000000-0000-0000-0000-000000000001', true);
 select test_admin_commerce.assert((select count(*) = 1 from public.list_admin_commerce_orders()), 'admin can read the Shared Commerce order');
 select test_admin_commerce.assert((select total_revenue = 99000 and paid_orders = 1 from public.get_admin_commerce_report()), 'report uses paid Shared Commerce revenue');
-select test_admin_commerce.assert((select name = 'Ops Test Guide' and image_path = 'products/ops-test.webp' from public.list_admin_purchasable_commerce_items()), 'admin product cards use domain cover metadata');
+select test_admin_commerce.assert(
+  (select count(*) = 1
+   from public.list_admin_purchasable_commerce_items('Ops Test Guide')
+   where commerce_item_id = '99010000-0000-0000-0000-000000000001'
+     and name = 'Ops Test Guide'
+     and image_path = 'products/ops-test.webp'),
+  'admin product cards use domain cover metadata'
+);
 select test_admin_commerce.assert((select name = 'Ops Test Guide' and is_available from public.get_admin_commerce_item_detail('99010000-0000-0000-0000-000000000001')), 'admin product detail resolves from domain source');
 select public.create_commerce_cart_link(
   '99000000-0000-0000-0000-000000000002',
