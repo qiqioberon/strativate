@@ -102,12 +102,14 @@ export type MentorProfile = {
   user_id: string
   tier_id: string | null
   timezone: string
+  is_active: boolean
   created_at: string
   updated_at: string
 }
 export type MentorAvailabilityRule = {
   id: string
   mentor_id: string
+  week_start_date: string
   day_of_week: number
   start_time: string
   end_time: string
@@ -125,9 +127,12 @@ export type ManagedMentor = {
   tier_code: string | null
   tier_name: string | null
   timezone: string
+  is_active: boolean
   mentor_setup_completed_at: string | null
   created_at: string
   availability_configured: boolean
+  availability_current_week_configured: boolean
+  availability_next_week_configured: boolean
 }
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
@@ -151,14 +156,16 @@ export type Database = {
       mentor_invites: Table<MentorInvite, Partial<MentorInvite> & Pick<MentorInvite, "email" | "invited_by">>
       mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier, "code" | "name">>
       mentor_profiles: Table<MentorProfile, Partial<MentorProfile> & Pick<MentorProfile, "user_id">>
-      mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule, "mentor_id" | "day_of_week" | "start_time" | "end_time">>
+      mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule, "mentor_id" | "week_start_date" | "day_of_week" | "start_time" | "end_time">>
     }
     Views: { [_ in never]: never }
     Functions: {
       list_mentor_invites: { Args: { p_offset?: number }; Returns: MentorInviteSummary[] }
-      list_managed_mentors: { Args: { p_offset?: number; p_query?: string; p_tier_id?: string | null; p_setup_status?: string }; Returns: ManagedMentor[] }
+      list_managed_mentors: { Args: { p_offset: number; p_query: string; p_tier_id: string | null; p_account_status: string; p_setup_status: string }; Returns: ManagedMentor[] }
       set_mentor_tier: { Args: { p_mentor_id: string; p_tier_id: string }; Returns: MentorProfile }
-      save_mentor_availability: { Args: { p_mentor_id: string; p_rules: Json }; Returns: MentorAvailabilityRule[] }
+      set_mentor_active: { Args: { p_mentor_id: string; p_is_active: boolean }; Returns: MentorProfile }
+      save_mentor_availability: { Args: { p_mentor_id: string; p_week_start_date: string; p_rules: Json }; Returns: MentorAvailabilityRule[] }
+      delete_mentor_account: { Args: { p_mentor_id: string }; Returns: undefined }
       delete_mentor_invite: { Args: { p_email: string }; Returns: undefined }
       import_institutions_batch: { Args: { p_rows: Json }; Returns: Json }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }

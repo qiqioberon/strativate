@@ -7,10 +7,18 @@ begin
   if p_condition is distinct from true then raise exception 'ASSERTION FAILED: %', p_message; end if;
 end $$;
 create function test_marketing.denied(p_sql text, p_message text) returns void language plpgsql as $$
-declare rejected boolean := false;
+declare
+  rejected boolean := false;
+  affected bigint := 0;
 begin
-  begin execute p_sql;
-  exception when insufficient_privilege or check_violation then rejected := true;
+  begin
+    execute p_sql;
+    get diagnostics affected = row_count;
+    -- PostgreSQL RLS may reject UPDATE/DELETE by filtering every candidate row,
+    -- producing a successful statement with zero affected rows instead of an exception.
+    rejected := affected = 0;
+  exception when insufficient_privilege or check_violation then
+    rejected := true;
   end;
   if not rejected then raise exception 'ATTACK ACCEPTED: %', p_message; end if;
 end $$;
