@@ -5,18 +5,33 @@ import {
   createMidtransSignature,
   normalizeMidtransStatus,
   parseIdrGrossAmount,
+  toMidtransItemName,
 } from '../lib/payments/midtrans-model'
 
-test('Midtrans status mapping never treats unsafe capture as paid', () => {
-  assert.equal(normalizeMidtransStatus('pending', null), 'pending')
-  assert.equal(normalizeMidtransStatus('settlement', null), 'paid')
-  assert.equal(normalizeMidtransStatus('capture', 'accept'), 'paid')
-  assert.equal(normalizeMidtransStatus('capture', 'challenge'), 'pending')
-  assert.equal(normalizeMidtransStatus('capture', 'deny'), 'failed')
-  assert.equal(normalizeMidtransStatus('deny', null), 'failed')
-  assert.equal(normalizeMidtransStatus('cancel', null), 'cancelled')
-  assert.equal(normalizeMidtransStatus('expire', null), 'expired')
-  assert.equal(normalizeMidtransStatus('unexpected', null), 'pending')
+test('Midtrans status mapping requires provider success code before paid', () => {
+  assert.equal(normalizeMidtransStatus('200', 'pending', null), 'pending')
+  assert.equal(normalizeMidtransStatus('200', 'settlement', null), 'paid')
+  assert.equal(normalizeMidtransStatus('201', 'settlement', null), 'pending')
+  assert.equal(normalizeMidtransStatus('500', 'settlement', null), 'pending')
+  assert.equal(normalizeMidtransStatus('200', 'capture', 'accept'), 'paid')
+  assert.equal(normalizeMidtransStatus('201', 'capture', 'accept'), 'pending')
+  assert.equal(normalizeMidtransStatus('200', 'capture', null), 'pending')
+  assert.equal(normalizeMidtransStatus('200', 'capture', 'challenge'), 'pending')
+  assert.equal(normalizeMidtransStatus('200', 'capture', 'deny'), 'failed')
+  assert.equal(normalizeMidtransStatus('200', 'deny', null), 'failed')
+  assert.equal(normalizeMidtransStatus('200', 'cancel', null), 'cancelled')
+  assert.equal(normalizeMidtransStatus('200', 'expire', null), 'expired')
+  assert.equal(normalizeMidtransStatus('200', 'unexpected', null), 'pending')
+})
+
+test('Midtrans item names are provider-safe without breaking Unicode', () => {
+  assert.equal(toMidtransItemName('A'.repeat(50)), 'A'.repeat(50))
+  assert.equal(toMidtransItemName('A'.repeat(51)), 'A'.repeat(50))
+  const unicode = toMidtransItemName('😀'.repeat(60))
+  assert.equal(Array.from(unicode).length, 50)
+  assert.equal(unicode, '😀'.repeat(50))
+  assert.equal(toMidtransItemName('  Business|Case\u0000\n  Guide  '), 'Business - Case Guide')
+  assert.equal(toMidtransItemName('\u0000|\n'), 'Item Strativate')
 })
 
 test('signature uses exact notification strings in Midtrans order', () => {
