@@ -37,6 +37,10 @@ select test_payments.denied(
   $$insert into public.payment_attempts (order_id,provider,provider_order_id,gross_amount,status) select id,'midtrans','CLIENT-CONTROLLED',1,'paid' from public.orders limit 1$$,
   'authenticated client creates Payment Attempt'
 );
+select test_payments.denied(
+  $$select public.claim_midtrans_snap_creation('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002')$$,
+  'authenticated client claims Snap creation'
+);
 reset role;
 
 set local role service_role;
@@ -50,24 +54,115 @@ select test_payments.assert(
   (select bool_and(provider_order_id ~ '^STRAT-[0-9a-f]{32}$' and char_length(provider_order_id) < 50) from public.payment_attempts),
   'provider Order ID is server-generated and within Midtrans limit'
 );
-select public.store_midtrans_snap_token((select id from public.payment_attempts), 'fixture-snap-token');
+select set_config('test.first_attempt', (select id::text from public.payment_attempts), true);
+select set_config('test.first_provider_order', (select provider_order_id from public.payment_attempts), true);
+
 select test_payments.assert(
-  (select status = 'pending' and snap_token = 'fixture-snap-token' from public.payment_attempts),
-  'Snap token moves creating attempt to pending'
+  public.claim_midtrans_snap_creation(
+    current_setting('test.first_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000001'
+  ),
+  'first creation claim wins'
+);
+select test_payments.assert(
+  not public.claim_midtrans_snap_creation(
+    current_setting('test.first_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000002'
+  ),
+  'concurrent creation claim has exactly one winner'
+);
+select public.store_midtrans_snap_token(
+  current_setting('test.first_attempt')::uuid,
+  '95200000-0000-0000-0000-000000000001',
+  'fixture-snap-token'
+);
+select test_payments.assert(
+  (select status = 'pending'
+      and snap_token = 'fixture-snap-token'
+      and snap_token_created_at is not null
+      and snap_token_expires_at = snap_token_created_at + interval '24 hours'
+      and snap_creation_claim_token is null
+    from public.payment_attempts
+    where id = current_setting('test.first_attempt')::uuid),
+  'matching claim stores a bounded Snap token and releases the claim'
+);
+
+update public.payment_attempts
+set snap_token_expires_at = now() - interval '1 minute'
+where id = current_setting('test.first_attempt')::uuid;
+select public.reserve_midtrans_payment_attempt((select id from public.orders where user_id = '95000000-0000-0000-0000-000000000001'));
+select test_payments.assert(
+  (select status = 'expired' from public.payment_attempts where id = current_setting('test.first_attempt')::uuid),
+  'expired Snap token retires the old attempt'
+);
+select test_payments.assert(
+  (select count(*) = 2 from public.payment_attempts)
+  and (select count(*) = 1 from public.payment_attempts where status in ('creating','pending')),
+  'expired token retry creates exactly one fresh active attempt for the same Order'
+);
+select set_config('test.retry_attempt', (select id::text from public.payment_attempts where status = 'creating'), true);
+select test_payments.assert(
+  (select provider_order_id <> current_setting('test.first_provider_order')
+    from public.payment_attempts where id = current_setting('test.retry_attempt')::uuid),
+  'retry receives a fresh provider Order ID'
+);
+
+select test_payments.assert(
+  public.claim_midtrans_snap_creation(
+    current_setting('test.retry_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000003'
+  ),
+  'retry attempt can be claimed'
+);
+select test_payments.assert(
+  not public.release_midtrans_snap_creation(
+    current_setting('test.retry_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000004'
+  ),
+  'non-owner cannot release another request creation claim'
+);
+update public.payment_attempts
+set snap_creation_claim_expires_at = now() - interval '1 second'
+where id = current_setting('test.retry_attempt')::uuid;
+select test_payments.assert(
+  public.claim_midtrans_snap_creation(
+    current_setting('test.retry_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000004'
+  ),
+  'stale creation claim can be recovered'
+);
+select test_payments.assert(
+  public.release_midtrans_snap_creation(
+    current_setting('test.retry_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000004'
+  ),
+  'matching request can release its creation claim after provider failure'
+);
+select test_payments.assert(
+  public.claim_midtrans_snap_creation(
+    current_setting('test.retry_attempt')::uuid,
+    '95200000-0000-0000-0000-000000000005'
+  ),
+  'released attempt is retryable'
+);
+select public.store_midtrans_snap_token(
+  current_setting('test.retry_attempt')::uuid,
+  '95200000-0000-0000-0000-000000000005',
+  'retry-snap-token'
 );
 
 select public.apply_midtrans_payment_status(
-  (select id from public.payment_attempts), 'paid', 'settlement', 'midtrans-transaction-1', null, 'bank_transfer'
+  current_setting('test.retry_attempt')::uuid, 'paid', 'settlement', 'midtrans-transaction-1', null, 'bank_transfer'
 );
 select test_payments.assert(
-  (select status = 'paid' from public.payment_attempts)
+  (select status = 'paid' from public.payment_attempts where id = current_setting('test.retry_attempt')::uuid)
   and (select status = 'paid' and paid_at is not null from public.orders),
   'trusted paid transition marks attempt and Order paid'
 );
 select set_config('test.paid_at', (select paid_at::text from public.orders), true);
 
 select public.apply_midtrans_payment_status(
-  (select id from public.payment_attempts), 'paid', 'settlement', 'midtrans-transaction-1', null, 'bank_transfer'
+  current_setting('test.retry_attempt')::uuid, 'paid', 'settlement', 'midtrans-transaction-1', null, 'bank_transfer'
 );
 select test_payments.assert(
   (select paid_at::text = current_setting('test.paid_at') from public.orders),
@@ -75,14 +170,14 @@ select test_payments.assert(
 );
 
 select public.apply_midtrans_payment_status(
-  (select id from public.payment_attempts), 'pending', 'pending', 'midtrans-transaction-1', null, 'bank_transfer'
+  current_setting('test.retry_attempt')::uuid, 'pending', 'pending', 'midtrans-transaction-1', null, 'bank_transfer'
 );
 select test_payments.assert(
-  (select status = 'paid' from public.payment_attempts)
+  (select status = 'paid' from public.payment_attempts where id = current_setting('test.retry_attempt')::uuid)
   and (select status = 'paid' and paid_at::text = current_setting('test.paid_at') from public.orders),
   'stale pending notification cannot downgrade paid state'
 );
 reset role;
 
 rollback;
-select 'PASS: Payment Attempt persistence and monotonic Order transitions' as result;
+select 'PASS: Payment Attempt expiry, claim ownership, retry, and monotonic Order transitions' as result;

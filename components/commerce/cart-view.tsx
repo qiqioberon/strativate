@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { checkoutActiveCart } from '@/app/cart/actions'
 import { buttonVariants } from '@/components/ui/button'
 import { formatRupiah } from '@/lib/commerce/money'
 import type { ActiveCart } from '@/lib/commerce/types'
@@ -93,9 +94,11 @@ export function CartView({ cart }: { cart: ActiveCart }) {
             Checkout tidak tersedia
           </button>
         ) : (
-          <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/checkout">
-            Checkout <ArrowRight aria-hidden="true" size={16} />
-          </Link>
+          <form action={checkoutActiveCart}>
+            <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="submit">
+              Checkout <ArrowRight aria-hidden="true" size={16} />
+            </button>
+          </form>
         )}
       </aside>
     </div>

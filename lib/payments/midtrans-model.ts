@@ -3,15 +3,16 @@ import { createHash, timingSafeEqual } from 'node:crypto'
 export type NormalizedPaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled'
 
 export function normalizeMidtransStatus(
+  statusCode: string,
   transactionStatus: string,
   fraudStatus: string | null,
 ): NormalizedPaymentStatus {
   switch (transactionStatus) {
     case 'settlement':
-      return 'paid'
+      return statusCode === '200' ? 'paid' : 'pending'
     case 'capture':
-      if (fraudStatus === 'accept') return 'paid'
       if (fraudStatus === 'deny') return 'failed'
+      if (statusCode === '200' && fraudStatus === 'accept') return 'paid'
       return 'pending'
     case 'deny':
       return 'failed'
@@ -23,6 +24,18 @@ export function normalizeMidtransStatus(
     default:
       return 'pending'
   }
+}
+
+export function toMidtransItemName(name: string): string {
+  const normalized = name
+    .normalize('NFKC')
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
+    .replace(/\|/g, ' - ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!normalized || !/[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(normalized)) return 'Item Strativate'
+  return Array.from(normalized).slice(0, 50).join('').trimEnd() || 'Item Strativate'
 }
 
 export function createMidtransSignature(
