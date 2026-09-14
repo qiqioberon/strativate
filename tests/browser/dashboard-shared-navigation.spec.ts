@@ -6,6 +6,36 @@ const roles = [
   { name: 'user', url: 'http://localhost:3001/dashboard', fullName: 'User Strativate', email: 'user@fixture.test', roleLabel: 'User' },
 ] as const
 
+const emptyAdminCommerceReport = {
+  total_revenue: 0,
+  total_transactions: 0,
+  paid_orders: 0,
+  pending_orders: 0,
+  customer_count: 0,
+  average_order_value: 0,
+  total_users: 1,
+  total_mentors: 1,
+  total_sessions: 0,
+  sessions_today: 0,
+  pending_sessions: 0,
+  trend: [],
+  product_distribution: [],
+  best_sellers: [],
+}
+
+async function stubAdminCommerce(page: import('@playwright/test').Page) {
+  await page.route('**/rest/v1/rpc/list_admin_commerce_orders', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: '[]',
+  }))
+  await page.route('**/rest/v1/rpc/get_admin_commerce_report', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([emptyAdminCommerceReport]),
+  }))
+}
+
 function isKnownFixtureAssetFailure(url: string) {
   const parsed = new URL(url)
   if (parsed.pathname.startsWith('/assets/brand/')) return true
@@ -30,6 +60,7 @@ function captureRuntimeErrors(page: import('@playwright/test').Page) {
 
 for (const role of roles) {
   test(`${role.name} dashboard shares accessible account and notification popovers`, async ({ page }) => {
+    if (role.name === 'admin') await stubAdminCommerce(page)
     const runtime = captureRuntimeErrors(page)
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(role.url)
@@ -88,6 +119,7 @@ test('user dashboard is owned-content focused and exposes honest digital product
 })
 
 test('all role popovers remain inside the viewport across target responsive widths', async ({ page }) => {
+  await stubAdminCommerce(page)
   const sizes = [
     { width: 1440, height: 900 },
     { width: 1024, height: 768 },
