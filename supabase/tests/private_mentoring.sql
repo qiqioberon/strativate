@@ -98,9 +98,16 @@ select public.create_commerce_cart_link(
   ]
 );
 select test_private_mentoring.assert(
-  (select count(*) = 1 and bool_and(token_hash = repeat('a', 64)) from public.commerce_cart_links where mentee_id = '96000000-0000-0000-0000-000000000002'),
-  'cart link persists only supplied secure hash for intended mentee'
+  (select count(*) = 1 from public.list_admin_cart_links() where mentee_id = '96000000-0000-0000-0000-000000000002'),
+  'admin lists the created cart link through the protected RPC'
 );
+set local role service_role;
+select test_private_mentoring.assert(
+  (select count(*) = 1 and bool_and(token_hash = repeat('a', 64)) from public.commerce_cart_links where mentee_id = '96000000-0000-0000-0000-000000000002'),
+  'database persists only the supplied secure token hash'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '96000000-0000-0000-0000-000000000001', true);
 
 select set_config('request.jwt.claim.sub', '96000000-0000-0000-0000-000000000003', true);
 select test_private_mentoring.denied($$select public.claim_commerce_cart_link(repeat('a',64))$$, 'wrong mentee cannot claim link');
