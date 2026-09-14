@@ -114,9 +114,12 @@ test('all role popovers remain inside the viewport across target responsive widt
         const innerWidth = window.innerWidth
         const rects = Array.from(document.querySelectorAll<HTMLElement>('body *')).map(element => {
           const rect = element.getBoundingClientRect()
+          const parent = element.parentElement
           return {
             tag: element.tagName.toLowerCase(),
             className: typeof element.className === 'string' ? element.className : '',
+            parentClass: parent && typeof parent.className === 'string' ? parent.className : '',
+            text: element.textContent?.replace(/\s+/g, ' ').trim().slice(0, 100) || '',
             left: rect.left,
             right: rect.right,
             width: rect.width,
