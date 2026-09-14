@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { buttonVariants } from '@/components/ui/button'
-import type { SanitizedCheckout } from '@/lib/payments/application'
+import type { SanitizedCheckout } from '@/lib/payments/types'
 
- type SnapEmbedOptions = {
+type SnapEmbedOptions = {
   embedId: string
   onSuccess: (result: unknown) => void
   onPending: (result: unknown) => void
