@@ -2,22 +2,19 @@ import { ArrowRight, Check, Clock3, Layers3, Sparkles, UsersRound } from 'lucide
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
-import type { CatalogMarketingProgram } from '@/lib/catalog/presentation'
 import { cn } from '@/lib/utils'
 
-export type MarketingProgram = CatalogMarketingProgram | {
+export type MarketingProgram = {
   id: string
   number: string
   title: string
   kicker: string
   description: string
   highlights: readonly string[]
-  priceLabel?: string
-  priceContext?: string
   href?: string
-  assetKey: 'programs.bigClass.cover'
-  status: 'overview'
-  tone: 'yellow'
+  assetKey: 'programs.private.cover' | 'programs.intensive.cover' | 'programs.bigClass.cover'
+  status: 'information' | 'overview'
+  tone: 'orange' | 'red' | 'yellow'
 }
 
 const programIcons = {
@@ -55,8 +52,8 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
 
         <div className="marketing-program-card__bottom">
           <div>
-            {program.priceLabel ? <strong>{program.priceLabel}</strong> : <strong>Belum dipublikasikan</strong>}
-            <small>{program.priceContext ?? 'Menunggu master program dari Strativate'}</small>
+            <strong>{isPlaceholder ? 'Gambaran layanan' : 'Informasi program'}</strong>
+            <small>{isPlaceholder ? 'Detail komersial belum tersedia' : 'Rincian komersial sedang diperbarui'}</small>
           </div>
           {program.href ? (
             <span className={cn(buttonVariants({ variant: 'dark', size: 'icon' }), 'marketing-program-card__action')} aria-hidden="true">

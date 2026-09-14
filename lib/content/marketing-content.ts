@@ -39,7 +39,7 @@ export const productPlaceholders: ProductPreview[] = [
     cover: 'products.guide.cover',
     eyebrow: 'Slot produk digital 01',
     title: 'Materi sedang disiapkan',
-    description: 'Nama, format, harga, dan sampul akan tampil setelah master produk disetujui.',
+    description: 'Nama, format, harga, dan sampul akan tampil setelah detail produk final disetujui.',
   },
   {
     id: 'template',

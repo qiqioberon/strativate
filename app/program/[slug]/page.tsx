@@ -1,27 +1,29 @@
-import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getPublicCatalogProduct, listPublicCatalog } from '@/lib/catalog/public'
-import { resolveMentoringSlug } from '@/lib/program-routes'
+import { notFound, permanentRedirect } from 'next/navigation'
+
 import { MarketingShell } from '@/components/marketing/marketing-shell'
-import { ProductDetail } from '@/components/programs/program-detail'
-import { catalogProductDisplayTitle } from '@/lib/catalog/presentation'
-import { featureFlags } from '@/lib/features'
+import { ProgramDetail } from '@/components/programs/program-detail'
+import { getProgramEditorialBySlug } from '@/lib/program-information'
+import { resolveMentoringSlug } from '@/lib/program-routes'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const canonical = resolveMentoringSlug(slug) ?? slug
-  const product = await getPublicCatalogProduct(canonical)
-  return product
-    ? { title: catalogProductDisplayTitle(product), description: product.shortDescription, alternates: { canonical: `/program/${canonical}` } }
+  const canonical = resolveMentoringSlug(slug)
+  if (!canonical) return {}
+  const program = getProgramEditorialBySlug(canonical)
+  return program
+    ? { title: program.title, description: program.shortDescription, alternates: { canonical: `/program/${canonical}` } }
     : {}
 }
 
-export default async function ProgramDetail({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProgramDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const canonical = resolveMentoringSlug(slug)
-  if (canonical && canonical !== slug) permanentRedirect(`/program/${canonical}`)
-  const [product, comparisons] = await Promise.all([getPublicCatalogProduct(slug), listPublicCatalog()])
-  if (!product) notFound()
-  if (!featureFlags.digitalProducts && product.productType === 'digital_product') permanentRedirect('/program')
-  return <MarketingShell><ProductDetail product={product} comparisons={comparisons} /></MarketingShell>
+  if (!canonical) notFound()
+  if (canonical !== slug) permanentRedirect(`/program/${canonical}`)
+
+  const program = getProgramEditorialBySlug(canonical)
+  if (!program) notFound()
+
+  return <MarketingShell><ProgramDetail program={program} /></MarketingShell>
 }

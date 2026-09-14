@@ -3,22 +3,18 @@
 Authentication, onboarding, database migrations, and administration setup:
 [Supabase setup guide](docs/supabase-setup.md).
 
-Product / Catalog Master, authoritative guidebook bootstrap, ownership boundaries,
-RLS model, and verification:
-[Product Master guide](docs/program-information.md).
+Program/frontend data ownership and the retirement of the former generic Product Catalog Master:
+[Program information guide](docs/program-information.md).
 
-For existing deployments with migrations 001–002 applied, apply
-[`202609060003_invite_management_auth_ux.sql`](supabase/migrations/202609060003_invite_management_auth_ux.sql)
-before deploying the invitation management update. It adds admin-only invitation
-deletion and requires competition interests selected from the configured list.
+## Current architecture direction
 
-Apply [`202609090001_product_catalog_master.sql`](supabase/migrations/202609090001_product_catalog_master.sql)
-before deploying Product Master. The migration publishes the approved Private and
-Intensive Mentoring master, but intentionally seeds no Big Class or Digital Product.
+The former generic Product Catalog Master is migration history and is no longer the runtime architecture. Each business/product type owns its own domain model. Shared commerce will later unify cart, checkout, order, and payment.
 
-Apply [`202609120001_marketing_hero_posters.sql`](supabase/migrations/202609120001_marketing_hero_posters.sql)
-after Product Master to enable the admin-managed homepage poster carousel and its
-dedicated Supabase Storage bucket. Hosted application is not implied by this file.
+This cleanup intentionally does **not** implement the future Digital Product, Private Mentoring, or shared-commerce domains. Public program/product UI continues to use approved editorial content or honest unavailable/placeholder states until those domains are implemented.
+
+For a fresh database, apply the versioned migrations in filename order. `202609090001_product_catalog_master.sql` remains in history because it may already have been applied; `202609140002_remove_legacy_product_catalog.sql` removes that legacy schema forward-only after the Mentor Domain and Hero Poster migrations. Do not delete or rewrite the historical Product Catalog migration.
+
+The Product Catalog removal migration must be reviewed and applied deliberately to hosted Supabase. This repository does not imply that the destructive forward migration has already been run remotely.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
@@ -46,10 +42,6 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Learn More
 
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
-
-tes
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [v0 Documentation](https://v0.app/docs)

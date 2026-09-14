@@ -1,11 +1,11 @@
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
-import type { ConnectedServiceOverview } from '@/lib/content/services'
+import type { ServiceOverview } from '@/lib/content/services'
 
 type ServiceCardVariant = 'primary' | 'secondary' | 'compact'
 
-export function ServiceCard({ service, index, variant }: { service: ConnectedServiceOverview; index: number; variant: ServiceCardVariant }) {
+export function ServiceCard({ service, index, variant }: { service: ServiceOverview; index: number; variant: ServiceCardVariant }) {
   const Icon = service.icon
   return (
     <article

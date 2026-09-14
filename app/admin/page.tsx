@@ -7,7 +7,6 @@ import { InstitutionManagement } from '@/components/admin/institutions'
 import { MasterOptions } from '@/components/admin/master-options'
 import { MenteeManagement } from '@/components/admin/people'
 import { MentorManagement } from '@/components/admin/mentor-management'
-import { CatalogManagement } from '@/components/admin/catalog-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { useAccount } from '@/components/auth/account-provider'
 import { SignOut } from '@/components/auth/sign-out'
@@ -20,7 +19,7 @@ import { featureFlags } from '@/lib/features'
 const groups = [
   { label: 'Operasional', items: ['Overview', 'Orders', 'Mentor Assignment', 'Bookings'] },
   { label: 'Pengguna', items: ['Mentees', 'Mentors'] },
-  { label: 'Produk', items: ['Katalog Produk', ...(featureFlags.digitalProducts ? ['Resources'] : [])] },
+  ...(featureFlags.digitalProducts ? [{ label: 'Produk', items: ['Resources'] }] : []),
   { label: 'Konten', items: ['Hero Posters'] },
   { label: 'Bisnis', items: ['Payments', 'Reports'] },
   { label: 'Data master', items: ['Institutions', 'Referral Sources', 'Competition Interests'] },
@@ -94,7 +93,6 @@ export default function AdminDashboard() {
         {section === 'Overview' && <Overview orders={orders} pending={pending} navigate={navigate} />}
         {section === 'Orders' && <Orders orders={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} />}
         {section === 'Mentor Assignment' && <Assignment orders={pending.length ? pending : orders} assign={assign} />}
-        {section === 'Katalog Produk' && <CatalogManagement />}
         {section === 'Hero Posters' && <HeroPosterManagement />}
         {section === 'Resources' && <Resources />}
         {section === 'Payments' && <Payments orders={orders} />}

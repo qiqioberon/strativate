@@ -13,19 +13,24 @@ SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
 APP_URL=http://localhost:3000
 ```
 
-`SUPABASE_SECRET_KEY` hanya dipakai server action undangan dan importer. Untuk deployment gunakan secret environment variable di hosting, dan ubah `APP_URL` ke origin HTTPS produksi. Jangan tambahkan prefix `NEXT_PUBLIC_` pada secret. Restart aplikasi setelah mengubah environment.
+`SUPABASE_SECRET_KEY` hanya dipakai server action/admin/importer. Jangan beri prefix `NEXT_PUBLIC_` pada secret.
 
-Jalankan migrasi berurutan di Supabase SQL Editor, masing-masing sebagai satu transaksi (`BEGIN;` sebelum isi dan `COMMIT;` sesudah isi):
+Untuk database baru, jalankan semua migration dalam urutan filename:
 
-1. `supabase/migrations/202609060001_auth_onboarding.sql`
-2. `supabase/migrations/202609060002_institution_import.sql`
-3. `supabase/migrations/202609060003_invite_management_auth_ux.sql`
-4. `supabase/migrations/202609090001_product_catalog_master.sql`
-5. `supabase/migrations/202609120001_marketing_hero_posters.sql`
+1. `202609060001_auth_onboarding.sql`
+2. `202609060002_institution_import.sql`
+3. `202609060003_invite_management_auth_ux.sql`
+4. `202609090001_product_catalog_master.sql` — **history**; jangan edit/hapus karena dapat sudah diterapkan.
+5. `202609120001_marketing_hero_posters.sql`
+6. `202609130001_mentor_domain.sql`
+7. `202609140001_marketing_hero_poster_natural_order.sql`
+8. `202609140002_remove_legacy_product_catalog.sql` — forward cleanup yang membongkar Product Catalog Master lama.
 
-Untuk project yang sudah menjalankan migrasi 001–003, lanjutkan dengan migrasi Product Master lalu migrasi Hero Poster. Migrasi Hero Poster membuat tabel `marketing_hero_posters`, bucket publik `marketing-hero-posters`, RLS admin, kebijakan Storage, kebijakan baca poster aktif yang aman untuk publik, dan RPC pengurutan yang menolak daftar identitas basi akibat perubahan bersamaan. Jangan menganggap migrasi hosted sudah terpasang sebelum tabel, bucket, serta kebijakannya diperiksa pada project Supabase tujuan.
+Migration nomor 8 harus diterapkan secara terkontrol ke project hosted. Ia menghapus tabel/view/function/type Product Catalog lama dan **tidak** boleh dijalankan otomatis terhadap production dari workflow cleanup ini. Pastikan backup/approval operasional tersedia sesuai prosedur deployment sebelum penerapan.
 
-Alternatif dengan PostgreSQL CLI dan `SUPABASE_DB_URL` yang disimpan sebagai environment variable:
+Arsitektur setelah cleanup: setiap business/product type akan memiliki domain model sendiri; shared commerce akan dibangun kemudian untuk cart, checkout, order, dan payment. Migration cleanup ini tidak membuat domain baru tersebut.
+
+Contoh PostgreSQL CLI:
 
 ```powershell
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060001_auth_onboarding.sql
@@ -33,128 +38,59 @@ psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/mi
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060003_invite_management_auth_ux.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609090001_product_catalog_master.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609120001_marketing_hero_posters.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609130001_mentor_domain.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140001_marketing_hero_poster_natural_order.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140002_remove_legacy_product_catalog.sql
 ```
 
-`psql` tidak otomatis membaca `.env`; ekspor `SUPABASE_DB_URL` ke shell atau gunakan koneksi CLI dari menu **Connect** Supabase. Jangan menjalankan ulang migration 001 yang sudah diterapkan. Pada project yang memakai Supabase CLI, gunakan `supabase db push` sesuai riwayat migrasinya. Jika SQL Editor sudah dipakai terlebih dahulu, sinkronkan migration history sebelum beralih ke CLI.
+`psql` tidak otomatis membaca `.env`. Jangan menjalankan ulang migration yang telah tercatat sebagai applied; sinkronkan migration history jika SQL Editor pernah dipakai sebelum beralih ke Supabase CLI.
 
-Migrasi membuat `profiles`, `mentee_profiles`, `institutions`, `referral_sources`, `interests`, `mentee_interests`, dan registry privat `mentor_invites`. RLS aktif pada ketujuh tabel. Onboarding dan pengajuan institusi menggunakan RPC transaksi. Role, metode registrasi, status password, dan completion tidak dapat ditulis browser. Opsi referral/minat awal disediakan migrasi.
-
-## 2. URL dan email
+## 2. Authentication URL dan email
 
 Di **Authentication → URL Configuration**:
 
 - Site URL: origin produksi, atau `http://localhost:3000` selama pengembangan.
-- Redirect URLs: `http://localhost:3000/auth/callback` dan `https://YOUR_DOMAIN/auth/callback`.
-- Gunakan URL persis; hindari wildcard produksi.
+- Redirect URLs: callback lokal dan produksi (`/auth/callback`).
+- Hindari wildcard produksi.
 
-Template email harus memakai token hash agar callback server dapat membentuk session cookie, termasuk bila email dibuka di browser lain. Konfigurasi tautan utama pada **Authentication → Email Templates**:
+Email template harus memakai token hash agar callback server dapat membentuk session cookie. Magic Link/Confirm Signup, Invite User, dan Recovery harus mengarah ke `.RedirectTo` dengan `token_hash` dan tipe yang sesuai. Gunakan SMTP produksi dengan domain terverifikasi dan password policy minimal 8 karakter.
 
-Magic Link dan Confirm Signup:
+## 3. Google OAuth
 
-```html
-<a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email">Masuk ke Strativate</a>
-```
+1. Buat Google OAuth Web Client dan consent screen/test users.
+2. Authorized redirect URI provider adalah callback Supabase `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
+3. Aktifkan Google provider di Supabase.
+4. Tambahkan callback aplikasi lokal/produksi ke redirect allowlist Supabase.
 
-Invite User:
-
-```html
-<a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=invite">Terima undangan mentor</a>
-```
-
-Reset Password (callback recovery tersedia; tidak ada tombol reset baru dalam lingkup ini):
-
-```html
-<a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery">Atur password baru</a>
-```
-
-Semua operasi aplikasi memberikan `RedirectTo` tanpa query dan mengarah ke `/auth/callback`. Untuk undangan mentor, gunakan menu Admin aplikasi agar registry tepercaya tersedia; undangan langsung dari Dashboard Supabase tidak otomatis menjadi mentor. Template default berbasis URL fragment `#access_token` perlu diganti dengan token-hash di atas.
-
-Aktifkan Email provider dan pendaftaran pengguna. Gunakan password policy minimal 8 karakter (aplikasi membatasi 8–128); gunakan SMTP produksi dengan domain terverifikasi. Atur rate limit dan pengiriman sesuai kebutuhan produk. Callback mengabaikan `next`/redirect arbitrer.
-
-## 3. Google
-
-1. Buat Google OAuth Web Client di Google Cloud dan konfigurasi consent screen/test users.
-2. Authorized redirect URI Google: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback` — ini callback provider milik Supabase.
-3. Masukkan Client ID/Secret ke **Authentication → Providers → Google**, lalu enable.
-4. Tambahkan callback aplikasi lokal/produksi ke redirect allowlist Supabase sebagaimana di atas.
-
-OAuth menggunakan PKCE Supabase. Nama/avatar yang tersedia diprefill; username tetap dipilih pengguna. Password Google opsional dan tidak pernah dibuatkan password aplikasi palsu.
+OAuth menggunakan PKCE. Nama/avatar provider dapat diprefill; username tetap dipilih pengguna.
 
 ## 4. Bootstrap admin pertama
 
-1. Di **Authentication → Users → Add user → Create new user**, buat user dengan email yang kamu kuasai dan password kuat. Tandai email confirmed. Jangan membuat user dengan metadata role sebagai mekanisme admin.
-2. Salin UUID user dari daftar Auth Users.
-3. Jalankan SQL berikut di SQL Editor tepercaya, mengganti UUID dan data contoh. SQL mengunci target serta gagal bila profil tidak ditemukan:
+Buat user Auth secara tepercaya, lalu ubah `public.profiles.role` menjadi `admin` melalui SQL/admin tooling tepercaya. Jangan memakai user metadata sebagai sumber role dan jangan menyediakan registrasi admin publik.
 
-```sql
-begin;
-do $$
-declare target uuid := 'REPLACE_WITH_AUTH_USER_UUID';
-begin
-  perform id from public.profiles where id = target for update;
-  if not found then raise exception 'Auth profile not found'; end if;
-  update public.profiles
-  set role = 'admin', first_name = 'Admin', last_name = 'Strativate'
-  where id = target;
-  delete from public.mentee_profiles where user_id = target;
-end $$;
-commit;
-```
+## 5. Institution import
 
-4. Masuk melalui `/auth` dengan email/password itu. User diarahkan ke `/admin`. Tidak ada registrasi admin publik maupun API browser untuk mengganti role.
-
-## 5. Import dataset
-
-Dataset version-controlled: `supabase/seed/institutions_all.csv` (3.479 baris: 2.129 universitas, 421 SMA, 929 SMK). Sumber aslinya ditemukan di `../institution_scraper/outputs/institutions_all.csv`.
+Dataset version-controlled berada di `supabase/seed/institutions_all.csv`. Gunakan:
 
 ```powershell
 pnpm import:institutions --dry-run
 pnpm import:institutions --dry-run --compare
 pnpm import:institutions
-pnpm import:institutions
 ```
 
-`--dry-run` hanya memvalidasi CSV. `--compare` juga membaca database dan melaporkan rencana insert/update/skip. Impor sebenarnya menggunakan RPC service-only, batch 200, identitas `(source, external_id)`, dan transaksi per batch. Nilai kosong di metadata opsional menjadi null. Pengajuan pengguna tidak ditimpa. Eksekusi ulang tanpa perubahan melaporkan `inserted: 0`, `updated: 0`, `skipped: 3479`.
+Importer memakai batch dan RPC/service-only path; pengajuan pengguna tidak boleh ditimpa.
 
-Path CSV lain dapat diberikan sebagai argumen posisi. Bila memakai koneksi SQL langsung, simpan `SUPABASE_DB_URL` di `.env`, lalu gunakan `pnpm import:institutions --postgres`. Impor gagal dengan exit code nonzero bila CSV tidak ada, data tidak valid, atau suatu batch gagal; batch sebelumnya mungkin sudah committed dan aman dilanjutkan dengan menjalankan ulang.
+## 6. Mentor invitation dan Mentor Domain
 
-## 6. Backend undangan
+`mentor_invites` adalah registry privat untuk alur invitation. Mentor Domain memakai `public.mentor_tiers` sebagai tier operasional canonical, bersama `mentor_profiles` dan `mentor_availability_rules`. Jangan memakai model `catalog_mentor_tiers` lama: tabel itu dihapus oleh cleanup migration Product Catalog.
 
-Tidak ada Edge Function terpisah. `lib/admin/invite-mentor.ts` adalah Next.js server action yang ikut deployment aplikasi. Hosting harus menjalankan Next.js server, bukan static export. Action memverifikasi session dengan `getUser`, membaca role admin dari database, membuat registry privat, lalu memanggil `auth.admin.inviteUserByEmail`. Trigger Auth menetapkan mentor dalam transaksi invitation sebelum email dapat diterima.
+Admin dapat mengelola invitation/tier/availability melalui boundary yang sudah ada. Auth/onboarding/Mentor Domain tidak boleh bergantung pada schema Product Catalog lama.
 
-Undangan berulang yang sedang diproses/sudah terkirim tidak dikirim ulang. Kegagalan pengiriman sebelum user terbentuk dapat dicoba lagi. Jika proses server terputus sehingga registry tertinggal `pending`, periksa `mentor_invites` dan Auth Users melalui tooling admin: bila `user_id` sudah terisi dan role mentor benar, tandai registry `sent`; bila belum ada user dan tidak ada proses berjalan, tandai `failed` untuk mengizinkan percobaan ulang. Jangan menghapus/mengganti akun aktif untuk mengulang undangan.
+## 7. Hero Posters
 
-Admin → Mentors kini memiliki **Undangan mentor**, termasuk status gagal yang belum memiliki profil. Tombol **Hapus** meminta konfirmasi email tujuan. RPC `delete_mentor_invite` menghapus registry serta akun Auth/profil yang terkait dalam satu transaksi, hanya jika akun undangan belum dikonfirmasi, belum pernah login, belum menyimpan password, dan belum menyelesaikan setup. Token undangan lama tidak berlaku setelah akun dihapus, dan email dapat diundang kembali. Akun aktif serta undangan `pending` dilindungi; kegagalan penghapusan akun membatalkan penghapusan registry juga. Tidak ada grant baca/tulis langsung registry untuk browser. RPC daftar dan hapus memverifikasi role admin dari database setiap kali dipanggil.
+`marketing_hero_posters` dan bucket `marketing-hero-posters` tetap domain terpisah. Migration Product Catalog cleanup tidak mengubah tabel, Storage bucket, policy, atau RPC Hero Poster. Migration natural-order 14 September harus tetap diterapkan sebelum cleanup Product Catalog.
 
-## 7. Uji satu mentee email
-
-1. Buka browser privat, `/auth` → **Belum punya akun? Daftar**. Masukkan email milikmu dan kirim tautan.
-2. Klik email. Callback membentuk session dan membuka langkah **Data Diri**. Profile harus `mentee` walaupun ada metadata role lain.
-3. Isi nama, username unik, password minimal 8 karakter, konfirmasi. Lanjutkan; cek `profiles` dan `mentee_profiles` lewat SQL Editor.
-4. Cari institusi minimal dua karakter; pilih hasil atau ajukan dengan tipe yang sesuai. Pengajuan baru `pending`, `user_submission`, dan `submitted_by` UUID sendiri. Akun lain tidak bisa melihatnya.
-5. Isi jurusan/angkatan; lanjut. Reload, keluar, lalu login email/password: harus kembali ke **Dari Mana?**.
-6. Pilih satu referral atau Lainnya; pilih satu atau lebih minat dari daftar. Selesaikan. Dashboard `/dashboard` terbuka hanya setelah completion tersimpan.
-7. Reload dan login ulang: tetap dashboard. Periksa custom referral tidak menambah master referral.
-
-## 8. Uji satu mentee Google
-
-1. Di browser privat pilih **Lanjutkan dengan Google**, gunakan akun yang belum terdaftar.
-2. Setelah callback, periksa nama/avatar dari provider dan role `mentee`; pilih username sendiri.
-3. Biarkan password kosong, selesaikan onboarding, keluar, lalu masuk lewat Google. Dashboard harus terbuka.
-4. Untuk memverifikasi password opsional, gunakan akun Google uji kedua, isi password/konfirmasi pada langkah 1. Setelah selesai, login email/password maupun Google harus tersedia.
-
-## 9. Undang satu mentor dan kelola master
-
-1. Login sebagai admin, tab **Mentors** → **Invite Mentor**, masukkan email yang kamu kuasai dan belum menjadi akun confirmed.
-2. Klik email undangan. Harus menuju `/auth/setup`, bukan onboarding mentee.
-3. Tetapkan nama, username, password dan konfirmasi. Setelah tersimpan buka `/mentor`; reload dan login ulang mempertahankan akses.
-4. Sebagai mentee, mengetik `/admin`/`/mentor` harus diarahkan ke tujuan akun sendiri. RPC/REST langsung untuk mengubah role/master atau data orang lain harus ditolak.
-5. Di Admin → **Institutions**, filter `pending`, setujui/tolak/edit/arsipkan. **Duplikat** memerlukan pemilihan dan konfirmasi tujuan, memindahkan referensi secara transaksi lalu mengarsipkan asal.
-6. Di **Referral Sources** dan **Competition Interests**, tambah/edit nama/urutan atau arsipkan. Opsi nonaktif hilang dari pilihan baru; referensi lama tetap tersimpan.
-7. Dengan akun uji lain yang belum menerima undangan, uji **Hapus** → batal (data tetap ada), lalu konfirmasi (undangan dan akun uji hilang). Undang ulang email yang sama; akun harus tetap mendapat role mentor. Undangan akun yang sudah aktif tidak boleh dihapus.
-8. Uji ikon mata pada login, setup mentor, recovery password, dan langkah Data Diri onboarding. Tombol harus berganti tampil/sembunyi tanpa mengirim form atau mengubah isinya; password dan konfirmasinya dapat ditampilkan secara terpisah.
-
-## 10. Pengujian otomatis dan batas bukti
+## 8. Pengujian otomatis
 
 ```powershell
 pnpm test
@@ -165,24 +101,20 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Untuk menyiapkan database uji Postgres yang benar-benar baru (contoh port lokal 55439):
+Untuk database uji benar-benar baru:
 
 ```powershell
 createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_auth
 $env:TEST_DATABASE_URL = 'postgresql://postgres@127.0.0.1:55439/strativate_test_auth'
-pnpm test:db --bootstrap
+pnpm test:db -- --bootstrap
 ```
 
-Runner hanya menerima nama database `strativate_test_*`. `--bootstrap` menolak database yang sudah memiliki tabel Auth/profiles, lalu memasang harness dan semua migrasi secara berurutan. Tanpa `--bootstrap`, runner menjalankan ulang tiga suite SQL pada database uji yang telah disiapkan. Gunakan database uji bersih dengan seed bawaan, sebelum impor dataset lengkap. Suite importer memeriksa idempotensi, update, rollback batch gagal, serta perlindungan pengajuan pengguna.
+Runner hanya menerima database bernama `strativate_test_*`. `--bootstrap` memasang harness dan seluruh migration dalam urutan filename, termasuk forward Product Catalog cleanup, lalu menjalankan suite SQL Auth, institution import, mentor invites, Hero Posters, Mentor Domain, dan `catalog_removal.sql`.
 
-`supabase/tests/auth_security.sql` memeriksa SQL/RLS sebagai role `anon`/`authenticated`, ownership, progress, password, invitation, master mutations, dan duplicate handling. Jalankan setelah migrasi pada database uji saja. Fixture di-rollback:
+`catalog_removal.sql` harus membuktikan tidak ada tabel/view/function/type Product Catalog aktif lagi dan memastikan `mentor_tiers`, Auth/onboarding, institutions, serta Hero Posters tetap ada.
 
-```powershell
-psql $env:TEST_DATABASE_URL -v ON_ERROR_STOP=1 -f supabase/tests/auth_security.sql
-```
+## 9. Batas bukti hosted
 
-`supabase/tests/mentor_invites.sql` memeriksa izin admin, penghapusan undangan/akun belum aktif, perlindungan akun aktif, undangan yang masih diproses, pengiriman ulang, dan rollback ketika penghapusan akun ditolak foreign key.
-
-`supabase/tests/bootstrap.sql` hanya harness untuk **PostgreSQL kosong lokal**, meniru kolom Auth dan helper claims agar RLS dapat diuji. Jangan jalankan bootstrap ini di Supabase atau database yang sudah berisi data. Test SQL lokal tidak membuktikan SMTP/OAuth hosted sudah dikonfigurasi; uji email/Google/invite di atas tetap diperlukan setelah setup provider dan migrasi.
+Test lokal dan migration repository tidak membuktikan bahwa hosted Supabase sudah diperbarui. Setelah deployment migration yang disetujui, verifikasi migration history serta objek Auth/Mentor/Hero Poster pada target project. Jangan menganggap `202609140002_remove_legacy_product_catalog.sql` telah diterapkan remote hanya karena file-nya ada di repository.
 
 Referensi resmi: [SSR Supabase](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [template email](https://supabase.com/docs/guides/auth/auth-email-templates), [Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google), [Admin invitations](https://supabase.com/docs/reference/javascript/auth-admin-inviteuserbyemail).

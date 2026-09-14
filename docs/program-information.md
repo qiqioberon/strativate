@@ -1,52 +1,50 @@
-# Product / Catalog Master
+# Program and product information
 
-Product Master adalah sumber resmi identitas komersial, struktur penawaran, dan harga katalog Strativate. Implementasinya berada pada migration `202609090001_product_catalog_master.sql`, domain TypeScript di `lib/catalog/`, serta editor persisten “Katalog Produk” pada dashboard admin.
+## Current ownership direction
 
-## Sumber data bisnis
+The former generic Product Catalog Master is no longer Strativate's runtime architecture. Migration `202609090001_product_catalog_master.sql` is retained only as applied migration history, and `202609140002_remove_legacy_product_catalog.sql` removes its database objects forward-only.
 
-Private Mentoring dan Intensive Mentoring di-bootstrap sebagai data aktif/dipublikasikan dari dua guidebook yang disediakan pemilik proyek pada 9 September 2026:
+The current long-term ownership rule is deliberately simple:
 
-- `Private Mentoring Guidebook (English) (2).pdf`;
-- `Intensive Program Guidebook (English).pdf`.
+- each business/product type owns its own domain model;
+- shared commerce will later unify cart, checkout, order, and payment;
+- this cleanup does not implement those later domains.
 
-Nilai di guidebook disimpan apa adanya. Secara khusus, offering Top Student Mentor tiga sesi menyimpan harga per sesi Rp285.000, total paket Rp885.000, dan harga referensi Rp950.000. Nilai total tersebut tidak dihitung ulang atau “dikoreksi” dari sumber lain.
+There must not be a second temporary generic catalog abstraction between the retired Product Catalog and those future domains.
 
-Bootstrap mencakup dua produk program, sepuluh offering Mentoring Privat, tiga offering Mentoring Intensif, tiga add-on, tiga bundle beserta komposisi relasionalnya, tier mentor, paket sesi, jalur belajar, fokus topik, benefit, durasi sesi, dan batas peserta. Tidak ada data Big Class atau Produk Digital yang di-bootstrap karena belum ada master produksi yang disetujui.
+## Public program information during the transition
 
-## Batas kepemilikan data
+`/program` continues to use the approved eight-service overview in `lib/content/services.ts`. Private Mentoring and Intensive Mentoring have dedicated information pages backed by editorial content in `lib/program-information.ts`.
 
-- `catalog_products` memiliki identitas program dan metadata katalog umum.
-- `catalog_commercial_items` memberi UUID stabil kepada setiap offering, add-on berbayar, dan bundle.
-- Benefit dan delivery option memiliki identitas stabil sendiri, tetapi bukan item komersial dan tidak dapat menjadi SKU.
-- Product Master memiliki kode, label kanonis, ketersediaan, urutan, dan dukungan nilai khusus untuk jalur belajar/fokus topik.
-- `lib/program-information.ts` hanya menyimpan penjelasan editorial yang dipetakan melalui kode stabil Product Master. File itu tidak memiliki daftar atau label operasional paralel.
-- Metadata Produk Digital hanya menyatakan `pdf` atau `video`; upload, storage, URL, entitlement, dan delivery tidak dimodelkan.
+Those pages intentionally preserve the existing marketing composition—breadcrumb, hero, audience, journey, category list, comparison, contact CTA, typography, responsive layout, and styling—without treating retired Product Catalog records as current commercial truth.
 
-## Lifecycle dan keamanan
+Package prices, per-session prices, commercial offerings, add-ons, bundles, benefits, delivery options, purchase flows, and other Product Catalog business structures are not copied into a new static master. While the domain-specific implementations are absent, the UI shows an honest unavailable/update state and directs users to the approved contact path.
 
-`draft` berarti konfigurasi belum aktif, `published` berarti katalog aktif saat ini, dan `archived` berarti identitas yang tidak lagi ditawarkan. Harga, deskripsi, visibility, featured state, dan ordering dapat diperbarui. Perubahan makna komersial—misalnya jumlah sesi atau komposisi bundle—dibuat sebagai identitas draf baru lalu identitas lama diarsipkan.
+Legacy mentoring slugs remain compatibility redirects to the canonical Private/Intensive information routes. Legacy checkout URLs for those mentoring slugs redirect to the public information pages; there is no replacement checkout in this cleanup.
 
-Semua tabel katalog memakai RLS. Policy public mengulang seluruh jalur `published` + `is_public`, termasuk tabel child dan relationship. View `public_catalog_*` menggunakan `security_invoker = true`, kolom eksplisit, dan tetap tunduk pada RLS tabel dasar. Lifecycle hanya diubah melalui RPC admin. Suite SQL menguji pembacaan langsung yang terlalu luas dan membuktikan produk internal/draf/arsip tidak dapat bocor lewat UUID child.
+## Digital Product presentation
 
-## Integrasi aplikasi
+Digital Product is not implemented as a new domain here. When its reversible feature flag is enabled, `/produk-digital` and the homepage preserve the existing product-card/image/layout foundation while using only the repository's explicit placeholder records. They do not invent product names, prices, files, entitlements, or delivery rules.
 
-- `/explore`, `/program/[slug]`, dan bagian program di homepage membaca view Product Master melalui `lib/catalog/public.ts`.
-- Label dan urutan delivery option berasal dari database; editorial hanya menambah penjelasan berdasarkan kode.
-- Big Class dan Produk Digital menampilkan keadaan kosong/“segera hadir” ketika tidak ada record published.
-- Data demo `lib/catalog.ts` dan `programOptions`/`services` telah dihentikan.
-- Checkout tetap simulasi dan di luar scope. Batas kompatibilitas hanya menerima product UUID, commercial-item UUID, dan fixed price dari Product Master; quotation item ditolak.
+## Admin/frontend preservation
 
-Saat browser test lokal memakai `TEST_DATABASE_URL`, adapter pengujian membaca view Product Master dari PostgreSQL disposable yang sama. Adapter tersebut tidak menyimpan fixture atau harga kedua.
+The old generic `Katalog Produk` admin entry is unmounted because its backend no longer exists. Reusable frontend work is retained where practical:
 
-## Verifikasi
+- `components/admin/catalog-management.tsx` is presentation-only;
+- `components/admin/catalog-structures.tsx` is presentation-only;
+- `components/catalog/catalog-browser.tsx` is presentation-only;
+- catalog/program/product CSS remains unless independently proven obsolete.
 
-```bash
-pnpm test
-pnpm test:db -- --bootstrap
-pnpm typecheck
-pnpm lint
-pnpm exec playwright test --workers 3
-pnpm build
-```
+Retained components must compile without Product Catalog tables, views, RPCs, generated types, or `lib/catalog/*`.
 
-Browser test Product Master lokal memerlukan PostgreSQL disposable dengan migration yang sudah di-bootstrap dan `TEST_DATABASE_URL` diteruskan ke proses Playwright.
+## Historical commercial sources
+
+The Private Mentoring and Intensive Mentoring guidebooks and migration history remain useful provenance, including unresolved pricing/naming conflicts documented in `docs/strativate/source-conflicts.md`. They are not copied into current runtime commercial data by this cleanup.
+
+Historical design/plan documents under `docs/superpowers/` may describe the Product Catalog architecture that existed at the time. Treat those documents as history, not current source of truth.
+
+## Verification boundary
+
+The cleanup is considered structurally complete only when runtime searches show no active dependency on the removed Product Catalog backend and the forward migration/test suite proves the catalog objects are absent while Mentor Domain, Auth/onboarding, institutions, and Hero Posters survive.
+
+The destructive forward migration is not considered deployed to hosted Supabase until `supabase/migrations/202609140002_remove_legacy_product_catalog.sql` has been deliberately applied and verified on the target project.
