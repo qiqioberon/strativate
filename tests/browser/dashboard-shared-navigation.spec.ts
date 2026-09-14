@@ -112,18 +112,35 @@ test('all role popovers remain inside the viewport across target responsive widt
 
       const viewport = await page.evaluate(() => {
         const innerWidth = window.innerWidth
-        const overflowElements = Array.from(document.querySelectorAll<HTMLElement>('body *'))
-          .map(element => {
-            const rect = element.getBoundingClientRect()
-            return { tag: element.tagName.toLowerCase(), className: element.className, left: rect.left, right: rect.right, width: rect.width }
-          })
-          .filter(rect => rect.right > innerWidth + 0.1 || rect.left < -0.1)
+        const rects = Array.from(document.querySelectorAll<HTMLElement>('body *')).map(element => {
+          const rect = element.getBoundingClientRect()
+          return {
+            tag: element.tagName.toLowerCase(),
+            className: typeof element.className === 'string' ? element.className : '',
+            left: rect.left,
+            right: rect.right,
+            width: rect.width,
+          }
+        })
+        const rightOverflow = rects
+          .filter(rect => rect.right > innerWidth + 0.1)
+          .sort((a, b) => b.right - a.right)
           .slice(0, 8)
-        return { scrollWidth: document.documentElement.scrollWidth, innerWidth, overflowElements }
+        const leftOverflow = rects
+          .filter(rect => rect.left < -0.1)
+          .sort((a, b) => a.left - b.left)
+          .slice(0, 3)
+        return {
+          scrollWidth: document.documentElement.scrollWidth,
+          bodyScrollWidth: document.body.scrollWidth,
+          innerWidth,
+          rightOverflow,
+          leftOverflow,
+        }
       })
       expect(
         viewport.scrollWidth,
-        `${role.name} ${size.width}x${size.height} document overflow: ${viewport.scrollWidth}px > ${viewport.innerWidth}px; elements=${JSON.stringify(viewport.overflowElements)}`,
+        `${role.name} ${size.width}x${size.height} document overflow: ${viewport.scrollWidth}px > ${viewport.innerWidth}px; body=${viewport.bodyScrollWidth}px; right=${JSON.stringify(viewport.rightOverflow)}; left=${JSON.stringify(viewport.leftOverflow)}`,
       ).toBeLessThanOrEqual(viewport.innerWidth)
       await page.keyboard.press('Escape')
       await expect(dialog).toBeHidden()
