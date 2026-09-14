@@ -15,7 +15,7 @@ select test_catalog_removal.assert(to_regclass('public.public_catalog_products')
 select test_catalog_removal.assert(
   not exists (
     select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public' and (c.relname like 'catalog\_%' escape '\\' or c.relname like 'public\_catalog\_%' escape '\\')
+    where n.nspname = 'public' and c.relname ~ '^(catalog_|public_catalog_)'
   ),
   'no legacy catalog relations or indexes remain'
 );
@@ -23,7 +23,7 @@ select test_catalog_removal.assert(
   not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and (p.proname like 'catalog\_%' escape '\\' or p.proname like 'set\_catalog\_%' escape '\\' or p.proname = 'create_catalog_commercial_item')
+      and (p.proname like 'catalog\_%' or p.proname like 'set\_catalog\_%' or p.proname = 'create_catalog_commercial_item')
   ),
   'no legacy catalog functions remain'
 );
