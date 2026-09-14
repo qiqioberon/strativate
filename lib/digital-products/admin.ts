@@ -28,7 +28,7 @@ export function parseDigitalProductPriceInput(value: string) {
   if (!/^\d+$/.test(trimmed)) return null
   try {
     const parsed = BigInt(trimmed)
-    if (parsed < 0n || parsed > BigInt(Number.MAX_SAFE_INTEGER)) return null
+    if (parsed < BigInt(0) || parsed > BigInt(Number.MAX_SAFE_INTEGER)) return null
     return Number(parsed)
   } catch {
     return null
