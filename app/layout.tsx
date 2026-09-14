@@ -11,6 +11,7 @@ import './marketing.css'
 import './hero-kinetic.css'
 import './error-page.css'
 import './mentor-marquee.css'
+import './mentor-management.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://strativate.id'),

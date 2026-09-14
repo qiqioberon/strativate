@@ -1,0 +1,404 @@
+.mentor-management-root {
+  width: min(100%, 1180px);
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.mentor-management-root .mentor-management-page-heading {
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-management-page-heading > div {
+  max-width: 720px;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-management-count {
+  flex: none;
+  white-space: nowrap;
+}
+
+.mentor-management-root .mentor-management-section,
+.mentor-management-root .mentor-manage-surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  min-width: 0;
+  gap: 22px;
+}
+
+.mentor-management-root .mentor-management-section > .role-card-heading,
+.mentor-management-root .mentor-manage-surface > .role-card-heading {
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-invite-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr);
+  gap: 18px;
+  align-items: start;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-invite-pane,
+.mentor-management-root .mentor-invitations-pane {
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-invite-form,
+.mentor-management-root .mentor-invitations {
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #e8ebee;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.mentor-management-root .mentor-invite-form {
+  display: grid;
+  gap: 14px;
+}
+
+.mentor-management-root .mentor-invite-fields {
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, .6fr);
+  gap: 12px;
+}
+
+.mentor-management-root .mentor-invite-form > .button {
+  min-width: 180px;
+  justify-self: start;
+}
+
+.mentor-management-root .mentor-invitations {
+  display: grid;
+  gap: 14px;
+}
+
+.mentor-management-root .mentor-invitation-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.mentor-management-root .mentor-invitation-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -.03em;
+}
+
+.mentor-management-root .mentor-invitation-heading p {
+  margin: 0;
+  color: #707982;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.mentor-management-root .mentor-invitation-list {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-invitation-list > p {
+  padding: 14px 0;
+  color: #707982;
+  font-size: 10px;
+}
+
+.mentor-management-root .mentor-invitations .admin-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 0;
+  border-top: 1px solid #e8ebee;
+}
+
+.mentor-management-root .mentor-invitations .admin-record > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mentor-management-root .mentor-invitations .admin-record small {
+  color: #7b858d;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.mentor-management-root .mentor-invitations .invitation-email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+.mentor-management-root .mentor-invitations .admin-record > .button {
+  align-self: start;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+
+.mentor-management-root .mentor-invitation-status-failed {
+  color: var(--deep-red);
+  background: #fbe9ea;
+}
+
+.mentor-management-root .mentor-invitation-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.mentor-management-root .mentor-invitation-pagination .button {
+  padding: 9px 12px;
+}
+
+.mentor-management-root .mentor-management-filter-surface {
+  grid-template-columns: minmax(280px, 1fr) minmax(150px, 180px) minmax(180px, 220px);
+  gap: 12px;
+  align-items: end;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e8ebee;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.mentor-management-root .mentor-management-filter-surface .search-field {
+  min-width: 0;
+  min-height: 40px;
+}
+
+.mentor-management-root .mentor-management-filter-surface > label {
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-management-filter-surface select,
+.mentor-management-root .mentor-account-row-responsive select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-account-list-surface {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border-top: 0;
+}
+
+.mentor-management-root .mentor-account-row-responsive {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.55fr) minmax(160px, .85fr) minmax(120px, .65fr) minmax(120px, .65fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e8ebee;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.mentor-management-root .mentor-account-identity-responsive,
+.mentor-management-root .mentor-account-identity-responsive > div,
+.mentor-management-root .mentor-account-status-block,
+.mentor-management-root .mentor-account-row-responsive .mentor-tier-control {
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-account-identity-responsive strong,
+.mentor-management-root .mentor-account-identity-responsive small {
+  max-width: 100%;
+}
+
+.mentor-management-root .mentor-account-status-pill {
+  max-width: 100%;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+}
+
+.mentor-management-root .mentor-account-manage-button {
+  align-self: center;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.mentor-management-root .mentor-pagination-wrap {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.mentor-management-root .mentor-manage-surface {
+  border-color: #f0b48c;
+}
+
+.mentor-management-root .mentor-detail-summary-responsive {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-detail-summary-responsive dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mentor-management-root .mentor-manage-availability,
+.mentor-management-root .mentor-availability-editor,
+.mentor-management-root .availability-week,
+.mentor-management-root .availability-day {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .mentor-management-root .mentor-invite-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-management-filter-surface {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .65fr);
+  }
+
+  .mentor-management-root .mentor-management-filter-surface .search-field {
+    grid-column: 1 / -1;
+  }
+
+  .mentor-management-root .mentor-account-row-responsive {
+    grid-template-columns: minmax(0, 1.35fr) minmax(180px, .65fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+      'identity tier tier manage'
+      'identity account availability manage';
+    align-items: start;
+  }
+
+  .mentor-management-root .mentor-account-identity-responsive {
+    grid-area: identity;
+  }
+
+  .mentor-management-root .mentor-account-row-responsive .mentor-tier-control {
+    grid-area: tier;
+  }
+
+  .mentor-management-root .mentor-account-status--account {
+    grid-area: account;
+  }
+
+  .mentor-management-root .mentor-account-status--availability {
+    grid-area: availability;
+  }
+
+  .mentor-management-root .mentor-account-manage-button {
+    grid-area: manage;
+    align-self: center;
+  }
+}
+
+@media (max-width: 800px) {
+  .mentor-management-root .mentor-management-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mentor-management-root .mentor-management-count {
+    white-space: normal;
+  }
+
+  .mentor-management-root .mentor-management-filter-surface {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-account-row-responsive {
+    grid-template-columns: minmax(0, 1fr) minmax(160px, .7fr);
+    grid-template-areas:
+      'identity identity'
+      'tier tier'
+      'account availability'
+      'manage manage';
+  }
+
+  .mentor-management-root .mentor-account-manage-button {
+    justify-self: start;
+  }
+
+  .mentor-management-root .mentor-detail-summary-responsive {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .mentor-management-root .mentor-management-section,
+  .mentor-management-root .mentor-manage-surface {
+    gap: 18px;
+  }
+
+  .mentor-management-root .mentor-invite-form,
+  .mentor-management-root .mentor-invitations,
+  .mentor-management-root .mentor-management-filter-surface,
+  .mentor-management-root .mentor-account-row-responsive {
+    padding: 14px;
+  }
+
+  .mentor-management-root .mentor-invite-fields,
+  .mentor-management-root .mentor-management-filter-surface {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-management-filter-surface .search-field {
+    grid-column: auto;
+  }
+
+  .mentor-management-root .mentor-invite-form > .button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mentor-management-root .mentor-invitations .admin-record {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-invitations .admin-record > .status-pill,
+  .mentor-management-root .mentor-invitations .admin-record > .button {
+    justify-self: start;
+  }
+
+  .mentor-management-root .mentor-invitation-pagination .button,
+  .mentor-management-root .mentor-invitation-pagination .text-link {
+    width: 100%;
+  }
+
+  .mentor-management-root .mentor-account-identity-responsive small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .mentor-management-root .mentor-account-row-responsive {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'identity'
+      'tier'
+      'account'
+      'availability'
+      'manage';
+  }
+
+  .mentor-management-root .mentor-account-manage-button,
+  .mentor-management-root .mentor-pagination-wrap .button,
+  .mentor-management-root .mentor-pagination-wrap .text-link {
+    width: 100%;
+  }
+
+  .mentor-management-root .mentor-pagination-wrap {
+    justify-content: flex-start;
+  }
+
+  .mentor-management-root .mentor-detail-summary-responsive {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
