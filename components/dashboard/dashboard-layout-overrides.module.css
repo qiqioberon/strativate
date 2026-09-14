@@ -1,5 +1,7 @@
-:global(.admin-shell .attention-grid) {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+@media (min-width: 801px) {
+  :global(.admin-shell .attention-grid) {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  }
 }
 
 :global(.admin-shell .attention-grid > *) {
