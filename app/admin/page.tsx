@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, ChevronRight, Images, LayoutDashboard, Menu, Search, X } from 'lucide-react'
+import { ChevronRight, Images, LayoutDashboard, Menu, Search, X } from 'lucide-react'
 import { DemoOrder, mentorOptions, readOrders, readState, writeState } from '@/lib/demo-store'
 import { InstitutionManagement } from '@/components/admin/institutions'
 import { MasterOptions } from '@/components/admin/master-options'
@@ -10,7 +10,9 @@ import { MentorManagement } from '@/components/admin/mentor-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { useAccount } from '@/components/auth/account-provider'
-import { SignOut } from '@/components/auth/sign-out'
+import { ProfileForm } from '@/components/auth/profile-form'
+import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-sidebar-utilities'
+import { DashboardTopbarActions } from '@/components/dashboard/dashboard-topbar-actions'
 import { displayName } from '@/lib/auth/rules'
 import { displayLabel } from '@/lib/labels'
 import { displayDemoLabel } from '@/lib/demo-labels'
@@ -80,14 +82,14 @@ export default function AdminDashboard() {
           </button>)}
         </div>)}
       </nav>
-      <div className="role-sidebar-bottom"><button>Bantuan &amp; dukungan</button><SignOut /></div>
+      <div className="role-sidebar-bottom"><button>Bantuan &amp; dukungan</button><DashboardSidebarUtilities /></div>
     </aside>
     {mobile && <button className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu" />}
     <main className="role-main">
       <header className="role-topbar">
         <button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu admin" aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true" /></button>
         <span className="role-context">{displayLabel(section)}</span>
-        <div className="role-actions"><Bell aria-hidden="true" /><span className="role-avatar red small">OP</span></div>
+        <div className="role-actions"><DashboardTopbarActions role="admin" onEditProfile={() => navigate('Profile')} /></div>
       </header>
       <div className="role-content">
         {section === 'Overview' && <Overview orders={orders} pending={pending} navigate={navigate} />}
@@ -103,6 +105,7 @@ export default function AdminDashboard() {
         {section === 'Institutions' && <InstitutionManagement />}
         {section === 'Referral Sources' && <MasterOptions key="referral" table="referral_sources" />}
         {section === 'Competition Interests' && <MasterOptions key="interests" table="interests" />}
+        {section === 'Profile' && <ProfileForm />}
       </div>
     </main>
   </div>

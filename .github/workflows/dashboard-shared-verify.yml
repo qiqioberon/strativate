@@ -1,0 +1,64 @@
+name: Dashboard Shared UX Verify
+
+on:
+  push:
+    branches:
+      - feat/dashboard-shared-navigation-popovers
+  pull_request:
+    paths:
+      - 'app/admin/**'
+      - 'app/mentor/dashboard/**'
+      - 'app/dashboard/**'
+      - 'components/auth/**'
+      - 'components/dashboard/**'
+      - 'tests/dashboard-*.test.ts'
+      - 'tests/browser/dashboard-shared-navigation.spec.ts'
+      - 'tests/fixtures/carousel-interaction/app/admin/**'
+      - 'tests/fixtures/carousel-interaction/app/mentor/**'
+      - 'tests/fixtures/carousel-interaction/app/dashboard/**'
+      - '.github/workflows/dashboard-shared-verify.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+      SUPABASE_SECRET_KEY: test-secret-key
+      APP_URL: http://localhost:3000
+      MIDTRANS_ENV: sandbox
+      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: test-midtrans-client-key
+      MIDTRANS_SERVER_KEY: test-midtrans-server-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pnpm
+        run: npm install --global pnpm@10.17.1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: Dashboard regression tests
+        run: pnpm exec tsx --test tests/dashboard-digital-products.test.ts tests/dashboard-shared-navigation.test.ts
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Build with Digital Products disabled
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'false'
+        run: pnpm build
+      - name: Build with Digital Products enabled
+        env:
+          FEATURE_DIGITAL_PRODUCTS: 'true'
+        run: |
+          rm -rf .next
+          pnpm build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Dashboard browser verification
+        env:
+          TEST_BASE_URL: http://localhost:3000
+        run: pnpm exec playwright test tests/browser/dashboard-shared-navigation.spec.ts
