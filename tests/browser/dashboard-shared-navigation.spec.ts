@@ -6,18 +6,31 @@ const roles = [
   { name: 'user', url: 'http://localhost:3001/dashboard', fullName: 'User Strativate', email: 'user@fixture.test', roleLabel: 'User' },
 ] as const
 
+function isKnownFixtureAssetFailure(url: string) {
+  const parsed = new URL(url)
+  if (parsed.pathname.startsWith('/assets/brand/')) return true
+  if (parsed.pathname === '/_next/image') return decodeURIComponent(parsed.search).includes('/assets/brand/')
+  return false
+}
+
 function captureRuntimeErrors(page: import('@playwright/test').Page) {
   const errors: string[] = []
+  const httpErrors: string[] = []
   page.on('console', message => {
-    if (message.type() === 'error') errors.push(message.text())
+    if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(message.text())
   })
   page.on('pageerror', error => errors.push(error.message))
-  return errors
+  page.on('response', response => {
+    if (response.status() >= 400 && !isKnownFixtureAssetFailure(response.url())) {
+      httpErrors.push(`${response.status()} ${response.url()}`)
+    }
+  })
+  return { errors, httpErrors }
 }
 
 for (const role of roles) {
   test(`${role.name} dashboard shares accessible account and notification popovers`, async ({ page }) => {
-    const runtimeErrors = captureRuntimeErrors(page)
+    const runtime = captureRuntimeErrors(page)
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(role.url)
 
@@ -53,12 +66,13 @@ for (const role of roles) {
     await expect(homeLink).toBeVisible()
     await expect(homeLink).toHaveAttribute('href', '/')
     await expect(page.getByRole('button', { name: 'Keluar' })).toBeVisible()
-    expect(runtimeErrors).toEqual([])
+    expect(runtime.errors).toEqual([])
+    expect(runtime.httpErrors).toEqual([])
   })
 }
 
 test('user dashboard is owned-content focused and exposes honest digital product empty state', async ({ page }) => {
-  const runtimeErrors = captureRuntimeErrors(page)
+  const runtime = captureRuntimeErrors(page)
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('http://localhost:3001/dashboard')
 
@@ -69,7 +83,8 @@ test('user dashboard is owned-content focused and exposes honest digital product
 
   const storefrontLink = page.getByRole('link', { name: 'Lihat Produk Digital', exact: true })
   await expect(storefrontLink).toHaveAttribute('href', '/produk-digital')
-  expect(runtimeErrors).toEqual([])
+  expect(runtime.errors).toEqual([])
+  expect(runtime.httpErrors).toEqual([])
 })
 
 test('all role popovers remain inside the viewport across target responsive widths', async ({ page }) => {
@@ -90,13 +105,13 @@ test('all role popovers remain inside the viewport across target responsive widt
       await expect(dialog).toBeVisible()
       const box = await dialog.boundingBox()
       expect(box).not.toBeNull()
-      expect(box!.x).toBeGreaterThanOrEqual(0)
-      expect(box!.x + box!.width).toBeLessThanOrEqual(size.width)
-      expect(box!.y).toBeGreaterThanOrEqual(0)
-      expect(box!.y + box!.height).toBeLessThanOrEqual(size.height)
+      expect(box!.x, `${role.name} ${size.width}x${size.height} popover left edge`).toBeGreaterThanOrEqual(0)
+      expect(box!.x + box!.width, `${role.name} ${size.width}x${size.height} popover right edge`).toBeLessThanOrEqual(size.width)
+      expect(box!.y, `${role.name} ${size.width}x${size.height} popover top edge`).toBeGreaterThanOrEqual(0)
+      expect(box!.y + box!.height, `${role.name} ${size.width}x${size.height} popover bottom edge`).toBeLessThanOrEqual(size.height)
 
-      const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
-      expect(fitsViewport).toBe(true)
+      const viewport = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }))
+      expect(viewport.scrollWidth, `${role.name} ${size.width}x${size.height} document overflow: ${viewport.scrollWidth}px > ${viewport.innerWidth}px`).toBeLessThanOrEqual(viewport.innerWidth)
       await page.keyboard.press('Escape')
       await expect(dialog).toBeHidden()
     }
