@@ -34,7 +34,7 @@ export function toMidtransItemName(name: string): string {
     .replace(/\s+/g, ' ')
     .trim()
 
-  if (!normalized) return 'Item Strativate'
+  if (!normalized || !/[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(normalized)) return 'Item Strativate'
   return Array.from(normalized).slice(0, 50).join('').trimEnd() || 'Item Strativate'
 }
 
