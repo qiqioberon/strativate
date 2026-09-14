@@ -31,7 +31,7 @@ jobs:
       MIDTRANS_ENV: sandbox
       NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: test-midtrans-client-key
       MIDTRANS_SERVER_KEY: test-midtrans-server-key
-      FEATURE_DIGITAL_PRODUCTS: 'true'
+      FEATURE_DIGITAL_PRODUCTS: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
