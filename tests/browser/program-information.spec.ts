@@ -1,19 +1,31 @@
 import { expect, test } from '@playwright/test'
 
-test('homepage and program overview expose database-backed Private Mentoring without self-service scheduling', async ({ page }) => {
+test('static Private Mentoring marketing and DB catalog coexist without self-service scheduling', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: 'Lihat Private Mentoring', exact: true })).toHaveAttribute('href', '/program/private-mentoring')
+  const homeCard = page.getByTestId('program-card-private-mentoring-link')
+  await expect(homeCard).toContainText('Mentoring fleksibel untuk individu atau tim kecil')
+  await expect(homeCard).toHaveAttribute('href', '/program/private-mentoring')
+
   await page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Program', exact: true }).click()
   await expect(page.getByText('Product Master', { exact: false })).toHaveCount(0)
-  await page.locator('.marketing-service-card').filter({ hasText: 'Private Mentoring' }).getByRole('link', { name: 'Lihat Private Mentoring', exact: true }).click()
+  const directoryCard = page.locator('.marketing-service-card').filter({ hasText: 'Private Mentoring' })
+  await expect(directoryCard).toContainText('Mentoring fleksibel untuk individu atau tim kecil')
+  await directoryCard.getByRole('link', { name: 'Lihat Private Mentoring', exact: true }).click()
+
   await expect(page).toHaveURL(/\/program\/private-mentoring$/)
   await expect(page).toHaveTitle('Private Mentoring | Strativate')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://strativate.id/program/private-mentoring')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Private Mentoring')
+  await expect(page.getByTestId('program-detail-hero')).toContainText('Mulai dengan satu sesi terarah')
+  await expect(page.getByTestId('program-detail-hero')).toContainText('Belajar bersama mentor pilihan')
+  await expect(page.getByText('Konsultasi awal', { exact: true })).toBeVisible()
+
   await expect(page.getByTestId('private-mentoring-learning-paths')).toContainText('End-to-End Learning')
   await expect(page.getByTestId('private-mentoring-learning-paths')).toContainText('Competition-Focused Mentoring')
   await expect(page.getByTestId('private-mentoring-session-focuses')).toContainText('Idea & Problem Framing')
   await expect(page.getByTestId('private-mentoring-session-focuses')).toContainText('Pitching & Presentation Skills')
+  await expect(page.getByText('Business Plan Competition', { exact: true })).toBeVisible()
+
   await page.getByRole('link', { name: 'Lihat informasi paket', exact: true }).click()
   await expect(page).toHaveURL(/#packages$/)
   await expect(page.locator('#packages')).toContainText('Top Student')
@@ -40,8 +52,10 @@ test('retired Explore route redirects and the program directory opens Intensive 
   await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
 })
 
-test('program overview gives the two mentoring services equal priority', async ({ page }) => {
+test('program overview keeps the pre-Phase-3 service hierarchy and journey presentation', async ({ page }) => {
   await page.goto('/program')
+  await expect(page.getByTestId('program-directory-section')).toBeVisible()
+  await expect(page.getByText('Tiga langkah untuk menemukan format yang pas.', { exact: true })).toBeVisible()
   const primary = page.getByRole('region', { name: 'Program utama' })
   await expect(primary).toHaveAttribute('data-testid', 'program-primary-services')
   await expect(primary.getByTestId(/service-card-/)).toHaveCount(2)
@@ -56,6 +70,7 @@ test('program overview gives the two mentoring services equal priority', async (
   const supporting = page.getByRole('region', { name: 'Layanan pendukung' })
   await expect(supporting.getByTestId(/service-card-/)).toHaveCount(5)
   await expect(page.locator('.marketing-service-card')).toHaveCount(8)
+  await expect(page.getByTestId('program-consultation-section')).toBeVisible()
 })
 
 test('old mentoring URLs and direct checkout entries lead to public program information', async ({ page }) => {

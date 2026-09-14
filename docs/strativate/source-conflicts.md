@@ -1,5 +1,13 @@
 # Strativate source conflict register
 
+## 14 September 2026 corrective Private Mentoring ownership resolution
+
+A corrective architecture review after Phase 3 clarifies a boundary that the first implementation interpreted too broadly. **Private Mentoring website marketing/editorial content is static frontend content, not a database-managed CMS.** The canonical title, slug, homepage and `/program` marketing copy, short description, kicker, hero/detail copy, audience, marketing highlights, journey/how-it-works copy, CTA copy, section headings, and supporting explanatory copy live in the repository's static content modules.
+
+The database remains authoritative only for genuine Private Mentoring business/domain data: packages and prices, Session Topics / Session Focuses, Learning Paths, Competition Categories, enrollments, sessions, mentor assignment/scheduling operations, and Shared Commerce references. Admin may manage those catalog/operational records, but it must not mutate the website's marketing copy.
+
+The corrective forward migration removes the obsolete `private_mentoring_programs`, `private_mentoring_highlights`, and `private_mentoring_journey_steps` runtime/CMS objects after decoupling Shared Commerce from them. Historical migrations remain unchanged for migration provenance. The public Program UI follows the presentation established immediately before Phase 3 while injecting only the real database-backed catalog records where needed.
+
 ## 14 September 2026 Phase 3 Private Mentoring resolution
 
 The approved Phase 3 implementation brief resolves the remaining Private Mentoring commercial and operational conflicts for this phase:
@@ -49,7 +57,7 @@ These conflicts come from the September 2026 frontend content/asset audit. They 
 | Country count | Omitted | No matching explicit primary claim was found | Keep omitted until approved. | P0 if used |
 | `2.500+` audience label | `2500+ Siswa` | Guidebooks refer to students/mentees | Resolved by 11 September handoff. | Resolved |
 | Private top-student three-session total | Domain-owned package is `Rp885.000` total with `Rp950.000` reference price; per-session display is derived only | Guidebook visual says `Rp885.000` while earlier stated per-session arithmetic conflicted | Resolved by the approved 14 September Phase 3 brief: total is authoritative and `Rp295.000/session` is runtime-derived. | Resolved |
-| Private/Intensive wording | Private Mentoring is domain-owned; Intensive Mentoring remains approved static editorial information | Guidebooks contain source concepts with some different wording | Private Mentoring follows the approved Phase 3 brief; approve Intensive commercial entitlements separately. | Resolved/P1 |
+| Private/Intensive wording | Private Mentoring and Intensive Mentoring marketing/editorial content remain source-owned; Private Mentoring catalog/operations are domain-owned in the database | Guidebooks contain source concepts with some different wording | Corrected 14 September boundary: do not turn Private marketing copy into CMS data; approve Intensive commercial entitlements separately. | Resolved/P1 |
 | Private CTA/fulfilment flow | WhatsApp consultation → intended-mentee generic Cart Link → Shared Commerce cart/checkout | Guidebook/proposal context includes consultation and mentor/schedule marketing language | Resolved by the approved 14 September Phase 3 brief; no public direct-buy, self-service mentor, or self-service schedule flow. | Resolved |
 | Intensive bundle 1 name | No current runtime bundle after legacy catalog removal | Guidebook: `Skill Builder`; legacy catalog used a localized name | Approve future domain-owned name and positioning. | P0 |
 | Other Intensive bundle names | No current runtime bundles after legacy catalog removal | Guidebook: `Competition Ready`, `Competition Assurance`; legacy catalog used localized names | Approve final localization, especially any guarantee implication. | P0 |

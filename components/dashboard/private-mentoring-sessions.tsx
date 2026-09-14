@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/client'
-import type { PrivateMentoringPublicView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
+import type { PrivateMentoringSessionFocusView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
 
-export function PrivateMentoringSessions({ sessions, sessionFocuses }: { sessions: PrivateMentoringSessionView[]; sessionFocuses: PrivateMentoringPublicView['sessionFocuses'] }) {
+export function PrivateMentoringSessions({ sessions, sessionFocuses }: { sessions: PrivateMentoringSessionView[]; sessionFocuses: PrivateMentoringSessionFocusView[] }) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
   const [busyId, setBusyId] = useState<string | null>(null)
