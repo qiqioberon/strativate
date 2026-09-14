@@ -8,6 +8,7 @@ const config = readFileSync('lib/digital-products/config.ts', 'utf8')
 const layout = readFileSync('app/layout.tsx', 'utf8')
 const addToCart = readFileSync('components/digital-products/add-to-cart-button.tsx', 'utf8')
 const cartView = readFileSync('components/commerce/cart-view.tsx', 'utf8')
+const userOrderHistory = readFileSync('components/commerce/user-order-history.tsx', 'utf8')
 const home = readFileSync('components/marketing/home-page.tsx', 'utf8')
 const dashboardPage = readFileSync('app/dashboard/page.tsx', 'utf8')
 const dashboardClient = readFileSync('app/dashboard/dashboard-client.tsx', 'utf8')
@@ -47,7 +48,8 @@ test('dashboard consumes the shared cart and real Digital Product order history'
   assert.match(dashboardPage, /getActiveCart/)
   assert.match(dashboardPage, /listUserOrders/)
   assert.match(dashboardClient, /label: 'Keranjang'/)
-  assert.match(dashboardClient, /Lanjutkan pembayaran/)
+  assert.match(dashboardClient, /UserOrderHistory/)
+  assert.match(userOrderHistory, /Lanjutkan Pembayaran/)
 })
 
 test('paid library routes into an internal protected reader/player', () => {

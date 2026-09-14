@@ -10,7 +10,9 @@ const listPage = readFileSync('app/produk-digital/page.tsx', 'utf8')
 const detailPage = readFileSync('app/produk-digital/[slug]/page.tsx', 'utf8')
 const addToCart = readFileSync('components/digital-products/add-to-cart-button.tsx', 'utf8')
 const dashboard = readFileSync('app/dashboard/dashboard-client.tsx', 'utf8')
+const userOrderHistory = readFileSync('components/commerce/user-order-history.tsx', 'utf8')
 const styles = readFileSync('app/digital-product-ux.css', 'utf8')
+const operationsStyles = readFileSync('app/operations-dashboard.css', 'utf8')
 
 test('digital purchase mode preserves existing completed-Mentee eligibility rules', () => {
   assert.equal(resolveDigitalPurchaseMode(null), 'anonymous')
@@ -60,8 +62,10 @@ test('product detail keeps purchase actions contextual and reports cart state th
 
 test('dashboard keeps owned-content behavior while compacting library and order history', () => {
   assert.match(dashboard, /Produk Digital Saya/)
-  assert.match(dashboard, /Riwayat lengkap pesanan Anda/)
+  assert.match(dashboard, /Riwayat pesanan Anda/)
+  assert.match(dashboard, /UserOrderHistory/)
+  assert.match(userOrderHistory, /user-order-card/)
   assert.doesNotMatch(dashboard, /id: 'explore'/)
   assert.match(styles, /\.workspace \.resource-card-cover/)
-  assert.match(styles, /\.workspace \.order-detail-card \.confirmation-grid/)
+  assert.match(operationsStyles, /\.user-order-card/)
 })
