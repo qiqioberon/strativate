@@ -93,7 +93,7 @@ export function ProgramDetail({ program }: { program: ProgramDetailModel }) {
             </article>)}
           </div></section>)}
         </div>
-        <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Konsultasi via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
+        <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Tanya paket via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
       </> : <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Rincian paket dan harga sedang diperbarui.</h2><p>Hubungi tim Strativate untuk informasi program terbaru dan mendiskusikan kebutuhanmu.</p></div>}
     </section>
 
