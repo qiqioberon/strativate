@@ -77,10 +77,13 @@ update public.mentee_profiles set onboarding_completed_at = now() where user_id 
   '96000000-0000-0000-0000-000000000002', '96000000-0000-0000-0000-000000000003'
 );
 
-insert into public.digital_products (id, name, slug, description, image_path, price_amount) values
-  ('96100000-0000-0000-0000-000000000001', 'Phase 3 Product A', 'phase-3-product-a', 'Digital Product mixed-cart fixture A.', 'products/phase-3-a.webp', 50000),
-  ('96100000-0000-0000-0000-000000000002', 'Phase 3 Existing Cart Item', 'phase-3-existing-cart-item', 'Existing unrelated cart fixture.', 'products/phase-3-existing.webp', 25000),
-  ('96100000-0000-0000-0000-000000000003', 'Phase 3 Unavailable Product', 'phase-3-unavailable', 'Unavailable link fixture.', 'products/phase-3-unavailable.webp', 10000);
+insert into public.digital_products (
+  id, name, slug, description, image_path, price_amount,
+  content_type, content_path, content_mime_type, content_file_name, content_size_bytes, is_published
+) values
+  ('96100000-0000-0000-0000-000000000001', 'Phase 3 Product A', 'phase-3-product-a', 'Digital Product mixed-cart fixture A.', 'products/phase-3-a.webp', 50000, 'pdf', 'products/phase-3-a/material.pdf', 'application/pdf', 'material.pdf', 1024, true),
+  ('96100000-0000-0000-0000-000000000002', 'Phase 3 Existing Cart Item', 'phase-3-existing-cart-item', 'Existing unrelated cart fixture.', 'products/phase-3-existing.webp', 25000, 'pdf', 'products/phase-3-existing/material.pdf', 'application/pdf', 'material.pdf', 1024, true),
+  ('96100000-0000-0000-0000-000000000003', 'Phase 3 Unavailable Product', 'phase-3-unavailable', 'Unavailable link fixture.', 'products/phase-3-unavailable.webp', 10000, 'pdf', 'products/phase-3-unavailable/material.pdf', 'application/pdf', 'material.pdf', 1024, true);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '96000000-0000-0000-0000-000000000001', true);
