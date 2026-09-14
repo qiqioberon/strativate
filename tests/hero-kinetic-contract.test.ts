@@ -29,8 +29,8 @@ test('kinetic hero styles are isolated, pointer-reactive, and motion safe', () =
   assert.ok(layout.indexOf("./hero-kinetic.css") > layout.indexOf("./marketing.css"))
 })
 
-test('accent headline reveal releases clipping after the entrance animation', () => {
+test('accent headline reveal never clips glyph bounds', () => {
   const css = readFileSync(new URL('../app/hero-kinetic.css', import.meta.url), 'utf8')
   const keyframes = css.match(/@keyframes hero-accent-reveal\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
-  assert.match(keyframes, /100%\s*\{[^}]*clip-path:\s*none/s)
+  assert.doesNotMatch(keyframes, /clip-path:/)
 })
