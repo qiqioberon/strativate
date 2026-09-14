@@ -10,11 +10,13 @@ Program/frontend data ownership and the retirement of the former generic Product
 
 The former generic Product Catalog Master is migration history and is no longer the runtime architecture. Each business/product type owns its own domain model. Shared commerce will later unify cart, checkout, order, and payment.
 
-This cleanup intentionally does **not** implement the future Digital Product, Private Mentoring, or shared-commerce domains. Public program/product UI continues to use approved editorial content or honest unavailable/placeholder states until those domains are implemented.
+Digital Product is now the first standalone product domain. `public.digital_products` is its source of truth and `digital-product-images` is its dedicated private cover-image bucket. Admins can create, read, update, and delete Digital Products and their covers from the admin application.
 
-For a fresh database, apply the versioned migrations in filename order. `202609090001_product_catalog_master.sql` remains in history because it may already have been applied; `202609140002_remove_legacy_product_catalog.sql` removes that legacy schema forward-only after the Mentor Domain and Hero Poster migrations. Do not delete or rewrite the historical Product Catalog migration.
+This phase intentionally does **not** implement downloadable Digital Product files, public Digital Product records, cart, checkout, orders, payments, purchases, or entitlements. `featureFlags.digitalProducts` remains disabled, so the public storefront stays unavailable until a later phase deliberately connects it.
 
-The Product Catalog removal migration must be reviewed and applied deliberately to hosted Supabase. This repository does not imply that the destructive forward migration has already been run remotely.
+For a fresh database, apply the versioned migrations in filename order. `202609090001_product_catalog_master.sql` remains in history because it may already have been applied; `202609140002_remove_legacy_product_catalog.sql` removes that legacy schema forward-only, and `202609140003_digital_product_domain.sql` creates the independent Digital Product domain after the removal. Do not delete or rewrite the historical Product Catalog migration.
+
+Hosted Supabase migrations must be reviewed and applied deliberately. Repository migrations do not imply that schema-changing or destructive migrations have already been run on the target project.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
