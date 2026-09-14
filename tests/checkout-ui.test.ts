@@ -16,12 +16,17 @@ test('shared checkout GET is read-only and renders an existing Order snapshot', 
   assert.doesNotMatch(page, /shipping|courier|alamat pengiriman/i)
 })
 
-test('Midtrans uses official embedded Snap and backend reconciliation', () => {
+test('Midtrans start is explicit and embedded Snap survives script remounts safely', () => {
+  assert.match(embed, /const startPayment = useCallback/)
+  assert.match(embed, /onClick=\{\(\) => void startPayment\(\)\}/)
+  assert.match(embed, /Mulai pembayaran/)
+  assert.match(embed, /onReady=\{\(\) => setScriptReady\(true\)\}/)
   assert.match(embed, /window\.snap\.embed/)
   assert.match(embed, /embedId:\s*['"]midtrans-snap-container['"]/)
   assert.match(embed, /id="midtrans-snap-container"/)
   assert.match(embed, /\/api\/checkout\/start/)
   assert.match(embed, /\/api\/checkout\/status/)
+  assert.doesNotMatch(embed, /onLoad=\{/)
   assert.doesNotMatch(embed, /window\.snap\.pay/)
   assert.doesNotMatch(embed, /redirect_url|window\.location/)
 })
