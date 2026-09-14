@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - feat/digital-product-domain-admin-crud
-      - fix/admin-digital-product-ui
 
 jobs:
   verify:
@@ -53,10 +52,6 @@ jobs:
           grep -n 'digitalProducts: false' lib/features.ts
       - name: Build
         run: pnpm build
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Browser tests
-        run: pnpm test:e2e
       - name: Database bootstrap and SQL tests
         env:
           PGPASSWORD: postgres
@@ -64,3 +59,7 @@ jobs:
         run: |
           createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_phase2a
           pnpm test:db -- --bootstrap
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: pnpm test:e2e
