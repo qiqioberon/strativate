@@ -122,7 +122,10 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
     () => weeks.find(week => week.weekStartDate === selectedWeekStart) || null,
     [selectedWeekStart, weeks],
   )
-  const ranges = selectedWeekStart ? rangesByWeek[selectedWeekStart] || [] : []
+  const ranges = useMemo(
+    () => selectedWeekStart ? rangesByWeek[selectedWeekStart] || [] : [],
+    [rangesByWeek, selectedWeekStart],
+  )
   const grouped = useMemo(() => groupAvailabilityByDay(ranges), [ranges])
 
   function replaceSelectedRanges(update: (current: AvailabilityDraftRange[]) => AvailabilityDraftRange[]) {
