@@ -102,8 +102,8 @@ select test_protected_content.assert(
   (select count(*) = 0 from storage.objects where bucket_id = 'digital-product-content'),
   'paid owner still cannot read raw protected Storage directly'
 );
-select test_protected_content.assert(
-  (select count(*) = 0 from public.digital_product_access_sessions),
+select test_protected_content.denied(
+  $$select count(*) from public.digital_product_access_sessions$$,
   'authenticated users cannot read forensic access-session rows directly'
 );
 
