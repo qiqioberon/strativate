@@ -7,49 +7,51 @@ import { useState } from 'react'
 
 import { checkoutActiveCart } from '@/app/cart/actions'
 import { buttonVariants } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast-provider'
 import { formatRupiah } from '@/lib/commerce/money'
 import type { ActiveCart } from '@/lib/commerce/types'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 
-export function CartView({ cart }: { cart: ActiveCart }) {
+export function CartView({ cart, embedded = false }: { cart: ActiveCart; embedded?: boolean }) {
   const router = useRouter()
+  const { show } = useToast()
   const [removingId, setRemovingId] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
 
   async function removeItem(cartItemId: string) {
     if (removingId) return
     setRemovingId(cartItemId)
-    setMessage(null)
     const supabase = createClient()
     const { error } = await supabase.rpc('remove_cart_item', { p_cart_item_id: cartItemId })
     if (error) {
-      setMessage('Item belum dapat dihapus. Coba lagi.')
+      show({ variant: 'error', message: 'Item belum dapat dihapus. Coba lagi.' })
       setRemovingId(null)
       return
     }
+    show({ variant: 'success', message: 'Produk dihapus dari keranjang.' })
     setRemovingId(null)
     router.refresh()
   }
 
   if (cart.items.length === 0) {
     return (
-      <section className="commerce-empty-state">
+      <section className={cn('commerce-empty-state', embedded && 'commerce-empty-state--embedded')}>
         <ShoppingBag aria-hidden="true" size={30} />
-        <h1>Keranjangmu masih kosong.</h1>
-        <p>Tambahkan Produk Digital yang ingin kamu beli, lalu kembali ke sini untuk checkout.</p>
+        <h1>Keranjang Anda masih kosong.</h1>
+        <p>Tambahkan Produk Digital yang ingin Anda beli, lalu kembali ke sini untuk checkout.</p>
         <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/produk-digital">
-          Jelajahi Produk Digital <ArrowRight aria-hidden="true" size={16} />
+          Lihat Produk Digital <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </section>
     )
   }
 
   return (
-    <div className="commerce-cart-layout">
+    <div className={cn('commerce-cart-layout', embedded && 'commerce-cart-layout--embedded')}>
       <section className="commerce-cart-items" aria-label="Isi keranjang">
         <div className="commerce-cart-heading">
           <div>
-            <p>Shared Commerce</p>
+            <p>Produk Digital</p>
             <h1>Keranjang</h1>
           </div>
           <span>{cart.items.length} item</span>
@@ -61,7 +63,7 @@ export function CartView({ cart }: { cart: ActiveCart }) {
             <article className={`commerce-cart-item${unavailable ? ' is-unavailable' : ''}`} key={item.cart_item_id}>
               <div className="commerce-cart-item__cover">
                 {item.imageUrl ? (
-                  // Public cover image from Supabase Storage.
+                  // Public marketing cover only; paid source content never uses this URL.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.imageUrl} alt="" />
                 ) : <span aria-hidden="true">S</span>}
@@ -69,6 +71,7 @@ export function CartView({ cart }: { cart: ActiveCart }) {
               <div className="commerce-cart-item__content">
                 <span>{item.item_kind === 'digital_product' ? 'Produk Digital' : 'Item'}</span>
                 <h2>{item.name ?? 'Item tidak tersedia'}</h2>
+                {item.slug ? <Link href={`/produk-digital/${item.slug}`}>Lihat detail</Link> : null}
                 {unavailable ? (
                   <p className="commerce-cart-item__warning"><AlertTriangle aria-hidden="true" size={14} /> Item ini sudah tidak tersedia. Hapus item untuk melanjutkan checkout.</p>
                 ) : null}
@@ -82,7 +85,6 @@ export function CartView({ cart }: { cart: ActiveCart }) {
             </article>
           )
         })}
-        {message ? <p className="commerce-inline-error" role="status">{message}</p> : null}
       </section>
 
       <aside className="commerce-cart-summary">

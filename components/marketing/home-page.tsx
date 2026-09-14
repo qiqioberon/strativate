@@ -9,14 +9,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 
 import { buttonVariants } from '@/components/ui/button'
 import {
   bigClassPlaceholder,
   faqPreview,
 } from '@/lib/content/marketing-content'
-import { formatRupiah } from '@/lib/commerce/money'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { socialProof } from '@/lib/content/brand'
 import { mentors } from '@/lib/content/mentors'
@@ -25,7 +23,7 @@ import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
-import { AssetMedia } from './asset-media'
+import { DigitalProductCarousel } from './digital-product-carousel'
 import { HeroCarousel } from './hero-carousel'
 import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
@@ -165,22 +163,7 @@ export function HomePage({
               Lihat Produk Digital <ArrowRight data-icon="arrow" size={16} />
             </Link>
           </div>
-          <div className="marketing-product-stack">
-            {digitalProducts.slice(0, 2).map((product, index) => (
-              <article className="marketing-product-card" key={product.id}>
-                <div className="marketing-product-card__cover">
-                  <Image src={product.imageUrl} alt={`Sampul ${product.name}`} fill sizes="(max-width: 760px) 32vw, 13vw" unoptimized />
-                </div>
-                <div>
-                  <span>Produk Digital · {formatRupiah(product.price_amount)}</span>
-                  <h3>{product.name}</h3>
-                  <p>{product.description}</p>
-                </div>
-                <strong aria-hidden="true">0{index + 1}</strong>
-              </article>
-            ))}
-            {digitalProducts.length === 0 ? <p className="marketing-products__empty">Belum ada Produk Digital yang dipublikasikan.</p> : null}
-          </div>
+          <DigitalProductCarousel products={digitalProducts} />
         </div>
       </section> : null}
 

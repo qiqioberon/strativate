@@ -2,6 +2,7 @@ import type {
   Cart,
   CartItemView,
   DigitalProduct,
+  DigitalProductContentType,
   Order,
   OrderItem,
   OwnedDigitalProduct,
@@ -29,5 +30,8 @@ export type OrderWithItems = Order & {
 }
 
 export type OwnedDigitalProductView = OwnedDigitalProduct & {
+  product_id: string
   imageUrl: string | null
+  contentType: DigitalProductContentType | null
+  contentReady: boolean
 }

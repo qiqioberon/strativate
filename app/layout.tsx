@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Poppins } from 'next/font/google'
 
+import { ToastProvider } from '@/components/ui/toast-provider'
 import { brandDescription } from '@/lib/content/brand'
 
 import './globals.css'
@@ -9,6 +10,7 @@ import './auth/auth.css'
 import './program-information.css'
 import './marketing.css'
 import './digital-product-ux.css'
+import './digital-product-commerce.css'
 import './hero-kinetic.css'
 import './error-page.css'
 import './mentor-marquee.css'
@@ -34,8 +36,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="id" className="bg-background" data-scroll-behavior="smooth">
       <body className={`${poppins.variable} ${poppins.className} antialiased`}>
-        {children}
-        {process.env.VERCEL && <Analytics />}
+        <ToastProvider>
+          {children}
+          {process.env.VERCEL && <Analytics />}
+        </ToastProvider>
       </body>
     </html>
   )

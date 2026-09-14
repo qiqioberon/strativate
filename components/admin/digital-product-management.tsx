@@ -1,11 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-import { ImagePlus, PackageOpen, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { FileText, ImagePlus, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { formError } from '@/lib/auth/errors'
 import {
+  buildDigitalProductContentPath,
+  buildDigitalProductContentPayload,
   buildDigitalProductImagePath,
   buildDigitalProductPayload,
   digitalProductMutationError,
@@ -13,10 +15,12 @@ import {
   isDigitalProductSetupRequired,
   normalizeDigitalProductSlug,
   parseDigitalProductPriceInput,
+  validateDigitalProductContentFile,
   validateDigitalProductDraft,
+  type DigitalProductContentType,
   type DigitalProductDraftErrors,
 } from '@/lib/digital-products/admin'
-import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
+import { DIGITAL_PRODUCT_CONTENT_BUCKET, DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
 import dataStyles from './data-management.module.css'
@@ -24,7 +28,7 @@ import dialogStyles from './digital-product-dialog.module.css'
 import styles from './digital-product-management.module.css'
 import { TablePagination } from './table-pagination'
 
-const migrationName = '202609140003_digital_product_domain.sql'
+const migrationName = '202609140009_digital_product_content_delivery.sql'
 const PRODUCT_PAGE_SIZE = 10
 
 type Draft = {
@@ -32,12 +36,20 @@ type Draft = {
   slug: string
   description: string
   price: string
+  contentType: DigitalProductContentType | ''
+  isPublished: boolean
 }
 
-const emptyDraft: Draft = { name: '', slug: '', description: '', price: '' }
+const emptyDraft: Draft = { name: '', slug: '', description: '', price: '', contentType: '', isPublished: false }
 
 function formatUpdatedAt(value: string) {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+}
+
+function formatFileSize(value: number | null) {
+  if (!value || value <= 0) return null
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(value >= 10 * 1024 * 1024 ? 0 : 1)} MB`
+  return `${Math.ceil(value / 1024)} KB`
 }
 
 export function DigitalProductManagement() {
@@ -50,6 +62,8 @@ export function DigitalProductManagement() {
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedContentFile, setSelectedContentFile] = useState<File | null>(null)
+  const [contentError, setContentError] = useState('')
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
   const [storedPreviewUrl, setStoredPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -70,7 +84,7 @@ export function DigitalProductManagement() {
   const filteredProducts = useMemo(() => {
     const term = query.trim().toLocaleLowerCase('id-ID')
     if (!term) return products
-    return products.filter(product => `${product.name} ${product.slug} ${product.description} ${product.price_amount}`.toLocaleLowerCase('id-ID').includes(term))
+    return products.filter(product => `${product.name} ${product.slug} ${product.description} ${product.price_amount} ${product.content_type ?? ''}`.toLocaleLowerCase('id-ID').includes(term))
   }, [products, query])
   const pagedProducts = useMemo(
     () => filteredProducts.slice(productPage * PRODUCT_PAGE_SIZE, productPage * PRODUCT_PAGE_SIZE + PRODUCT_PAGE_SIZE),
@@ -92,9 +106,8 @@ export function DigitalProductManagement() {
 
     if (loadError) {
       setProducts([])
-      if (isDigitalProductSetupRequired(loadError)) {
-        setSetupRequired(true)
-      } else {
+      if (isDigitalProductSetupRequired(loadError)) setSetupRequired(true)
+      else {
         setLoadFailed(true)
         setError(formError(loadError, 'Digital Products belum dapat dimuat. Periksa koneksi lalu coba lagi.'))
       }
@@ -120,9 +133,13 @@ export function DigitalProductManagement() {
       slug: selected.slug,
       description: selected.description,
       price: String(selected.price_amount),
+      contentType: selected.content_type ?? '',
+      isPublished: selected.is_published,
     })
     setSlugManuallyEdited(true)
     setSelectedFile(null)
+    setSelectedContentFile(null)
+    setContentError('')
     setFieldErrors({})
   }, [creating, selected])
 
@@ -185,6 +202,8 @@ export function DigitalProductManagement() {
     setDraft(emptyDraft)
     setSlugManuallyEdited(false)
     setSelectedFile(null)
+    setSelectedContentFile(null)
+    setContentError('')
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -195,6 +214,8 @@ export function DigitalProductManagement() {
     setSelectedId(id)
     setSlugManuallyEdited(true)
     setSelectedFile(null)
+    setSelectedContentFile(null)
+    setContentError('')
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -209,6 +230,8 @@ export function DigitalProductManagement() {
     setCreating(false)
     setSelectedId(null)
     setSelectedFile(null)
+    setSelectedContentFile(null)
+    setContentError('')
     setStoredPreviewUrl(null)
     setFieldErrors({})
     setError('')
@@ -227,140 +250,152 @@ export function DigitalProductManagement() {
     event.preventDefault()
     if (busy) return
 
+    const editing = creating ? null : selected
     const validation = validateDigitalProductDraft({
       name: draft.name,
       slug: draft.slug,
       description: draft.description,
       priceInput: draft.price,
       file: selectedFile,
-      hasStoredImage: Boolean(selectedImagePath),
+      hasStoredImage: Boolean(editing?.image_path),
     })
+    const compatibleStoredContent = Boolean(editing?.content_path && editing.content_type === draft.contentType)
+    const nextContentError = draft.contentType
+      ? validateDigitalProductContentFile({
+        file: selectedContentFile,
+        contentType: draft.contentType,
+        hasStoredContent: compatibleStoredContent,
+        publishing: draft.isPublished,
+      }) ?? ''
+      : 'Pilih Jenis Produk PDF atau Video.'
     setFieldErrors(validation)
+    setContentError(nextContentError)
     setError('')
     setNotice('')
-    if (Object.keys(validation).length > 0) return
+    if (Object.keys(validation).length > 0 || nextContentError) return
 
-    const editing = creating ? null : selected
     const oldImagePath = editing?.image_path ?? null
-    let uploadedPath: string | null = null
-    let stage: 'upload' | 'database' = 'upload'
+    const oldContentPath = compatibleStoredContent ? editing?.content_path ?? null : null
+    let uploadedImagePath: string | null = null
+    let uploadedContentPath: string | null = null
+    let databaseAttempted = false
     setBusy(true)
 
     try {
       if (selectedFile) {
-        uploadedPath = buildDigitalProductImagePath(selectedFile.name)
+        uploadedImagePath = buildDigitalProductImagePath(selectedFile.name)
         const { error: uploadError } = await supabase.storage
           .from(DIGITAL_PRODUCT_IMAGE_BUCKET)
-          .upload(uploadedPath, selectedFile, { cacheControl: '3600', upsert: false })
+          .upload(uploadedImagePath, selectedFile, { cacheControl: '3600', upsert: false })
         if (uploadError) throw uploadError
       }
 
-      stage = 'database'
-      const payload = buildDigitalProductPayload({
-        name: draft.name,
-        slug: draft.slug,
-        description: draft.description,
-        priceInput: draft.price,
-        imagePath: uploadedPath,
-        storedImagePath: oldImagePath,
-      })
+      if (selectedContentFile) {
+        uploadedContentPath = buildDigitalProductContentPath(selectedContentFile.name)
+        const { error: contentUploadError } = await supabase.storage
+          .from(DIGITAL_PRODUCT_CONTENT_BUCKET)
+          .upload(uploadedContentPath, selectedContentFile, { cacheControl: '3600', upsert: false })
+        if (contentUploadError) throw contentUploadError
+      }
 
+      const payload = {
+        ...buildDigitalProductPayload({
+          name: draft.name,
+          slug: draft.slug,
+          description: draft.description,
+          priceInput: draft.price,
+          imagePath: uploadedImagePath,
+          storedImagePath: oldImagePath,
+        }),
+        ...buildDigitalProductContentPayload({
+          contentType: draft.contentType || null,
+          contentPath: uploadedContentPath,
+          storedContentPath: oldContentPath,
+          fileName: selectedContentFile?.name ?? null,
+          storedFileName: compatibleStoredContent ? editing?.content_file_name ?? null : null,
+          mimeType: selectedContentFile?.type ?? null,
+          storedMimeType: compatibleStoredContent ? editing?.content_mime_type ?? null : null,
+          fileSize: selectedContentFile?.size ?? null,
+          storedFileSize: compatibleStoredContent ? editing?.content_size_bytes ?? null : null,
+          isPublished: draft.isPublished,
+        }),
+      }
+
+      databaseAttempted = true
       let authoritativeId = editing?.id ?? null
       if (editing) {
-        const { data: updated, error: updateError } = await supabase
-          .from('digital_products')
-          .update(payload)
-          .eq('id', editing.id)
-          .select('id')
-          .single()
+        const { data: updated, error: updateError } = await supabase.from('digital_products').update(payload).eq('id', editing.id).select('id').single()
         if (updateError) throw updateError
         authoritativeId = updated.id
       } else {
-        const { data: created, error: insertError } = await supabase
-          .from('digital_products')
-          .insert(payload)
-          .select('id')
-          .single()
+        const { data: created, error: insertError } = await supabase.from('digital_products').insert(payload).select('id').single()
         if (insertError) throw insertError
         authoritativeId = created.id
       }
 
-      let cleanupWarning = ''
-      if (oldImagePath && uploadedPath && oldImagePath !== uploadedPath) {
+      const cleanupWarnings: string[] = []
+      if (oldImagePath && uploadedImagePath && oldImagePath !== uploadedImagePath) {
         const { error: cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([oldImagePath])
-        if (cleanupError) cleanupWarning = ' Cover lama masih perlu ditinjau dan dihapus manual dari Storage.'
+        if (cleanupError) cleanupWarnings.push('cover lama')
+      }
+      if (editing?.content_path && uploadedContentPath && editing.content_path !== uploadedContentPath) {
+        const { error: cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([editing.content_path])
+        if (cleanupError) cleanupWarnings.push('materi lama')
       }
 
       setSelectedFile(null)
+      setSelectedContentFile(null)
       setSelectedId(authoritativeId)
-      setNotice(`${editing ? 'Digital Product berhasil diperbarui.' : 'Digital Product berhasil dibuat.'}${cleanupWarning}`)
+      setNotice(`${editing ? 'Digital Product berhasil diperbarui.' : 'Digital Product berhasil dibuat.'}${cleanupWarnings.length ? ` Tinjau ${cleanupWarnings.join(' dan ')} di Storage karena pembersihan otomatis belum berhasil.` : ''}`)
       await load()
       setCreating(false)
     } catch (caught) {
-      let cleanupWarning = ''
-      if (uploadedPath && stage === 'database') {
-        const { data: persisted, error: reconciliationError } = await supabase
-          .from('digital_products')
-          .select('id,image_path')
-          .eq('image_path', uploadedPath)
-          .maybeSingle()
-
-        if (persisted) {
-          if (oldImagePath && oldImagePath !== uploadedPath) {
-            const { error: cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([oldImagePath])
-            if (cleanupError) cleanupWarning = ' Cover lama masih perlu ditinjau dan dihapus manual dari Storage.'
-          }
-          setSelectedFile(null)
-          setSelectedId(persisted.id)
-          setNotice(`${editing ? 'Digital Product berhasil diperbarui.' : 'Digital Product berhasil dibuat.'}${cleanupWarning}`)
-          await load()
-          setCreating(false)
-          return
-        }
-
-        if (reconciliationError) {
-          cleanupWarning = ' Cover baru tidak dihapus otomatis karena status database belum dapat dipastikan. Tinjau daftar Digital Products dan Storage sebelum mencoba lagi.'
-        } else {
-          const { error: cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([uploadedPath])
-          if (cleanupError) cleanupWarning = ' Cover baru juga perlu ditinjau manual di Storage.'
-        }
+      let persisted = false
+      if (databaseAttempted) {
+        const { data: authoritative } = await supabase.from('digital_products').select('id,image_path,content_path').eq('slug', draft.slug.trim()).maybeSingle()
+        persisted = Boolean(authoritative && (!uploadedImagePath || authoritative.image_path === uploadedImagePath) && (!uploadedContentPath || authoritative.content_path === uploadedContentPath))
       }
 
-      setError(`${stage === 'upload'
-        ? 'Cover image belum dapat diunggah. Periksa Storage dan coba lagi.'
-        : digitalProductMutationError(caught)}${cleanupWarning}`)
+      if (!persisted) {
+        const cleanup: PromiseLike<unknown>[] = []
+        if (uploadedImagePath) cleanup.push(supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([uploadedImagePath]))
+        if (uploadedContentPath) cleanup.push(supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([uploadedContentPath]))
+        await Promise.allSettled(cleanup)
+      } else {
+        await load()
+      }
+
+      setError(databaseAttempted
+        ? digitalProductMutationError(caught)
+        : 'File belum dapat diunggah. Periksa tipe, ukuran, izin Storage, lalu coba lagi.')
     } finally {
       setBusy(false)
     }
   }
 
   async function removeProduct(product: DigitalProduct) {
-    if (busy || !window.confirm(`Hapus Digital Product “${product.name}”? Data produk akan dihapus lebih dulu, lalu cover Storage dibersihkan.`)) return
+    if (busy || !window.confirm(`Hapus Digital Product “${product.name}”? Data produk dihapus lebih dulu, lalu asset Storage dibersihkan.`)) return
 
     setBusy(true)
     setError('')
     setNotice('')
     try {
-      const { error: rowError } = await supabase
-        .from('digital_products')
-        .delete()
-        .eq('id', product.id)
-        .select('id')
-        .single()
+      const { error: rowError } = await supabase.from('digital_products').delete().eq('id', product.id).select('id').single()
       if (rowError) throw rowError
 
       setCreating(false)
       setSelectedId(null)
       setDraft(emptyDraft)
       setSelectedFile(null)
+      setSelectedContentFile(null)
       setFieldErrors({})
 
-      const { error: storageError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([product.image_path])
-      if (storageError) {
-        setNotice('Digital Product sudah dihapus, tetapi cover Storage perlu ditinjau dan dihapus manual.')
-      } else {
-        setNotice('Digital Product berhasil dihapus.')
-      }
+      const removals = [supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([product.image_path])]
+      if (product.content_path) removals.push(supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([product.content_path]))
+      const results = await Promise.all(removals)
+      setNotice(results.some(result => result.error)
+        ? 'Digital Product sudah dihapus, tetapi sebagian asset Storage perlu ditinjau manual.'
+        : 'Digital Product berhasil dihapus.')
       await load()
     } catch (caught) {
       setError(formError(caught, 'Digital Product belum dapat dihapus. Periksa koneksi lalu coba lagi.'))
@@ -373,13 +408,14 @@ export function DigitalProductManagement() {
   const editorPreviewUrl = localPreviewUrl ?? storedPreviewUrl
   const previewSource = localPreviewUrl ? 'local' : storedPreviewUrl ? 'stored' : 'empty'
   const showDedicatedEmptyState = !loading && !setupRequired && !loadFailed && !creating && products.length === 0
+  const storedContentCompatible = Boolean(selected?.content_path && selected.content_type === draft.contentType)
 
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
         <p className="kicker">Produk · Digital Product</p>
         <h2>Digital Products</h2>
-        <p>Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini.</p>
+        <p>Kelola storefront, tipe materi PDF/Video, status publikasi, dan file berbayar yang disimpan secara private.</p>
       </div>
       {!loading && !setupRequired && !loadFailed && products.length > 0 ? <span className={dataStyles.countPill}><PackageOpen aria-hidden="true" />{products.length} produk</span> : null}
     </header>
@@ -388,10 +424,7 @@ export function DigitalProductManagement() {
   const editor = (creating || selected) ? (
     <form className={styles.form} onSubmit={save} noValidate aria-busy={busy} data-testid={creating ? 'digital-product-create-mode' : 'digital-product-edit-mode'}>
       <section className={styles.formSection} aria-labelledby="digital-product-information-heading">
-        <div className={styles.sectionHeading}>
-          <h3 id="digital-product-information-heading">Informasi produk</h3>
-          <p>Atur nama, identifier, dan deskripsi yang menjadi dasar informasi Digital Product.</p>
-        </div>
+        <div className={styles.sectionHeading}><h3 id="digital-product-information-heading">Informasi produk</h3><p>Atur nama, identifier, dan deskripsi yang tampil pada katalog Digital Product.</p></div>
         <div className={styles.formGrid}>
           <label className={styles.field}>Nama
             <input data-testid="digital-product-name-input" value={draft.name} onChange={event => updateName(event.target.value)} maxLength={160} aria-invalid={Boolean(fieldErrors.name)} />
@@ -399,7 +432,7 @@ export function DigitalProductManagement() {
           </label>
           <label className={styles.field}>Slug
             <input data-testid="digital-product-slug-input" value={draft.slug} onChange={event => { setDraft(current => ({ ...current, slug: event.target.value })); setSlugManuallyEdited(true); setFieldErrors(current => ({ ...current, slug: undefined })) }} maxLength={120} aria-invalid={Boolean(fieldErrors.slug)} />
-            {fieldErrors.slug ? <small className="form-error">{fieldErrors.slug}</small> : <small className={styles.helper}>Identifier URL/internal produk. Slug dibuat otomatis sampai diedit manual.</small>}
+            {fieldErrors.slug ? <small className="form-error">{fieldErrors.slug}</small> : <small className={styles.helper}>Slug dibuat otomatis sampai diedit manual.</small>}
           </label>
           <label className={styles.wideField}>Deskripsi
             <textarea data-testid="digital-product-description-input" value={draft.description} onChange={event => { setDraft(current => ({ ...current, description: event.target.value })); setFieldErrors(current => ({ ...current, description: undefined })) }} rows={6} maxLength={5000} aria-invalid={Boolean(fieldErrors.description)} />
@@ -409,43 +442,45 @@ export function DigitalProductManagement() {
       </section>
 
       <section className={styles.formSection} aria-labelledby="digital-product-price-heading">
-        <div className={styles.sectionHeading}>
-          <h3 id="digital-product-price-heading">Harga</h3>
-          <p>Simpan nilai sebagai Rupiah bulat. Preview formatting tidak mengubah data input.</p>
-        </div>
+        <div className={styles.sectionHeading}><h3 id="digital-product-price-heading">Harga</h3><p>Simpan nilai sebagai Rupiah bulat. Preview formatting tidak mengubah data input.</p></div>
         <label className={styles.field}>Harga
-          <span className={styles.priceControl}>
-            <span className={styles.pricePrefix} aria-hidden="true">Rp</span>
-            <input data-testid="digital-product-price-input" type="text" inputMode="numeric" value={draft.price} onChange={event => { setDraft(current => ({ ...current, price: event.target.value })); setFieldErrors(current => ({ ...current, price: undefined })) }} placeholder="75000" aria-invalid={Boolean(fieldErrors.price)} />
-          </span>
+          <span className={styles.priceControl}><span className={styles.pricePrefix} aria-hidden="true">Rp</span><input data-testid="digital-product-price-input" type="text" inputMode="numeric" value={draft.price} onChange={event => { setDraft(current => ({ ...current, price: event.target.value })); setFieldErrors(current => ({ ...current, price: undefined })) }} placeholder="75000" aria-invalid={Boolean(fieldErrors.price)} /></span>
           {parsedPrice === null ? <small className={styles.helper}>Gunakan angka Rupiah bulat tanpa simbol atau pemisah ribuan.</small> : <small className={styles.pricePreview}>Preview: {formatDigitalProductPrice(parsedPrice)}</small>}
           {fieldErrors.price ? <small className="form-error">{fieldErrors.price}</small> : null}
         </label>
       </section>
 
       <section className={styles.formSection} aria-labelledby="digital-product-cover-heading">
-        <div className={styles.sectionHeading}>
-          <h3 id="digital-product-cover-heading">Cover</h3>
-          <p>Cover digunakan sebagai gambar pemasaran. File produk sebenarnya belum dikelola pada fase ini.</p>
-        </div>
+        <div className={styles.sectionHeading}><h3 id="digital-product-cover-heading">Cover / poster</h3><p>Cover adalah asset pemasaran publik. File PDF/Video berbayar dikelola terpisah di storage private.</p></div>
         <div className={styles.coverLayout}>
           <div className={styles.coverInput}>
-            <label>{selected ? 'Ganti cover' : 'Pilih cover produk'}
-              <input data-testid="digital-product-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file: undefined })) }} />
-            </label>
-            <small className={styles.helper}>{selected ? 'Cover saat ini tetap digunakan jika tidak memilih file baru. JPG, PNG, atau WebP · maksimal 5 MB.' : 'JPG, PNG, atau WebP · maksimal 5 MB.'}</small>
+            <label>{selected ? 'Ganti cover' : 'Pilih cover produk'}<input data-testid="digital-product-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file: undefined })) }} /></label>
+            <small className={styles.helper}>{selected ? 'Cover tersimpan tetap digunakan jika tidak memilih file baru. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB.</small>
             {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
           </div>
-
           <div className={styles.coverPreview} data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product">
-            <div className={styles.coverPreviewCanvas}>
-              {editorPreviewUrl
-                ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 768px) 80vw, 280px" unoptimized />
-                : <div className={styles.coverPreviewEmpty}><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}
-            </div>
-            <p>{localPreviewUrl ? 'Preview cover baru. Cover lama baru dibersihkan setelah update database berhasil.' : selected ? 'Cover tersimpan saat ini. Pilih file baru hanya jika ingin menggantinya.' : 'Preview akan muncul di sini sebelum data disimpan.'}</p>
+            <div className={styles.coverPreviewCanvas}>{editorPreviewUrl ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 768px) 80vw, 280px" unoptimized /> : <div className={styles.coverPreviewEmpty}><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}</div>
+            <p>{localPreviewUrl ? 'Preview cover baru.' : selected ? 'Cover tersimpan saat ini.' : 'Preview akan muncul di sini sebelum data disimpan.'}</p>
           </div>
         </div>
+      </section>
+
+      <section className={styles.formSection} aria-labelledby="digital-product-content-heading">
+        <div className={styles.sectionHeading}><h3 id="digital-product-content-heading">Materi terlindungi</h3><p>Pilih Jenis Produk dan upload source berbayar. Asset ini tidak menggunakan public URL permanen.</p></div>
+        <fieldset className={styles.contentTypeFieldset}>
+          <legend>Jenis Produk</legend>
+          <div className={styles.typeOptions}>
+            <label className={draft.contentType === 'pdf' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="pdf" checked={draft.contentType === 'pdf'} onChange={() => { setDraft(current => ({ ...current, contentType: 'pdf' })); setSelectedContentFile(null); setContentError('') }} /><FileText aria-hidden="true" /> PDF</label>
+            <label className={draft.contentType === 'video' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="video" checked={draft.contentType === 'video'} onChange={() => { setDraft(current => ({ ...current, contentType: 'video' })); setSelectedContentFile(null); setContentError('') }} /><PlayCircle aria-hidden="true" /> Video</label>
+          </div>
+        </fieldset>
+        {draft.contentType ? <label className={styles.field}>{draft.contentType === 'pdf' ? 'PDF source' : 'Video source'}
+          <input data-testid="digital-product-content-input" type="file" accept={draft.contentType === 'pdf' ? 'application/pdf,.pdf' : 'video/mp4,video/webm,.mp4,.webm'} onChange={event => { setSelectedContentFile(event.target.files?.[0] ?? null); setContentError('') }} />
+          <small className={styles.helper}>{storedContentCompatible ? `Materi tersimpan: ${selected?.content_file_name ?? 'file terlindungi'}${formatFileSize(selected?.content_size_bytes ?? null) ? ` · ${formatFileSize(selected?.content_size_bytes ?? null)}` : ''}. Pilih file baru hanya untuk mengganti.` : draft.contentType === 'pdf' ? 'PDF · maksimal 500 MB.' : 'MP4 atau WebM · maksimal 500 MB.'}</small>
+        </label> : null}
+        {selectedContentFile ? <div className={styles.protectedFileSummary}><ShieldCheck aria-hidden="true" /><span><strong>{selectedContentFile.name}</strong>{formatFileSize(selectedContentFile.size)} · {selectedContentFile.type}</span></div> : null}
+        {contentError ? <small className="form-error" data-testid="digital-product-content-error">{contentError}</small> : null}
+        <label className={styles.publishToggle}><input type="checkbox" checked={draft.isPublished} onChange={event => { setDraft(current => ({ ...current, isPublished: event.target.checked })); setContentError('') }} /><span><strong>Publikasikan di storefront</strong><small>Produk draft tetap dapat dikelola admin. Publikasi memerlukan jenis dan file materi terlindungi.</small></span></label>
       </section>
 
       <div className={styles.formActions}>
@@ -458,151 +493,47 @@ export function DigitalProductManagement() {
     </form>
   ) : null
 
-  const productDialog = editorOpen ? <dialog
-    ref={dialogRef}
-    className={dialogStyles.dialog}
-    aria-labelledby="digital-product-dialog-heading"
-    data-testid="digital-product-dialog"
-    onClose={resetEditorState}
-    onCancel={event => { if (busy) event.preventDefault() }}
-    onClick={event => {
-      if (event.target === event.currentTarget && !busy) event.currentTarget.close()
-    }}
-  >
+  const productDialog = editorOpen ? <dialog ref={dialogRef} className={dialogStyles.dialog} aria-labelledby="digital-product-dialog-heading" data-testid="digital-product-dialog" onClose={resetEditorState} onCancel={event => { if (busy) event.preventDefault() }} onClick={event => { if (event.target === event.currentTarget && !busy) event.currentTarget.close() }}>
     <div className={dialogStyles.panel}>
-      <header className={dialogStyles.header}>
-        <div>
-          <p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p>
-          <h2 id="digital-product-dialog-heading">{creating ? 'Buat Digital Product' : selected?.name || 'Kelola Digital Product'}</h2>
-        </div>
-        <button type="button" className={`role-close ${dialogStyles.closeButton}`} onClick={closeEditor} disabled={busy} aria-label="Tutup editor Digital Product" data-testid="digital-product-dialog-close" autoFocus><X aria-hidden="true" /></button>
-      </header>
+      <header className={dialogStyles.header}><div><p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p><h2 id="digital-product-dialog-heading">{creating ? 'Buat Digital Product' : selected?.name || 'Kelola Digital Product'}</h2></div><button type="button" className={`role-close ${dialogStyles.closeButton}`} onClick={closeEditor} disabled={busy} aria-label="Tutup editor Digital Product" data-testid="digital-product-dialog-close" autoFocus><X aria-hidden="true" /></button></header>
       <div className={dialogStyles.body}>{editor}</div>
     </div>
   </dialog> : null
 
-  if (loading) {
-    return (
-      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy="true">
-        {pageHeader}
-        <div className={styles.stateCard} role="status"><RefreshCw aria-hidden="true" /><h3>Memuat Digital Products…</h3><p>Menyiapkan daftar produk, cover, dan editor.</p></div>
-      </section>
-    )
-  }
+  if (loading) return <section className={dataStyles.page} data-testid="digital-product-management" aria-busy="true">{pageHeader}<div className={styles.stateCard} role="status"><RefreshCw aria-hidden="true" /><h3>Memuat Digital Products…</h3><p>Menyiapkan daftar produk, cover, dan editor.</p></div></section>
 
-  if (setupRequired) {
-    return (
-      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
-        {pageHeader}
-        <div className={styles.stateCard} role="alert" data-testid="digital-product-setup-required">
-          <PackageOpen aria-hidden="true" />
-          <h3>Setup database diperlukan.</h3>
-          <p>Migration <code>{migrationName}</code> perlu diterapkan pada project Supabase yang digunakan deployment ini sebelum Digital Product dapat dikelola.</p>
-          <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
-        </div>
-      </section>
-    )
-  }
+  if (setupRequired) return <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>{pageHeader}<div className={styles.stateCard} role="alert" data-testid="digital-product-setup-required"><PackageOpen aria-hidden="true" /><h3>Setup database diperlukan.</h3><p>Migration <code>{migrationName}</code> perlu diterapkan pada project Supabase yang digunakan deployment ini sebelum Digital Product dapat dikelola.</p><button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button></div></section>
 
-  if (loadFailed) {
-    return (
-      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
-        {pageHeader}
-        <div className={styles.stateCard} role="alert" data-testid="digital-product-load-error">
-          <RefreshCw aria-hidden="true" />
-          <h3>Digital Products belum dapat dimuat.</h3>
-          <p>{error}</p>
-          <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
-        </div>
-      </section>
-    )
-  }
+  if (loadFailed) return <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>{pageHeader}<div className={styles.stateCard} role="alert" data-testid="digital-product-load-error"><RefreshCw aria-hidden="true" /><h3>Digital Products belum dapat dimuat.</h3><p>{error}</p><button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button></div></section>
 
-  if (showDedicatedEmptyState) {
-    return (
-      <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
-        {pageHeader}
-        <div className={styles.emptyState} data-testid="digital-product-empty-state">
-          <div className={styles.emptyContent}>
-            <span className={styles.emptyIcon}><PackageOpen aria-hidden="true" /></span>
-            <h3>Belum ada Digital Product</h3>
-            <p>Buat produk digital pertama untuk mulai menyiapkan informasi, harga, dan cover sebelum storefront tersedia.</p>
-            <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Buat Digital Product</button>
-            <div className={styles.emptyChips} aria-label="Status Digital Product">
-              <span>Draft admin</span>
-              <span>Storefront belum aktif</span>
-              <span>Cover JPG / PNG / WebP</span>
-            </div>
-            {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
-          </div>
-        </div>
-      </section>
-    )
-  }
+  if (showDedicatedEmptyState) return <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>{pageHeader}<div className={styles.emptyState} data-testid="digital-product-empty-state"><div className={styles.emptyContent}><span className={styles.emptyIcon}><PackageOpen aria-hidden="true" /></span><h3>Belum ada Digital Product</h3><p>Buat produk digital pertama, pilih PDF atau Video, upload materi private, lalu publikasikan saat siap.</p><button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Buat Digital Product</button><div className={styles.emptyChips} aria-label="Status Digital Product"><span>PDF / Video</span><span>Private content</span><span>Draft / Published</span></div>{notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}</div></div></section>
 
   return (
     <section className={dataStyles.page} data-testid="digital-product-management" aria-busy={busy}>
       {pageHeader}
-
       <div className={dataStyles.surface} data-testid="digital-product-list-surface">
-        <div className={dataStyles.surfaceHeader}>
-          <div className={dataStyles.surfaceHeaderCopy}>
-            <p className="kicker">Daftar produk</p>
-            <h3>{products.length} Digital Product</h3>
-            <p>Gunakan pencarian untuk mempersempit daftar, lalu pilih Kelola untuk membuka editor.</p>
-          </div>
-          <button type="button" className="button button-primary" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button>
-        </div>
-
-        <div className={dataStyles.toolbar}>
-          <label className={dataStyles.searchField}>Cari produk
-            <span className={dataStyles.searchControl}><Search aria-hidden="true" /><input
-              type="search"
-              value={query}
-              onChange={event => { setQuery(event.target.value); setProductPage(0) }}
-              placeholder="Cari nama, slug, deskripsi, atau harga"
-            /></span>
-          </label>
-        </div>
-
+        <div className={dataStyles.surfaceHeader}><div className={dataStyles.surfaceHeaderCopy}><p className="kicker">Daftar produk</p><h3>{products.length} Digital Product</h3><p>Cari produk, periksa jenis/status materi, lalu pilih Kelola untuk membuka editor.</p></div><button type="button" className="button button-primary" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button></div>
+        <div className={dataStyles.toolbar}><label className={dataStyles.searchField}>Cari produk<span className={dataStyles.searchControl}><Search aria-hidden="true" /><input type="search" value={query} onChange={event => { setQuery(event.target.value); setProductPage(0) }} placeholder="Cari nama, slug, deskripsi, jenis, atau harga" /></span></label></div>
         {filteredProducts.length === 0 ? <div className={dataStyles.empty}>Tidak ada Digital Product yang sesuai dengan pencarian.</div> : <div className={dataStyles.tableScroll} data-testid="digital-product-table-scroll">
           <table className={`${dataStyles.table} ${dataStyles.productTable}`} data-testid="digital-product-table">
-            <thead>
-              <tr>
-                <th scope="col">Produk</th>
-                <th scope="col">Slug</th>
-                <th scope="col">Harga</th>
-                <th scope="col">Cover</th>
-                <th scope="col">Terakhir diperbarui</th>
-                <th scope="col" className={dataStyles.actionCell}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedProducts.map(product => <tr key={product.id} data-testid="digital-product-row">
-                <td><div className={dataStyles.identityText}>
-                  <strong className={dataStyles.primaryText}>{product.name}</strong>
-                  <span className={dataStyles.descriptionText}>{product.description}</span>
-                </div></td>
-                <td><span className={dataStyles.mono}>/{product.slug}</span></td>
+            <thead><tr><th scope="col">Produk</th><th scope="col">Jenis</th><th scope="col">Harga</th><th scope="col">Status</th><th scope="col">Materi terlindungi</th><th scope="col">Diperbarui</th><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead>
+            <tbody>{pagedProducts.map(product => {
+              const coverUrl = supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(product.image_path).data.publicUrl
+              const contentReady = Boolean(product.content_type && product.content_path && product.content_mime_type)
+              return <tr key={product.id} data-testid="digital-product-row">
+                <td><div className={styles.tableProductIdentity}><div className={styles.tableThumbnail}><Image src={coverUrl} alt="" fill sizes="54px" unoptimized /></div><div className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{product.name}</strong><span className={dataStyles.descriptionText}>/{product.slug}</span></div></div></td>
+                <td><span className={`${dataStyles.badge} ${product.content_type ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.content_type ? product.content_type.toUpperCase() : 'Belum diatur'}</span></td>
                 <td><strong className={dataStyles.primaryText}>{formatDigitalProductPrice(product.price_amount)}</strong></td>
-                <td><span className={`${dataStyles.badge} ${product.image_path ? dataStyles.successBadge : dataStyles.warningBadge}`} title={product.image_path || undefined}>{product.image_path ? 'Tersimpan' : 'Belum ada'}</span></td>
+                <td><span className={`${dataStyles.badge} ${product.is_published ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.is_published ? 'Published' : 'Draft'}</span></td>
+                <td><span className={`${dataStyles.badge} ${contentReady ? dataStyles.successBadge : dataStyles.warningBadge}`}>{contentReady ? 'Siap' : 'Belum ada'}</span></td>
                 <td><time className={dataStyles.dateCell} dateTime={product.updated_at}>{formatUpdatedAt(product.updated_at)}</time></td>
-                <td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => beginEdit(product.id)} data-testid={`digital-product-manage-${product.id}`}>Kelola</button></td>
-              </tr>)}
-            </tbody>
+                <td className={dataStyles.actionCell}><div className={styles.tableActions}>{product.is_published ? <a className={`button button-outline ${dataStyles.actionButton}`} href={`/produk-digital/${product.slug}`} target="_blank" rel="noreferrer">Preview</a> : null}<button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => beginEdit(product.id)} data-testid={`digital-product-manage-${product.id}`}>Kelola</button></div></td>
+              </tr>
+            })}</tbody>
           </table>
         </div>}
-
-        <TablePagination
-          page={productPage}
-          pageSize={PRODUCT_PAGE_SIZE}
-          totalItems={filteredProducts.length}
-          onPageChange={setProductPage}
-          disabled={busy}
-          label="Pagination Digital Product"
-        />
+        <TablePagination page={productPage} pageSize={PRODUCT_PAGE_SIZE} totalItems={filteredProducts.length} onPageChange={setProductPage} disabled={busy} label="Pagination Digital Product" />
       </div>
-
       {productDialog}
     </section>
   )
