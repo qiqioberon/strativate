@@ -6,7 +6,7 @@ import { MidtransEmbed } from '@/components/commerce/midtrans-embed'
 import { buttonVariants } from '@/components/ui/button'
 import { requireAccount } from '@/lib/auth/server'
 import { formatRupiah } from '@/lib/commerce/money'
-import { createOrderFromCart, getActiveCart, getOrderWithItems } from '@/lib/commerce/server'
+import { getOrderWithItems } from '@/lib/commerce/server'
 import type { OrderWithItems } from '@/lib/commerce/types'
 import { isDigitalProductsEnabled } from '@/lib/features'
 import { getMidtransPublicConfig } from '@/lib/payments/midtrans'
@@ -39,12 +39,7 @@ export default async function CheckoutPage({
   const params = await searchParams
   const requestedOrderId = typeof params.order === 'string' ? params.order : null
 
-  if (!requestedOrderId) {
-    const cart = await getActiveCart()
-    if (!cart.canCheckout) redirect('/cart')
-    const order = await createOrderFromCart(cart.id)
-    redirect(`/checkout?order=${encodeURIComponent(order.id)}`)
-  }
+  if (!requestedOrderId) redirect('/cart')
 
   const order = await loadOwnedOrder(requestedOrderId)
   const midtrans = getMidtransPublicConfig()

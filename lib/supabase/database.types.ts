@@ -137,6 +137,11 @@ export type PaymentAttempt = {
   provider: "midtrans"
   provider_order_id: string
   snap_token: string | null
+  snap_token_created_at: string | null
+  snap_token_expires_at: string | null
+  snap_creation_claim_token: string | null
+  snap_creation_claimed_at: string | null
+  snap_creation_claim_expires_at: string | null
   provider_transaction_id: string | null
   provider_status: string | null
   fraud_status: string | null
@@ -270,7 +275,9 @@ export type Database = {
       create_order_from_cart: { Args: { p_cart_id: string }; Returns: Order }
       list_owned_digital_products: { Args: Record<PropertyKey, never>; Returns: OwnedDigitalProduct[] }
       reserve_midtrans_payment_attempt: { Args: { p_order_id: string }; Returns: PaymentAttempt }
-      store_midtrans_snap_token: { Args: { p_attempt_id: string; p_snap_token: string }; Returns: PaymentAttempt }
+      claim_midtrans_snap_creation: { Args: { p_attempt_id: string; p_claim_token: string }; Returns: boolean }
+      store_midtrans_snap_token: { Args: { p_attempt_id: string; p_claim_token: string; p_snap_token: string }; Returns: PaymentAttempt }
+      release_midtrans_snap_creation: { Args: { p_attempt_id: string; p_claim_token: string }; Returns: boolean }
       apply_midtrans_payment_status: { Args: { p_attempt_id: string; p_normalized_status: string; p_provider_status: string; p_provider_transaction_id: string | null; p_fraud_status: string | null; p_payment_type: string | null }; Returns: PaymentAttempt }
     }
     Enums: {
