@@ -7,10 +7,10 @@ The former generic Product Catalog Master is no longer Strativate's runtime arch
 The current long-term ownership rule is deliberately simple:
 
 - each business/product type owns its own domain model;
-- shared commerce will later unify cart, checkout, order, and payment;
-- this cleanup does not implement those later domains.
+- Digital Product is now the first standalone product domain;
+- shared commerce will later unify cart, checkout, order, and payment.
 
-There must not be a second temporary generic catalog abstraction between the retired Product Catalog and those future domains.
+There must not be a second temporary generic catalog abstraction between the retired Product Catalog and the domain-owned implementations.
 
 ## Public program information during the transition
 
@@ -18,33 +18,43 @@ There must not be a second temporary generic catalog abstraction between the ret
 
 Those pages intentionally preserve the existing marketing composition—breadcrumb, hero, audience, journey, category list, comparison, contact CTA, typography, responsive layout, and styling—without treating retired Product Catalog records as current commercial truth.
 
-Package prices, per-session prices, commercial offerings, add-ons, bundles, benefits, delivery options, purchase flows, and other Product Catalog business structures are not copied into a new static master. While the domain-specific implementations are absent, the UI shows an honest unavailable/update state and directs users to the approved contact path.
+Package prices, per-session prices, commercial offerings, add-ons, bundles, benefits, delivery options, purchase flows, and other retired Product Catalog business structures are not copied into a new static master. Until their future domain-specific implementations exist, the UI shows an honest unavailable/update state and directs users to the approved contact path.
 
-Legacy mentoring slugs remain compatibility redirects to the canonical Private/Intensive information routes. Legacy checkout URLs for those mentoring slugs redirect to the public information pages; there is no replacement checkout in this cleanup.
+Legacy mentoring slugs remain compatibility redirects to the canonical Private/Intensive information routes. Legacy checkout URLs for those mentoring slugs redirect to the public information pages; there is no replacement checkout in this phase.
 
-## Digital Product presentation
+## Digital Product domain
 
-Digital Product is not implemented as a new domain here. When its reversible feature flag is enabled, `/produk-digital` and the homepage preserve the existing product-card/image/layout foundation while using only the repository's explicit placeholder records. They do not invent product names, prices, files, entitlements, or delivery rules.
+Digital Product now owns a dedicated runtime model created by `202609140003_digital_product_domain.sql`:
+
+- `public.digital_products` is the source of truth for `name`, `slug`, `description`, `image_path`, and integer-Rupiah `price_amount`;
+- `digital-product-images` is a private Supabase Storage bucket containing only cover/marketing images under the `products/` namespace;
+- direct table and cover management is admin-only through `public.is_admin()` RLS and Storage policies;
+- the admin UI supports list/search/create/edit/delete plus safe cover upload, replacement, and deletion cleanup;
+- `components/admin/catalog-management.tsx` remains presentation-only and is reused by `components/admin/digital-product-management.tsx`.
+
+This domain deliberately does **not** contain the actual downloadable/viewable Digital Product file, content delivery, entitlement, ownership, cart, checkout, order, payment, or purchase state.
+
+`featureFlags.digitalProducts` remains `false`. The public `/produk-digital` storefront is not connected to `public.digital_products`, and Digital Product records/covers are not exposed publicly in this phase. Public product presentation stays in its existing disabled/placeholder behavior until a later phase explicitly wires the storefront.
 
 ## Admin/frontend preservation
 
-The old generic `Katalog Produk` admin entry is unmounted because its backend no longer exists. Reusable frontend work is retained where practical:
+The old generic `Katalog Produk` admin backend remains retired. Reusable frontend work is retained where practical:
 
-- `components/admin/catalog-management.tsx` is presentation-only;
-- `components/admin/catalog-structures.tsx` is presentation-only;
+- `components/admin/catalog-management.tsx` is presentation-only and now supplies the Digital Product list/search/editor shell;
+- `components/admin/catalog-structures.tsx` is presentation-only historical reusable UI;
 - `components/catalog/catalog-browser.tsx` is presentation-only;
 - catalog/program/product CSS remains unless independently proven obsolete.
 
-Retained components must compile without Product Catalog tables, views, RPCs, generated types, or `lib/catalog/*`.
+Retained presentation components must compile without Product Catalog tables, views, RPCs, generated types, or `lib/catalog/*`. Digital Product business logic belongs only to its domain-specific controller/helpers and `public.digital_products` schema.
 
 ## Historical commercial sources
 
-The Private Mentoring and Intensive Mentoring guidebooks and migration history remain useful provenance, including unresolved pricing/naming conflicts documented in `docs/strativate/source-conflicts.md`. They are not copied into current runtime commercial data by this cleanup.
+The Private Mentoring and Intensive Mentoring guidebooks and migration history remain useful provenance, including unresolved pricing/naming conflicts documented in `docs/strativate/source-conflicts.md`. They are not copied into current runtime commercial data.
 
 Historical design/plan documents under `docs/superpowers/` may describe the Product Catalog architecture that existed at the time. Treat those documents as history, not current source of truth.
 
 ## Verification boundary
 
-The cleanup is considered structurally complete only when runtime searches show no active dependency on the removed Product Catalog backend and the forward migration/test suite proves the catalog objects are absent while Mentor Domain, Auth/onboarding, institutions, and Hero Posters survive.
+Phase 2A is structurally complete only when runtime searches show no active dependency on the removed Product Catalog backend, the fresh migration chain succeeds through Product Catalog creation → removal → Digital Product creation, Digital Product SQL/application/browser tests pass, and the public Digital Product feature flag remains disabled.
 
-The destructive forward migration is not considered deployed to hosted Supabase until `supabase/migrations/202609140002_remove_legacy_product_catalog.sql` has been deliberately applied and verified on the target project.
+Hosted Supabase is not considered updated until the target environment has deliberately applied all pending migrations through `supabase/migrations/202609140003_digital_product_domain.sql`. The repository must not apply destructive or schema-changing migrations to hosted Supabase automatically.

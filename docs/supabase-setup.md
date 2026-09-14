@@ -25,10 +25,11 @@ Untuk database baru, jalankan semua migration dalam urutan filename:
 6. `202609130001_mentor_domain.sql`
 7. `202609140001_marketing_hero_poster_natural_order.sql`
 8. `202609140002_remove_legacy_product_catalog.sql` — forward cleanup yang membongkar Product Catalog Master lama.
+9. `202609140003_digital_product_domain.sql` — domain Digital Product mandiri dan bucket cover admin-only.
 
-Migration nomor 8 harus diterapkan secara terkontrol ke project hosted. Ia menghapus tabel/view/function/type Product Catalog lama dan **tidak** boleh dijalankan otomatis terhadap production dari workflow cleanup ini. Pastikan backup/approval operasional tersedia sesuai prosedur deployment sebelum penerapan.
+Migration nomor 8 harus diterapkan secara terkontrol ke project hosted karena menghapus tabel/view/function/type Product Catalog lama. Migration nomor 9 kemudian membuat `public.digital_products` dan bucket private `digital-product-images`. Keduanya merupakan perubahan schema dan **tidak** boleh dijalankan otomatis terhadap production dari workflow ini. Pastikan backup/approval operasional tersedia sesuai prosedur deployment sebelum penerapan.
 
-Arsitektur setelah cleanup: setiap business/product type akan memiliki domain model sendiri; shared commerce akan dibangun kemudian untuk cart, checkout, order, dan payment. Migration cleanup ini tidak membuat domain baru tersebut.
+Arsitektur setelah Phase 2A: Digital Product sudah memiliki domain model sendiri; Private/Intensive/Big Class tetap terpisah dan shared commerce akan dibangun kemudian untuk cart, checkout, order, dan payment. Domain Digital Product saat ini tidak berisi file produk yang dapat diunduh, purchase, atau entitlement.
 
 Contoh PostgreSQL CLI:
 
@@ -41,6 +42,7 @@ psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/mi
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609130001_mentor_domain.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140001_marketing_hero_poster_natural_order.sql
 psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140002_remove_legacy_product_catalog.sql
+psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140003_digital_product_domain.sql
 ```
 
 `psql` tidak otomatis membaca `.env`. Jangan menjalankan ulang migration yang telah tercatat sebagai applied; sinkronkan migration history jika SQL Editor pernah dipakai sebelum beralih ke Supabase CLI.
@@ -90,7 +92,15 @@ Admin dapat mengelola invitation/tier/availability melalui boundary yang sudah a
 
 `marketing_hero_posters` dan bucket `marketing-hero-posters` tetap domain terpisah. Migration Product Catalog cleanup tidak mengubah tabel, Storage bucket, policy, atau RPC Hero Poster. Migration natural-order 14 September harus tetap diterapkan sebelum cleanup Product Catalog.
 
-## 8. Pengujian otomatis
+## 8. Digital Products
+
+`public.digital_products` menyimpan hanya nama, slug, deskripsi, object path cover, integer Rupiah, dan metadata teknis. Admin adalah satu-satunya browser role yang dapat SELECT/INSERT/UPDATE/DELETE melalui RLS `public.is_admin()`.
+
+Bucket `digital-product-images` bersifat private dan hanya menyimpan JPG/PNG/WebP cover maksimal 5 MB di namespace `products/`. Admin dapat membaca, mengunggah, mengganti, dan menghapus object melalui Storage policy. Tabel menyimpan object path, bukan public URL; admin preview menggunakan signed URL sementara.
+
+`featureFlags.digitalProducts` tetap `false`. Jangan membuka public read policy, storefront, file produk sebenarnya, cart, checkout, order, payment, atau entitlement dari setup ini.
+
+## 9. Pengujian otomatis
 
 ```powershell
 pnpm test
@@ -109,12 +119,12 @@ $env:TEST_DATABASE_URL = 'postgresql://postgres@127.0.0.1:55439/strativate_test_
 pnpm test:db -- --bootstrap
 ```
 
-Runner hanya menerima database bernama `strativate_test_*`. `--bootstrap` memasang harness dan seluruh migration dalam urutan filename, termasuk forward Product Catalog cleanup, lalu menjalankan suite SQL Auth, institution import, mentor invites, Hero Posters, Mentor Domain, dan `catalog_removal.sql`.
+Runner hanya menerima database bernama `strativate_test_*`. `--bootstrap` memasang harness dan seluruh migration dalam urutan filename, termasuk forward Product Catalog cleanup dan Digital Product Domain, lalu menjalankan suite SQL Auth, institution import, mentor invites, Hero Posters, Mentor Domain, `catalog_removal.sql`, dan `digital_products.sql`.
 
-`catalog_removal.sql` harus membuktikan tidak ada tabel/view/function/type Product Catalog aktif lagi dan memastikan `mentor_tiers`, Auth/onboarding, institutions, serta Hero Posters tetap ada.
+`catalog_removal.sql` harus membuktikan tidak ada tabel/view/function/type Product Catalog aktif lagi dan memastikan `mentor_tiers`, Auth/onboarding, institutions, serta Hero Posters tetap ada. `digital_products.sql` harus membuktikan schema/constraint, admin CRUD, role isolation, private cover Storage, dan bahwa schema katalog lama tidak muncul kembali.
 
-## 9. Batas bukti hosted
+## 10. Batas bukti hosted
 
-Test lokal dan migration repository tidak membuktikan bahwa hosted Supabase sudah diperbarui. Setelah deployment migration yang disetujui, verifikasi migration history serta objek Auth/Mentor/Hero Poster pada target project. Jangan menganggap `202609140002_remove_legacy_product_catalog.sql` telah diterapkan remote hanya karena file-nya ada di repository.
+Test lokal dan migration repository tidak membuktikan bahwa hosted Supabase sudah diperbarui. Setelah deployment migration yang disetujui, verifikasi migration history serta objek Auth/Mentor/Hero Poster/Digital Product pada target project. Jangan menganggap `202609140002_remove_legacy_product_catalog.sql` atau `202609140003_digital_product_domain.sql` telah diterapkan remote hanya karena file-nya ada di repository.
 
 Referensi resmi: [SSR Supabase](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [template email](https://supabase.com/docs/guides/auth/auth-email-templates), [Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google), [Admin invitations](https://supabase.com/docs/reference/javascript/auth-admin-inviteuserbyemail).
