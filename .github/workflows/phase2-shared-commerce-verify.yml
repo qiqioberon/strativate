@@ -1,9 +1,14 @@
 name: Phase 2 Shared Commerce Verify
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
+      - main
       - feat/phase-2-shared-commerce
+      - fix/phase-2-commerce-hardening
   workflow_dispatch:
 
 jobs:
