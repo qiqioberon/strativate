@@ -12,6 +12,9 @@ export const marketingNavigationItems = [
   { label: 'Tanya Jawab', href: '/tanya-jawab', icon: 'help' },
 ] as const satisfies ReadonlyArray<{ label: string; href: string; icon: NavigationIcon }>
 
+export type MarketingNavigationItem =
+  (typeof marketingNavigationItems)[number]
+
 export function getMarketingNavigation(digitalProductsEnabled: boolean) {
   return marketingNavigationItems.filter(
     item => digitalProductsEnabled || item.href !== '/produk-digital',

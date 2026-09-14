@@ -27,8 +27,8 @@ test('signature uses exact notification strings in Midtrans order', () => {
 })
 
 test('gross amount parsing is integer-safe and rejects non-IDR fractions', () => {
-  assert.equal(parseIdrGrossAmount('125000.00'), 125000n)
-  assert.equal(parseIdrGrossAmount('0'), 0n)
+  assert.equal(parseIdrGrossAmount('125000.00'), BigInt(125000))
+  assert.equal(parseIdrGrossAmount('0'), BigInt(0))
   assert.throws(() => parseIdrGrossAmount('10.50'))
   assert.throws(() => parseIdrGrossAmount('1e5'))
 })
