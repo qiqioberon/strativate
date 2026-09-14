@@ -15,7 +15,7 @@ export type HeroPosterSummary = {
 
 export type HeroPosterFile = Pick<File, 'size' | 'type'>
 
-export type HeroPosterDraftErrors = Partial<Record<'file' | 'altText' | 'url' | 'sortOrder', string>>
+export type HeroPosterDraftErrors = Partial<Record<'file' | 'altText' | 'url' | 'position', string>>
 
 export function getHeroPosterSummary(posters: MarketingHeroPoster[]): HeroPosterSummary {
   const active = posters.filter(poster => poster.is_active).length
@@ -64,13 +64,15 @@ export function isHeroPosterSetupRequired(error: unknown) {
 export function validateHeroPosterDraft({
   altText,
   url,
-  sortOrder,
+  position,
+  posterCount,
   file,
   hasStoredImage,
 }: {
   altText: string
   url: string
-  sortOrder: string
+  position?: string
+  posterCount?: number
   file: HeroPosterFile | null
   hasStoredImage: boolean
 }): HeroPosterDraftErrors {
@@ -85,12 +87,15 @@ export function validateHeroPosterDraft({
   } else if (trimmedUrl && !/^\/[A-Za-z0-9/?#&=._~-]*$/.test(trimmedUrl)) {
     errors.url = 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.'
   }
-  const trimmedOrder = sortOrder.trim()
-  const parsedOrder = Number(trimmedOrder)
-  if (!trimmedOrder) {
-    errors.sortOrder = 'Urutan wajib diisi.'
-  } else if (!Number.isInteger(parsedOrder) || parsedOrder < -100000 || parsedOrder > 100000) {
-    errors.sortOrder = 'Urutan harus berupa bilangan bulat antara -100000 dan 100000.'
+  if (position !== undefined) {
+    const trimmedPosition = position.trim()
+    const parsedPosition = Number(trimmedPosition)
+    const maximum = posterCount ?? 0
+    if (!trimmedPosition) {
+      errors.position = 'Posisi wajib diisi.'
+    } else if (!Number.isInteger(parsedPosition) || parsedPosition < 1 || parsedPosition > maximum) {
+      errors.position = `Posisi harus berupa bilangan bulat antara 1 dan ${maximum}.`
+    }
   }
   return errors
 }
@@ -101,7 +106,6 @@ export function buildHeroPosterPayload({
   altText,
   title,
   url,
-  sortOrder,
   isActive,
 }: {
   imagePath: string | null
@@ -109,7 +113,6 @@ export function buildHeroPosterPayload({
   altText: string
   title: string
   url: string
-  sortOrder: string
   isActive: boolean
 }) {
   return {
@@ -117,9 +120,23 @@ export function buildHeroPosterPayload({
     alt_text: altText.trim(),
     title: title.trim() || null,
     url: url.trim() || null,
-    sort_order: Number(sortOrder),
     is_active: isActive,
   }
+}
+
+export function getNextHeroPosterSortOrder(posters: MarketingHeroPoster[]) {
+  if (!posters.length) return 1
+  return Math.max(...posters.map(poster => poster.sort_order)) + 1
+}
+
+export function moveHeroPosterIdToPosition(posters: MarketingHeroPoster[], posterId: string, position: number) {
+  const ids = posters.map(poster => poster.id)
+  const currentIndex = ids.indexOf(posterId)
+  const destination = position - 1
+  if (currentIndex < 0 || destination < 0 || destination >= ids.length || destination === currentIndex) return ids
+  const [id] = ids.splice(currentIndex, 1)
+  ids.splice(destination, 0, id)
+  return ids
 }
 
 export function reorderHeroPosterIds(posters: MarketingHeroPoster[], index: number, direction: -1 | 1) {

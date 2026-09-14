@@ -11,7 +11,9 @@ import { formError } from '@/lib/auth/errors'
 import {
   buildHeroPosterPayload,
   getHeroPosterSummary,
+  getNextHeroPosterSortOrder,
   isHeroPosterSetupRequired,
+  moveHeroPosterIdToPosition,
   reorderHeroPosterIds,
   safeHeroPosterFileName,
   validateHeroPosterDraft,
@@ -90,6 +92,13 @@ export function HeroPosterManagement() {
     setNotice('')
   }
 
+  async function reorderEditedPoster(posterId: string, position: number) {
+    const ids = moveHeroPosterIdToPosition(posters, posterId, position)
+    if (ids.every((id, index) => id === posters[index]?.id)) return null
+    const { error: reorderError } = await supabase.rpc('reorder_marketing_hero_posters', { p_ids: ids })
+    return reorderError
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
@@ -97,11 +106,12 @@ export function HeroPosterManagement() {
     const values = new FormData(form)
     const altText = String(values.get('alt_text'))
     const url = String(values.get('url'))
-    const sortOrder = String(values.get('sort_order'))
+    const position = editing ? String(values.get('position')) : undefined
     const validation = validateHeroPosterDraft({
       altText,
       url,
-      sortOrder,
+      position,
+      posterCount: editing ? posters.length : undefined,
       file: selectedFile,
       hasStoredImage: Boolean(editing?.image_path),
     })
@@ -111,6 +121,7 @@ export function HeroPosterManagement() {
     if (Object.keys(validation).length > 0) return
 
     const wasEditing = Boolean(editing)
+    const requestedPosition = editing && position !== undefined ? Number(position) : null
     setBusyAction('save')
     let uploadedPath: string | null = null
 
@@ -127,15 +138,19 @@ export function HeroPosterManagement() {
         altText,
         title: String(values.get('title')),
         url,
-        sortOrder,
         isActive: values.get('is_active') === 'on',
       })
       const result = editing
         ? await supabase.from('marketing_hero_posters').update(payload).eq('id', editing.id)
-        : await supabase.from('marketing_hero_posters').insert(payload)
+        : await supabase.from('marketing_hero_posters').insert({ ...payload, sort_order: getNextHeroPosterSortOrder(posters) })
       if (result.error) throw result.error
 
       let cleanupWarning = ''
+      let orderingWarning = ''
+      if (editing && requestedPosition !== null) {
+        const reorderError = await reorderEditedPoster(editing.id, requestedPosition)
+        if (reorderError) orderingWarning = ' Konten tersimpan, tetapi posisi belum diperbarui. Muat ulang lalu coba atur posisi lagi.'
+      }
       if (editing && uploadedPath && editing.image_path !== uploadedPath) {
         const { error: cleanupError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([editing.image_path])
         if (cleanupError) cleanupWarning = ' Poster lama masih perlu ditinjau dan dihapus manual dari Storage.'
@@ -143,7 +158,7 @@ export function HeroPosterManagement() {
 
       resetEditor()
       form.reset()
-      setNotice(`${wasEditing ? 'Poster berhasil diperbarui.' : 'Poster berhasil ditambahkan.'}${cleanupWarning}`)
+      setNotice(`${wasEditing ? 'Poster berhasil diperbarui.' : 'Poster berhasil ditambahkan.'}${orderingWarning}${cleanupWarning}`)
       await load()
     } catch (caught) {
       let cleanupWarning = ''
@@ -155,13 +170,18 @@ export function HeroPosterManagement() {
           .maybeSingle()
 
         if (persisted) {
+          let orderingWarning = ''
+          if (editing && requestedPosition !== null) {
+            const reorderError = await reorderEditedPoster(editing.id, requestedPosition)
+            if (reorderError) orderingWarning = ' Konten tersimpan, tetapi posisi belum diperbarui. Muat ulang lalu coba atur posisi lagi.'
+          }
           if (editing && editing.image_path !== uploadedPath) {
             const { error: cleanupError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([editing.image_path])
             if (cleanupError) cleanupWarning = ' Poster lama masih perlu ditinjau dan dihapus manual dari Storage.'
           }
           resetEditor()
           form.reset()
-          setNotice(`${wasEditing ? 'Poster berhasil diperbarui.' : 'Poster berhasil ditambahkan.'}${cleanupWarning}`)
+          setNotice(`${wasEditing ? 'Poster berhasil diperbarui.' : 'Poster berhasil ditambahkan.'}${orderingWarning}${cleanupWarning}`)
           await load()
           return
         }
@@ -188,9 +208,17 @@ export function HeroPosterManagement() {
     try {
       const { error: rowError } = await supabase.from('marketing_hero_posters').delete().eq('id', poster.id)
       if (rowError) throw rowError
+
+      let orderingWarning = ''
+      const remainingIds = posters.filter(item => item.id !== poster.id).map(item => item.id)
+      if (remainingIds.length) {
+        const { error: reorderError } = await supabase.rpc('reorder_marketing_hero_posters', { p_ids: remainingIds })
+        if (reorderError) orderingWarning = ' Urutan poster yang tersisa belum dapat dinormalisasi; coba muat ulang.'
+      }
+
       const { error: storageError } = await supabase.storage.from(HERO_POSTER_BUCKET).remove([poster.image_path])
-      if (storageError) setNotice('Poster dihapus dari daftar, tetapi berkas Storage perlu ditinjau manual.')
-      else setNotice('Poster berhasil dihapus.')
+      if (storageError) setNotice(`Poster dihapus dari daftar, tetapi berkas Storage perlu ditinjau manual.${orderingWarning}`)
+      else setNotice(`Poster berhasil dihapus.${orderingWarning}`)
       if (editing?.id === poster.id) resetEditor()
       await load()
     } catch (caught) {
@@ -241,6 +269,7 @@ export function HeroPosterManagement() {
   const storedPreviewUrl = editing ? previewUrl(editing.image_path) : null
   const editorPreviewUrl = localPreviewUrl ?? storedPreviewUrl
   const editorPreviewSource = localPreviewUrl ? 'local' : storedPreviewUrl ? 'stored' : 'empty'
+  const editingPosition = editing ? posters.findIndex(poster => poster.id === editing.id) + 1 : null
 
   return (
     <section className="hero-poster-admin" data-testid="hero-poster-admin-section" aria-busy={busy || loading}>
@@ -301,7 +330,9 @@ export function HeroPosterManagement() {
               <div>
                 <p className="kicker">{editing ? 'Ubah poster' : 'Poster baru'}</p>
                 <h2>{editing?.title ?? 'Tambahkan hero poster'}</h2>
-                {editing ? <p className="hero-poster-form__editing">Sedang mengedit {editing.title ?? editing.alt_text}</p> : null}
+                {editing
+                  ? <p className="hero-poster-form__editing">Sedang mengedit {editing.title ?? editing.alt_text}</p>
+                  : <p className="hero-poster-form__editing">Poster baru otomatis ditempatkan di posisi terakhir.</p>}
               </div>
               <ImagePlus aria-hidden="true" size={24} />
             </div>
@@ -329,9 +360,9 @@ export function HeroPosterManagement() {
             <PosterField id="hero-poster-url" label="Tautan internal" requirement="Opsional" help="Gunakan path internal seperti /program. Tautan // tidak diizinkan." error={fieldErrors.url}>
               <input id="hero-poster-url" name="url" placeholder="/program" defaultValue={editing?.url ?? ''} aria-invalid={Boolean(fieldErrors.url)} aria-describedby={`hero-poster-url-help${fieldErrors.url ? ' hero-poster-url-error' : ''}`} data-testid="hero-poster-url-input" />
             </PosterField>
-            <PosterField id="hero-poster-order" label="Urutan" requirement="Wajib" help="Bilangan bulat dari -100000 sampai 100000." error={fieldErrors.sortOrder}>
-              <input id="hero-poster-order" name="sort_order" type="number" required min={-100000} max={100000} step={1} defaultValue={editing?.sort_order ?? (posters.length + 1) * 10} aria-invalid={Boolean(fieldErrors.sortOrder)} aria-describedby={`hero-poster-order-help${fieldErrors.sortOrder ? ' hero-poster-order-error' : ''}`} data-testid="hero-poster-order-input" />
-            </PosterField>
+            {editing ? <PosterField id="hero-poster-position" label="Posisi" requirement="Wajib" help={`Pilih posisi 1 sampai ${posters.length}. Poster lain akan bergeser otomatis.`} error={fieldErrors.position}>
+              <input id="hero-poster-position" name="position" type="number" required min={1} max={posters.length} step={1} defaultValue={editingPosition ?? 1} aria-invalid={Boolean(fieldErrors.position)} aria-describedby={`hero-poster-position-help${fieldErrors.position ? ' hero-poster-position-error' : ''}`} data-testid="hero-poster-position-input" />
+            </PosterField> : null}
 
             <label className="hero-poster-form__active"><input name="is_active" type="checkbox" defaultChecked={editing?.is_active ?? true} data-testid="hero-poster-active-checkbox" /> <span><strong>Aktif di beranda</strong><small>Poster aktif ikut dihitung dalam kesiapan carousel.</small></span></label>
             <div className="button-row hero-poster-form__actions">
@@ -386,7 +417,7 @@ function PosterRow({ poster, index, count, busy, busyAction, previewUrl, onToggl
     <div className="hero-poster-row__copy">
       <div className="hero-poster-row__title"><strong>{poster.title ?? 'Tanpa judul'}</strong><span className={`hero-poster-status hero-poster-status--${poster.is_active ? 'active' : 'inactive'}`}>{poster.is_active ? 'Aktif' : 'Nonaktif'}</span></div>
       <p>{poster.alt_text}</p>
-      <dl><div><dt>Tujuan</dt><dd>{poster.url ?? 'Tanpa tautan'}</dd></div><div><dt>Urutan</dt><dd>{poster.sort_order}</dd></div></dl>
+      <dl><div><dt>Tujuan</dt><dd>{poster.url ?? 'Tanpa tautan'}</dd></div><div><dt>Posisi</dt><dd>{index + 1}</dd></div></dl>
     </div>
     <div className="hero-poster-row__actions">
       <button type="button" onClick={() => void onToggle(poster)} disabled={busy} role="switch" aria-checked={poster.is_active} aria-label={`${poster.is_active ? 'Nonaktifkan' : 'Aktifkan'} ${name}`} className="hero-poster-row__toggle">{busyAction === `toggle-${poster.id}` ? 'Menyimpan…' : poster.is_active ? 'Aktif' : 'Nonaktif'}</button>

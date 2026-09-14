@@ -32,7 +32,7 @@ values ('marketing-hero-posters', 'posters/active.webp', '92000000-0000-0000-000
 select public.reorder_marketing_hero_posters(array(
   select id from public.marketing_hero_posters order by sort_order desc
 ));
-select test_marketing.assert((select sort_order = 10 from public.marketing_hero_posters where image_path = 'posters/draft.webp'), 'admin can reorder posters atomically');
+select test_marketing.assert((select sort_order = 1 from public.marketing_hero_posters where image_path = 'posters/draft.webp'), 'admin can reorder posters into natural one-based positions');
 reset role;
 
 set local role anon;

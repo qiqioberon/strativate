@@ -4,7 +4,9 @@ import test from 'node:test'
 import {
   buildHeroPosterPayload,
   getHeroPosterSummary,
+  getNextHeroPosterSortOrder,
   isHeroPosterSetupRequired,
+  moveHeroPosterIdToPosition,
   reorderHeroPosterIds,
   safeHeroPosterFileName,
   validateHeroPosterDraft,
@@ -32,8 +34,8 @@ test('carousel readiness distinguishes fallback, single poster, and active carou
     message: 'Beranda masih menggunakan visual brand bawaan.',
     tone: 'fallback',
   })
-  assert.equal(getHeroPosterSummary([poster('one', true, 10)]).label, 'Poster tunggal')
-  assert.deepEqual(getHeroPosterSummary([poster('one', true, 10), poster('two', true, 20)]), {
+  assert.equal(getHeroPosterSummary([poster('one', true, 1)]).label, 'Poster tunggal')
+  assert.deepEqual(getHeroPosterSummary([poster('one', true, 1), poster('two', true, 2)]), {
     total: 2,
     active: 2,
     inactive: 0,
@@ -41,7 +43,7 @@ test('carousel readiness distinguishes fallback, single poster, and active carou
     message: '2 poster aktif akan diputar otomatis di beranda.',
     tone: 'carousel',
   })
-  assert.deepEqual(getHeroPosterSummary([poster('one', true, 10), poster('two', false, 20)]), {
+  assert.deepEqual(getHeroPosterSummary([poster('one', true, 1), poster('two', false, 2)]), {
     total: 2,
     active: 1,
     inactive: 1,
@@ -57,18 +59,19 @@ test('database setup detection recognizes PGRST205 and equivalent missing-resour
   assert.equal(isHeroPosterSetupRequired({ code: '42501', message: 'permission denied' }), false)
 })
 
-test('poster validation rejects missing alt text, unsafe links, invalid files, and oversized files', () => {
-  assert.equal(validateHeroPosterDraft({ altText: '', url: '', sortOrder: '10', file: null, hasStoredImage: true }).altText, 'Teks alternatif wajib diisi.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '//evil.test', sortOrder: '10', file: null, hasStoredImage: true }).url, 'Gunakan path internal yang diawali / dan bukan //.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type: 'image/gif', size: 100 }, hasStoredImage: false }).file, 'Gunakan gambar JPG, PNG, atau WebP.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type: 'image/png', size: 5 * 1024 * 1024 + 1 }, hasStoredImage: false }).file, 'Ukuran gambar maksimal 5 MB.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10.5', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).sortOrder, 'Urutan harus berupa bilangan bulat antara -100000 dan 100000.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '   ', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).sortOrder, 'Urutan wajib diisi.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/path with spaces', sortOrder: '10', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
-  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/\\evil.test', sortOrder: '10', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
+test('poster validation rejects invalid content and only validates position while editing', () => {
+  assert.equal(validateHeroPosterDraft({ altText: '', url: '', file: null, hasStoredImage: true }).altText, 'Teks alternatif wajib diisi.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '//evil.test', file: null, hasStoredImage: true }).url, 'Gunakan path internal yang diawali / dan bukan //.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', file: { type: 'image/gif', size: 100 }, hasStoredImage: false }).file, 'Gunakan gambar JPG, PNG, atau WebP.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', file: { type: 'image/png', size: 5 * 1024 * 1024 + 1 }, hasStoredImage: false }).file, 'Ukuran gambar maksimal 5 MB.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', position: '', posterCount: 3, file: null, hasStoredImage: true }).position, 'Posisi wajib diisi.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/program', position: '4', posterCount: 3, file: null, hasStoredImage: true }).position, 'Posisi harus berupa bilangan bulat antara 1 dan 3.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/path with spaces', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
+  assert.equal(validateHeroPosterDraft({ altText: 'Poster', url: '/\\evil.test', file: { type: 'image/webp', size: 100 }, hasStoredImage: false }).url, 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.')
   for (const type of ['image/jpeg', 'image/png', 'image/webp']) {
-    assert.deepEqual(validateHeroPosterDraft({ altText: 'Poster', url: '/program', sortOrder: '10', file: { type, size: 5 * 1024 * 1024 }, hasStoredImage: false }), {})
+    assert.deepEqual(validateHeroPosterDraft({ altText: 'Poster', url: '/program', file: { type, size: 5 * 1024 * 1024 }, hasStoredImage: false }), {})
   }
+  assert.deepEqual(validateHeroPosterDraft({ altText: 'Poster', url: '/program', position: '2', posterCount: 3, file: null, hasStoredImage: true }), {})
 })
 
 test('uploaded poster names stay unique-path safe without trusting the original filename', () => {
@@ -76,27 +79,40 @@ test('uploaded poster names stay unique-path safe without trusting the original 
   assert.equal(safeHeroPosterFileName('???'), 'poster')
 })
 
-test('editing without a replacement retains the stored image path', () => {
+test('editing without a replacement retains the stored image path and leaves ordering to the reorder flow', () => {
   assert.deepEqual(buildHeroPosterPayload({
     imagePath: null,
     storedImagePath: 'posters/current.webp',
     altText: 'Poster yang diperbarui',
     title: '',
     url: '',
-    sortOrder: '30',
     isActive: false,
   }), {
     image_path: 'posters/current.webp',
     alt_text: 'Poster yang diperbarui',
     title: null,
     url: null,
-    sort_order: 30,
     is_active: false,
   })
 })
 
-test('reordering returns the exact protected RPC identity sequence and keeps invalid moves unchanged', () => {
-  const posters = [poster('one', true, 10), poster('two', false, 20), poster('three', true, 30)]
+test('new posters append after the greatest stored order so they stay last before normalization', () => {
+  assert.equal(getNextHeroPosterSortOrder([]), 1)
+  assert.equal(getNextHeroPosterSortOrder([poster('one', true, 1), poster('two', true, 2)]), 3)
+  assert.equal(getNextHeroPosterSortOrder([poster('one', true, 10), poster('two', true, 20)]), 21)
+})
+
+test('editing can move a poster directly to a natural one-based position', () => {
+  const posters = [poster('one', true, 1), poster('two', false, 2), poster('three', true, 3)]
+  assert.deepEqual(moveHeroPosterIdToPosition(posters, 'three', 1), ['three', 'one', 'two'])
+  assert.deepEqual(moveHeroPosterIdToPosition(posters, 'one', 3), ['two', 'three', 'one'])
+  assert.deepEqual(moveHeroPosterIdToPosition(posters, 'two', 2), ['one', 'two', 'three'])
+  assert.deepEqual(moveHeroPosterIdToPosition(posters, 'missing', 1), ['one', 'two', 'three'])
+  assert.deepEqual(moveHeroPosterIdToPosition(posters, 'one', 0), ['one', 'two', 'three'])
+})
+
+test('quick up and down reordering returns the exact protected RPC identity sequence', () => {
+  const posters = [poster('one', true, 1), poster('two', false, 2), poster('three', true, 3)]
   assert.deepEqual(reorderHeroPosterIds(posters, 0, 1), ['two', 'one', 'three'])
   assert.deepEqual(reorderHeroPosterIds(posters, 0, -1), ['one', 'two', 'three'])
   assert.deepEqual(reorderHeroPosterIds(posters, 2, 1), ['one', 'two', 'three'])
