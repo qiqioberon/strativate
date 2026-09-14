@@ -40,8 +40,8 @@ update public.mentee_profiles set onboarding_completed_at = now() where user_id 
   '96000000-0000-0000-0000-000000000003'
 );
 
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '96000000-0000-0000-0000-000000000001', true);
+-- Seed deterministic fixture identities as the database owner. Authenticated admins
+-- intentionally do not control primary keys; role behavior is exercised below.
 insert into public.digital_products (
   id, name, slug, description, image_path, price_amount,
   content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, is_published
@@ -51,7 +51,6 @@ insert into public.digital_products (
 );
 insert into storage.objects (bucket_id, name, owner_id)
 values ('digital-product-content', 'products/protected/protected-handbook.pdf', '96000000-0000-0000-0000-000000000001');
-reset role;
 
 set local role anon;
 select test_protected_content.denied(
