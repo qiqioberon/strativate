@@ -1,31 +1,31 @@
 import type { LucideIcon } from 'lucide-react'
 import { BookOpenCheck, BriefcaseBusiness, CircleHelp, FileSearch, Presentation, Trophy, UsersRound, Wrench } from 'lucide-react'
-import type { CatalogProductSummary, CatalogProductType } from '@/lib/catalog/types'
 
 export type ServiceOverview = {
   id: string
   name: string
   description: string
-  productType?: Extract<CatalogProductType, 'private_mentoring' | 'intensive_mentoring'>
   icon: LucideIcon
+  href?: string
+  detailLabel?: string
 }
-
-export type ConnectedServiceOverview = ServiceOverview & { href?: string; detailLabel?: string }
 
 export const services: ServiceOverview[] = [
   {
     id: 'private-mentoring',
     name: 'Private Mentoring',
     description: 'Mentoring fleksibel untuk individu atau tim kecil yang disesuaikan dengan kebutuhan, target, dan timeline peserta.',
-    productType: 'private_mentoring',
     icon: UsersRound,
+    href: '/program/private-mentoring',
+    detailLabel: 'Lihat Private Mentoring',
   },
   {
     id: 'intensive-mentoring',
     name: 'Intensive Mentoring',
     description: 'Pendampingan rutin dan terstruktur untuk mempersiapkan kompetisi bisnis dari tahap awal hingga final.',
-    productType: 'intensive_mentoring',
     icon: Trophy,
+    href: '/program/intensive-mentoring',
+    detailLabel: 'Lihat Intensive Mentoring',
   },
   {
     id: 'big-class',
@@ -64,11 +64,3 @@ export const services: ServiceOverview[] = [
     icon: BookOpenCheck,
   },
 ]
-
-export function connectServicesToCatalog(products: CatalogProductSummary[]): ConnectedServiceOverview[] {
-  return services.map((service) => {
-    if (!service.productType) return service
-    const product = products.find(item => item.productType === service.productType)
-    return product ? { ...service, href: `/program/${product.slug}`, detailLabel: `Lihat ${service.name}` } : service
-  })
-}

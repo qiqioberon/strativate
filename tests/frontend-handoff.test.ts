@@ -58,7 +58,7 @@ test('every ready registry asset exists at its declared public path', async () =
   }
 })
 
-test('the program overview contains exactly eight sourced services and only verified detail routes', async () => {
+test('the program overview contains exactly eight sourced services and only verified editorial detail routes', async () => {
   let content: typeof import('../lib/content/services')
   try {
     content = await import('../lib/content/services')
@@ -76,17 +76,18 @@ test('the program overview contains exactly eight sourced services and only veri
     'Workshop',
     'Community',
   ])
-  assert.deepEqual(content.services.filter(service => service.productType).map(service => service.productType), ['private_mentoring', 'intensive_mentoring'])
-  assert.equal(content.connectServicesToCatalog([]).some(service => service.href), false)
-  const publishedPrivate = {
-    id: 'private-id', code: 'private_mentoring', slug: 'private-custom', productType: 'private_mentoring' as const,
-    defaultPurchaseFlow: 'consultation_offer' as const, title: 'Mentoring Privat', shortDescription: 'Published', description: null,
-    isFeatured: true, sortOrder: 1, startingPriceAmount: 300000, hasQuotationPricing: false,
-  }
-  const connected = content.connectServicesToCatalog([publishedPrivate])
-  assert.equal(connected[0].href, '/program/private-custom')
-  assert.equal(connected[0].detailLabel, 'Lihat Private Mentoring')
-  assert.equal(connected[1].href, undefined)
+
+  assert.deepEqual(
+    content.services.filter(service => service.href).map(service => ({ id: service.id, href: service.href, detailLabel: service.detailLabel })),
+    [
+      { id: 'private-mentoring', href: '/program/private-mentoring', detailLabel: 'Lihat Private Mentoring' },
+      { id: 'intensive-mentoring', href: '/program/intensive-mentoring', detailLabel: 'Lihat Intensive Mentoring' },
+    ],
+  )
+
+  const serialized = JSON.stringify(content.services)
+  assert.equal(serialized.includes('productType'), false)
+  assert.equal('connectServicesToCatalog' in content, false)
 })
 
 test('legacy mentoring labels render with the standardized public names', async () => {

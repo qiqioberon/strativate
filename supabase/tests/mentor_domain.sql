@@ -299,9 +299,8 @@ select test_mentor.denied(
   'non-mentor account cannot own a mentor profile'
 );
 select test_mentor.assert(
-  to_regclass('public.catalog_mentor_tiers') is not null
-  and (select count(*) = 2 from public.catalog_mentor_tiers),
-  'Product Catalog mentor tiers remain intact'
+  to_regclass('public.catalog_mentor_tiers') is null,
+  'legacy Product Catalog mentor tiers are removed while operational mentor_tiers remain canonical'
 );
 
 rollback;

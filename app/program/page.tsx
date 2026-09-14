@@ -5,8 +5,7 @@ import { PageIntro } from '@/components/marketing/page-intro'
 import { ProgramKineticSurface } from '@/components/marketing/program-kinetic'
 import { ServiceCard } from '@/components/marketing/service-card'
 import { buttonVariants } from '@/components/ui/button'
-import { listPublicCatalog } from '@/lib/catalog/public'
-import { connectServicesToCatalog } from '@/lib/content/services'
+import { services } from '@/lib/content/services'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 
 import './program-page.css'
@@ -18,8 +17,7 @@ const journey = [
   { number: '03', title: 'Mulai persiapan', copy: 'Masuk ke program yang paling relevan dan bergerak lebih terarah.' },
 ]
 
-export default async function ProgramPage() {
-  const services = connectServicesToCatalog(await listPublicCatalog())
+export default function ProgramPage() {
   const primaryServices = services.filter(service => service.id === 'private-mentoring' || service.id === 'intensive-mentoring')
   const secondaryService = services.find(service => service.id === 'big-class')
   const supportingServices = services.filter(service => !primaryServices.includes(service) && service !== secondaryService)
@@ -30,7 +28,7 @@ export default async function ProgramPage() {
         <PageIntro
           eyebrow="Program Strativate"
           title={<>Pilih dukungan yang<br /><em>sesuai tahapmu.</em></>}
-          description="Delapan layanan Strativate mendukung kebutuhan belajar, konsultasi, dan persiapan kompetisi. Detail komersial hanya ditampilkan untuk program yang telah tersedia di Product Master."
+          description="Delapan layanan Strativate mendukung kebutuhan belajar, konsultasi, dan persiapan kompetisi. Informasi komersial yang belum memiliki sumber domain aktif tidak ditampilkan sebagai fakta produksi."
           motif="program"
           aside={(
             <div className="program-intro-panel">
