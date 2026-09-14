@@ -25,8 +25,13 @@ select test_payments.assert(to_regclass('public.payment_attempts') is not null, 
 
 insert into auth.users (id, email) values ('95000000-0000-0000-0000-000000000001', 'payment-mentee@test.invalid');
 update public.mentee_profiles set onboarding_completed_at = now() where user_id = '95000000-0000-0000-0000-000000000001';
-insert into public.digital_products (id, name, slug, description, image_path, price_amount)
-values ('95100000-0000-0000-0000-000000000001', 'Payment Handbook', 'payment-handbook', 'Payment fixture.', 'products/payment-handbook.webp', 75000);
+insert into public.digital_products (
+  id, name, slug, description, image_path, price_amount,
+  content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, is_published
+) values (
+  '95100000-0000-0000-0000-000000000001', 'Payment Handbook', 'payment-handbook', 'Payment fixture.', 'products/payment-handbook.webp', 75000,
+  'pdf', 'products/payment/payment-handbook.pdf', 'application/pdf', 'payment-handbook.pdf', 4096, 20, true
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '95000000-0000-0000-0000-000000000001', true);
