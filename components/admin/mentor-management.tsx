@@ -3,6 +3,7 @@
 import { Search, UserRoundCheck, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
 import { formError } from '@/lib/auth/errors'
 import { managedMentorName, managedMentorSetup, managedMentorTier } from '@/lib/mentor/admin'
 import { createClient } from '@/lib/supabase/client'
@@ -10,7 +11,7 @@ import type { ManagedMentor, MentorTier } from '@/lib/supabase/database.types'
 import { MentorInviteForm } from './mentor-invite-form'
 import { MentorInvitations } from './mentor-invitations'
 import { MentorTierSelect } from './mentor-tier-select'
-import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
+import styles from './mentor-management.module.css'
 
 export function MentorManagement() {
   const [mentors, setMentors] = useState<ManagedMentor[]>([])
@@ -84,8 +85,8 @@ export function MentorManagement() {
     setError('')
   }
 
-  return <div className="mentor-management">
-    <header className="mentor-management-heading">
+  return <div className={`mentor-management ${styles.root}`}>
+    <header className={`mentor-management-heading ${styles.heading}`}>
       <div>
         <p className="kicker">Pengguna · mentor</p>
         <h2>Mentor Management</h2>
@@ -94,15 +95,21 @@ export function MentorManagement() {
       <span className="mentor-management-count"><UserRoundCheck aria-hidden="true" />{mentors.length} pada halaman ini</span>
     </header>
 
-    <section className="role-card mentor-management-section" aria-labelledby="invite-mentor-heading">
+    <section className={`role-card mentor-management-section ${styles.section}`} aria-labelledby="invite-mentor-heading">
       <div className="role-card-heading"><div><p className="kicker">Akses mentor</p><h2 id="invite-mentor-heading">Invite Mentor</h2></div></div>
-      <MentorInviteForm onInvited={invitationChanged} />
-      <MentorInvitations refreshKey={invitationRefresh} onDeleted={invitationChanged} />
+      <div className={styles.inviteLayout}>
+        <div className={styles.inviteFormPane}>
+          <MentorInviteForm onInvited={invitationChanged} />
+        </div>
+        <div className={styles.invitationPane}>
+          <MentorInvitations refreshKey={invitationRefresh} onDeleted={invitationChanged} />
+        </div>
+      </div>
     </section>
 
-    <section className="role-card mentor-management-section" aria-labelledby="active-mentors-heading">
+    <section className={`role-card mentor-management-section ${styles.section}`} aria-labelledby="active-mentors-heading">
       <div className="role-card-heading"><div><p className="kicker">Akun mentor</p><h2 id="active-mentors-heading">Active mentor accounts</h2></div></div>
-      <div className="mentor-management-filters">
+      <div className={`mentor-management-filters ${styles.filters}`}>
         <label className="search-field"><Search aria-hidden="true" /><span className="sr-only">Cari mentor</span><input
           value={query}
           onChange={event => { setQuery(event.target.value); setPage(0) }}
@@ -124,12 +131,14 @@ export function MentorManagement() {
       {loading && <p role="status">Memuat akun mentor…</p>}
       {!loading && !error && mentors.length === 0 && <div className="mentor-management-empty"><UserRoundCheck aria-hidden="true" /><p>Mentor tidak ditemukan untuk filter ini.</p></div>}
 
-      <div className="mentor-account-list">
+      <div className={`mentor-account-list ${styles.accountList}`}>
         {mentors.map(mentor => {
           const name = managedMentorName(mentor)
           const setup = managedMentorSetup(mentor)
-          return <article className="mentor-account-row" key={mentor.user_id}>
-            <div className="mentor-account-identity">
+          const accountStatusClass = setup.tone === 'active' ? 'status-pill green' : 'status-pill'
+          const availabilityStatusClass = mentor.availability_configured ? 'status-pill green' : 'status-pill'
+          return <article className={`mentor-account-row ${styles.accountRow}`} key={mentor.user_id}>
+            <div className={`mentor-account-identity ${styles.identity}`}>
               <span className="role-avatar blue">{name.slice(0, 2).toUpperCase()}</span>
               <div><strong>{name}</strong><small>{mentor.email}</small><small>@{mentor.username || 'belum-diatur'}</small></div>
             </div>
@@ -142,26 +151,26 @@ export function MentorManagement() {
               onSaved={tierId => tierSaved(mentor.user_id, tierId)}
               onFailure={async failure => { setMessage(''); setError(failure); await loadMentors() }}
             />
-            <div className="mentor-account-status"><span>Status akun</span><strong className={setup.tone}>{setup.label}</strong></div>
-            <div className="mentor-account-status"><span>Ketersediaan</span><strong>{mentor.availability_configured ? 'Sudah diatur' : 'Belum diatur'}</strong></div>
-            <button type="button" className="button button-outline" onClick={() => setSelectedId(mentor.user_id)}>Manage</button>
+            <div className={`mentor-account-status ${styles.statusBlock} ${styles.accountStatus}`}><span>Status akun</span><strong className={`${accountStatusClass} ${styles.statusPill}`}>{setup.label}</strong></div>
+            <div className={`mentor-account-status ${styles.statusBlock} ${styles.availabilityStatus}`}><span>Ketersediaan</span><strong className={`${availabilityStatusClass} ${styles.statusPill}`}>{mentor.availability_configured ? 'Sudah diatur' : 'Belum diatur'}</strong></div>
+            <button type="button" className={`button button-outline ${styles.manageButton}`} onClick={() => setSelectedId(mentor.user_id)}>Manage</button>
           </article>
         })}
       </div>
 
-      <div className="button-row mentor-pagination">
+      <div className={`button-row mentor-pagination ${styles.pagination}`}>
         <button type="button" className="button button-outline" disabled={page === 0 || loading} onClick={() => setPage(value => value - 1)}>Sebelumnya</button>
         <button type="button" className="button button-outline" disabled={mentors.length < 25 || loading} onClick={() => setPage(value => value + 1)}>Berikutnya</button>
         <button type="button" className="text-link" disabled={loading} onClick={() => void loadMentors()}>Muat ulang</button>
       </div>
     </section>
 
-    {selectedMentor && <section className="role-card mentor-manage-panel" aria-labelledby="mentor-manage-heading">
+    {selectedMentor && <section className={`role-card mentor-manage-panel ${styles.managePanel}`} aria-labelledby="mentor-manage-heading">
       <div className="role-card-heading">
         <div><p className="kicker">Mentor detail</p><h2 id="mentor-manage-heading">{managedMentorName(selectedMentor)}</h2></div>
         <button type="button" className="role-close mentor-manage-close" onClick={() => setSelectedId(null)} aria-label="Tutup detail mentor"><X /></button>
       </div>
-      <dl className="mentor-detail-summary">
+      <dl className={`mentor-detail-summary ${styles.detailSummary}`}>
         <div><dt>Email</dt><dd>{selectedMentor.email}</dd></div>
         <div><dt>Tier</dt><dd>{managedMentorTier(selectedMentor)}</dd></div>
         <div><dt>Zona waktu</dt><dd>{selectedMentor.timezone}</dd></div>

@@ -48,25 +48,29 @@ export function MentorInvitations({ refreshKey, onDeleted }: { refreshKey: numbe
   }
 
   return <section className="mentor-invitations" aria-label="Daftar undangan mentor">
-    <h3>Undangan mentor</h3>
-    <p>Hapus undangan gagal atau salah email sebelum akun diaktifkan.</p>
+    <div className="mentor-invitation-heading">
+      <h3>Undangan mentor</h3>
+      <p>Hapus undangan gagal atau salah email sebelum akun diaktifkan.</p>
+    </div>
     {error && <p role="alert" className="form-error">{error}</p>}
     {message && <p role="status">{message}</p>}
-    {loading ? <p role="status">Memuat undangan…</p> : invitations.map(invitation =>
-      <div className="admin-record" key={invitation.email}>
-        <div><strong className="invitation-email">{invitation.email}</strong>
-          <small>Tier: {invitation.tier_name || 'Tier belum ditentukan (legacy)'}</small>
-          <small>{new Date(invitation.created_at).toLocaleString('id-ID')}</small>
-          {!invitation.can_delete && <small>{invitation.status === 'pending' ? 'Tunggu hingga pengiriman selesai.' : 'Akun sudah aktif atau perlu diperiksa administrator.'}</small>}
-        </div>
-        <span className="status-pill">{statuses[invitation.status]}</span>
-        <button type="button" className="button button-outline" aria-label={`Hapus undangan ${invitation.email}`}
-          disabled={!invitation.can_delete || removing !== null} onClick={() => void remove(invitation)}>
-          <Trash2 size={16} aria-hidden="true" />{removing === invitation.email ? 'Menghapus…' : 'Hapus'}
-        </button>
-      </div>)}
-    {!loading && !error && invitations.length === 0 && <p>Belum ada undangan.</p>}
-    <div className="button-row">
+    <div className="mentor-invitation-list">
+      {loading ? <p role="status">Memuat undangan…</p> : invitations.map(invitation =>
+        <div className="admin-record" key={invitation.email}>
+          <div><strong className="invitation-email">{invitation.email}</strong>
+            <small>Tier: {invitation.tier_name || 'Tier belum ditentukan (legacy)'}</small>
+            <small>{new Date(invitation.created_at).toLocaleString('id-ID')}</small>
+            {!invitation.can_delete && <small>{invitation.status === 'pending' ? 'Tunggu hingga pengiriman selesai.' : 'Akun sudah aktif atau perlu diperiksa administrator.'}</small>}
+          </div>
+          <span className={`status-pill ${invitation.status === 'sent' ? 'green' : ''} ${invitation.status === 'failed' ? 'mentor-invitation-status-failed' : ''}`}>{statuses[invitation.status]}</span>
+          <button type="button" className="button button-outline" aria-label={`Hapus undangan ${invitation.email}`}
+            disabled={!invitation.can_delete || removing !== null} onClick={() => void remove(invitation)}>
+            <Trash2 size={16} aria-hidden="true" />{removing === invitation.email ? 'Menghapus…' : 'Hapus'}
+          </button>
+        </div>)}
+      {!loading && !error && invitations.length === 0 && <p>Belum ada undangan.</p>}
+    </div>
+    <div className="button-row mentor-invitation-pagination">
       <button type="button" className="button button-outline" disabled={page === 0 || loading || removing !== null} onClick={() => setPage(value => value - 1)}>Undangan sebelumnya</button>
       <button type="button" className="button button-outline" disabled={invitations.length < 25 || loading || removing !== null} onClick={() => setPage(value => value + 1)}>Undangan berikutnya</button>
       <button type="button" className="text-link" disabled={loading || removing !== null} onClick={() => void load()}>Muat ulang undangan</button>
