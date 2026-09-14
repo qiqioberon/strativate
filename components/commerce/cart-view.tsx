@@ -7,9 +7,11 @@ import { useState } from 'react'
 
 import { checkoutActiveCart } from '@/app/cart/actions'
 import { buttonVariants } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast-provider'
 import { formatRupiah } from '@/lib/commerce/money'
 import type { ActiveCart } from '@/lib/commerce/types'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 
 function itemKindLabel(kind: string) {
   if (kind === 'digital_product') return 'Produk Digital'
@@ -17,29 +19,30 @@ function itemKindLabel(kind: string) {
   return 'Item'
 }
 
-export function CartView({ cart }: { cart: ActiveCart }) {
+export function CartView({ cart, embedded = false }: { cart: ActiveCart; embedded?: boolean }) {
   const router = useRouter()
+  const { show } = useToast()
   const [removingId, setRemovingId] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
 
   async function removeItem(cartItemId: string) {
     if (removingId) return
+    const item = cart.items.find(candidate => candidate.cart_item_id === cartItemId)
     setRemovingId(cartItemId)
-    setMessage(null)
     const supabase = createClient()
     const { error } = await supabase.rpc('remove_cart_item', { p_cart_item_id: cartItemId })
     if (error) {
-      setMessage('Item belum dapat dihapus. Coba lagi.')
+      show({ variant: 'error', message: 'Item belum dapat dihapus. Coba lagi.' })
       setRemovingId(null)
       return
     }
+    show({ variant: 'success', message: `${item?.name ?? 'Item'} dihapus dari keranjang.` })
     setRemovingId(null)
     router.refresh()
   }
 
   if (cart.items.length === 0) {
     return (
-      <section className="commerce-empty-state">
+      <section className={cn('commerce-empty-state', embedded && 'commerce-empty-state--embedded')}>
         <ShoppingBag aria-hidden="true" size={30} />
         <h1>Keranjangmu masih kosong.</h1>
         <p>Item yang kamu pilih melalui website atau Cart Link akan tampil di sini sebelum checkout.</p>
@@ -52,7 +55,7 @@ export function CartView({ cart }: { cart: ActiveCart }) {
   }
 
   return (
-    <div className="commerce-cart-layout">
+    <div className={cn('commerce-cart-layout', embedded && 'commerce-cart-layout--embedded')}>
       <section className="commerce-cart-items" aria-label="Isi keranjang">
         <div className="commerce-cart-heading"><div><p>Shared Commerce</p><h1>Keranjang</h1></div><span>{cart.items.length} item</span></div>
         {cart.items.map(item => {
@@ -65,6 +68,7 @@ export function CartView({ cart }: { cart: ActiveCart }) {
               <div className="commerce-cart-item__content">
                 <span>{itemKindLabel(item.item_kind)}</span>
                 <h2>{item.name ?? 'Item tidak tersedia'}</h2>
+                {item.item_kind === 'digital_product' && item.slug ? <Link href={`/produk-digital/${item.slug}`}>Lihat detail</Link> : null}
                 {unavailable ? <p className="commerce-cart-item__warning"><AlertTriangle aria-hidden="true" size={14} /> Item ini sudah tidak tersedia. Hapus item untuk melanjutkan checkout.</p> : null}
               </div>
               <div className="commerce-cart-item__actions">
@@ -74,7 +78,6 @@ export function CartView({ cart }: { cart: ActiveCart }) {
             </article>
           )
         })}
-        {message ? <p className="commerce-inline-error" role="status">{message}</p> : null}
       </section>
       <aside className="commerce-cart-summary">
         <span>Ringkasan</span>

@@ -30,6 +30,16 @@ select test_digital_products.assert(
   ),
   'public Digital Product cover bucket is configured'
 );
+select test_digital_products.assert(
+  exists (
+    select 1 from storage.buckets
+    where id = 'digital-product-content'
+      and public = false
+      and file_size_limit = 524288000
+      and allowed_mime_types = array['application/pdf', 'video/mp4', 'video/webm']
+  ),
+  'protected Digital Product content bucket is private'
+);
 select test_digital_products.assert(to_regclass('public.catalog_products') is null, 'legacy catalog_products is not recreated');
 select test_digital_products.assert(to_regclass('public.catalog_commercial_items') is null, 'legacy catalog_commercial_items is not recreated');
 select test_digital_products.assert(to_regclass('public.catalog_digital_product_details') is null, 'legacy catalog_digital_product_details is not recreated');
@@ -45,10 +55,25 @@ update public.profiles set role = 'mentor' where id = '93000000-0000-0000-0000-0
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000001', true);
 
+insert into public.digital_products (
+  name, slug, description, image_path, price_amount,
+  content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, is_published
+) values (
+  'Business Case Handbook', 'business-case-handbook', 'Panduan latihan kasus bisnis.', 'products/business-case-handbook.webp', 75000,
+  'pdf', 'products/business-case/business-case.pdf', 'application/pdf', 'business-case.pdf', 4096, 24, true
+);
 insert into public.digital_products (name, slug, description, image_path, price_amount)
-values ('Business Case Handbook', 'business-case-handbook', 'Panduan latihan kasus bisnis.', 'products/business-case-handbook.webp', 75000);
-select test_digital_products.assert((select count(*) = 1 from public.digital_products where slug = 'business-case-handbook'), 'admin can create and select Digital Products');
+values ('Draft Workbook', 'draft-workbook', 'Draft admin.', 'products/draft-workbook.webp', 25000);
+select test_digital_products.assert((select count(*) = 2 from public.digital_products), 'admin can create and select published and draft Digital Products');
 
+select test_digital_products.rejected($q$
+  insert into public.digital_products (name, slug, description, image_path, price_amount, is_published)
+  values ('No content', 'no-content', 'No protected source.', 'products/no-content.webp', 10000, true)
+$q$, 'publishing without protected content');
+select test_digital_products.rejected($q$
+  insert into public.digital_products (name, slug, description, image_path, price_amount, content_type, content_path, content_mime_type, content_file_name, content_size_bytes, is_published)
+  values ('Bad MIME', 'bad-mime', 'Bad MIME.', 'products/bad-mime.webp', 10000, 'pdf', 'products/bad-mime/file.pdf', 'video/mp4', 'file.pdf', 100, true)
+$q$, 'content MIME must match product type');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Duplicate', 'business-case-handbook', 'Duplicate slug.', 'products/duplicate.webp', 10000)
@@ -87,25 +112,19 @@ select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000001
 update public.digital_products set description = 'Panduan latihan kasus bisnis yang diperbarui.' where slug = 'business-case-handbook';
 select test_digital_products.assert((select updated_at > now() - interval '1 minute' from public.digital_products where slug = 'business-case-handbook'), 'updated_at trigger refreshes timestamps through an allowed admin update');
 
-insert into public.digital_products (name, slug, description, image_path, price_amount)
-values ('Delete test', 'delete-test', 'Delete test.', 'products/delete-test.webp', 0);
-delete from public.digital_products where slug = 'delete-test';
-select test_digital_products.assert((select count(*) = 0 from public.digital_products where slug = 'delete-test'), 'admin can delete Digital Products');
+delete from public.digital_products where slug = 'draft-workbook';
+select test_digital_products.assert((select count(*) = 0 from public.digital_products where slug = 'draft-workbook'), 'admin can delete Digital Products');
 
-insert into storage.objects (bucket_id, name, owner_id)
-values ('digital-product-images', 'products/admin-cover.webp', '93000000-0000-0000-0000-000000000001');
-select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images' and name = 'products/admin-cover.webp'), 'admin can upload a Digital Product cover');
-update storage.objects set name = 'products/admin-cover-renamed.webp' where bucket_id = 'digital-product-images' and name = 'products/admin-cover.webp';
-select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images' and name = 'products/admin-cover-renamed.webp'), 'admin can update a Digital Product cover object');
-delete from storage.objects where bucket_id = 'digital-product-images' and name = 'products/admin-cover-renamed.webp';
-select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-images'), 'admin can delete a Digital Product cover object');
-insert into storage.objects (bucket_id, name, owner_id)
-values ('digital-product-images', 'products/public-cover.webp', '93000000-0000-0000-0000-000000000001');
+insert into storage.objects (bucket_id, name, owner_id) values
+  ('digital-product-images', 'products/admin-cover.webp', '93000000-0000-0000-0000-000000000001'),
+  ('digital-product-content', 'products/business-case/business-case.pdf', '93000000-0000-0000-0000-000000000001');
+select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images'), 'admin can upload a Digital Product cover');
+select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-content'), 'admin can upload protected Digital Product content');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000002', true);
-select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentee can read public Digital Products');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentee can read published Digital Products only');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized mentee', 'unauthorized-mentee', 'Unauthorized.', 'products/unauthorized-mentee.webp', 1)
@@ -113,29 +132,25 @@ $q$, 'mentee insert');
 update public.digital_products set name = 'Unauthorized mentee update';
 delete from public.digital_products;
 select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images'), 'mentee can read public cover objects');
+select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-content'), 'mentee cannot read protected content objects');
 select test_digital_products.rejected($q$
   insert into storage.objects (bucket_id, name, owner_id)
-  values ('digital-product-images', 'products/unauthorized-mentee.webp', '93000000-0000-0000-0000-000000000002')
-$q$, 'mentee storage upload');
+  values ('digital-product-content', 'products/unauthorized/file.pdf', '93000000-0000-0000-0000-000000000002')
+$q$, 'mentee protected storage upload');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000003', true);
-select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentor can read public Digital Products');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentor can read published Digital Products');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized mentor', 'unauthorized-mentor', 'Unauthorized.', 'products/unauthorized-mentor.webp', 1)
 $q$, 'mentor insert');
-update public.digital_products set name = 'Unauthorized mentor update';
-delete from public.digital_products;
-select test_digital_products.rejected($q$
-  insert into storage.objects (bucket_id, name, owner_id)
-  values ('digital-product-images', 'products/unauthorized-mentor.webp', '93000000-0000-0000-0000-000000000003')
-$q$, 'mentor storage upload');
+select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-content'), 'mentor cannot read protected content objects');
 reset role;
 
 set local role anon;
-select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'anonymous visitor can read Digital Products');
+select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'anonymous visitor can read published Digital Products');
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized anonymous', 'unauthorized-anonymous', 'Unauthorized.', 'products/unauthorized-anonymous.webp', 1)
@@ -143,6 +158,7 @@ $q$, 'anonymous insert');
 select test_digital_products.rejected($q$update public.digital_products set name = 'Unauthorized anonymous update'$q$, 'anonymous update');
 select test_digital_products.rejected($q$delete from public.digital_products$q$, 'anonymous delete');
 select test_digital_products.assert((select count(*) = 1 from storage.objects where bucket_id = 'digital-product-images'), 'anonymous visitor can read public cover objects');
+select test_digital_products.assert((select count(*) = 0 from storage.objects where bucket_id = 'digital-product-content'), 'anonymous visitor cannot read protected content objects');
 reset role;
 
 set local role authenticated;
@@ -151,4 +167,4 @@ select test_digital_products.assert((select name = 'Business Case Handbook Revis
 reset role;
 
 rollback;
-select 'PASS: Digital Product schema, validation, RLS, and Storage security' as result;
+select 'PASS: Digital Product schema, publication, RLS, and private content Storage security' as result;

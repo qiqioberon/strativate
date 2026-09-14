@@ -1,8 +1,12 @@
 import { formError } from '../auth/errors'
 import {
+  DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE,
+  DIGITAL_PRODUCT_CONTENT_NAMESPACE,
   DIGITAL_PRODUCT_IMAGE_ALLOWED_TYPES,
   DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE,
   DIGITAL_PRODUCT_IMAGE_NAMESPACE,
+  DIGITAL_PRODUCT_PDF_ALLOWED_TYPES,
+  DIGITAL_PRODUCT_VIDEO_ALLOWED_TYPES,
 } from './config'
 
 const NAME_MAX_LENGTH = 160
@@ -10,7 +14,8 @@ const SLUG_MAX_LENGTH = 120
 const DESCRIPTION_MAX_LENGTH = 5000
 const STRICT_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
-export type DigitalProductFile = Pick<File, 'size' | 'type'>
+export type DigitalProductContentType = 'pdf' | 'video'
+export type DigitalProductFile = Pick<File, 'size' | 'type'> & Partial<Pick<File, 'name'>>
 export type DigitalProductDraftErrors = Partial<Record<'name' | 'slug' | 'description' | 'price' | 'file', string>>
 
 export function normalizeDigitalProductSlug(value: string) {
@@ -82,6 +87,47 @@ export function validateDigitalProductDraft({
   return errors
 }
 
+export function validateDigitalProductContentFile({
+  file,
+  contentType,
+  hasStoredContent,
+  publishing = false,
+}: {
+  file: DigitalProductFile | null
+  contentType: DigitalProductContentType | null
+  hasStoredContent: boolean
+  publishing?: boolean
+}) {
+  if (!contentType) {
+    return publishing || file || hasStoredContent ? 'Pilih Jenis Produk PDF atau Video.' : null
+  }
+  if (!file && !hasStoredContent) {
+    return publishing ? 'Upload materi sebelum mempublikasikan Digital Product.' : null
+  }
+  if (!file) return null
+  if (file.size <= 0) return 'File materi tidak valid.'
+  if (file.size > DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE) return 'Ukuran materi maksimal 500 MB.'
+
+  const allowed = contentType === 'pdf' ? DIGITAL_PRODUCT_PDF_ALLOWED_TYPES : DIGITAL_PRODUCT_VIDEO_ALLOWED_TYPES
+  if (!allowed.has(file.type)) {
+    return contentType === 'pdf'
+      ? 'Materi PDF harus menggunakan file PDF.'
+      : 'Materi Video harus menggunakan MP4 atau WebM.'
+  }
+
+  const extension = file.name?.trim().toLowerCase().split('.').pop() ?? ''
+  if (contentType === 'pdf' && extension !== 'pdf') {
+    return 'Materi PDF harus menggunakan file PDF dengan ekstensi .pdf.'
+  }
+  if (contentType === 'video') {
+    const expectedExtension = file.type === 'video/mp4' ? 'mp4' : file.type === 'video/webm' ? 'webm' : ''
+    if (!expectedExtension || extension !== expectedExtension) {
+      return 'Materi Video harus menggunakan file MP4 atau WebM dengan ekstensi yang sesuai.'
+    }
+  }
+  return null
+}
+
 export function safeDigitalProductFileName(name: string) {
   const leaf = name.replace(/\\/g, '/').split('/').pop() ?? ''
   const normalized = leaf
@@ -99,6 +145,10 @@ export function safeDigitalProductFileName(name: string) {
 
 export function buildDigitalProductImagePath(fileName: string) {
   return `${DIGITAL_PRODUCT_IMAGE_NAMESPACE}/${crypto.randomUUID()}-${safeDigitalProductFileName(fileName)}`
+}
+
+export function buildDigitalProductContentPath(fileName: string) {
+  return `${DIGITAL_PRODUCT_CONTENT_NAMESPACE}/${crypto.randomUUID()}/${safeDigitalProductFileName(fileName) || 'content'}`
 }
 
 export function buildDigitalProductPayload({
@@ -126,6 +176,43 @@ export function buildDigitalProductPayload({
     description: description.trim(),
     image_path: authoritativeImagePath,
     price_amount: priceAmount,
+  }
+}
+
+export function buildDigitalProductContentPayload({
+  contentType,
+  contentPath,
+  storedContentPath,
+  fileName,
+  storedFileName,
+  mimeType,
+  storedMimeType,
+  fileSize,
+  storedFileSize,
+  isPublished,
+}: {
+  contentType: DigitalProductContentType | null
+  contentPath: string | null
+  storedContentPath: string | null
+  fileName: string | null
+  storedFileName: string | null
+  mimeType: string | null
+  storedMimeType: string | null
+  fileSize: number | null
+  storedFileSize: number | null
+  isPublished: boolean
+}) {
+  const authoritativePath = contentPath ?? storedContentPath
+  if (isPublished && (!contentType || !authoritativePath)) {
+    throw new Error('Digital Product cannot be published before protected content is configured.')
+  }
+  return {
+    content_type: contentType,
+    content_path: authoritativePath,
+    content_file_name: fileName ?? storedFileName,
+    content_mime_type: mimeType ?? storedMimeType,
+    content_size_bytes: fileSize ?? storedFileSize,
+    is_published: isPublished,
   }
 }
 

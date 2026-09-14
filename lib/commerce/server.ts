@@ -2,7 +2,12 @@ import 'server-only'
 
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/server'
-import type { DigitalProduct, Order } from '@/lib/supabase/database.types'
+import type {
+  DigitalProduct,
+  DigitalProductContentType,
+  Order,
+  OwnedDigitalProduct,
+} from '@/lib/supabase/database.types'
 import { summarizeCart } from './model'
 import type {
   ActiveCart,
@@ -10,6 +15,11 @@ import type {
   OwnedDigitalProductView,
   PublicDigitalProduct,
 } from './types'
+
+type OwnedDigitalProductRpcRow = OwnedDigitalProduct & {
+  current_content_type: DigitalProductContentType | null
+  content_ready: boolean
+}
 
 function commerceError(message: string, code?: string) {
   return new Error(code ? `${message} (${code})` : message)
@@ -20,6 +30,7 @@ export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[
   const { data, error } = await supabase
     .from('digital_products')
     .select('*')
+    .eq('is_published', true)
     .order('created_at', { ascending: false })
     .order('id')
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
@@ -31,6 +42,7 @@ export async function getPublicDigitalProduct(slug: string): Promise<PublicDigit
   const { data, error } = await supabase
     .from('digital_products')
     .select('*')
+    .eq('is_published', true)
     .eq('slug', slug)
     .maybeSingle()
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
@@ -89,14 +101,50 @@ export async function getOrderWithItems(
   return { ...order, items: items ?? [] }
 }
 
+export async function listUserOrders(): Promise<OrderWithItems[]> {
+  const supabase = await createClient()
+  const { data: orders, error: orderError } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+  if (orderError) throw commerceError('Riwayat pesanan belum dapat dimuat.', orderError.code)
+  if (!orders?.length) return []
+
+  const { data: items, error: itemError } = await supabase
+    .from('order_items')
+    .select('*')
+    .in('order_id', orders.map(order => order.id))
+    .order('created_at')
+    .order('id')
+  if (itemError) throw commerceError('Rincian riwayat pesanan belum dapat dimuat.', itemError.code)
+
+  const itemsByOrder = new Map<string, NonNullable<typeof items>>()
+  for (const item of items ?? []) {
+    const current = itemsByOrder.get(item.order_id) ?? []
+    current.push(item)
+    itemsByOrder.set(item.order_id, current)
+  }
+  return orders.map(order => ({ ...order, items: itemsByOrder.get(order.id) ?? [] }))
+}
+
 export async function listOwnedDigitalProducts(): Promise<OwnedDigitalProductView[]> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('list_owned_digital_products')
   if (error) throw commerceError('Produk Digital yang dimiliki belum dapat dimuat.', error.code)
-  return (data ?? []).map(product => ({
+  const rows = (data ?? []) as OwnedDigitalProductRpcRow[]
+  return rows.map(product => ({
     ...product,
+    product_id: product.commerce_item_id,
+    contentType: product.current_content_type,
+    contentReady: product.content_ready,
     imageUrl: product.current_image_path
       ? supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(product.current_image_path).data.publicUrl
       : null,
   }))
+}
+
+export async function getOwnedDigitalProduct(productId: string) {
+  const products = await listOwnedDigitalProducts()
+  return products.find(product => product.product_id === productId) ?? null
 }

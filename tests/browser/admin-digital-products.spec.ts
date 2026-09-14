@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
+const digitalProductsEnabled = process.env.FEATURE_DIGITAL_PRODUCTS === 'true'
+
 type DigitalProduct = {
   id: string
   name: string
@@ -7,6 +9,14 @@ type DigitalProduct = {
   description: string
   image_path: string
   price_amount: number
+  content_type: 'pdf' | 'video' | null
+  content_path: string | null
+  content_mime_type: string | null
+  content_file_name: string | null
+  content_size_bytes: number | null
+  page_count: number | null
+  duration_seconds: number | null
+  is_published: boolean
   created_at: string
   updated_at: string
 }
@@ -18,6 +28,14 @@ const product = (id: string, name: string, slug: string, price: number): Digital
   description: `${name} description`,
   image_path: `products/${id}.webp`,
   price_amount: price,
+  content_type: null,
+  content_path: null,
+  content_mime_type: null,
+  content_file_name: null,
+  content_size_bytes: null,
+  page_count: null,
+  duration_seconds: null,
+  is_published: false,
   created_at: '2026-09-14T00:00:00.000Z',
   updated_at: '2026-09-14T00:00:00.000Z',
 })
@@ -137,6 +155,8 @@ test('Digital Product table and modal stay page-overflow safe at desktop and mob
 })
 
 test('public Digital Products storefront remains disabled', async ({ page }) => {
+  test.skip(digitalProductsEnabled, 'Digital Products public rollout is enabled in this browser target.')
+
   await page.goto('/produk-digital')
   await expect(page).toHaveURL(/\/program(?:\?.*)?$/)
 })

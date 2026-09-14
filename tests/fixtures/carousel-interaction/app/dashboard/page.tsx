@@ -21,7 +21,12 @@ const profile: Profile = {
 export default function MenteeDashboardFixture() {
   return (
     <AccountProvider profile={profile} email="user@fixture.test">
-      <DashboardClient digitalProductsEnabled ownedDigitalProducts={[]} />
+      <DashboardClient
+        digitalProductsEnabled
+        ownedDigitalProducts={[]}
+        cart={{ id: 'fixture-cart', items: [], totalAmount: 0, hasUnavailableItems: false, canCheckout: false }}
+        commerceOrders={[]}
+      />
     </AccountProvider>
   )
 }

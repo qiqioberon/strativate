@@ -119,7 +119,7 @@ export function ProgramDetail({
           })}
         </div>
         <p className="program-pricing-note">Setelah konsultasi, tim Strativate mengirim Cart Link untuk mentee yang dituju. Cart dan checkout tetap menggunakan Shared Commerce dan harga paket aktif.</p>
-        <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Konsultasi via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
+        <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Tanya paket via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
       </> : isPrivateMentoring ? <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Data paket belum dapat dimuat saat ini.</h2><p>Hubungi tim Strativate untuk bantuan dan informasi terbaru.</p></div> : <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Rincian paket dan harga sedang diperbarui.</h2><p>Hubungi tim Strativate untuk informasi program terbaru dan mendiskusikan kebutuhanmu.</p></div>}
     </section>
 

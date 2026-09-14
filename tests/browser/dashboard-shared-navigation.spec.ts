@@ -79,7 +79,7 @@ test('user dashboard is owned-content focused and exposes honest digital product
   await expect(page.getByText('Jelajahi program', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Mentoring saya' })).toBeVisible()
   await page.getByRole('button', { name: 'Produk Digital Saya' }).click()
-  await expect(page.getByRole('heading', { name: 'Belum ada produk digital.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Anda belum memiliki Produk Digital.' })).toBeVisible()
 
   const storefrontLink = page.getByRole('link', { name: 'Lihat Produk Digital', exact: true })
   await expect(storefrontLink).toHaveAttribute('href', '/produk-digital')

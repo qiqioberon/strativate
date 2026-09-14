@@ -33,3 +33,9 @@ test('public directory and detail consume real Digital Product records', () => {
   assert.match(addToCart, /rpc\('add_cart_item'/)
   assert.match(addToCart, /href="\/auth"/)
 })
+
+test('public Digital Product queries explicitly exclude drafts for every authenticated role', () => {
+  const server = readFileSync('lib/commerce/server.ts', 'utf8')
+  const publishedFilters = server.match(/\.eq\('is_published', true\)/g) ?? []
+  assert.equal(publishedFilters.length, 2)
+})

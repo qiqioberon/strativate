@@ -14,6 +14,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -27,7 +28,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
       SUPABASE_SECRET_KEY: test-secret-key
       APP_URL: http://localhost:3000
@@ -86,9 +87,20 @@ jobs:
         run: |
           createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_phase2
           pnpm test:db -- --bootstrap
+      - name: Start deterministic Supabase fixture
+        run: |
+          node tests/fixtures/commerce-backend/server.mjs > /tmp/commerce-fixture.log 2>&1 &
+          echo $! > /tmp/commerce-fixture.pid
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:54321/health && exit 0
+            sleep 1
+          done
+          cat /tmp/commerce-fixture.log
+          exit 1
       - name: Rebuild disabled storefront for browser suite
         env:
           FEATURE_DIGITAL_PRODUCTS: 'false'
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
         run: |
           rm -rf .next
           pnpm build
@@ -97,4 +109,5 @@ jobs:
       - name: Browser tests
         env:
           FEATURE_DIGITAL_PRODUCTS: 'false'
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
         run: pnpm test:e2e

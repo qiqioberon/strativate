@@ -248,9 +248,12 @@ select test_mentor.denied(
 select set_config('request.jwt.claim.sub', '82000000-0000-0000-0000-000000000004', true);
 select test_mentor.assert(
   (select count(*) = 0 from public.mentor_profiles)
-  and (select count(*) = 0 from public.mentor_availability_rules)
-  and (select count(*) = 0 from public.mentor_tiers),
+  and (select count(*) = 0 from public.mentor_availability_rules),
   'mentee cannot read private mentor management data'
+);
+select test_mentor.assert(
+  (select count(*) = 2 and bool_and(is_active) from public.mentor_tiers),
+  'mentee can read active mentor tier taxonomy used by public Private Mentoring packages'
 );
 select test_mentor.denied(
   $$select * from public.save_mentor_availability('82000000-0000-0000-0000-000000000002','[]'::jsonb)$$,

@@ -19,20 +19,22 @@ test('public Digital Products rollout has one env-backed runtime decision', () =
   assert.doesNotMatch(featureFlags, /digitalProducts:\s*false/)
 })
 
-test('Digital Product controller renders its real domain fields in a semantic paginated table', () => {
+test('Digital Product controller renders protected-media domain fields in a semantic paginated table', () => {
   assert.match(manager, /data-testid="digital-product-table"/)
   assert.match(manager, /<th scope="col">Produk<\/th>/)
-  assert.match(manager, /<th scope="col">Slug<\/th>/)
+  assert.match(manager, /<th scope="col">Jenis<\/th>/)
   assert.match(manager, /<th scope="col">Harga<\/th>/)
-  assert.match(manager, /<th scope="col">Cover<\/th>/)
-  assert.match(manager, /<th scope="col">Terakhir diperbarui<\/th>/)
+  assert.match(manager, /<th scope="col">Status<\/th>/)
+  assert.match(manager, /<th scope="col">Materi terlindungi<\/th>/)
+  assert.match(manager, /<th scope="col">Diperbarui<\/th>/)
+  assert.match(manager, /product\.slug/)
+  assert.match(manager, /product\.content_type/)
+  assert.match(manager, /product\.is_published/)
   assert.match(manager, /const pagedProducts = useMemo/)
   assert.match(manager, /pagedProducts\.map/)
   assert.match(manager, /<TablePagination/)
   assert.match(manager, /totalItems=\{filteredProducts\.length\}/)
   assert.doesNotMatch(manager, /<CatalogManagement/)
-  assert.doesNotMatch(manager, /<th scope="col">(?:Tipe|Jenis|Kategori)<\/th>/i)
-  assert.doesNotMatch(manager, /product\.(?:type|category)/i)
 })
 
 test('Digital Product create and edit flows open in a native modal dialog', () => {
@@ -48,17 +50,20 @@ test('Digital Product create and edit flows open in a native modal dialog', () =
   assert.equal(existsSync('components/admin/digital-product-dialog.module.css'), true)
 })
 
-test('Digital Product CRUD and Storage reconciliation safety remain owned by the controller', () => {
+test('Digital Product CRUD and both Storage asset reconciliation paths remain owned by the controller', () => {
   assert.match(manager, /\.from\('digital_products'\)/)
   assert.match(manager, /DIGITAL_PRODUCT_IMAGE_BUCKET/)
-  assert.match(manager, /\.upload\(uploadedPath/)
+  assert.match(manager, /DIGITAL_PRODUCT_CONTENT_BUCKET/)
+  assert.match(manager, /\.upload\(uploadedImagePath/)
+  assert.match(manager, /\.upload\(uploadedContentPath/)
   assert.match(manager, /\.update\(payload\)/)
   assert.match(manager, /\.insert\(payload\)/)
   assert.match(manager, /\.delete\(\)/)
   assert.match(manager, /\.maybeSingle\(\)/)
   assert.match(manager, /createSignedUrl/)
   assert.match(manager, /\.remove\(\[oldImagePath\]\)/)
-  assert.match(manager, /\.remove\(\[uploadedPath\]\)/)
+  assert.match(manager, /\.remove\(\[uploadedImagePath\]\)/)
+  assert.match(manager, /\.remove\(\[uploadedContentPath\]\)/)
 })
 
 test('Digital Product zero state remains dedicated onboarding', () => {

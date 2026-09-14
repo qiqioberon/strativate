@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('homepage mentor marquee reveals compact details and opens the shared mentor dialog', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
 
   const marquee = page.getByTestId('mentor-infinite-marquee')

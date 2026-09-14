@@ -3,13 +3,16 @@ export type AppRole = "admin" | "mentor" | "mentee"
 export type InstitutionType = "university" | "sma" | "smk"
 export type ApprovalStatus = "approved" | "pending" | "rejected" | "archived"
 export type RegistrationMethod = "email" | "google" | "invitation"
+export type DigitalProductContentType = "pdf" | "video"
 
 export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
 export type MenteeProfile = { user_id:string; institution_id:string|null; major_or_faculty:string|null; cohort_year:number|null; referral_source_id:string|null; referral_other_text:string|null; other_interest_text:string|null; onboarding_step:number; onboarding_completed_at:string|null; created_at:string; updated_at:string }
 export type Institution = { id:string; name:string; normalized_name:string; type:InstitutionType; province:string|null; city:string|null; external_id:string|null; source:string; source_url:string|null; approval_status:ApprovalStatus; institution_status:string|null; submitted_by:string|null; created_at:string; updated_at:string }
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MarketingHeroPoster = { id:string; image_path:string; alt_text:string; title:string|null; url:string|null; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; created_at:string; updated_at:string }
+export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; created_at:string; updated_at:string }
+export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
+export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
 export type CommerceItem = { id:string; item_kind:string; is_available:boolean; created_at:string; updated_at:string }
 export type CartStatus = "active" | "converted"
 export type Cart = { id:string; user_id:string; status:CartStatus; created_at:string; updated_at:string }
@@ -20,7 +23,7 @@ export type Order = { id:string; user_id:string; cart_id:string; status:OrderSta
 export type OrderItem = { id:string; order_id:string; commerce_item_id:string; item_kind_snapshot:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; created_at:string }
 export type PaymentAttemptStatus = "creating" | "pending" | "paid" | "failed" | "expired" | "cancelled"
 export type PaymentAttempt = { id:string; order_id:string; provider:"midtrans"; provider_order_id:string; snap_token:string|null; snap_token_created_at:string|null; snap_token_expires_at:string|null; snap_creation_claim_token:string|null; snap_creation_claimed_at:string|null; snap_creation_claim_expires_at:string|null; provider_transaction_id:string|null; provider_status:string|null; fraud_status:string|null; payment_type:string|null; gross_amount:number; status:PaymentAttemptStatus; created_at:string; updated_at:string }
-export type OwnedDigitalProduct = { order_item_id:string; order_id:string; commerce_item_id:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; purchased_at:string; current_image_path:string|null }
+export type OwnedDigitalProduct = { order_item_id:string; order_id:string; commerce_item_id:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; purchased_at:string; current_image_path:string|null; current_content_type:DigitalProductContentType|null; current_content_file_name:string|null; current_content_size_bytes:number|null; current_page_count:number|null; current_duration_seconds:number|null }
 export type MentorInvite = { email:string; invited_by:string; status:"pending"|"sent"|"failed"; user_id:string|null; tier_id:string|null; created_at:string; updated_at:string }
 export type MentorInviteSummary = Pick<MentorInvite,'email'|'status'|'tier_id'|'created_at'> & { tier_code:string|null; tier_name:string|null; can_delete:boolean }
 export type MentorTier = { id:string; code:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
@@ -56,6 +59,7 @@ export type Database = {
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption,"name">>
       marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster,"image_path"|"alt_text">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
+      digital_product_access_sessions: Table<DigitalProductAccessSession, Partial<DigitalProductAccessSession> & Pick<DigitalProductAccessSession,"user_id"|"product_id">>
       commerce_items: Table<CommerceItem, Partial<CommerceItem> & Pick<CommerceItem,"id"|"item_kind">>
       carts: Table<Cart, Partial<Cart> & Pick<Cart,"user_id">>
       cart_items: Table<CartItem, Partial<CartItem> & Pick<CartItem,"cart_id"|"commerce_item_id">>
@@ -100,6 +104,7 @@ export type Database = {
       get_active_cart: { Args:Record<PropertyKey,never>; Returns:CartItemView[] }
       create_order_from_cart: { Args:{p_cart_id:string}; Returns:Order }
       list_owned_digital_products: { Args:Record<PropertyKey,never>; Returns:OwnedDigitalProduct[] }
+      create_digital_product_access_session: { Args:{p_product_id:string}; Returns:DigitalProductAccessGrant[] }
       reserve_midtrans_payment_attempt: { Args:{p_order_id:string}; Returns:PaymentAttempt }
       claim_midtrans_snap_creation: { Args:{p_attempt_id:string;p_claim_token:string}; Returns:boolean }
       store_midtrans_snap_token: { Args:{p_attempt_id:string;p_claim_token:string;p_snap_token:string}; Returns:PaymentAttempt }

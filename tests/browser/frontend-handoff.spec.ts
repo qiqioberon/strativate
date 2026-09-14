@@ -59,6 +59,8 @@ for (const viewport of [
 }
 
 test('public marketing and auth routes remain actionable and overflow-safe throughout the responsive matrix', async ({ page }) => {
+  test.setTimeout(90_000)
+
   for (const viewport of responsiveMatrix) {
     await page.setViewportSize(viewport)
 
