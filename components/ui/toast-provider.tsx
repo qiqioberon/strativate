@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, CircleAlert, CircleInfo, TriangleAlert, X } from 'lucide-react'
+import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from 'lucide-react'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
@@ -14,7 +14,7 @@ const iconByVariant = {
   success: CheckCircle2,
   error: CircleAlert,
   warning: TriangleAlert,
-  info: CircleInfo,
+  info: Info,
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

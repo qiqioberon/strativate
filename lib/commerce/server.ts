@@ -2,7 +2,12 @@ import 'server-only'
 
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/server'
-import type { DigitalProduct, Order } from '@/lib/supabase/database.types'
+import type {
+  DigitalProduct,
+  DigitalProductContentType,
+  Order,
+  OwnedDigitalProduct,
+} from '@/lib/supabase/database.types'
 import { summarizeCart } from './model'
 import type {
   ActiveCart,
@@ -10,6 +15,11 @@ import type {
   OwnedDigitalProductView,
   PublicDigitalProduct,
 } from './types'
+
+type OwnedDigitalProductRpcRow = OwnedDigitalProduct & {
+  current_content_type: DigitalProductContentType | null
+  content_ready: boolean
+}
 
 function commerceError(message: string, code?: string) {
   return new Error(code ? `${message} (${code})` : message)
@@ -120,7 +130,8 @@ export async function listOwnedDigitalProducts(): Promise<OwnedDigitalProductVie
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('list_owned_digital_products')
   if (error) throw commerceError('Produk Digital yang dimiliki belum dapat dimuat.', error.code)
-  return (data ?? []).map(product => ({
+  const rows = (data ?? []) as OwnedDigitalProductRpcRow[]
+  return rows.map(product => ({
     ...product,
     product_id: product.commerce_item_id,
     contentType: product.current_content_type,
