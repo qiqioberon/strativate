@@ -17,6 +17,7 @@ import './hero-kinetic.css'
 import './error-page.css'
 import './mentor-marquee.css'
 import './mentor-management.css'
+import './admin-mentoring-tables.css'
 import './mentor-weekly-controls.css'
 
 export const metadata: Metadata = {
