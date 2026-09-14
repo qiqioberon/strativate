@@ -9,7 +9,7 @@ test('admin navigation exposes Digital Products independently from the public fe
   assert.match(adminPage, /import \{ DigitalProductManagement \} from '@\/components\/admin\/digital-product-management'/)
   assert.match(adminPage, /\{ label: 'Produk', items: \['Digital Products'\] \}/)
   assert.doesNotMatch(adminPage, /featureFlags\.digitalProducts/)
-  assert.match(adminPage, /section === 'Digital Products'.*<DigitalProductManagement \/>/s)
+  assert.match(adminPage, /section === 'Digital Products'[\s\S]*<DigitalProductManagement \/>/)
 })
 
 test('public Digital Products feature remains disabled', () => {
