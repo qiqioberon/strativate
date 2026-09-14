@@ -15,7 +15,7 @@ const DESCRIPTION_MAX_LENGTH = 5000
 const STRICT_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export type DigitalProductContentType = 'pdf' | 'video'
-export type DigitalProductFile = Pick<File, 'size' | 'type'>
+export type DigitalProductFile = Pick<File, 'size' | 'type'> & Partial<Pick<File, 'name'>>
 export type DigitalProductDraftErrors = Partial<Record<'name' | 'slug' | 'description' | 'price' | 'file', string>>
 
 export function normalizeDigitalProductSlug(value: string) {
@@ -113,6 +113,17 @@ export function validateDigitalProductContentFile({
     return contentType === 'pdf'
       ? 'Materi PDF harus menggunakan file PDF.'
       : 'Materi Video harus menggunakan MP4 atau WebM.'
+  }
+
+  const extension = file.name?.trim().toLowerCase().split('.').pop() ?? ''
+  if (contentType === 'pdf' && extension !== 'pdf') {
+    return 'Materi PDF harus menggunakan file PDF dengan ekstensi .pdf.'
+  }
+  if (contentType === 'video') {
+    const expectedExtension = file.type === 'video/mp4' ? 'mp4' : file.type === 'video/webm' ? 'webm' : ''
+    if (!expectedExtension || extension !== expectedExtension) {
+      return 'Materi Video harus menggunakan file MP4 atau WebM dengan ekstensi yang sesuai.'
+    }
   }
   return null
 }

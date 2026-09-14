@@ -30,6 +30,7 @@ export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[
   const { data, error } = await supabase
     .from('digital_products')
     .select('*')
+    .eq('is_published', true)
     .order('created_at', { ascending: false })
     .order('id')
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
@@ -41,6 +42,7 @@ export async function getPublicDigitalProduct(slug: string): Promise<PublicDigit
   const { data, error } = await supabase
     .from('digital_products')
     .select('*')
+    .eq('is_published', true)
     .eq('slug', slug)
     .maybeSingle()
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
