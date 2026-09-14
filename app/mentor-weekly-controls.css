@@ -1,0 +1,141 @@
+.availability-week-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.availability-week-option {
+  min-width: 190px;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: flex-start;
+  border-radius: 14px;
+  padding: 10px 16px;
+}
+
+.availability-week-option span {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.availability-week-option small {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.35;
+  opacity: .78;
+}
+
+.availability-week-caption {
+  color: #707982;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.mentor-management-root .mentor-management-filter-surface {
+  grid-template-columns: minmax(250px, 1fr) minmax(140px, 170px) minmax(145px, 180px) minmax(145px, 180px);
+}
+
+.mentor-management-root .mentor-detail-summary-responsive {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.mentor-management-root .mentor-account-lifecycle-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #e8ebee;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.mentor-management-root .mentor-account-lifecycle-actions > div:first-child {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mentor-management-root .mentor-account-lifecycle-actions h3 {
+  font-size: 14px;
+  letter-spacing: -.03em;
+}
+
+.mentor-management-root .mentor-account-lifecycle-actions p:last-child {
+  max-width: 660px;
+  color: #707982;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.mentor-management-root .mentor-account-lifecycle-buttons {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mentor-management-root .mentor-account-lifecycle-buttons .button {
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.mentor-management-root .mentor-delete-button {
+  color: var(--deep-red);
+  border-color: color-mix(in srgb, var(--deep-red) 35%, white);
+  background: #fff7f7;
+}
+
+.mentor-management-root .mentor-delete-button:hover {
+  background: #fbe9ea;
+}
+
+@media (max-width: 1100px) {
+  .mentor-management-root .mentor-management-filter-surface {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mentor-management-root .mentor-management-filter-surface .search-field {
+    grid-column: 1 / -1;
+  }
+
+  .mentor-management-root .mentor-account-lifecycle-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-account-lifecycle-buttons {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 800px) {
+  .mentor-management-root .mentor-detail-summary-responsive {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .availability-week-switcher {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .availability-week-option {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mentor-management-root .mentor-management-filter-surface,
+  .mentor-management-root .mentor-detail-summary-responsive {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-management-root .mentor-management-filter-surface .search-field {
+    grid-column: auto;
+  }
+
+  .mentor-management-root .mentor-account-lifecycle-buttons,
+  .mentor-management-root .mentor-account-lifecycle-buttons .button {
+    width: 100%;
+  }
+}
