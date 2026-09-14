@@ -80,8 +80,12 @@ $q$, 'image outside products namespace');
 
 update public.digital_products set name = 'Business Case Handbook Revised' where slug = 'business-case-handbook';
 select test_digital_products.assert((select name = 'Business Case Handbook Revised' from public.digital_products where slug = 'business-case-handbook'), 'admin can update Digital Products');
+reset role;
 update public.digital_products set updated_at = '2000-01-01T00:00:00Z' where slug = 'business-case-handbook';
-select test_digital_products.assert((select updated_at > now() - interval '1 minute' from public.digital_products where slug = 'business-case-handbook'), 'updated_at trigger refreshes timestamps');
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000001', true);
+update public.digital_products set description = 'Panduan latihan kasus bisnis yang diperbarui.' where slug = 'business-case-handbook';
+select test_digital_products.assert((select updated_at > now() - interval '1 minute' from public.digital_products where slug = 'business-case-handbook'), 'updated_at trigger refreshes timestamps through an allowed admin update');
 
 insert into public.digital_products (name, slug, description, image_path, price_amount)
 values ('Delete test', 'delete-test', 'Delete test.', 'products/delete-test.webp', 0);
