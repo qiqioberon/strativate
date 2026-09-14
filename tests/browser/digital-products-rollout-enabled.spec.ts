@@ -10,5 +10,5 @@ test('enabled Digital Products rollout exposes navigation and keeps the storefro
 
   await page.goto('/produk-digital')
   await expect(page).toHaveURL(/\/produk-digital(?:\?.*)?$/)
-  await expect(page.getByRole('heading', { name: /Produk Digital/i }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Materi mandiri/i }).first()).toBeVisible()
 })
