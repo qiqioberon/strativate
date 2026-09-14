@@ -1,5 +1,5 @@
 -- Complete the Digital Product domain with private paid-content delivery.
--- Existing storefront rows stay published; new rows default to draft until an admin publishes them.
+-- Existing rows become safe drafts until an admin assigns protected content and publishes them.
 
 alter table public.digital_products
   add column content_type text check (content_type is null or content_type in ('pdf', 'video')),
@@ -18,8 +18,22 @@ alter table public.digital_products
   add column duration_seconds integer check (duration_seconds is null or duration_seconds >= 0),
   add column is_published boolean not null default false;
 
--- Digital Products that were already intentionally exposed by Phase 2 keep their storefront state.
-update public.digital_products set is_published = true;
+alter table public.digital_products
+  add constraint digital_products_content_mime_matches_type check (
+    content_mime_type is null
+    or (content_type = 'pdf' and content_mime_type = 'application/pdf')
+    or (content_type = 'video' and content_mime_type in ('video/mp4', 'video/webm'))
+  ),
+  add constraint digital_products_publish_requires_content check (
+    not is_published
+    or (
+      content_type is not null
+      and content_path is not null
+      and content_mime_type is not null
+      and content_file_name is not null
+      and content_size_bytes is not null
+    )
+  );
 
 -- Drafts are hidden publicly while admins retain complete read access.
 drop policy if exists digital_products_public_read on public.digital_products;
@@ -35,7 +49,7 @@ grant insert (content_type, content_path, content_mime_type, content_file_name, 
   update (content_type, content_path, content_mime_type, content_file_name, content_size_bytes, page_count, duration_seconds, is_published)
   on public.digital_products to authenticated;
 
--- Publication controls shared-commerce availability. Existing products stay available after the backfill above.
+-- Publication controls shared-commerce availability. Existing rows remain unavailable until content is ready.
 create or replace function public.register_digital_product_commerce_item() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
