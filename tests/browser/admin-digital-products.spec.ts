@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
+const digitalProductsEnabled = process.env.FEATURE_DIGITAL_PRODUCTS === 'true'
+
 type DigitalProduct = {
   id: string
   name: string
@@ -153,6 +155,8 @@ test('Digital Product table and modal stay page-overflow safe at desktop and mob
 })
 
 test('public Digital Products storefront remains disabled', async ({ page }) => {
+  test.skip(digitalProductsEnabled, 'Digital Products public rollout is enabled in this browser target.')
+
   await page.goto('/produk-digital')
   await expect(page).toHaveURL(/\/program(?:\?.*)?$/)
 })
