@@ -3,8 +3,9 @@ import { createContext, useContext, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/lib/supabase/database.types'
 import { createClient } from '@/lib/supabase/client'
-const AccountContext = createContext<Profile | null>(null)
-export function AccountProvider({ profile, children }: { profile: Profile; children: React.ReactNode }) {
+type AccountProfile = Profile & { email: string | null }
+const AccountContext = createContext<AccountProfile | null>(null)
+export function AccountProvider({ profile, email = null, children }: { profile: Profile; email?: string | null; children: React.ReactNode }) {
   const router = useRouter()
   useEffect(() => {
     const { data: { subscription } } = createClient().auth.onAuthStateChange((event) => {
@@ -13,7 +14,7 @@ export function AccountProvider({ profile, children }: { profile: Profile; child
     })
     return () => subscription.unsubscribe()
   }, [router])
-  return <AccountContext.Provider value={profile}>{children}</AccountContext.Provider>
+  return <AccountContext.Provider value={{ ...profile, email }}>{children}</AccountContext.Provider>
 }
 export function useAccount() {
   const profile = useContext(AccountContext)
