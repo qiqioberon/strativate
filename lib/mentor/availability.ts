@@ -15,6 +15,12 @@ export type AvailabilityPayloadRange = {
   end_time: string
 }
 
+export type AvailabilityWeekOption = {
+  kind: 'current' | 'next'
+  weekStartDate: string
+  weekEndDate: string
+}
+
 export const DAYS_OF_WEEK: ReadonlyArray<{ value: DayOfWeek; label: string }> = [
   { value: 1, label: 'Senin' },
   { value: 2, label: 'Selasa' },
@@ -26,6 +32,55 @@ export const DAYS_OF_WEEK: ReadonlyArray<{ value: DayOfWeek; label: string }> = 
 ]
 
 const clockPattern = /^([01][0-9]|2[0-3]):[0-5][0-9]$/
+const isoDatePattern = /^(\d{4})-(\d{2})-(\d{2})$/
+
+function parseIsoDate(value: string) {
+  const match = isoDatePattern.exec(value)
+  if (!match) throw new Error('Invalid ISO date')
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+  if (date.toISOString().slice(0, 10) !== value) throw new Error('Invalid ISO date')
+  return date
+}
+
+function formatIsoDate(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function addIsoDays(value: string, amount: number) {
+  const date = parseIsoDate(value)
+  date.setUTCDate(date.getUTCDate() + amount)
+  return formatIsoDate(date)
+}
+
+export function dateInTimeZone(value: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(value)
+  const byType = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  return `${byType.year}-${byType.month}-${byType.day}`
+}
+
+export function availabilityWeekOptions(todayIso: string): AvailabilityWeekOption[] {
+  const date = parseIsoDate(todayIso)
+  const isoWeekday = date.getUTCDay() || 7
+  const currentWeekStart = addIsoDays(todayIso, -(isoWeekday - 1))
+  const nextWeekStart = addIsoDays(currentWeekStart, 7)
+  return [
+    {
+      kind: 'current',
+      weekStartDate: currentWeekStart,
+      weekEndDate: addIsoDays(currentWeekStart, 6),
+    },
+    {
+      kind: 'next',
+      weekStartDate: nextWeekStart,
+      weekEndDate: addIsoDays(nextWeekStart, 6),
+    },
+  ]
+}
 
 function sortedRanges(ranges: AvailabilityDraftRange[]) {
   return [...ranges].sort((left, right) =>
