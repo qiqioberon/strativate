@@ -1,22 +1,18 @@
 import { DashboardClient } from './dashboard-client'
 
 import { getActiveCart, listOwnedDigitalProducts, listUserOrders } from '@/lib/commerce/server'
-import type { ActiveCart } from '@/lib/commerce/types'
 import { isDigitalProductsEnabled } from '@/lib/features'
-
-const emptyCart: ActiveCart = {
-  id: '',
-  items: [],
-  totalAmount: 0,
-  hasUnavailableItems: false,
-  canCheckout: false,
-}
+import { getPublicPrivateMentoring, listMyPrivateMentoringSessions } from '@/lib/private-mentoring/server'
 
 export default async function MenteeDashboard() {
   const digitalProductsEnabled = isDigitalProductsEnabled()
-  const [ownedDigitalProducts, cart, commerceOrders] = digitalProductsEnabled
-    ? await Promise.all([listOwnedDigitalProducts(), getActiveCart(), listUserOrders()])
-    : [[], emptyCart, []]
+  const [ownedDigitalProducts, cart, commerceOrders, privateMentoring, privateMentoringSessions] = await Promise.all([
+    digitalProductsEnabled ? listOwnedDigitalProducts() : Promise.resolve([]),
+    getActiveCart(),
+    listUserOrders(),
+    getPublicPrivateMentoring(),
+    listMyPrivateMentoringSessions(),
+  ])
 
   return (
     <DashboardClient
@@ -24,6 +20,8 @@ export default async function MenteeDashboard() {
       ownedDigitalProducts={ownedDigitalProducts}
       cart={cart}
       commerceOrders={commerceOrders}
+      privateMentoringSessions={privateMentoringSessions}
+      sessionFocuses={privateMentoring?.sessionFocuses ?? []}
     />
   )
 }

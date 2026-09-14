@@ -11,12 +11,16 @@ async function main() {
       const { rows } = await db.query("select to_regclass('auth.users') as users, to_regclass('public.profiles') as profiles")
       if (rows[0].users || rows[0].profiles) throw new Error('Bootstrap requires an empty disposable database.')
       await db.query(readFileSync('supabase/tests/bootstrap.sql', 'utf8'))
-      for (const filename of readdirSync('supabase/migrations').filter(f => f.endsWith('.sql')).sort()) {
+      const migrations = readdirSync('supabase/migrations').filter(f => f.endsWith('.sql')).sort()
+      const versions = migrations.map(filename => filename.split('_')[0])
+      const duplicateVersion = versions.find((version, index) => versions.indexOf(version) !== index)
+      if (duplicateVersion) throw new Error(`Duplicate Supabase migration version: ${duplicateVersion}`)
+      for (const filename of migrations) {
         await db.query(`BEGIN;\n${readFileSync(`supabase/migrations/${filename}`, 'utf8')}\nCOMMIT;`)
         console.log(`Migration passed: ${filename}`)
       }
     }
-    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql', 'marketing_hero_posters.sql', 'mentor_domain.sql', 'mentor_weekly_controls.sql', 'catalog_removal.sql', 'digital_products.sql', 'shared_commerce.sql', 'protected_digital_content.sql', 'payment_attempts.sql']) {
+    for (const filename of ['auth_security.sql', 'institution_import.sql', 'mentor_invites.sql', 'marketing_hero_posters.sql', 'mentor_domain.sql', 'mentor_weekly_controls.sql', 'catalog_removal.sql', 'digital_products.sql', 'shared_commerce.sql', 'protected_digital_content.sql', 'payment_attempts.sql', 'private_mentoring.sql']) {
       const sql = readFileSync(`supabase/tests/${filename}`, 'utf8')
       await db.query(sql)
       console.log(`Passed: ${filename}`)

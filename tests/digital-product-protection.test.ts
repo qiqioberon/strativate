@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import test from 'node:test'
 
-const migrationPath = 'supabase/migrations/202609140009_digital_product_content_delivery.sql'
+const migrationPath = 'supabase/migrations/202609140011_digital_product_content_delivery.sql'
 const adminHelpers = readFileSync('lib/digital-products/admin.ts', 'utf8')
 const config = readFileSync('lib/digital-products/config.ts', 'utf8')
 const layout = readFileSync('app/layout.tsx', 'utf8')
@@ -14,6 +14,12 @@ const dashboardClient = readFileSync('app/dashboard/dashboard-client.tsx', 'utf8
 
 test('protected Digital Product storage and entitlement migration exists', () => {
   assert.equal(existsSync(migrationPath), true, 'protected-content migration must exist')
+})
+
+test('Supabase migration versions remain unique after concurrent feature integration', () => {
+  const migrations = readdirSync('supabase/migrations').filter(filename => filename.endsWith('.sql'))
+  const versions = migrations.map(filename => filename.split('_')[0])
+  assert.equal(new Set(versions).size, versions.length, 'migration numeric prefixes must be unique')
 })
 
 test('admin helpers define private PDF/video content validation and paths', () => {
