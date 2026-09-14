@@ -7,6 +7,7 @@ import { SignOut } from '@/components/auth/sign-out'
 import { displayName } from '@/lib/auth/rules'
 import type { AppRole } from '@/lib/supabase/database.types'
 import styles from './dashboard-shared.module.css'
+import './dashboard-layout-overrides.module.css'
 
 type Panel = 'notification' | 'account' | null
 

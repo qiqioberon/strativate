@@ -1,7 +1,0 @@
-.admin-shell .attention-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-}
-
-.admin-shell .attention-grid > * {
-  min-width: 0;
-}
