@@ -22,7 +22,8 @@ Current as of 14 September 2026. Runtime asset metadata lives in
 | Private/Intensive editorial information | Ready | `lib/program-information.ts` supplies approved non-commercial detail, audience, highlights, and journey | Keep pricing/packages unavailable until their domains are deliberately rebuilt |
 | Private/Intensive commercial data | Intentionally unavailable during rebuild | Legacy Product Catalog runtime removed; public detail pages show an honest unavailable/update state | Reintroduce only through future domain-owned business data, not a temporary generic catalog |
 | Big Class commercial master/cover | Missing | Public overview only; neutral placeholder registry slot | Supply cohort, schedule, price, outcomes, instructor and cover |
-| Digital Product masters/covers/files | Missing | Honest empty/placeholder states; no temporary database abstraction | Supply approved product and delivery masters in the future Digital Product domain |
+| Digital Product domain and covers | Admin-ready; public disabled | `public.digital_products` plus private `digital-product-images` cover bucket; admin CRUD is available while `featureFlags.digitalProducts` remains false | Enter only approved product facts/covers; do not expose them publicly until storefront work is approved |
+| Actual Digital Product files/delivery | Not implemented | No downloadable/viewable product content, entitlement, purchase, or delivery model exists | Implement only in a later explicitly scoped phase |
 | Program/achievement photography | Missing | Hero uses approved brand composition; registry slots remain placeholders | Supply standalone originals and captions if desired |
 | Testimonials and portraits | Missing | Not published | Supply approved quote, identity, context and consent |
 | Institution logos | Missing / intentionally omitted | Text-only social-proof wording | Supply official files and approved usage language |
@@ -36,5 +37,6 @@ Current as of 14 September 2026. Runtime asset metadata lives in
 - `ready` means the supplied file or approved text is integrated and visible.
 - `missing` means the UI must use a clear fallback or omit the section.
 - `intentionally unavailable during rebuild` means previous runtime business data was retired and must not be copied into a temporary source of truth.
+- `admin-ready; public disabled` means the domain can store approved records for preparation, but the public site must not consume or expose them yet.
 - Embedded PDF imagery is reference-only and was not extracted into production.
 - Runtime demo records remain confined to authenticated operational prototypes and are not treated as public marketing facts.
