@@ -6,8 +6,18 @@ const roles = [
   { name: 'user', url: 'http://localhost:3001/dashboard', fullName: 'User Strativate', email: 'user@fixture.test', roleLabel: 'User' },
 ] as const
 
+function captureRuntimeErrors(page: import('@playwright/test').Page) {
+  const errors: string[] = []
+  page.on('console', message => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+  page.on('pageerror', error => errors.push(error.message))
+  return errors
+}
+
 for (const role of roles) {
   test(`${role.name} dashboard shares accessible account and notification popovers`, async ({ page }) => {
+    const runtimeErrors = captureRuntimeErrors(page)
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(role.url)
 
@@ -43,10 +53,12 @@ for (const role of roles) {
     await expect(homeLink).toBeVisible()
     await expect(homeLink).toHaveAttribute('href', '/')
     await expect(page.getByRole('button', { name: 'Keluar' })).toBeVisible()
+    expect(runtimeErrors).toEqual([])
   })
 }
 
 test('user dashboard is owned-content focused and exposes honest digital product empty state', async ({ page }) => {
+  const runtimeErrors = captureRuntimeErrors(page)
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('http://localhost:3001/dashboard')
 
@@ -57,9 +69,10 @@ test('user dashboard is owned-content focused and exposes honest digital product
 
   const storefrontLink = page.getByRole('link', { name: 'Lihat Produk Digital', exact: true })
   await expect(storefrontLink).toHaveAttribute('href', '/produk-digital')
+  expect(runtimeErrors).toEqual([])
 })
 
-test('shared popovers remain inside the viewport across target responsive widths', async ({ page }) => {
+test('all role popovers remain inside the viewport across target responsive widths', async ({ page }) => {
   const sizes = [
     { width: 1440, height: 900 },
     { width: 1024, height: 768 },
@@ -67,23 +80,25 @@ test('shared popovers remain inside the viewport across target responsive widths
     { width: 375, height: 812 },
   ]
 
-  for (const size of sizes) {
-    await page.setViewportSize(size)
-    await page.goto('http://localhost:3001/dashboard')
-    await page.getByRole('button', { name: 'Buka notifikasi' }).click()
+  for (const role of roles) {
+    for (const size of sizes) {
+      await page.setViewportSize(size)
+      await page.goto(role.url)
+      await page.getByRole('button', { name: 'Buka notifikasi' }).click()
 
-    const dialog = page.getByRole('dialog', { name: 'Notifikasi' })
-    await expect(dialog).toBeVisible()
-    const box = await dialog.boundingBox()
-    expect(box).not.toBeNull()
-    expect(box!.x).toBeGreaterThanOrEqual(0)
-    expect(box!.x + box!.width).toBeLessThanOrEqual(size.width)
-    expect(box!.y).toBeGreaterThanOrEqual(0)
-    expect(box!.y + box!.height).toBeLessThanOrEqual(size.height)
+      const dialog = page.getByRole('dialog', { name: 'Notifikasi' })
+      await expect(dialog).toBeVisible()
+      const box = await dialog.boundingBox()
+      expect(box).not.toBeNull()
+      expect(box!.x).toBeGreaterThanOrEqual(0)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(size.width)
+      expect(box!.y).toBeGreaterThanOrEqual(0)
+      expect(box!.y + box!.height).toBeLessThanOrEqual(size.height)
 
-    const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
-    expect(fitsViewport).toBe(true)
-    await page.keyboard.press('Escape')
-    await expect(dialog).toBeHidden()
+      const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+      expect(fitsViewport).toBe(true)
+      await page.keyboard.press('Escape')
+      await expect(dialog).toBeHidden()
+    }
   }
 })
