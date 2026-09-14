@@ -64,7 +64,7 @@ test('admin navigation renders a searchable Digital Product navigator and select
 
   await expect(page.getByText('Produk', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Digital Products' })).toBeVisible()
-  await expect(page.getByText('Business Case Handbook', { exact: true })).toBeVisible()
+  await expect(page.locator('.catalog-admin-product').filter({ hasText: 'Business Case Handbook' })).toBeVisible()
   await expect(page.getByText('Rp75.000 · /business-case-handbook', { exact: true })).toBeVisible()
   await expect(page.getByTestId('digital-product-edit-mode')).toBeVisible()
 
