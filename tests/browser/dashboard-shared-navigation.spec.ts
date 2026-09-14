@@ -110,8 +110,21 @@ test('all role popovers remain inside the viewport across target responsive widt
       expect(box!.y, `${role.name} ${size.width}x${size.height} popover top edge`).toBeGreaterThanOrEqual(0)
       expect(box!.y + box!.height, `${role.name} ${size.width}x${size.height} popover bottom edge`).toBeLessThanOrEqual(size.height)
 
-      const viewport = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }))
-      expect(viewport.scrollWidth, `${role.name} ${size.width}x${size.height} document overflow: ${viewport.scrollWidth}px > ${viewport.innerWidth}px`).toBeLessThanOrEqual(viewport.innerWidth)
+      const viewport = await page.evaluate(() => {
+        const innerWidth = window.innerWidth
+        const overflowElements = Array.from(document.querySelectorAll<HTMLElement>('body *'))
+          .map(element => {
+            const rect = element.getBoundingClientRect()
+            return { tag: element.tagName.toLowerCase(), className: element.className, left: rect.left, right: rect.right, width: rect.width }
+          })
+          .filter(rect => rect.right > innerWidth + 0.1 || rect.left < -0.1)
+          .slice(0, 8)
+        return { scrollWidth: document.documentElement.scrollWidth, innerWidth, overflowElements }
+      })
+      expect(
+        viewport.scrollWidth,
+        `${role.name} ${size.width}x${size.height} document overflow: ${viewport.scrollWidth}px > ${viewport.innerWidth}px; elements=${JSON.stringify(viewport.overflowElements)}`,
+      ).toBeLessThanOrEqual(viewport.innerWidth)
       await page.keyboard.press('Escape')
       await expect(dialog).toBeHidden()
     }
