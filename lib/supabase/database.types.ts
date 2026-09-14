@@ -65,6 +65,16 @@ export type MarketingHeroPoster = {
   created_at: string
   updated_at: string
 }
+export type DigitalProduct = {
+  id: string
+  name: string
+  slug: string
+  description: string
+  image_path: string
+  price_amount: number
+  created_at: string
+  updated_at: string
+}
 export type MentorInvite = {
   email: string
   invited_by: string
@@ -136,6 +146,7 @@ export type Database = {
       referral_sources: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
       marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster, "image_path" | "alt_text">>
+      digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct, "name" | "slug" | "description" | "image_path" | "price_amount">>
       mentee_interests: Table<{ user_id: string; interest_id: string; created_at: string }, { user_id: string; interest_id: string; created_at?: string }>
       mentor_invites: Table<MentorInvite, Partial<MentorInvite> & Pick<MentorInvite, "email" | "invited_by">>
       mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier, "code" | "name">>
