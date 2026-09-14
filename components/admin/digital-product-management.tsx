@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { ImagePlus, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { ImagePlus, PackageOpen, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 
 import { CatalogManagement } from '@/components/admin/catalog-management'
@@ -20,6 +20,7 @@ import {
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
+import styles from './digital-product-management.module.css'
 
 const migrationName = '202609140003_digital_product_domain.sql'
 
@@ -339,93 +340,188 @@ export function DigitalProductManagement() {
     title: product.name,
     meta: `${formatDigitalProductPrice(product.price_amount)} · /${product.slug}`,
   }))
+  const showDedicatedEmptyState = !loading && !setupRequired && !loadFailed && !creating && products.length === 0
 
-  const editor = loading ? (
-    <div className="empty-state" role="status"><RefreshCw aria-hidden="true" /><h3>Memuat Digital Products…</h3></div>
-  ) : setupRequired ? (
-    <div className="empty-state" role="alert" data-testid="digital-product-setup-required">
-      <h3>Setup database diperlukan.</h3>
-      <p>Migration <code>{migrationName}</code> perlu diterapkan pada project Supabase yang digunakan deployment ini.</p>
-      <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
-    </div>
-  ) : loadFailed ? (
-    <div className="empty-state" role="alert" data-testid="digital-product-load-error">
-      <h3>Digital Products belum dapat dimuat.</h3>
-      <p>{error}</p>
-      <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
-    </div>
-  ) : (creating || selected) ? (
-    <form className="editor-panel catalog-product-form" onSubmit={save} noValidate aria-busy={busy} data-testid={creating ? 'digital-product-create-mode' : 'digital-product-edit-mode'}>
-      <div className="role-card-heading">
-        <div><p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p><h2>{creating ? 'Buat Digital Product' : selected?.name}</h2></div>
-        <button type="button" className="button button-outline" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button>
-      </div>
-
-      <div className="catalog-form-grid">
-        <label>Nama
-          <input data-testid="digital-product-name-input" value={draft.name} onChange={event => updateName(event.target.value)} maxLength={160} aria-invalid={Boolean(fieldErrors.name)} />
-          {fieldErrors.name ? <small className="form-error">{fieldErrors.name}</small> : null}
-        </label>
-        <label>Slug
-          <input data-testid="digital-product-slug-input" value={draft.slug} onChange={event => { setDraft(current => ({ ...current, slug: event.target.value })); setSlugManuallyEdited(true); setFieldErrors(current => ({ ...current, slug: undefined })) }} maxLength={120} aria-invalid={Boolean(fieldErrors.slug)} />
-          {fieldErrors.slug ? <small className="form-error">{fieldErrors.slug}</small> : null}
-        </label>
-        <label className="catalog-wide">Deskripsi
-          <textarea data-testid="digital-product-description-input" value={draft.description} onChange={event => { setDraft(current => ({ ...current, description: event.target.value })); setFieldErrors(current => ({ ...current, description: undefined })) }} rows={5} maxLength={5000} aria-invalid={Boolean(fieldErrors.description)} />
-          {fieldErrors.description ? <small className="form-error">{fieldErrors.description}</small> : null}
-        </label>
-        <label>Harga (Rupiah)
-          <input data-testid="digital-product-price-input" type="text" inputMode="numeric" value={draft.price} onChange={event => { setDraft(current => ({ ...current, price: event.target.value })); setFieldErrors(current => ({ ...current, price: undefined })) }} placeholder="75000" aria-invalid={Boolean(fieldErrors.price)} />
-          <small>{parsedPrice === null ? 'Simpan sebagai angka Rupiah bulat, tanpa Rp atau pemisah ribuan.' : `Preview: ${formatDigitalProductPrice(parsedPrice)}`}</small>
-          {fieldErrors.price ? <small className="form-error">{fieldErrors.price}</small> : null}
-        </label>
-        <label>Cover image
-          <input data-testid="digital-product-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file: undefined })) }} />
-          <small>{selected ? 'Kosongkan untuk mempertahankan cover saat ini.' : 'JPG, PNG, atau WebP · maksimal 5 MB.'}</small>
-          {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
-        </label>
-      </div>
-
-      <section className="hero-poster-preview" data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product">
-        <div className="hero-poster-preview__canvas">
-          {editorPreviewUrl
-            ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 800px) 90vw, 420px" unoptimized />
-            : <div className="hero-poster-preview__empty"><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}
-        </div>
-        <p>{localPreviewUrl ? 'Preview cover baru yang akan menggantikan cover saat ini setelah database berhasil diperbarui.' : selected ? 'Cover tersimpan saat ini. Pilih file baru hanya jika ingin menggantinya.' : 'Cover ini hanya untuk gambar pemasaran; file produk sebenarnya tidak diunggah pada fase ini.'}</p>
-      </section>
-
-      <div className="button-row">
-        <button data-testid="digital-product-save-button" className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : creating ? 'Buat Digital Product' : 'Simpan perubahan'}</button>
-        <button type="button" className="button button-outline" onClick={cancelEdit} disabled={busy}>Batal</button>
-        {!creating && selected ? <button type="button" className="button button-outline" onClick={() => void removeProduct(selected)} disabled={busy} data-testid="digital-product-delete-button"><Trash2 aria-hidden="true" /> Hapus</button> : null}
-      </div>
-      {error ? <p className="form-error" role="alert" data-testid="digital-product-error">{error}</p> : null}
-      {notice ? <p className="form-success" role="status" data-testid="digital-product-notice">{notice}</p> : null}
-    </form>
-  ) : (
-    <div className="empty-state" data-testid="digital-product-empty-editor">
-      <h3>Pilih Digital Product atau buat yang baru.</h3>
-      <p>Data yang disimpan di sini belum dipublikasikan ke storefront.</p>
-      <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Digital Product baru</button>
-      {notice ? <p className="form-success" role="status" data-testid="digital-product-notice">{notice}</p> : null}
+  const pageHeader = (
+    <div className={styles.pageHeader}>
+      <p className="kicker">Produk · Digital Product</p>
+      <h2>Digital Products</h2>
+      <p>Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini.</p>
     </div>
   )
 
+  const editor = (creating || selected) ? (
+    <form className={styles.form} onSubmit={save} noValidate aria-busy={busy} data-testid={creating ? 'digital-product-create-mode' : 'digital-product-edit-mode'}>
+      <div className={styles.formHeader}>
+        <div>
+          <p className="kicker">{creating ? 'Digital Product baru' : 'Edit Digital Product'}</p>
+          <h2>{creating ? 'Buat Digital Product' : selected?.name}</h2>
+        </div>
+        {!creating ? <button type="button" className="button button-outline" onClick={beginCreate} disabled={busy}><Plus aria-hidden="true" /> Digital Product baru</button> : null}
+      </div>
+
+      <section className={styles.formSection} aria-labelledby="digital-product-information-heading">
+        <div className={styles.sectionHeading}>
+          <h3 id="digital-product-information-heading">Informasi produk</h3>
+          <p>Atur nama, identifier, dan deskripsi yang menjadi dasar informasi Digital Product.</p>
+        </div>
+        <div className={styles.formGrid}>
+          <label className={styles.field}>Nama
+            <input data-testid="digital-product-name-input" value={draft.name} onChange={event => updateName(event.target.value)} maxLength={160} aria-invalid={Boolean(fieldErrors.name)} />
+            {fieldErrors.name ? <small className="form-error">{fieldErrors.name}</small> : null}
+          </label>
+          <label className={styles.field}>Slug
+            <input data-testid="digital-product-slug-input" value={draft.slug} onChange={event => { setDraft(current => ({ ...current, slug: event.target.value })); setSlugManuallyEdited(true); setFieldErrors(current => ({ ...current, slug: undefined })) }} maxLength={120} aria-invalid={Boolean(fieldErrors.slug)} />
+            {fieldErrors.slug ? <small className="form-error">{fieldErrors.slug}</small> : <small className={styles.helper}>Identifier URL/internal produk. Slug dibuat otomatis sampai diedit manual.</small>}
+          </label>
+          <label className={styles.wideField}>Deskripsi
+            <textarea data-testid="digital-product-description-input" value={draft.description} onChange={event => { setDraft(current => ({ ...current, description: event.target.value })); setFieldErrors(current => ({ ...current, description: undefined })) }} rows={6} maxLength={5000} aria-invalid={Boolean(fieldErrors.description)} />
+            {fieldErrors.description ? <small className="form-error">{fieldErrors.description}</small> : null}
+          </label>
+        </div>
+      </section>
+
+      <section className={styles.formSection} aria-labelledby="digital-product-price-heading">
+        <div className={styles.sectionHeading}>
+          <h3 id="digital-product-price-heading">Harga</h3>
+          <p>Simpan nilai sebagai Rupiah bulat. Preview formatting tidak mengubah data input.</p>
+        </div>
+        <label className={styles.field}>Harga
+          <span className={styles.priceControl}>
+            <span className={styles.pricePrefix} aria-hidden="true">Rp</span>
+            <input data-testid="digital-product-price-input" type="text" inputMode="numeric" value={draft.price} onChange={event => { setDraft(current => ({ ...current, price: event.target.value })); setFieldErrors(current => ({ ...current, price: undefined })) }} placeholder="75000" aria-invalid={Boolean(fieldErrors.price)} />
+          </span>
+          {parsedPrice === null ? <small className={styles.helper}>Gunakan angka Rupiah bulat tanpa simbol atau pemisah ribuan.</small> : <small className={styles.pricePreview}>Preview: {formatDigitalProductPrice(parsedPrice)}</small>}
+          {fieldErrors.price ? <small className="form-error">{fieldErrors.price}</small> : null}
+        </label>
+      </section>
+
+      <section className={styles.formSection} aria-labelledby="digital-product-cover-heading">
+        <div className={styles.sectionHeading}>
+          <h3 id="digital-product-cover-heading">Cover</h3>
+          <p>Cover digunakan sebagai gambar pemasaran. File produk sebenarnya belum dikelola pada fase ini.</p>
+        </div>
+        <div className={styles.coverLayout}>
+          <div className={styles.coverInput}>
+            <label>{selected ? 'Ganti cover' : 'Pilih cover produk'}
+              <input data-testid="digital-product-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file: undefined })) }} />
+            </label>
+            <small className={styles.helper}>{selected ? 'Cover saat ini tetap digunakan jika tidak memilih file baru. JPG, PNG, atau WebP · maksimal 5 MB.' : 'JPG, PNG, atau WebP · maksimal 5 MB.'}</small>
+            {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
+          </div>
+
+          <div className={styles.coverPreview} data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product">
+            <div className={styles.coverPreviewCanvas}>
+              {editorPreviewUrl
+                ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 768px) 80vw, 280px" unoptimized />
+                : <div className={styles.coverPreviewEmpty}><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}
+            </div>
+            <p>{localPreviewUrl ? 'Preview cover baru. Cover lama baru dibersihkan setelah update database berhasil.' : selected ? 'Cover tersimpan saat ini. Pilih file baru hanya jika ingin menggantinya.' : 'Preview akan muncul di sini sebelum data disimpan.'}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.formActions}>
+        <button data-testid="digital-product-save-button" className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : creating ? 'Buat Digital Product' : 'Simpan perubahan'}</button>
+        <button type="button" className="button button-outline" onClick={cancelEdit} disabled={busy}>Batal</button>
+        {!creating && selected ? <button type="button" className={`button button-outline ${styles.deleteButton}`} onClick={() => void removeProduct(selected)} disabled={busy} data-testid="digital-product-delete-button"><Trash2 aria-hidden="true" /> Hapus</button> : null}
+      </div>
+      {error ? <p className={`${styles.feedback} ${styles.errorFeedback}`} role="alert" data-testid="digital-product-error">{error}</p> : null}
+      {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
+    </form>
+  ) : (
+    <div className={styles.stateCard} data-testid="digital-product-empty-editor">
+      <h3>Pilih Digital Product untuk mulai mengelola.</h3>
+      <p>Pilih produk dari navigator atau buat Digital Product baru.</p>
+      <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Digital Product baru</button>
+      {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
+    </div>
+  )
+
+  if (loading) {
+    return (
+      <section className={styles.management} data-testid="digital-product-management" aria-busy="true">
+        {pageHeader}
+        <div className={styles.stateCard} role="status"><RefreshCw aria-hidden="true" /><h3>Memuat Digital Products…</h3><p>Menyiapkan daftar produk, cover, dan editor.</p></div>
+      </section>
+    )
+  }
+
+  if (setupRequired) {
+    return (
+      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+        {pageHeader}
+        <div className={styles.stateCard} role="alert" data-testid="digital-product-setup-required">
+          <PackageOpen aria-hidden="true" />
+          <h3>Setup database diperlukan.</h3>
+          <p>Migration <code>{migrationName}</code> perlu diterapkan pada project Supabase yang digunakan deployment ini sebelum Digital Product dapat dikelola.</p>
+          <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
+        </div>
+      </section>
+    )
+  }
+
+  if (loadFailed) {
+    return (
+      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+        {pageHeader}
+        <div className={styles.stateCard} role="alert" data-testid="digital-product-load-error">
+          <RefreshCw aria-hidden="true" />
+          <h3>Digital Products belum dapat dimuat.</h3>
+          <p>{error}</p>
+          <button type="button" className="button button-outline" onClick={() => void load()}><RefreshCw aria-hidden="true" /> Coba lagi</button>
+        </div>
+      </section>
+    )
+  }
+
+  if (showDedicatedEmptyState) {
+    return (
+      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+        {pageHeader}
+        <div className={styles.emptyState} data-testid="digital-product-empty-state">
+          <div className={styles.emptyContent}>
+            <span className={styles.emptyIcon}><PackageOpen aria-hidden="true" /></span>
+            <h3>Belum ada Digital Product</h3>
+            <p>Buat produk digital pertama untuk mulai menyiapkan informasi, harga, dan cover sebelum storefront tersedia.</p>
+            <button type="button" className="button button-primary" onClick={beginCreate}><Plus aria-hidden="true" /> Buat Digital Product</button>
+            <div className={styles.emptyChips} aria-label="Status Digital Product">
+              <span>Draft admin</span>
+              <span>Storefront belum aktif</span>
+              <span>Cover JPG / PNG / WebP</span>
+            </div>
+            {notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (creating && products.length === 0) {
+    return (
+      <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
+        {pageHeader}
+        <div className={styles.singleEditor}>{editor}</div>
+      </section>
+    )
+  }
+
   return (
-    <section data-testid="digital-product-management" aria-busy={loading || busy}>
+    <section className={styles.management} data-testid="digital-product-management" aria-busy={busy}>
       <CatalogManagement
         eyebrow="Produk · Digital Product"
         title="Digital Products"
-        description="Kelola data dan cover Digital Product. Storefront dan pembelian tetap dinonaktifkan pada fase ini."
+        description="Kelola informasi, harga, dan cover produk digital dari satu tempat. Storefront dan pembelian belum dipublikasikan pada fase ini."
         items={itemList}
         selectedId={selectedId ?? undefined}
         query={query}
         onQueryChange={setQuery}
         onSelect={beginEdit}
         editor={editor}
-        emptyTitle="Belum ada Digital Product."
-        emptyDescription="Buat Digital Product pertama untuk menyiapkan data sebelum storefront diluncurkan."
+        listLabel="Digital Products"
+        itemNoun="produk"
+        searchLabel="Cari produk"
+        searchPlaceholder="Cari nama, harga, atau slug…"
       />
     </section>
   )
