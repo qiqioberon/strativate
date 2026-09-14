@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
-const migrationPath = 'supabase/migrations/202609140005_shared_commerce.sql'
+const migrationPath = 'supabase/migrations/202609140006_shared_commerce.sql'
 
-test('shared commerce migration is a forward migration after Phase 2A', () => {
+test('shared commerce migration follows the managed mentor fix without rewriting it', () => {
+  assert.equal(existsSync('supabase/migrations/202609140005_fix_managed_mentor_listing.sql'), true)
   assert.equal(existsSync(migrationPath), true)
   const sql = readFileSync(migrationPath, 'utf8')
   for (const table of ['commerce_items', 'carts', 'cart_items', 'orders', 'order_items']) {
