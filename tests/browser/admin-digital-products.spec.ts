@@ -51,7 +51,7 @@ async function mockDigitalProductBackend(page: Page, products: DigitalProduct[])
 
 async function openDigitalProducts(page: Page) {
   await page.goto('http://localhost:3001/admin')
-  await page.getByRole('button', { name: 'Digital Products' }).click()
+  await page.getByRole('button', { name: 'Produk Digital' }).click()
   await expect(page.getByTestId('digital-product-management')).toBeVisible()
 }
 
