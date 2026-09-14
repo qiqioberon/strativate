@@ -13,8 +13,10 @@ test('admin navigation exposes Digital Products independently from the public fe
   assert.match(adminPage, /section === 'Digital Products'[\s\S]*<DigitalProductManagement \/>/)
 })
 
-test('public Digital Products feature remains disabled', () => {
-  assert.match(featureFlags, /digitalProducts:\s*false/)
+test('public Digital Products rollout has one env-backed runtime decision', () => {
+  assert.match(featureFlags, /isDigitalProductsEnabled/)
+  assert.match(featureFlags, /process\.env\.FEATURE_DIGITAL_PRODUCTS/)
+  assert.doesNotMatch(featureFlags, /digitalProducts:\s*false/)
 })
 
 test('Digital Product controller renders its real domain fields in a semantic paginated table', () => {
@@ -64,5 +66,4 @@ test('Digital Product zero state remains dedicated onboarding', () => {
   assert.match(manager, /data-testid="digital-product-empty-state"/)
   assert.match(manager, /Belum ada Digital Product/)
   assert.match(manager, /Buat Digital Product/)
-  assert.match(manager, /Storefront belum aktif/)
 })

@@ -17,8 +17,9 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
+import { CartEntryLink } from '@/components/commerce/cart-entry-link'
 import { buttonVariants } from '@/components/ui/button'
-import { marketingNavigation, type NavigationIcon } from '@/lib/content/marketing-content'
+import type { NavigationIcon, marketingNavigationItems } from '@/lib/content/marketing-content'
 import { cn } from '@/lib/utils'
 
 const icons = {
@@ -34,7 +35,13 @@ function isActiveRoute(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function SiteHeader() {
+export function SiteHeader({
+  navigation,
+  showCart = false,
+}: {
+  navigation: typeof marketingNavigationItems
+  showCart?: boolean
+}) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   useEffect(() => {
@@ -58,7 +65,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="marketing-nav" aria-label="Navigasi utama">
-          {marketingNavigation.map((item) => {
+          {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
 
@@ -78,6 +85,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="marketing-header__actions">
+          <CartEntryLink showCart={showCart} />
           <Link className="marketing-login" href="/auth" data-testid="desktop-login-link">
             <LogIn aria-hidden="true" size={16} />
             <span>Masuk</span>
@@ -102,7 +110,7 @@ export function SiteHeader() {
 
       <div className={cn('marketing-mobile-panel', mobileOpen && 'is-open')} id="marketing-mobile-navigation">
         <nav aria-label="Navigasi seluler">
-          {marketingNavigation.map((item) => {
+          {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
 
@@ -120,6 +128,7 @@ export function SiteHeader() {
               </Link>
             )
           })}
+          {showCart ? <Link className="marketing-mobile-link" href="/cart">Keranjang</Link> : null}
           <div className="marketing-mobile-panel__actions">
             <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/auth" data-testid="mobile-login-link">
               <LogIn aria-hidden="true" size={16} /> Masuk

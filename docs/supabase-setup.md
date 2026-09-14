@@ -1,130 +1,176 @@
-# Konfigurasi Supabase Strativate
+# Konfigurasi Supabase dan Shared Commerce Strativate
 
-Implementasi memakai Next.js App Router dan Supabase SSR cookies. Login bersama di `/auth`; callback di `/auth/callback`. Role berasal dari `public.profiles`, bukan user metadata. Dashboard tetap `/admin`, `/mentor`, `/dashboard`; mentee yang belum selesai diarahkan ke `/onboarding`, mentor baru ke `/auth/setup`.
+Implementasi memakai Next.js App Router, Supabase SSR cookies, dan Shared Commerce yang tetap terpisah dari business domain. Login bersama berada di `/auth`; role canonical berasal dari `public.profiles`, bukan user metadata. Dashboard tetap `/admin`, `/mentor`, dan `/dashboard`; Mentee yang belum selesai onboarding diarahkan ke `/onboarding`.
 
-## 1. Environment dan migrasi
+## 1. Environment
 
-Isi `.env` mengikuti `.env.example`, tanpa menimpa kredensial yang sudah ada:
+Isi `.env` mengikuti `.env.example` tanpa menaruh secret di client bundle:
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
 APP_URL=http://localhost:3000
+
+FEATURE_DIGITAL_PRODUCTS=false
+MIDTRANS_ENV=sandbox
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=YOUR_MIDTRANS_CLIENT_KEY
+MIDTRANS_SERVER_KEY=YOUR_MIDTRANS_SERVER_KEY
 ```
 
-`SUPABASE_SECRET_KEY` hanya dipakai server action/admin/importer. Jangan beri prefix `NEXT_PUBLIC_` pada secret.
+`SUPABASE_SECRET_KEY` dan `MIDTRANS_SERVER_KEY` adalah **server-only**. Jangan beri prefix `NEXT_PUBLIC_`, jangan kirim melalui API response, dan jangan log nilainya. `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` memang public dan dipakai Snap.js di browser.
 
-Untuk database baru, jalankan semua migration dalam urutan filename:
+`FEATURE_DIGITAL_PRODUCTS` adalah satu-satunya keputusan runtime untuk membuka storefront/cart/checkout Digital Product. Safe default adalah `false`.
 
-1. `202609060001_auth_onboarding.sql`
-2. `202609060002_institution_import.sql`
-3. `202609060003_invite_management_auth_ux.sql`
-4. `202609090001_product_catalog_master.sql` — **history**; jangan edit/hapus karena dapat sudah diterapkan.
-5. `202609120001_marketing_hero_posters.sql`
-6. `202609130001_mentor_domain.sql`
-7. `202609140001_marketing_hero_poster_natural_order.sql`
-8. `202609140002_remove_legacy_product_catalog.sql` — forward cleanup yang membongkar Product Catalog Master lama.
-9. `202609140003_digital_product_domain.sql` — domain Digital Product mandiri dan bucket cover admin-only.
+## 2. Urutan migration
 
-Migration nomor 8 harus diterapkan secara terkontrol ke project hosted karena menghapus tabel/view/function/type Product Catalog lama. Migration nomor 9 kemudian membuat `public.digital_products` dan bucket private `digital-product-images`. Keduanya merupakan perubahan schema dan **tidak** boleh dijalankan otomatis terhadap production dari workflow ini. Pastikan backup/approval operasional tersedia sesuai prosedur deployment sebelum penerapan.
+Untuk database baru, jalankan semua migration sesuai filename. Riwayat penting terbaru adalah:
 
-Arsitektur setelah Phase 2A: Digital Product sudah memiliki domain model sendiri; Private/Intensive/Big Class tetap terpisah dan shared commerce akan dibangun kemudian untuk cart, checkout, order, dan payment. Domain Digital Product saat ini tidak berisi file produk yang dapat diunduh, purchase, atau entitlement.
+1. `202609140001_marketing_hero_poster_natural_order.sql`
+2. `202609140002_remove_legacy_product_catalog.sql`
+3. `202609140003_digital_product_domain.sql`
+4. `202609140004_mentor_account_status_weekly_availability.sql`
+5. `202609140005_fix_managed_mentor_listing.sql`
+6. `202609140006_shared_commerce.sql`
+7. `202609140007_midtrans_payment_attempts.sql`
 
-Contoh PostgreSQL CLI:
+Migration lama `202609090001_product_catalog_master.sql` tetap history dan tidak boleh dihapus, tetapi `202609140002_remove_legacy_product_catalog.sql` membongkar runtime Product Catalog Master lama. Jangan membuat kembali `catalog_*` atau `public_catalog_*` sebagai fondasi commerce.
 
-```powershell
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060001_auth_onboarding.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060002_institution_import.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609060003_invite_management_auth_ux.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609090001_product_catalog_master.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609120001_marketing_hero_posters.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609130001_mentor_domain.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140001_marketing_hero_poster_natural_order.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140002_remove_legacy_product_catalog.sql
-psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/202609140003_digital_product_domain.sql
+### Catatan branch development lama
+
+Sebelum branch Phase 2 disinkronkan dengan `main`, Shared Commerce sempat memakai filename `202609140005_shared_commerce.sql` dan Payment Attempts memakai `202609140006_midtrans_payment_attempts.sql`. Setelah `main` membawa migration mentor `202609140005_fix_managed_mentor_listing.sql`, file Shared Commerce/Payment Attempts dipindah nomor menjadi `006`/`007` agar urutan history tidak bentrok.
+
+Jika database development persisten **pernah** menerapkan filename lama dari feature branch, jangan langsung menjalankan history baru secara buta. Periksa migration history dan lakukan rekonsiliasi/reset development yang disengaja terlebih dahulu. Repository tidak mengasumsikan bahwa migration branch lama sudah atau belum diterapkan ke hosted Supabase.
+
+## 3. Arsitektur Phase 2
+
+Arsitektur commerce saat ini:
+
+```text
+Digital Product Domain
+        ↓
+Commerce Item
+        ↓
+Shared Cart
+        ↓
+Shared Checkout
+        ↓
+Order + immutable Order Item snapshots
+        ↓
+Payment Attempt
+        ↓
+Midtrans Snap Embedded
 ```
 
-`psql` tidak otomatis membaca `.env`. Jangan menjalankan ulang migration yang telah tercatat sebagai applied; sinkronkan migration history jika SQL Editor pernah dipakai sebelum beralih ke Supabase CLI.
+Private Mentoring, Intensive Mentoring, dan Big Class belum dihubungkan ke Shared Commerce pada Phase 2 ini. Desain `commerce_items` sengaja reusable supaya business domain tersebut dapat masuk ke Cart/Order yang sama pada fase berikutnya tanpa membuat Cart/Order khusus Digital Product.
 
-## 2. Authentication URL dan email
+## 4. Digital Product dan cover security
 
-Di **Authentication → URL Configuration**:
+`public.digital_products` menyimpan nama, slug, deskripsi, object path cover, integer Rupiah, dan metadata teknis. Actual paid file/content **belum ada** di Phase 2.
 
-- Site URL: origin produksi, atau `http://localhost:3000` selama pengembangan.
-- Redirect URLs: callback lokal dan produksi (`/auth/callback`).
-- Hindari wildcard produksi.
+Bucket `digital-product-images` berisi cover yang merupakan **public marketing assets**. Public/anonymous user boleh membaca cover dan record Digital Product untuk storefront. Hanya admin yang boleh upload, replace, atau delete object. Jangan menambahkan public write policy.
 
-Email template harus memakai token hash agar callback server dapat membentuk session cookie. Magic Link/Confirm Signup, Invite User, dan Recovery harus mengarah ke `.RedirectTo` dengan `token_hash` dan tipe yang sesuai. Gunakan SMTP produksi dengan domain terverifikasi dan password policy minimal 8 karakter.
+Tidak ada PDF/video/downloadable asset, signed paid-file URL, content viewer, DRM, atau course progress pada fase ini.
 
-## 3. Google OAuth
+## 5. Cart, Order, dan ownership
 
-1. Buat Google OAuth Web Client dan consent screen/test users.
-2. Authorized redirect URI provider adalah callback Supabase `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
-3. Aktifkan Google provider di Supabase.
-4. Tambahkan callback aplikasi lokal/produksi ke redirect allowlist Supabase.
+Mentee yang sudah menyelesaikan onboarding memakai satu active Shared Cart. Browser tidak mengirim harga atau total authoritative; `create_order_from_cart` menghitung ulang dari Commerce Item resolver di PostgreSQL dan membuat immutable `order_items` snapshots.
 
-OAuth menggunakan PKCE. Nama/avatar provider dapat diprefill; username tetap dipilih pengguna.
+Digital Product dianggap dimiliki hanya bila terdapat:
 
-## 4. Bootstrap admin pertama
-
-Buat user Auth secara tepercaya, lalu ubah `public.profiles.role` menjadi `admin` melalui SQL/admin tooling tepercaya. Jangan memakai user metadata sebagai sumber role dan jangan menyediakan registrasi admin publik.
-
-## 5. Institution import
-
-Dataset version-controlled berada di `supabase/seed/institutions_all.csv`. Gunakan:
-
-```powershell
-pnpm import:institutions --dry-run
-pnpm import:institutions --dry-run --compare
-pnpm import:institutions
+```text
+paid Order
++ Order Item
++ item_kind_snapshot = digital_product
 ```
 
-Importer memakai batch dan RPC/service-only path; pengajuan pengguna tidak boleh ditimpa.
+Dashboard `Produk Digital` menggunakan `list_owned_digital_products()`. Nama, tanggal pembelian, dan harga berasal dari snapshot/history; cover boleh memakai cover produk saat ini jika source record masih ada. Tidak ada action download/open karena file produk belum ada.
 
-## 6. Mentor invitation dan Mentor Domain
+## 6. Midtrans
 
-`mentor_invites` adalah registry privat untuk alur invitation. Mentor Domain memakai `public.mentor_tiers` sebagai tier operasional canonical, bersama `mentor_profiles` dan `mentor_availability_rules`. Jangan memakai model `catalog_mentor_tiers` lama: tabel itu dihapus oleh cleanup migration Product Catalog.
+Provider module memilih endpoint berdasarkan `MIDTRANS_ENV`:
 
-Admin dapat mengelola invitation/tier/availability melalui boundary yang sudah ada. Auth/onboarding/Mentor Domain tidak boleh bergantung pada schema Product Catalog lama.
+- sandbox Snap: `https://app.sandbox.midtrans.com/snap/v1/transactions`
+- production Snap: `https://app.midtrans.com/snap/v1/transactions`
+- sandbox status: `https://api.sandbox.midtrans.com/v2/{id}/status`
+- production status: `https://api.midtrans.com/v2/{id}/status`
+- sandbox Snap.js: `https://app.sandbox.midtrans.com/snap/snap.js`
+- production Snap.js: `https://app.midtrans.com/snap/snap.js`
 
-## 7. Hero Posters
+Server membuat transaksi Midtrans hanya dari trusted `orders.total_amount` dan immutable `order_items`. Jumlah `item_details` diverifikasi sama dengan total Order sebelum request dikirim.
 
-`marketing_hero_posters` dan bucket `marketing-hero-posters` tetap domain terpisah. Migration Product Catalog cleanup tidak mengubah tabel, Storage bucket, policy, atau RPC Hero Poster. Migration natural-order 14 September harus tetap diterapkan sebelum cleanup Product Catalog.
+Checkout memakai official Snap Embedded:
 
-## 8. Digital Products
+```js
+window.snap.embed(token, {
+  embedId: 'midtrans-snap-container',
+  onSuccess,
+  onPending,
+  onError,
+  onClose,
+})
+```
 
-`public.digital_products` menyimpan hanya nama, slug, deskripsi, object path cover, integer Rupiah, dan metadata teknis. Admin adalah satu-satunya browser role yang dapat SELECT/INSERT/UPDATE/DELETE melalui RLS `public.is_admin()`.
+`onSuccess` bukan bukti pembayaran. Browser meminta `/api/checkout/status`, backend mengambil status Midtrans menggunakan Server Key, lalu state diterapkan melalui transition database yang sama dengan webhook. `onClose` tidak menandai gagal dan pending Order dapat dilanjutkan.
 
-Bucket `digital-product-images` bersifat private dan hanya menyimpan JPG/PNG/WebP cover maksimal 5 MB di namespace `products/`. Admin dapat membaca, mengunggah, mengganti, dan menghapus object melalui Storage policy. Tabel menyimpan object path, bukan public URL; admin preview menggunakan signed URL sementara.
+## 7. Midtrans Dashboard webhook
 
-`featureFlags.digitalProducts` tetap `false`. Jangan membuka public read policy, storefront, file produk sebenarnya, cart, checkout, order, payment, atau entitlement dari setup ini.
+Set **Payment Notification URL** menjadi:
 
-## 9. Pengujian otomatis
+```text
+<APP_URL>/api/payments/midtrans/webhook
+```
+
+Production wajib memakai HTTPS.
+
+Webhook tidak memerlukan session pengguna karena dipanggil oleh Midtrans. Backend memverifikasi `provider_order_id`, signature SHA-512, gross amount, transaction status, dan fraud status yang relevan sebelum menerapkan state.
+
+Signature dihitung dari exact notification strings:
+
+```text
+SHA512(order_id + status_code + gross_amount + MIDTRANS_SERVER_KEY)
+```
+
+Jangan mengubah `gross_amount` ke floating point sebelum signature verification.
+
+Status `paid` bersifat monotonic: notification `pending` yang datang terlambat tidak boleh menurunkan Order yang sudah `paid`, duplicate notification harus idempotent, dan `paid_at` harus tetap stabil.
+
+## 8. Sandbox → production
+
+Sebelum production:
+
+1. gunakan Midtrans production Server Key dan Client Key;
+2. set `MIDTRANS_ENV=production`;
+3. pastikan `APP_URL` menggunakan origin HTTPS production;
+4. konfigurasi Payment Notification URL production;
+5. pastikan secret hanya tersedia di server environment;
+6. lakukan transaksi sandbox nyata secara manual sebelum cutover, lalu transaksi production yang terkendali sesuai prosedur operasional.
+
+Automated test **tidak** boleh bergantung pada jaringan Midtrans atau kredensial nyata.
+
+## 9. Authentication dan Google OAuth
+
+Di **Authentication → URL Configuration**, atur Site URL dan callback `/auth/callback` untuk local/production. Hindari wildcard production. Google OAuth menggunakan callback Supabase `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`; tambahkan callback aplikasi ke allowlist Supabase.
+
+Role berasal dari database. Admin pertama harus dibuat melalui tooling tepercaya; tidak ada registrasi admin publik.
+
+## 10. Verification
+
+Verifikasi Phase 2 menjalankan:
 
 ```powershell
 pnpm test
 pnpm typecheck
 pnpm lint
 pnpm build
-pnpm exec playwright install chromium
+pnpm test:db -- --bootstrap
 pnpm test:e2e
 ```
 
-Untuk database uji benar-benar baru:
+Build harus terbukti dengan `FEATURE_DIGITAL_PRODUCTS=false`; feature-enabled path juga diuji dalam konfigurasi terkontrol. Automated tests memakai key dummy dan tidak menghubungi Midtrans asli.
 
-```powershell
-createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_auth
-$env:TEST_DATABASE_URL = 'postgresql://postgres@127.0.0.1:55439/strativate_test_auth'
-pnpm test:db -- --bootstrap
-```
+Database test runner hanya boleh diarahkan ke disposable database `strativate_test_*`. SQL suites memverifikasi RLS/ownership, active Cart uniqueness, duplicate Cart Item, authoritative pricing, immutable snapshots, deletion history, paid ownership, service-role Payment Attempts, retry/monotonic payment state, dan stabilitas `paid_at`.
 
-Runner hanya menerima database bernama `strativate_test_*`. `--bootstrap` memasang harness dan seluruh migration dalam urutan filename, termasuk forward Product Catalog cleanup dan Digital Product Domain, lalu menjalankan suite SQL Auth, institution import, mentor invites, Hero Posters, Mentor Domain, `catalog_removal.sql`, dan `digital_products.sql`.
+## 11. Batas bukti hosted
 
-`catalog_removal.sql` harus membuktikan tidak ada tabel/view/function/type Product Catalog aktif lagi dan memastikan `mentor_tiers`, Auth/onboarding, institutions, serta Hero Posters tetap ada. `digital_products.sql` harus membuktikan schema/constraint, admin CRUD, role isolation, private cover Storage, dan bahwa schema katalog lama tidak muncul kembali.
-
-## 10. Batas bukti hosted
-
-Test lokal dan migration repository tidak membuktikan bahwa hosted Supabase sudah diperbarui. Setelah deployment migration yang disetujui, verifikasi migration history serta objek Auth/Mentor/Hero Poster/Digital Product pada target project. Jangan menganggap `202609140002_remove_legacy_product_catalog.sql` atau `202609140003_digital_product_domain.sql` telah diterapkan remote hanya karena file-nya ada di repository.
-
-Referensi resmi: [SSR Supabase](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [template email](https://supabase.com/docs/guides/auth/auth-email-templates), [Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google), [Admin invitations](https://supabase.com/docs/reference/javascript/auth-admin-inviteuserbyemail).
+Keberadaan migration dan test repository tidak membuktikan hosted Supabase sudah diperbarui. Setelah deployment yang disetujui, periksa migration history target dan terapkan migration yang belum ada secara berurutan. Jangan mengklaim transaksi Midtrans sandbox nyata telah diuji kecuali transaksi tersebut memang dilakukan dan diverifikasi di dashboard/provider.

@@ -75,6 +75,87 @@ export type DigitalProduct = {
   created_at: string
   updated_at: string
 }
+export type CommerceItem = {
+  id: string
+  item_kind: string
+  is_available: boolean
+  created_at: string
+  updated_at: string
+}
+export type CartStatus = "active" | "converted"
+export type Cart = {
+  id: string
+  user_id: string
+  status: CartStatus
+  created_at: string
+  updated_at: string
+}
+export type CartItem = {
+  id: string
+  cart_id: string
+  commerce_item_id: string
+  created_at: string
+}
+export type CartItemView = {
+  cart_id: string
+  cart_item_id: string
+  commerce_item_id: string
+  item_kind: string
+  name: string | null
+  slug: string | null
+  image_path: string | null
+  price_amount: number | null
+  is_available: boolean
+  created_at: string
+}
+export type OrderStatus = "pending_payment" | "paid" | "payment_failed" | "expired" | "cancelled"
+export type Order = {
+  id: string
+  user_id: string
+  cart_id: string
+  status: OrderStatus
+  currency_code: "IDR"
+  total_amount: number
+  created_at: string
+  updated_at: string
+  paid_at: string | null
+}
+export type OrderItem = {
+  id: string
+  order_id: string
+  commerce_item_id: string
+  item_kind_snapshot: string
+  name_snapshot: string
+  slug_snapshot: string
+  unit_price_amount: number
+  created_at: string
+}
+export type PaymentAttemptStatus = "creating" | "pending" | "paid" | "failed" | "expired" | "cancelled"
+export type PaymentAttempt = {
+  id: string
+  order_id: string
+  provider: "midtrans"
+  provider_order_id: string
+  snap_token: string | null
+  provider_transaction_id: string | null
+  provider_status: string | null
+  fraud_status: string | null
+  payment_type: string | null
+  gross_amount: number
+  status: PaymentAttemptStatus
+  created_at: string
+  updated_at: string
+}
+export type OwnedDigitalProduct = {
+  order_item_id: string
+  order_id: string
+  commerce_item_id: string
+  name_snapshot: string
+  slug_snapshot: string
+  unit_price_amount: number
+  purchased_at: string
+  current_image_path: string | null
+}
 export type MentorInvite = {
   email: string
   invited_by: string
@@ -152,6 +233,12 @@ export type Database = {
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption, "name">>
       marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster, "image_path" | "alt_text">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct, "name" | "slug" | "description" | "image_path" | "price_amount">>
+      commerce_items: Table<CommerceItem, Partial<CommerceItem> & Pick<CommerceItem, "id" | "item_kind">>
+      carts: Table<Cart, Partial<Cart> & Pick<Cart, "user_id">>
+      cart_items: Table<CartItem, Partial<CartItem> & Pick<CartItem, "cart_id" | "commerce_item_id">>
+      orders: Table<Order, Partial<Order> & Pick<Order, "user_id" | "cart_id" | "total_amount">>
+      order_items: Table<OrderItem, Partial<OrderItem> & Pick<OrderItem, "order_id" | "commerce_item_id" | "item_kind_snapshot" | "name_snapshot" | "slug_snapshot" | "unit_price_amount">>
+      payment_attempts: Table<PaymentAttempt, Partial<PaymentAttempt> & Pick<PaymentAttempt, "order_id" | "provider" | "provider_order_id" | "gross_amount">>
       mentee_interests: Table<{ user_id: string; interest_id: string; created_at: string }, { user_id: string; interest_id: string; created_at?: string }>
       mentor_invites: Table<MentorInvite, Partial<MentorInvite> & Pick<MentorInvite, "email" | "invited_by">>
       mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier, "code" | "name">>
@@ -176,6 +263,15 @@ export type Database = {
       complete_mentor_setup: { Args: { p_first_name: string; p_last_name: string; p_username: string }; Returns: Profile }
       merge_institutions: { Args: { p_from: string; p_into: string }; Returns: undefined }
       reorder_marketing_hero_posters: { Args: { p_ids: string[] }; Returns: undefined }
+      get_or_create_active_cart: { Args: Record<PropertyKey, never>; Returns: Cart }
+      add_cart_item: { Args: { p_commerce_item_id: string }; Returns: CartItem }
+      remove_cart_item: { Args: { p_cart_item_id: string }; Returns: undefined }
+      get_active_cart: { Args: Record<PropertyKey, never>; Returns: CartItemView[] }
+      create_order_from_cart: { Args: { p_cart_id: string }; Returns: Order }
+      list_owned_digital_products: { Args: Record<PropertyKey, never>; Returns: OwnedDigitalProduct[] }
+      reserve_midtrans_payment_attempt: { Args: { p_order_id: string }; Returns: PaymentAttempt }
+      store_midtrans_snap_token: { Args: { p_attempt_id: string; p_snap_token: string }; Returns: PaymentAttempt }
+      apply_midtrans_payment_status: { Args: { p_attempt_id: string; p_normalized_status: string; p_provider_status: string; p_provider_transaction_id: string | null; p_fraud_status: string | null; p_payment_type: string | null }; Returns: PaymentAttempt }
     }
     Enums: {
       app_role: AppRole
