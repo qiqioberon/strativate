@@ -18,12 +18,14 @@ Current as of 14 September 2026. Runtime asset metadata lives in
 | Mentor credentials/links | Ready with recorded conflicts | Public workbook columns only; internal notes excluded | Resolve cross-source discrepancies listed in `source-conflicts.md` |
 | Mentor ratings | Intentionally absent | No real rating source | Connect only to production rating data |
 | Social proof | Ready | 2500+ students, 15+ universities, 20+ high schools | No partnership wording or logos |
-| Program overview | Ready | Eight services in `lib/content/services.ts`; Private/Intensive link directly to approved editorial information routes | Keep commercial data separate until domain-specific sources exist |
-| Private/Intensive editorial information | Ready | `lib/program-information.ts` supplies approved non-commercial detail, audience, highlights, and journey | Keep pricing/packages unavailable until their domains are deliberately rebuilt |
-| Private/Intensive commercial data | Intentionally unavailable during rebuild | Legacy Product Catalog runtime removed; public detail pages show an honest unavailable/update state | Reintroduce only through future domain-owned business data, not a temporary generic catalog |
+| Program overview | Ready | Eight services in `lib/content/services.ts`; Private Mentoring is hydrated from its active database domain while other service overviews retain their approved source | Keep domain-owned business data separate |
+| Private Mentoring Phase 3 | Ready | `public.private_mentoring_*` domain tables own editorial taxonomy and packages; public detail renders active DB records and the existing brand/marketing surface | No new image asset is required for Phase 3; future imagery needs its own approved source |
+| Private Mentoring commercial data | Ready | Ten seeded domain-owned packages sync only thin identities to Shared Commerce; the public page shows package totals/reference prices plus derived per-session display | Maintain prices through the Private Mentoring admin/domain, never a generic catalog |
+| Intensive Mentoring editorial information | Ready | `lib/program-information.ts` retains approved non-commercial detail, audience, highlights, and journey | Keep pricing/packages unavailable until its domain is deliberately rebuilt |
+| Intensive Mentoring commercial data | Intentionally unavailable during rebuild | Legacy Product Catalog runtime removed; its detail page shows an honest unavailable/update state | Reintroduce only through a future domain-owned business model |
 | Big Class commercial master/cover | Missing | Public overview only; neutral placeholder registry slot | Supply cohort, schedule, price, outcomes, instructor and cover |
-| Digital Product domain and covers | Admin-ready; public disabled | `public.digital_products` plus private `digital-product-images` cover bucket; admin CRUD is available while `featureFlags.digitalProducts` remains false | Enter only approved product facts/covers; do not expose them publicly until storefront work is approved |
-| Actual Digital Product files/delivery | Not implemented | No downloadable/viewable product content, entitlement, purchase, or delivery model exists | Implement only in a later explicitly scoped phase |
+| Digital Product domain and covers | Admin-ready; public rollout feature-controlled | `public.digital_products` plus private `digital-product-images` cover bucket; admin CRUD remains independent of the public feature flag | Enter only approved product facts/covers and control public exposure with the existing rollout flag |
+| Actual Digital Product files/delivery | Not implemented | No downloadable/viewable product content delivery model exists | Implement only in a later explicitly scoped phase |
 | Program/achievement photography | Missing | Hero uses approved brand composition; registry slots remain placeholders | Supply standalone originals and captions if desired |
 | Testimonials and portraits | Missing | Not published | Supply approved quote, identity, context and consent |
 | Institution logos | Missing / intentionally omitted | Text-only social-proof wording | Supply official files and approved usage language |
@@ -37,6 +39,6 @@ Current as of 14 September 2026. Runtime asset metadata lives in
 - `ready` means the supplied file or approved text is integrated and visible.
 - `missing` means the UI must use a clear fallback or omit the section.
 - `intentionally unavailable during rebuild` means previous runtime business data was retired and must not be copied into a temporary source of truth.
-- `admin-ready; public disabled` means the domain can store approved records for preparation, but the public site must not consume or expose them yet.
+- `admin-ready; public rollout feature-controlled` means the domain is real and admin-manageable while public exposure follows the existing feature flag.
 - Embedded PDF imagery is reference-only and was not extracted into production.
 - Runtime demo records remain confined to authenticated operational prototypes and are not treated as public marketing facts.

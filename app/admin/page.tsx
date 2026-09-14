@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Images, LayoutDashboard, Menu, Search, X } from 'lucide-react'
 import { DemoOrder, mentorOptions, readOrders, readState, writeState } from '@/lib/demo-store'
+import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
 import { InstitutionManagement } from '@/components/admin/institutions'
 import { MasterOptions } from '@/components/admin/master-options'
 import { MenteeManagement } from '@/components/admin/people'
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
+import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
+import { PrivateMentoringSessionManagement } from '@/components/admin/private-mentoring-session-management'
 import { useAccount } from '@/components/auth/account-provider'
 import { ProfileForm } from '@/components/auth/profile-form'
 import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-sidebar-utilities'
@@ -19,9 +22,9 @@ import { displayDemoLabel } from '@/lib/demo-labels'
 import { BrandLogo } from '@/components/brand/brand-logo'
 
 const groups = [
-  { label: 'Operasional', items: ['Overview', 'Orders', 'Mentor Assignment', 'Bookings'] },
+  { label: 'Operasional', items: ['Overview', 'Orders', 'Mentor Assignment', 'Bookings', 'Mentoring Sessions', 'Cart Links'] },
   { label: 'Pengguna', items: ['Mentees', 'Mentors'] },
-  { label: 'Produk', items: ['Digital Products'] },
+  { label: 'Produk', items: ['Private Mentoring', 'Digital Products'] },
   { label: 'Konten', items: ['Hero Posters'] },
   { label: 'Bisnis', items: ['Payments', 'Reports'] },
   { label: 'Data master', items: ['Institutions', 'Referral Sources', 'Competition Interests'] },
@@ -95,6 +98,9 @@ export default function AdminDashboard() {
         {section === 'Overview' && <Overview orders={orders} pending={pending} navigate={navigate} />}
         {section === 'Orders' && <Orders orders={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} />}
         {section === 'Mentor Assignment' && <Assignment orders={pending.length ? pending : orders} assign={assign} />}
+        {section === 'Mentoring Sessions' && <PrivateMentoringSessionManagement />}
+        {section === 'Cart Links' && <CommerceCartLinkManagement />}
+        {section === 'Private Mentoring' && <PrivateMentoringManagement />}
         {section === 'Digital Products' && <DigitalProductManagement />}
         {section === 'Hero Posters' && <HeroPosterManagement />}
         {section === 'Payments' && <Payments orders={orders} />}
