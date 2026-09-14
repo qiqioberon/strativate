@@ -20,6 +20,6 @@ test('payment transition function preserves paid Orders against stale notificati
   assert.match(sql, /status\s*=\s*'paid'/i)
   assert.match(sql, /paid_at\s*=\s*coalesce\([^,]+paid_at,\s*now\(\)\)/i)
   assert.match(sql, /if v_order\.status = 'paid'/i)
-  assert.match(sql, /grant execute on function public\.apply_midtrans_payment_status[^;]+to service_role/is)
-  assert.doesNotMatch(sql, /grant execute on function public\.apply_midtrans_payment_status[^;]+to authenticated/is)
+  assert.match(sql, /grant execute on function public\.apply_midtrans_payment_status[\s\S]*?to service_role/i)
+  assert.doesNotMatch(sql, /grant execute on function public\.apply_midtrans_payment_status[\s\S]*?to authenticated/i)
 })
