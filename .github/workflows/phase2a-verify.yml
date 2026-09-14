@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/digital-product-domain-admin-crud
+      - fix/admin-digital-product-ui
 
 jobs:
   verify:
