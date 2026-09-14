@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const read = (path: string) => { assert.equal(existsSync(path), true, `${path} must exist`); return readFileSync(path, 'utf8') }
 
-test('admin dashboard exposes Private Mentoring, generic Cart Links, and real session operations', () => {
+test('admin dashboard exposes Private Mentoring Catalog, generic Cart Links, and real session operations', () => {
   const admin = read('app/admin/page.tsx')
   assert.match(admin, /Private Mentoring/)
   assert.match(admin, /Cart Links/)
@@ -12,6 +12,20 @@ test('admin dashboard exposes Private Mentoring, generic Cart Links, and real se
   assert.match(admin, /PrivateMentoringManagement/)
   assert.match(admin, /CommerceCartLinkManagement/)
   assert.match(admin, /PrivateMentoringSessionManagement/)
+})
+
+test('Private Mentoring admin manages only genuine catalog data, never marketing copy', () => {
+  const source = read('components/admin/private-mentoring-management.tsx')
+  assert.match(source, /Private Mentoring Catalog/)
+  assert.match(source, /private_mentoring_packages/)
+  assert.match(source, /private_mentoring_learning_paths/)
+  assert.match(source, /private_mentoring_session_focuses/)
+  assert.match(source, /competition_categories/)
+  assert.doesNotMatch(source, /private_mentoring_programs/)
+  assert.doesNotMatch(source, /private_mentoring_highlights/)
+  assert.doesNotMatch(source, /private_mentoring_journey_steps/)
+  assert.doesNotMatch(source, /short_description|saveProgram|Informasi publik/)
+  assert.doesNotMatch(source, /aria-label=[^\n]*(title|kicker|audience|hero|journey|highlight)/i)
 })
 
 test('generic cart-link admin UI searches mentees and commerce items without manual UUID or custom price', () => {

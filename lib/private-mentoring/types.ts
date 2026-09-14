@@ -1,12 +1,3 @@
-export type PrivateMentoringOrderedContent = {
-  id: string
-  name?: string
-  title?: string
-  text?: string
-  description?: string
-  sortOrder: number
-}
-
 export type PrivateMentoringPackageView = {
   id: string
   mentorTierId: string
@@ -21,19 +12,36 @@ export type PrivateMentoringPackageView = {
   sortOrder: number
 }
 
-export type PrivateMentoringPublicView = {
+export type PrivateMentoringLearningPathView = {
   id: string
-  slug: 'private-mentoring'
-  title: string
-  shortDescription: string
-  kicker: string
-  detail: string
-  audience: string
-  highlights: Array<{ id: string; text: string; sortOrder: number }>
-  journeySteps: Array<{ id: string; title: string; description: string; sortOrder: number }>
-  learningPaths: Array<{ id: string; code: string; slug: string; name: string; description: string; sortOrder: number }>
-  sessionFocuses: Array<{ id: string; code: string; slug: string; name: string; description: string; sortOrder: number }>
-  competitionCategories: Array<{ id: string; code: string; slug: string; name: string; sortOrder: number }>
+  code: string
+  slug: string
+  name: string
+  description: string
+  sortOrder: number
+}
+
+export type PrivateMentoringSessionFocusView = {
+  id: string
+  code: string
+  slug: string
+  name: string
+  description: string
+  sortOrder: number
+}
+
+export type PrivateMentoringCompetitionCategoryView = {
+  id: string
+  code: string
+  slug: string
+  name: string
+  sortOrder: number
+}
+
+export type PrivateMentoringCatalogView = {
+  learningPaths: PrivateMentoringLearningPathView[]
+  sessionFocuses: PrivateMentoringSessionFocusView[]
+  competitionCategories: PrivateMentoringCompetitionCategoryView[]
   packages: PrivateMentoringPackageView[]
 }
 

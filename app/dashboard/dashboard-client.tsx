@@ -15,7 +15,7 @@ import type { OwnedDigitalProductView } from '@/lib/commerce/types'
 import { DemoState, readState } from '@/lib/demo-store'
 import { displayDemoLabel, displayDemoNotification } from '@/lib/demo-labels'
 import { displayLabel } from '@/lib/labels'
-import type { PrivateMentoringPublicView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
+import type { PrivateMentoringSessionFocusView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
 
 type Section = 'overview' | 'mentoring' | 'schedule' | 'programs' | 'library' | 'orders' | 'notifications' | 'profile' | 'support'
 function buildNav(digitalProductsEnabled: boolean): { id: Section; label: string; icon: typeof LayoutDashboard }[] {
@@ -31,7 +31,7 @@ export function DashboardClient({
   digitalProductsEnabled: boolean
   ownedDigitalProducts: OwnedDigitalProductView[]
   privateMentoringSessions?: PrivateMentoringSessionView[]
-  sessionFocuses?: PrivateMentoringPublicView['sessionFocuses']
+  sessionFocuses?: PrivateMentoringSessionFocusView[]
 }) {
   const account = useAccount()
   const accountName = displayName(account)
