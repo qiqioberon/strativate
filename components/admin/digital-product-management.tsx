@@ -56,6 +56,7 @@ export function DigitalProductManagement() {
     () => products.find(product => product.id === selectedId) ?? null,
     [products, selectedId],
   )
+  const selectedImagePath = selected?.image_path ?? null
 
   const load = useCallback(async (autoSelect = true) => {
     setLoading(true)
@@ -115,13 +116,13 @@ export function DigitalProductManagement() {
   useEffect(() => {
     let cancelled = false
     setStoredPreviewUrl(null)
-    if (!selected?.image_path || creating) {
+    if (!selectedImagePath || creating) {
       setPreviewLoading(false)
       return () => { cancelled = true }
     }
 
     setPreviewLoading(true)
-    void supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).createSignedUrl(selected.image_path, 60 * 60)
+    void supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).createSignedUrl(selectedImagePath, 60 * 60)
       .then(({ data, error: signedUrlError }) => {
         if (cancelled) return
         if (signedUrlError) {
@@ -133,7 +134,7 @@ export function DigitalProductManagement() {
       .finally(() => { if (!cancelled) setPreviewLoading(false) })
 
     return () => { cancelled = true }
-  }, [creating, selected?.image_path, supabase])
+  }, [creating, selectedImagePath, supabase])
 
   function beginCreate() {
     setCreating(true)
@@ -194,14 +195,14 @@ export function DigitalProductManagement() {
       description: draft.description,
       priceInput: draft.price,
       file: selectedFile,
-      hasStoredImage: Boolean(selected?.image_path),
+      hasStoredImage: Boolean(selectedImagePath),
     })
     setFieldErrors(validation)
     setError('')
     setNotice('')
     if (Object.keys(validation).length > 0) return
 
-    const editing = !creating && selected
+    const editing = creating ? null : selected
     const oldImagePath = editing?.image_path ?? null
     let uploadedPath: string | null = null
     let stage: 'upload' | 'database' = 'upload'
@@ -228,10 +229,20 @@ export function DigitalProductManagement() {
 
       let authoritativeId = editing?.id ?? null
       if (editing) {
-        const { error: updateError } = await supabase.from('digital_products').update(payload).eq('id', editing.id)
+        const { data: updated, error: updateError } = await supabase
+          .from('digital_products')
+          .update(payload)
+          .eq('id', editing.id)
+          .select('id')
+          .single()
         if (updateError) throw updateError
+        authoritativeId = updated.id
       } else {
-        const { data: created, error: insertError } = await supabase.from('digital_products').insert(payload).select('id').single()
+        const { data: created, error: insertError } = await supabase
+          .from('digital_products')
+          .insert(payload)
+          .select('id')
+          .single()
         if (insertError) throw insertError
         authoritativeId = created.id
       }
@@ -292,7 +303,12 @@ export function DigitalProductManagement() {
     setError('')
     setNotice('')
     try {
-      const { error: rowError } = await supabase.from('digital_products').delete().eq('id', product.id)
+      const { error: rowError } = await supabase
+        .from('digital_products')
+        .delete()
+        .eq('id', product.id)
+        .select('id')
+        .single()
       if (rowError) throw rowError
 
       setCreating(false)
@@ -317,6 +333,7 @@ export function DigitalProductManagement() {
 
   const parsedPrice = parseDigitalProductPriceInput(draft.price)
   const editorPreviewUrl = localPreviewUrl ?? storedPreviewUrl
+  const previewSource = localPreviewUrl ? 'local' : storedPreviewUrl ? 'stored' : 'empty'
   const itemList = products.map(product => ({
     id: product.id,
     title: product.name,
@@ -369,12 +386,13 @@ export function DigitalProductManagement() {
         </label>
       </div>
 
-      <section className="hero-poster-preview" data-testid="digital-product-cover-preview" aria-label="Preview cover Digital Product">
+      <section className="hero-poster-preview" data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product">
         <div className="hero-poster-preview__canvas">
           {editorPreviewUrl
             ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 800px) 90vw, 420px" unoptimized />
             : <div className="hero-poster-preview__empty"><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}
         </div>
+        <p>{localPreviewUrl ? 'Preview cover baru yang akan menggantikan cover saat ini setelah database berhasil diperbarui.' : selected ? 'Cover tersimpan saat ini. Pilih file baru hanya jika ingin menggantinya.' : 'Cover ini hanya untuk gambar pemasaran; file produk sebenarnya tidak diunggah pada fase ini.'}</p>
       </section>
 
       <div className="button-row">
