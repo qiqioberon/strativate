@@ -128,13 +128,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
     if (calendarState === 'connected') {
       setOauthNotice({ tone: 'success', message: 'Google Calendar berhasil terhubung.' })
     } else if (calendarState === 'denied') {
-      const reason = params.get('reason')
-      setOauthNotice({
-        tone: 'warning',
-        message: reason === 'access_denied'
-          ? 'Google menolak akses (403 access_denied). Jika aplikasi OAuth masih Testing, tambahkan akun Google ini di Google Auth Platform → Audience → Test users. Akun sekolah/kantor juga dapat dibatasi oleh admin Google Workspace.'
-          : 'Google Calendar belum memberikan izin. Coba hubungkan kembali atau periksa konfigurasi OAuth Google Cloud.',
-      })
+      setOauthNotice({ tone: 'warning', message: 'Google Calendar belum terhubung. Silakan coba lagi.' })
     }
     params.delete('calendar')
     params.delete('reason')
@@ -217,10 +211,6 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
           {payload?.connection.connected
             ? <span>Connected as {payload.connection.accountEmail}</span>
             : <span>{payload?.connection.status === 'invalid' ? 'Koneksi perlu diperbarui.' : 'Hubungkan agar agenda pribadi tampil bersama jadwal Strativate.'}</span>}
-          {!payload?.connection.connected ? <details className="calendar-connection-help">
-            <summary>Mengalami 403 access_denied?</summary>
-            <p>Jika OAuth app masih Testing, tambahkan akun Google yang dipakai di Google Auth Platform → Audience → Test users. Untuk akun sekolah/kantor, kebijakan Google Workspace juga dapat memblokir akses.</p>
-          </details> : null}
         </div>
       </div>
       <div className="button-row">
@@ -232,7 +222,6 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
     </section>
 
     {oauthNotice ? <p className={`calendar-oauth-notice ${oauthNotice.tone}`} role="status">{oauthNotice.message}</p> : null}
-    {payload?.googleError ? <p className="calendar-warning" role="status">Google Calendar sedang tidak dapat disinkronkan. Jadwal Strativate tetap dapat digunakan. {payload.googleError}</p> : null}
 
     <section className="role-card calendar-card">
       <div className="calendar-toolbar">

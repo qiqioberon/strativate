@@ -1,25 +1,39 @@
 /* Shared calendar polish for Admin, Mentor, and Mentee dashboards. */
 .calendar-connection-card__identity{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1}
 .calendar-connection-card__identity>div{min-width:0}
-.calendar-connection-help{margin-top:8px;color:#667085;font-size:12px;line-height:1.5}
-.calendar-connection-help summary{cursor:pointer;font-weight:700;color:#475467;list-style-position:inside}
-.calendar-connection-help p{margin:6px 0 0;max-width:760px}
+.calendar-connection-card .button-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .calendar-oauth-notice{margin:0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.55;border:1px solid transparent}
 .calendar-oauth-notice.success{background:#ecfdf3;border-color:#abefc6;color:#067647}
 .calendar-oauth-notice.warning{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px 24px;padding:14px 16px}
+.calendar-nav{display:grid;grid-template-columns:auto 40px 40px minmax(140px,1fr);align-items:center;gap:8px;min-width:0;flex:1 1 420px}
+.calendar-nav button{min-width:40px}
+.calendar-nav button:first-child{min-width:72px}
+.calendar-nav strong{min-width:140px;margin-left:4px}
+.calendar-view-switch{display:grid;grid-template-columns:repeat(3,minmax(72px,1fr));align-items:center;gap:8px;min-width:236px;flex:0 1 260px}
+.calendar-view-switch button{width:100%;min-width:72px}
+.calendar-source-controls{gap:16px 20px;padding:13px 16px}
+.calendar-source-controls label{gap:9px}
 .calendar-month-grid{overflow:hidden}
+
+@media(max-width:900px){
+ .calendar-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+ .calendar-nav{width:100%;flex:none}
+ .calendar-view-switch{width:100%;min-width:0;flex:none}
+}
 
 @media(max-width:760px){
  .native-calendar{gap:14px}
  .native-calendar .role-page-title{margin-bottom:2px}
  .calendar-connection-card{padding:14px;gap:14px}
  .calendar-connection-card__identity{width:100%}
- .calendar-toolbar{grid-template-columns:minmax(0,1fr);gap:10px;padding:12px}
+ .calendar-connection-card .button-row{width:100%;justify-content:stretch}
+ .calendar-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px}
  .calendar-nav{display:grid;grid-template-columns:auto 38px 38px minmax(0,1fr);gap:6px;width:100%;align-items:center}
  .calendar-nav button{min-height:38px;min-width:0;padding:6px 8px}
  .calendar-nav button:first-child{min-width:0}
- .calendar-nav strong{width:auto;order:initial;margin:0 0 0 2px;text-align:right;font-size:12px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- .calendar-view-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%}
+ .calendar-nav strong{width:auto;min-width:0;order:initial;margin:0 0 0 2px;text-align:right;font-size:12px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .calendar-view-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;min-width:0}
  .calendar-view-switch button{width:100%;min-width:0;padding:7px 6px}
  .calendar-source-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 12px}
  .calendar-source-controls label{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px;min-width:0}
@@ -40,5 +54,4 @@
  .calendar-source-controls{padding:9px 10px;gap:6px}
  .calendar-source-controls .source-badge{font-size:9px}
  .calendar-day{min-height:72px}
- .calendar-connection-help{font-size:11px}
 }

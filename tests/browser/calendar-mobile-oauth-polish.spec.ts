@@ -37,7 +37,7 @@ function calendarPayload(role: 'admin' | 'mentor' | 'mentee') {
       scopes: [],
       lastError: null,
     },
-    googleError: null,
+    googleError: 'Google Calendar API has not been used in project 123 before or it is disabled. (status 403)',
     role,
   }
 }
@@ -106,7 +106,13 @@ async function expectMobileCalendarPolish(page: Page) {
   expect(dimensions.body).toBeLessThanOrEqual(dimensions.viewport)
 }
 
-test('admin, mentor, and mentee calendars keep all mobile controls contained and expose 403 setup help', async ({ page }) => {
+async function expectNoDeveloperDiagnostics(page: Page) {
+  await expect(page.getByText(/403 access_denied/)).toHaveCount(0)
+  await expect(page.getByText(/Audience.*Test users/)).toHaveCount(0)
+  await expect(page.getByText(/Google Calendar API has not been used/)).toHaveCount(0)
+}
+
+test('admin, mentor, and mentee calendars keep mobile controls contained without developer diagnostics', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
 
   await stubAdminCommerce(page)
@@ -115,18 +121,19 @@ test('admin, mentor, and mentee calendars keep all mobile controls contained and
   await page.getByRole('button', { name: 'Buka menu admin' }).click()
   await page.getByRole('button', { name: 'Jadwal', exact: true }).click()
   await expectMobileCalendarPolish(page)
-  await page.getByText('Mengalami 403 access_denied?').click()
-  await expect(page.getByText(/Audience.*Test users/)).toBeVisible()
+  await expectNoDeveloperDiagnostics(page)
 
   await stubCalendar(page, 'mentor')
   await page.goto('http://localhost:3001/mentor')
   await page.getByRole('button', { name: 'Buka menu mentor' }).click()
   await page.getByRole('button', { name: 'Kalender', exact: true }).click()
   await expectMobileCalendarPolish(page)
+  await expectNoDeveloperDiagnostics(page)
 
   await stubCalendar(page, 'mentee')
   await page.goto('http://localhost:3001/dashboard')
   await page.getByRole('button', { name: 'Buka navigasi' }).click()
   await page.getByRole('button', { name: 'Jadwal', exact: true }).click()
   await expectMobileCalendarPolish(page)
+  await expectNoDeveloperDiagnostics(page)
 })
