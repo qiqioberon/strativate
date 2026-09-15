@@ -2,6 +2,7 @@ import 'server-only'
 import { buildBookableSlots, type SlotMentor, type TimeInterval } from '@/lib/calendar/slot-engine'
 import { getGoogleConnectionStatus, getGoogleFreeBusy, syncPrivateMentoringSession } from '@/lib/google-calendar/server'
 import { createClient } from '@/lib/supabase/server'
+import { resolveGoogleCalendarBusy, type GoogleCalendarAvailabilityStatus } from './scheduling-availability'
 
 type SlotContext = {
   sessionId:string
@@ -50,17 +51,21 @@ export async function getAdminBookableSlots(sessionId:string) {
   const horizonEnd=availability.reduce((max,r)=>r.end>max?r.end:max,availability[0].end)
   const mentorWarnings:string[]=[]
   const mentors:SlotMentor[]=[]
+  const mentorCalendarStatus=new Map<string,GoogleCalendarAvailabilityStatus>()
 
   for(const mentor of context.mentors){
-    let googleBusy:TimeInterval[]=[]
     const connection=await getGoogleConnectionStatus(mentor.mentorId)
+    let googleBusy:TimeInterval[]|null=[]
     if(connection.connected){
-      try{googleBusy=await getGoogleFreeBusy(mentor.mentorId,horizonStart,horizonEnd)}
-      catch{
-        mentorWarnings.push(`${mentor.mentorName}: Google Calendar belum dapat diverifikasi, jadi slot mentor ini sementara tidak ditawarkan.`)
-        continue
+      try{
+        googleBusy=await getGoogleFreeBusy(mentor.mentorId,horizonStart,horizonEnd)
+      }catch{
+        googleBusy=null
+        mentorWarnings.push(`${mentor.mentorName}: Google Calendar belum dapat diverifikasi. Slot tetap dihitung dari availability mentor dan sesi Strativate; periksa agenda Google mentor sebelum konfirmasi.`)
       }
     }
+    const calendar=resolveGoogleCalendarBusy({connected:connection.connected,busy:googleBusy})
+    mentorCalendarStatus.set(mentor.mentorId,calendar.status)
     mentors.push({
       mentorId:mentor.mentorId,
       mentorName:mentor.mentorName,
@@ -69,7 +74,7 @@ export async function getAdminBookableSlots(sessionId:string) {
       timezone:mentor.timezone,
       availability:mentor.availability,
       strativateBusy:mentor.strativate_busy??[],
-      googleBusy,
+      googleBusy:calendar.googleBusy,
     })
   }
 
@@ -86,12 +91,23 @@ export async function getAdminBookableSlots(sessionId:string) {
       menteeBusy=await getGoogleFreeBusy(context.menteeId,horizonStart,horizonEnd)
     }
   }catch{/* secondary indicator only */}
-  const slots=baseSlots.map(slot=>({...slot,menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy))}))
+  const slots=baseSlots.map(slot=>({
+    ...slot,
+    menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy)),
+    googleCalendarStatus:mentorCalendarStatus.get(slot.mentorId)??'not_connected',
+  }))
+  const contextWithCalendarStatus={
+    ...resolvedContext,
+    mentors:context.mentors.map(mentor=>({
+      ...mentor,
+      googleCalendarStatus:mentorCalendarStatus.get(mentor.mentorId)??'not_connected',
+    })),
+  }
   return {
-    context:resolvedContext,
+    context:contextWithCalendarStatus,
     slots,
     mentorWarnings,
-    message:slots.length?'':'Availability ditemukan, tetapi belum ada slot yang dapat dipilih setelah mempertimbangkan durasi sesi, waktu yang sudah lewat, sesi Strativate lain, dan Google Calendar.',
+    message:slots.length?'':'Availability ditemukan, tetapi belum ada slot yang dapat dipilih setelah mempertimbangkan durasi sesi, waktu yang sudah lewat, sesi Strativate lain, dan Google Calendar yang berhasil diverifikasi.',
   }
 }
 

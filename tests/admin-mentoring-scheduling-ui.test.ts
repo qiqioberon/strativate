@@ -17,6 +17,23 @@ test('admin scheduling explains mentor eligibility and keeps declared availabili
   assert.doesNotMatch(dialog,/datetime-local/)
 })
 
+test('Google verification failure does not discard mentor availability',()=>{
+  const server=read('lib/private-mentoring/scheduling-server.ts')
+  assert.match(server,/resolveGoogleCalendarBusy/)
+  assert.match(server,/Slot tetap dihitung dari availability mentor dan sesi Strativate/)
+  assert.doesNotMatch(server,/Google Calendar belum dapat diverifikasi[\s\S]{0,300}continue/)
+})
+
+test('schedule dialog filters future availability by week and day and exposes Google verification state',()=>{
+  const dialog=read('components/admin/admin-schedule-dialog.tsx')
+  assert.match(dialog,/schedule-filter-bar/)
+  assert.match(dialog,/availabilityMatchesFilters/)
+  assert.match(dialog,/Minggu ini & depan/)
+  assert.match(dialog,/Semua hari/)
+  assert.match(dialog,/googleCalendarStatus/)
+  assert.match(dialog,/Availability yang sudah lewat disembunyikan otomatis/)
+})
+
 test('mentoring session and scheduling dialogs have dedicated responsive polish loaded after calendar styles',()=>{
   const layout=read('app/layout.tsx')
   assert.equal(existsSync('app/admin-mentoring-scheduling.css'),true)
@@ -26,4 +43,12 @@ test('mentoring session and scheduling dialogs have dedicated responsive polish 
   assert.match(css,/\.schedule-dialog__summary/)
   assert.match(css,/\.schedule-mentor-card/)
   assert.match(css,/@media\s*\(max-width:\s*760px\)/)
+})
+
+test('mentor availability and session actions are compact and scrollable',()=>{
+  const css=read('app/admin-mentoring-scheduling.css')
+  assert.match(css,/schedule-availability-scroll[\s\S]*?max-height:[^;}]+;[\s\S]*?overflow-y:auto/)
+  assert.match(css,/schedule-mentor-grid[\s\S]*?max-height:[^;}]+;[\s\S]*?overflow:auto/)
+  assert.match(css,/button-row \.button\{[\s\S]*?min-height:34px[\s\S]*?padding:7px 11px/)
+  assert.match(css,/mentoring-session-detail-row>\.ops-status\{[\s\S]*?align-self:start/)
 })
