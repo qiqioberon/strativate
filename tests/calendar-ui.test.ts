@@ -24,7 +24,7 @@ test('shared calendar detail exposes duration and timezone and keeps role-correc
 })
 
 test('mentor calendar no longer renders the static demo CalendarPanel', () => {
-  const mentor = read('app/mentor/dashboard/page.tsx')
+  const mentor = read('components/mentor/mentor-dashboard-client.tsx')
   assert.match(mentor, /RoleCalendar/)
   assert.doesNotMatch(mentor, /function CalendarPanel\(\)/)
 })

@@ -118,6 +118,52 @@ test('user dashboard is owned-content focused and exposes honest digital product
   expect(runtime.httpErrors).toEqual([])
 })
 
+test('mentor dashboard uses operational real-data tables and removes the redundant Program tab', async ({ page }) => {
+  const runtime = captureRuntimeErrors(page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('http://localhost:3001/mentor')
+
+  await expect(page.getByRole('button', { name: 'Program', exact: true })).toHaveCount(0)
+  for (const label of ['Ringkasan', 'Kalender', 'Penugasan', 'Peserta Saya', 'Ketersediaan', 'Riwayat Sesi', 'Notifikasi', 'Profil']) {
+    await expect(page.getByRole('button', { name: new RegExp(`^${label}`) })).toBeVisible()
+  }
+  await expect(page.getByText('+12%', { exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: /^Penugasan/ }).click()
+  await expect(page.getByTestId('mentor-assignment-table')).toBeVisible()
+  await page.getByPlaceholder('Mentee, email, atau fokus').fill('Bima')
+  await expect(page.getByTestId('mentor-assignment-table')).toContainText('Bima Santoso')
+  await expect(page.getByTestId('mentor-assignment-table')).not.toContainText('Alya Pratama')
+  await page.getByRole('button', { name: /Lihat detail sesi 1 Bima Santoso/ }).click()
+  const sessionDialog = page.getByRole('dialog', { name: /Bima Santoso · Sesi 1/ })
+  await expect(sessionDialog).toBeVisible()
+  await expect(sessionDialog).toContainText('Dibatalkan')
+  await page.keyboard.press('Escape')
+  await expect(sessionDialog).toBeHidden()
+
+  await page.getByRole('button', { name: 'Peserta Saya' }).click()
+  await expect(page.getByTestId('mentor-mentees-table')).toBeVisible()
+  await expect(page.getByTestId('mentor-mentees-table')).toContainText('Alya Pratama')
+
+  await page.getByRole('button', { name: 'Riwayat Sesi' }).click()
+  await expect(page.getByTestId('mentor-history-table')).toContainText('Selesai')
+  await expect(page.getByTestId('mentor-history-table')).toContainText('Dibatalkan')
+  expect(runtime.errors).toEqual([])
+  expect(runtime.httpErrors).toEqual([])
+})
+
+test('mentor operational tables stay contained at tablet and mobile widths', async ({ page }) => {
+  for (const size of [{ width: 1536, height: 960 }, { width: 768, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(size)
+    await page.goto('http://localhost:3001/mentor')
+    if (size.width <= 800) await page.getByRole('button', { name: 'Buka menu mentor' }).click()
+    await page.getByRole('button', { name: /^Penugasan/ }).click()
+    await expect(page.getByTestId('mentor-assignment-table')).toBeVisible()
+    const widths = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }))
+    expect(widths.scrollWidth, `mentor assignments overflow at ${size.width}px`).toBeLessThanOrEqual(widths.innerWidth)
+  }
+})
+
 test('all role popovers remain inside the viewport across target responsive widths', async ({ page }) => {
   await stubAdminCommerce(page)
   const sizes = [

@@ -1,6 +1,8 @@
 import { AccountProvider } from '@/components/auth/account-provider'
 import { requireAccount } from '@/lib/auth/server'
 
+import './mentor-operations.css'
+
 export default async function MentorDashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

@@ -1,0 +1,532 @@
+/* Mentor dashboard operational surfaces. */
+
+
+.mentor-shell .role-main,
+.mentor-shell .role-content,
+.mentor-role-content,
+.mentor-section {
+  min-width: 0;
+}
+
+.mentor-role-content {
+  width: min(1280px, calc(100% - 72px));
+}
+
+.mentor-section {
+  display: grid;
+  gap: 18px;
+}
+
+.mentor-page-header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+  padding-bottom: 4px;
+}
+
+.mentor-page-header__copy {
+  display: grid;
+  min-width: 0;
+  max-width: 780px;
+  gap: 7px;
+}
+
+.mentor-page-header h1 {
+  margin: 0;
+  font-size: clamp(30px, 3.4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -.075em;
+}
+
+.mentor-page-header__copy > p:last-child {
+  color: #707982;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-page-header__action {
+  flex: 0 0 auto;
+}
+
+.mentor-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mentor-metric {
+  min-width: 0;
+}
+
+.mentor-metric small {
+  min-height: 30px;
+  line-height: 1.5;
+}
+
+.mentor-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.mentor-agenda-card,
+.mentor-quick-card,
+.mentor-data-state,
+.mentor-availability-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.mentor-agenda-list {
+  display: grid;
+  margin-top: 16px;
+}
+
+.mentor-agenda-row {
+  display: grid;
+  grid-template-columns: minmax(112px, .55fr) minmax(190px, 1.45fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 0;
+  border-top: 1px solid #e8ebee;
+}
+
+.mentor-agenda-time,
+.mentor-agenda-main {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mentor-agenda-time strong,
+.mentor-agenda-main strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+}
+
+.mentor-agenda-time span,
+.mentor-agenda-main span {
+  overflow: hidden;
+  color: #78828b;
+  font-size: 9px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-agenda-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 0;
+  color: var(--primary);
+  background: transparent;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mentor-agenda-link svg {
+  width: 13px;
+  height: 13px;
+}
+
+.mentor-quick-card {
+  gap: 16px;
+}
+
+.mentor-quick-card > h2 {
+  margin-top: -8px;
+}
+
+.mentor-quick-status {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.mentor-quick-status > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #e8ebee;
+}
+
+.mentor-quick-status dt {
+  color: #6f7981;
+  font-size: 9px;
+}
+
+.mentor-quick-status dd {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.mentor-quick-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.mentor-quick-actions button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #e3e7ea;
+  border-radius: 11px;
+  background: #fafbfc;
+  text-align: left;
+}
+
+.mentor-quick-actions button > svg {
+  width: 17px;
+  color: var(--primary);
+}
+
+.mentor-quick-actions button span {
+  display: grid;
+  gap: 2px;
+}
+
+.mentor-quick-actions strong {
+  font-size: 10px;
+}
+
+.mentor-quick-actions small {
+  color: #78828b;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.mentor-data-state {
+  min-height: 190px;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.mentor-data-state > svg {
+  width: 26px;
+  height: 26px;
+  color: var(--primary);
+}
+
+.mentor-data-state > strong {
+  font-size: 14px;
+}
+
+.mentor-data-state > p {
+  max-width: 520px;
+  color: #707982;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.mentor-data-state--error {
+  border-color: #efc2bf;
+  background: #fff7f6;
+}
+
+.mentor-inline-warning {
+  padding: 10px 12px;
+  border: 1px solid #f0d6ab;
+  border-radius: 10px;
+  color: #825815;
+  background: #fff9e9;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.mentor-ops-table {
+  min-width: 1040px;
+}
+
+.mentor-mentees-table {
+  min-width: 980px;
+}
+
+.mentor-history-table {
+  min-width: 850px;
+}
+
+.mentor-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.mentor-profile-grid .account-profile {
+  max-width: none;
+  min-width: 0;
+}
+
+.mentor-operational-profile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+}
+
+.mentor-operational-profile > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.mentor-operational-profile > div:first-child h2 {
+  font-size: 22px;
+  letter-spacing: -.05em;
+}
+
+.mentor-operational-profile > div:first-child p:last-child {
+  color: #707982;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.mentor-operational-profile dl,
+.mentor-dialog-contact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+
+.mentor-operational-profile dl > div,
+.mentor-dialog-contact > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #e8ebee;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.mentor-operational-profile dt,
+.mentor-dialog-contact span {
+  color: #7b858d;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.mentor-operational-profile dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.mentor-dialog-contact strong {
+  overflow-wrap: anywhere;
+  font-size: 10px;
+}
+
+.mentor-detail-dialog .ops-dialog__surface {
+  min-width: 0;
+}
+
+.mentor-dialog-session-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mentor-dialog-session-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid #e8ebee;
+}
+
+.mentor-dialog-session-list article > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mentor-dialog-session-list article > div strong {
+  font-size: 10px;
+}
+
+.mentor-dialog-session-list article > div span {
+  overflow: hidden;
+  color: #707982;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-dialog-session-list article > a {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #e2e6e9;
+  border-radius: 8px;
+  color: var(--primary);
+}
+
+.mentor-dialog-session-list article > a svg {
+  width: 14px;
+}
+
+/* Availability uses the content width instead of a narrow left rail. */
+.mentor-availability-card {
+  padding: 24px;
+}
+
+.mentor-availability-editor.mentor form {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.mentor-availability-editor.mentor .availability-week {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mentor-availability-editor.mentor .availability-day {
+  align-content: start;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e5e9ec;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.mentor-availability-editor.mentor .availability-day-heading {
+  align-items: flex-start;
+}
+
+.mentor-availability-editor.mentor .availability-range {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+}
+
+.mentor-availability-editor.mentor .availability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+@media (max-width: 1180px) {
+  .mentor-overview-grid,
+  .mentor-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-availability-editor.mentor .availability-week {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .mentor-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .mentor-role-content {
+    width: calc(100% - 36px);
+  }
+
+  .mentor-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mentor-page-header__action {
+    width: 100%;
+  }
+
+  .mentor-page-header__action .button {
+    width: 100%;
+  }
+
+  .mentor-agenda-row {
+    grid-template-columns: minmax(95px, .5fr) minmax(0, 1.5fr);
+  }
+
+  .mentor-agenda-row > .ops-status,
+  .mentor-agenda-row > .mentor-agenda-link {
+    justify-self: start;
+  }
+
+  .mentor-availability-editor.mentor .availability-range {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .mentor-metric-grid,
+  .mentor-operational-profile dl,
+  .mentor-dialog-contact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-agenda-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mentor-agenda-time span,
+  .mentor-agenda-main span {
+    white-space: normal;
+  }
+
+  .mentor-availability-card {
+    padding: 16px;
+  }
+
+  .mentor-availability-editor.mentor .availability-day {
+    padding: 13px;
+  }
+
+  .mentor-availability-editor.mentor .availability-range {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mentor-availability-editor.mentor .availability-range > span {
+    display: none;
+  }
+
+  .mentor-availability-editor.mentor .availability-remove {
+    justify-self: start;
+  }
+
+  .mentor-availability-editor.mentor .availability-actions,
+  .mentor-availability-editor.mentor .availability-actions .button {
+    width: 100%;
+  }
+
+  .mentor-dialog-session-list article {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .mentor-dialog-session-list article > a {
+    grid-column: 1 / -1;
+  }
+}
