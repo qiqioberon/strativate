@@ -4,40 +4,95 @@ import { getGoogleConnectionStatus, getGoogleFreeBusy, syncPrivateMentoringSessi
 import { createClient } from '@/lib/supabase/server'
 
 type SlotContext = {
-  sessionId:string; status:string; focusName:string|null; requiredTierId:string; durationMinutes:number; menteeId:string;
-  purchasedSessions:number; sessionNumber:number;
-  mentors:Array<{mentorId:string;mentorName:string;tierId:string;active:boolean;timezone:string;availability:TimeInterval[];strativate_busy:TimeInterval[]}>
+  sessionId:string
+  status:string
+  focusName:string|null
+  requiredTierId:string
+  durationMinutes:number
+  menteeId:string
+  purchasedSessions:number
+  sessionNumber:number
+  mentors:Array<{
+    mentorId:string
+    mentorName:string
+    tierId:string
+    active:boolean
+    timezone:string
+    availability:TimeInterval[]
+    strativate_busy:TimeInterval[]
+  }>
 }
-function overlap(start:string,end:string,busy:TimeInterval){return new Date(start).getTime()<new Date(busy.end).getTime() && new Date(end).getTime()>new Date(busy.start).getTime()}
+
+function overlap(start:string,end:string,busy:TimeInterval){
+  return new Date(start).getTime()<new Date(busy.end).getTime() && new Date(end).getTime()>new Date(busy.start).getTime()
+}
 
 export async function getAdminBookableSlots(sessionId:string) {
   const supabase = await createClient() as any
   const {data,error}=await supabase.rpc('admin_get_private_mentoring_slot_context',{p_session_id:sessionId})
   if(error||!data) throw new Error(error?.message||'Slot context belum dapat dimuat.')
+
   const context=data as SlotContext
-  if(!context.focusName) return {context,slots:[],mentorWarnings:[],message:'Mentee perlu memilih fokus sebelum sesi dapat dijadwalkan.'}
-  if(context.status==='completed') return {context,slots:[],mentorWarnings:[],message:'Sesi yang sudah selesai tidak dapat dijadwalkan ulang.'}
-  if(context.status==='cancelled') return {context,slots:[],mentorWarnings:[],message:'Sesi yang sudah dibatalkan tidak dapat dijadwalkan ulang.'}
+  const {data:tier}=await supabase.from('mentor_tiers').select('name').eq('id',context.requiredTierId).maybeSingle()
+  const requiredTierName=typeof tier?.name==='string'?tier.name:null
+  const resolvedContext={...context,requiredTierName}
+  const tierLabel=requiredTierName||'tier paket ini'
+
+  if(!context.focusName) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Mentee perlu memilih fokus sebelum sesi dapat dijadwalkan.'}
+  if(context.status==='completed') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah selesai tidak dapat dijadwalkan ulang.'}
+  if(context.status==='cancelled') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah dibatalkan tidak dapat dijadwalkan ulang.'}
+  if(!context.mentors.length) return {context:resolvedContext,slots:[],mentorWarnings:[],message:`Belum ada mentor aktif dengan tier ${tierLabel}. Atur tier dan status mentor di Mentor Management sebelum menjadwalkan sesi.`}
+
   const availability=context.mentors.flatMap(mentor=>mentor.availability)
-  if(!availability.length) return {context,slots:[],mentorWarnings:[],message:'Belum ada availability mentor untuk minggu yang tersedia.'}
+  if(!availability.length) return {context:resolvedContext,slots:[],mentorWarnings:[],message:`Mentor aktif dengan tier ${tierLabel} ditemukan, tetapi belum memasang availability untuk minggu ini atau minggu depan.`}
+
   const horizonStart=availability.reduce((min,r)=>r.start<min?r.start:min,availability[0].start)
   const horizonEnd=availability.reduce((max,r)=>r.end>max?r.end:max,availability[0].end)
   const mentorWarnings:string[]=[]
   const mentors:SlotMentor[]=[]
+
   for(const mentor of context.mentors){
     let googleBusy:TimeInterval[]=[]
     const connection=await getGoogleConnectionStatus(mentor.mentorId)
     if(connection.connected){
       try{googleBusy=await getGoogleFreeBusy(mentor.mentorId,horizonStart,horizonEnd)}
-      catch{mentorWarnings.push(`${mentor.mentorName}: Google Calendar belum dapat diverifikasi.`);continue}
+      catch{
+        mentorWarnings.push(`${mentor.mentorName}: Google Calendar belum dapat diverifikasi, jadi slot mentor ini sementara tidak ditawarkan.`)
+        continue
+      }
     }
-    mentors.push({mentorId:mentor.mentorId,mentorName:mentor.mentorName,tierId:mentor.tierId,active:mentor.active,timezone:mentor.timezone,availability:mentor.availability,strativateBusy:mentor.strativate_busy??[],googleBusy})
+    mentors.push({
+      mentorId:mentor.mentorId,
+      mentorName:mentor.mentorName,
+      tierId:mentor.tierId,
+      active:mentor.active,
+      timezone:mentor.timezone,
+      availability:mentor.availability,
+      strativateBusy:mentor.strativate_busy??[],
+      googleBusy,
+    })
   }
-  const baseSlots=buildBookableSlots({now:new Date().toISOString(),durationMinutes:context.durationMinutes,requiredTierId:context.requiredTierId,stepMinutes:15,mentors})
+
+  const baseSlots=buildBookableSlots({
+    now:new Date().toISOString(),
+    durationMinutes:context.durationMinutes,
+    requiredTierId:context.requiredTierId,
+    stepMinutes:15,
+    mentors,
+  })
   let menteeBusy:TimeInterval[]=[]
-  try{if((await getGoogleConnectionStatus(context.menteeId)).connected) menteeBusy=await getGoogleFreeBusy(context.menteeId,horizonStart,horizonEnd)}catch{/* secondary indicator only */}
+  try{
+    if((await getGoogleConnectionStatus(context.menteeId)).connected){
+      menteeBusy=await getGoogleFreeBusy(context.menteeId,horizonStart,horizonEnd)
+    }
+  }catch{/* secondary indicator only */}
   const slots=baseSlots.map(slot=>({...slot,menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy))}))
-  return {context,slots,mentorWarnings,message:slots.length?'':'Tidak ada slot yang benar-benar tersedia pada availability minggu ini / minggu depan.'}
+  return {
+    context:resolvedContext,
+    slots,
+    mentorWarnings,
+    message:slots.length?'':'Availability ditemukan, tetapi belum ada slot yang dapat dipilih setelah mempertimbangkan durasi sesi, waktu yang sudah lewat, sesi Strativate lain, dan Google Calendar.',
+  }
 }
 
 export async function scheduleAdminPrivateMentoringSession(sessionId:string,mentorId:string,start:string,currentAdminId:string){
