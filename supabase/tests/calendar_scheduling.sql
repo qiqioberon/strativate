@@ -97,10 +97,17 @@ select public.admin_schedule_private_mentoring_session(
   '98000000-0000-0000-0000-000000000004',
   (((date_trunc('week', current_timestamp at time zone 'Asia/Jakarta')::date + 7 + 1)::timestamp + time '10:00') at time zone 'Asia/Jakarta')
 );
+set local role service_role;
+select set_config('request.jwt.claim.role', 'service_role', true);
 select test_calendar_scheduling.assert(
   (select count(*) = 1 and bool_and(sync_status='pending' and organizer_user_id='98000000-0000-0000-0000-000000000001') from public.private_mentoring_session_calendar_integrations where session_id='98500000-0000-0000-0000-000000000001'),
   'booking creates exactly one pending calendar integration row linked to the canonical session'
 );
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '98000000-0000-0000-0000-000000000001', true);
 select test_calendar_scheduling.denied(
   $$select public.admin_schedule_private_mentoring_session('98500000-0000-0000-0000-000000000002','98000000-0000-0000-0000-000000000004',(((date_trunc('week', current_timestamp at time zone 'Asia/Jakarta')::date + 7 + 1)::timestamp + time '10:15') at time zone 'Asia/Jakarta'))$$,
   'overlap exclusion prevents concurrent mentor double booking'
