@@ -17,6 +17,7 @@ export async function getAdminBookableSlots(sessionId:string) {
   const context=data as SlotContext
   if(!context.focusName) return {context,slots:[],mentorWarnings:[],message:'Mentee perlu memilih fokus sebelum sesi dapat dijadwalkan.'}
   if(context.status==='completed') return {context,slots:[],mentorWarnings:[],message:'Sesi yang sudah selesai tidak dapat dijadwalkan ulang.'}
+  if(context.status==='cancelled') return {context,slots:[],mentorWarnings:[],message:'Sesi yang sudah dibatalkan tidak dapat dijadwalkan ulang.'}
   const availability=context.mentors.flatMap(mentor=>mentor.availability)
   if(!availability.length) return {context,slots:[],mentorWarnings:[],message:'Belum ada availability mentor untuk minggu yang tersedia.'}
   const horizonStart=availability.reduce((min,r)=>r.start<min?r.start:min,availability[0].start)
@@ -49,4 +50,24 @@ export async function scheduleAdminPrivateMentoringSession(sessionId:string,ment
   if(error) throw new Error(error.message)
   const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
   return {session:data,sync}
+}
+
+export async function cancelAdminPrivateMentoringSession(sessionId:string,currentAdminId:string){
+  const supabase=await createClient() as any
+  const {data,error}=await supabase.rpc('admin_cancel_private_mentoring_session',{p_session_id:sessionId})
+  if(error) throw new Error(error.message)
+  try {
+    const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
+    return {session:data,sync}
+  } catch (syncError) {
+    return {
+      session:data,
+      sync:{
+        status:'failed' as const,
+        meetingUrl:null,
+        eventId:null,
+        error:syncError instanceof Error ? syncError.message : 'Google Calendar cancellation could not be synchronized.',
+      },
+    }
+  }
 }

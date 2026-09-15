@@ -50,13 +50,13 @@ export async function loadCalendarEvents(account: AccountShape, start: string, e
   } else if (account.profile.role === 'mentor') {
     const result = await supabase.rpc('list_my_mentor_private_mentoring_sessions')
     if (result.error) throw new Error(result.error.message)
-    rows = (result.data ?? []).filter((row:AnyRow) => row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
+    rows = (result.data ?? []).filter((row:AnyRow) => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
   } else {
     const result = await supabase.rpc('list_my_private_mentoring_sessions_v2')
     if (result.error) throw new Error(result.error.message)
-    rows = (result.data ?? []).filter((row:AnyRow) => row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
+    rows = (result.data ?? []).filter((row:AnyRow) => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
   }
-  const strativate = rows.filter(row=>row.scheduled_start_at && row.scheduled_end_at).map(row=>strativateEvent(row,account.profile.role))
+  const strativate = rows.filter(row=>row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at).map(row=>strativateEvent(row,account.profile.role))
   const connection = await getGoogleConnectionStatus(account.user.id)
   let google: GoogleCalendarEvent[] = []
   let googleError: string | null = null

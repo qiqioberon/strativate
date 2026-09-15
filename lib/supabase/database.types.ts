@@ -38,7 +38,7 @@ export type PrivateMentoringPackage = { id:string; mentor_tier_id:string; sessio
 export type CommerceCartLink = { id:string; mentee_id:string; token_hash:string; status:'active'|'claimed'|'revoked'; claimed_cart_id:string|null; created_by:string; claimed_at:string|null; created_at:string; updated_at:string }
 export type CommerceCartLinkItem = { cart_link_id:string; commerce_item_id:string; created_at:string }
 export type PrivateMentoringEnrollment = { id:string; mentee_id:string; order_item_id:string; package_id:string; purchased_sessions:number; learning_path_id:string|null; competition_category_id:string|null; status:'active'|'completed'; created_at:string; updated_at:string }
-export type PrivateMentoringSessionStatus = 'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'
+export type PrivateMentoringSessionStatus = 'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled'
 export type PrivateMentoringSession = { id:string; enrollment_id:string; session_number:number; session_focus_id:string|null; mentor_id:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; status:PrivateMentoringSessionStatus; created_at:string; updated_at:string }
 export type CartLinkMentee = { user_id:string; email:string; display_name:string|null }
 export type PurchasableCommerceItem = { commerce_item_id:string; item_kind:string; name:string; slug:string; price_amount:number }
@@ -117,6 +117,7 @@ export type Database = {
       claim_commerce_cart_link: { Args:{p_token_hash:string}; Returns:string }
       set_private_mentoring_session_focus: { Args:{p_session_id:string;p_focus_id:string}; Returns:PrivateMentoringSession }
       admin_schedule_private_mentoring_session: { Args:{p_session_id:string;p_mentor_id:string;p_scheduled_start_at:string}; Returns:PrivateMentoringSession }
+      admin_cancel_private_mentoring_session: { Args:{p_session_id:string}; Returns:PrivateMentoringSession }
       admin_set_private_mentoring_session_status: { Args:{p_session_id:string;p_status:string}; Returns:PrivateMentoringSession }
       list_my_private_mentoring_sessions: { Args:Record<PropertyKey,never>; Returns:PrivateMentoringSessionViewRow[] }
       list_admin_private_mentoring_sessions: { Args:{p_query?:string}; Returns:AdminPrivateMentoringSessionRow[] }
