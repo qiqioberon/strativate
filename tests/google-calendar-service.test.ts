@@ -39,11 +39,53 @@ test('reschedule preserves the existing generated Meet URL when Google omits con
  assert.equal(result.effectiveMeetingUrl,'https://meet.google.com/keep-this')
 })
 
-
 test('retry requests conference creation again when the event exists but Meet is still missing', async()=>{
  const mod=await load(); assert.ok(mod,'sync module must exist')
  const calls:any[]=[]; const provider={upsertEvent:async(input:any)=>{calls.push(input);return {eventId:input.eventId,iCalUID:'ical-pending',meetingUrl:null}}}
  await mod.syncSessionEvent(fixture({eventId:'fixed123',providerMeetingUrl:null}),provider)
  assert.equal(calls[0].eventId,'fixed123')
  assert.equal(calls[0].createConference,true)
+})
+
+test('Google cancellation URL targets the exact calendar/event and sends attendee updates', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ assert.equal(mod.googleEventDeleteUrl('https://www.googleapis.com/calendar/v3',{calendarId:'team/calendar@example.com',eventId:'event id'}),'https://www.googleapis.com/calendar/v3/calendars/team%2Fcalendar%40example.com/events/event%20id?sendUpdates=all')
+})
+
+test('404 and 410 deletion responses are recognized as already absent while unrelated failures are not hidden', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ assert.equal(mod.isGoogleEventAlreadyAbsent(new Error('gone (status 404)')),true)
+ assert.equal(mod.isGoogleEventAlreadyAbsent(new Error('gone (status 410)')),true)
+ assert.equal(mod.isGoogleEventAlreadyAbsent(new Error('forbidden (status 403)')),false)
+})
+
+test('cancelling a synced session deletes the existing event identity', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ const calls:any[]=[]; const provider={deleteEvent:async(input:any)=>{calls.push(input)}}
+ const result=await mod.cancelSessionEvent({calendarId:'primary',eventId:'existing-event'},provider)
+ assert.deepEqual(calls,[{calendarId:'primary',eventId:'existing-event'}])
+ assert.deepEqual(result,{eventId:'existing-event',alreadyAbsent:false})
+})
+
+test('cancelling without a Google event id converges without calling the provider', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ let deletes=0; const provider={deleteEvent:async()=>{deletes++}}
+ const result=await mod.cancelSessionEvent({calendarId:'primary',eventId:null},provider)
+ assert.equal(deletes,0); assert.deepEqual(result,{eventId:null,alreadyAbsent:true})
+})
+
+test('cancelled retry only reconciles deletion and never upserts or recreates an event', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ let upserts=0; const deletes:any[]=[]
+ const provider={upsertEvent:async()=>{upserts++;throw new Error('must not upsert')},deleteEvent:async(input:any)=>{deletes.push(input)}}
+ const result=await mod.reconcileSessionEvent('cancelled',fixture({eventId:'fixed123'}),provider)
+ assert.equal(result.kind,'cancelled'); assert.equal(upserts,0); assert.deepEqual(deletes,[{calendarId:'primary',eventId:'fixed123'}])
+})
+
+test('normal scheduled retry keeps existing create/update behavior', async()=>{
+ const mod=await load(); assert.ok(mod,'sync module must exist')
+ let deletes=0; const upserts:any[]=[]
+ const provider={upsertEvent:async(input:any)=>{upserts.push(input);return {eventId:input.eventId,iCalUID:'ical-1',meetingUrl:'https://meet.google.com/abc-defg-hij'}},deleteEvent:async()=>{deletes++}}
+ const result=await mod.reconcileSessionEvent('scheduled',fixture({eventId:'fixed123',providerMeetingUrl:'https://meet.google.com/abc-defg-hij'}),provider)
+ assert.equal(result.kind,'upserted'); assert.equal(deletes,0); assert.equal(upserts.length,1); assert.equal(upserts[0].eventId,'fixed123')
 })

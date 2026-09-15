@@ -13,6 +13,7 @@ function sessionStatus(status: string) {
   if (status === 'awaiting_scheduling') return { label: 'Menunggu admin', tone: 'info' }
   if (status === 'scheduled') return { label: 'Terjadwal', tone: 'positive' }
   if (status === 'completed') return { label: 'Selesai', tone: 'neutral' }
+  if (status === 'cancelled') return { label: 'Dibatalkan', tone: 'neutral' }
   return { label: status.replaceAll('_', ' '), tone: 'neutral' }
 }
 
@@ -60,7 +61,7 @@ export function PrivateMentoringSessions({ sessions, sessionFocuses }: { session
               <div className="mentoring-session-card__top"><h4>{session.focusName ?? 'Fokus belum dipilih'}</h4><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></div>
               {canChooseFocus ? <label className="ops-field"><span>Fokus / topik sesi</span><select disabled={busyId === session.sessionId} value={session.sessionFocusId ?? ''} onChange={event => chooseFocus(session.sessionId, event.target.value)}><option value="">Pilih fokus</option>{sessionFocuses.map(focus => <option value={focus.id} key={focus.id}>{focus.name}</option>)}</select></label> : null}
               <div className="mentoring-session-card__meta"><span><UserRound aria-hidden="true" />{session.mentorName ?? 'Mentor menunggu penugasan admin'}</span><span><CalendarDays aria-hidden="true" />{session.scheduledStartAt ? new Intl.DateTimeFormat('id-ID', { dateStyle:'medium', timeStyle:'short', timeZone: session.mentorTimezone || undefined }).format(new Date(session.scheduledStartAt)) : 'Jadwal menunggu admin'}</span><span>{session.status === 'completed' ? <CheckCircle2 aria-hidden="true" /> : <Clock3 aria-hidden="true" />}{status.label}</span></div>
-              {session.scheduledStartAt ? <div className="button-row mentoring-session-card__actions">{session.meetingUrl ? <a className="button button-primary" href={session.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true" />Join Google Meet</a> : <span className="muted">Meeting link {session.googleSyncStatus === 'failed' ? 'sedang bermasalah; hubungi admin.' : 'sedang disiapkan.'}</span>}<a className="button button-outline" href={supportHref(session)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true" />Ada masalah dengan jadwal? Hubungi Admin</a></div> : null}
+              {session.scheduledStartAt && session.status !== 'cancelled' ? <div className="button-row mentoring-session-card__actions">{session.meetingUrl ? <a className="button button-primary" href={session.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true" />Join Google Meet</a> : <span className="muted">Meeting link {session.googleSyncStatus === 'failed' ? 'sedang bermasalah; hubungi admin.' : 'sedang disiapkan.'}</span>}<a className="button button-outline" href={supportHref(session)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true" />Ada masalah dengan jadwal? Hubungi Admin</a></div> : null}
             </div>
           </article>
         })}</div>

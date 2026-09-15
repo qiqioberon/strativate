@@ -4,7 +4,14 @@ import { createHash, randomBytes } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AppRole } from '@/lib/supabase/database.types'
 import { decryptGoogleCredential, encryptGoogleCredential } from './crypto'
-import { syncSessionEvent, type CalendarProvider, type UpsertEventInput } from './sync'
+import {
+  googleEventDeleteUrl,
+  isGoogleEventAlreadyAbsent,
+  reconcileSessionEvent,
+  type CalendarProvider,
+  type DeleteEventInput,
+  type UpsertEventInput,
+} from './sync'
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -192,6 +199,14 @@ export class GoogleCalendarRestProvider implements CalendarProvider {
     const updated = await googleFetch<GoogleEventApi>(this.organizerUserId, `${base}/${encodeURIComponent(input.eventId)}?${query}`, {method:'PATCH',body:JSON.stringify(patchBody)})
     return {eventId:updated.id,iCalUID:updated.iCalUID ?? null,meetingUrl:meetingUrl(updated)}
   }
+  async deleteEvent(input: DeleteEventInput) {
+    try {
+      await googleFetch<void>(this.organizerUserId, googleEventDeleteUrl(CALENDAR_API, input), { method:'DELETE' })
+    } catch (error) {
+      if (isGoogleEventAlreadyAbsent(error)) return
+      throw error
+    }
+  }
 }
 
 type SyncContext = {sessionId:string;sessionNumber:number;purchasedSessions:number;status:string;focusName:string|null;start:string|null;end:string|null;menteeEmail:string;mentorEmail:string|null;organizerUserId:string|null;calendarId:string;eventId:string|null;iCalUID:string|null;providerMeetingUrl:string|null;manualMeetingUrl:string|null}
@@ -200,20 +215,36 @@ export async function syncPrivateMentoringSession(sessionId: string, currentAdmi
   const { data, error } = await admin.rpc('service_get_private_mentoring_sync_context', {p_session_id:sessionId})
   if (error || !data) throw new Error(error?.message || 'Session sync context could not be loaded.')
   const context = data as SyncContext
-  if (!context.start || !context.end || !context.mentorEmail) throw new Error('Session is not fully scheduled.')
   const organizerUserId = context.organizerUserId || currentAdminId
   if (!organizerUserId) throw new Error('Google Calendar organizer is not available.')
+  const cancelled = context.status === 'cancelled'
+  if (!cancelled && (!context.start || !context.end || !context.mentorEmail)) throw new Error('Session is not fully scheduled.')
   const integration = admin.from('private_mentoring_session_calendar_integrations')
   await integration.upsert({session_id:sessionId,organizer_user_id:organizerUserId,google_calendar_id:context.calendarId||'primary',sync_status:'pending',sync_error:null},{onConflict:'session_id'})
   try {
-    const result = await syncSessionEvent({sessionId,calendarId:context.calendarId||'primary',eventId:context.eventId,summary:`Strativate Private Mentoring — ${context.focusName || 'Mentoring Session'}`,description:`Session ${context.sessionNumber}/${context.purchasedSessions}\nStrativate Private Mentoring\nSession reference: ${sessionId}`,start:context.start,end:context.end,attendees:[context.menteeEmail,context.mentorEmail],manualMeetingUrl:context.manualMeetingUrl,providerMeetingUrl:context.providerMeetingUrl},new GoogleCalendarRestProvider(organizerUserId))
+    const result = await reconcileSessionEvent(context.status, {
+      sessionId,
+      calendarId:context.calendarId||'primary',
+      eventId:context.eventId,
+      summary:`Strativate Private Mentoring — ${context.focusName || 'Mentoring Session'}`,
+      description:`Session ${context.sessionNumber}/${context.purchasedSessions}\nStrativate Private Mentoring\nSession reference: ${sessionId}`,
+      start:context.start || '',
+      end:context.end || '',
+      attendees:[context.menteeEmail, context.mentorEmail || ''],
+      manualMeetingUrl:context.manualMeetingUrl,
+      providerMeetingUrl:context.providerMeetingUrl,
+    }, new GoogleCalendarRestProvider(organizerUserId))
+    if (result.kind === 'cancelled') {
+      await integration.update({organizer_user_id:organizerUserId,sync_status:'cancelled',sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
+      return {status:'cancelled' as const,meetingUrl:null,eventId:context.eventId}
+    }
     const syncStatus = result.meetingUrl ? 'synced' : 'pending'
     await integration.update({organizer_user_id:organizerUserId,google_event_id:result.eventId,google_ical_uid:result.iCalUID,provider_meeting_url:result.meetingUrl,sync_status:syncStatus,sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
     return {status:syncStatus,meetingUrl:result.effectiveMeetingUrl,eventId:result.eventId}
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Google Calendar synchronization failed.'
     await integration.update({sync_status:'failed',sync_error:message,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
-    return {status:'failed' as const,meetingUrl:context.manualMeetingUrl || context.providerMeetingUrl,error:message,eventId:context.eventId}
+    return {status:'failed' as const,meetingUrl:cancelled ? null : context.manualMeetingUrl || context.providerMeetingUrl,error:message,eventId:context.eventId}
   }
 }
 
