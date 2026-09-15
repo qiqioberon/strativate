@@ -1,63 +1,6 @@
-export type PrivateMentoringPackageView = {
-  id: string
-  mentorTierId: string
-  mentorTierCode: string
-  mentorTierName: string
-  sessionCount: number
-  priceAmount: number
-  referencePriceAmount: number | null
-  pricePerSession: number
-  durationMinutes: number
-  maxParticipants: number
-  sortOrder: number
-}
-
-export type PrivateMentoringLearningPathView = {
-  id: string
-  code: string
-  slug: string
-  name: string
-  description: string
-  sortOrder: number
-}
-
-export type PrivateMentoringSessionFocusView = {
-  id: string
-  code: string
-  slug: string
-  name: string
-  description: string
-  sortOrder: number
-}
-
-export type PrivateMentoringCompetitionCategoryView = {
-  id: string
-  code: string
-  slug: string
-  name: string
-  sortOrder: number
-}
-
-export type PrivateMentoringCatalogView = {
-  learningPaths: PrivateMentoringLearningPathView[]
-  sessionFocuses: PrivateMentoringSessionFocusView[]
-  competitionCategories: PrivateMentoringCompetitionCategoryView[]
-  packages: PrivateMentoringPackageView[]
-}
-
-export type PrivateMentoringSessionView = {
-  sessionId: string
-  enrollmentId: string
-  sessionNumber: number
-  status: 'awaiting_focus' | 'awaiting_scheduling' | 'scheduled' | 'completed'
-  sessionFocusId: string | null
-  focusName: string | null
-  mentorId: string | null
-  mentorName: string | null
-  scheduledStartAt: string | null
-  scheduledEndAt: string | null
-  mentorTierCode: string
-  mentorTierName: string
-  packageId: string
-  purchasedSessions: number
-}
+export type PrivateMentoringPackageView={id:string;mentorTierId:string;mentorTierCode:string;mentorTierName:string;sessionCount:number;priceAmount:number;referencePriceAmount:number|null;pricePerSession:number;durationMinutes:number;maxParticipants:number;sortOrder:number}
+export type PrivateMentoringLearningPathView={id:string;code:string;slug:string;name:string;description:string;sortOrder:number}
+export type PrivateMentoringSessionFocusView={id:string;code:string;slug:string;name:string;description:string;sortOrder:number}
+export type PrivateMentoringCompetitionCategoryView={id:string;code:string;slug:string;name:string;sortOrder:number}
+export type PrivateMentoringCatalogView={learningPaths:PrivateMentoringLearningPathView[];sessionFocuses:PrivateMentoringSessionFocusView[];competitionCategories:PrivateMentoringCompetitionCategoryView[];packages:PrivateMentoringPackageView[]}
+export type PrivateMentoringSessionView={sessionId:string;enrollmentId:string;sessionNumber:number;status:'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed';sessionFocusId:string|null;focusName:string|null;mentorId:string|null;mentorName:string|null;scheduledStartAt:string|null;scheduledEndAt:string|null;mentorTierCode:string;mentorTierName:string;packageId:string;purchasedSessions:number;mentorTimezone:string|null;durationMinutes:number;meetingUrl:string|null;googleEventId:string|null;googleICalUid:string|null;googleSyncStatus:'pending'|'synced'|'failed'}

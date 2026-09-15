@@ -89,6 +89,13 @@ update public.mentee_profiles set onboarding_completed_at = now() where user_id 
   '96000000-0000-0000-0000-000000000002', '96000000-0000-0000-0000-000000000003'
 );
 
+-- Scheduling now requires a concrete declared availability window. Preserve the
+-- original test scenarios by declaring only the exact current/next-week windows
+-- used below rather than weakening the production RPC.
+insert into public.mentor_availability_rules (mentor_id, week_start_date, day_of_week, start_time, end_time) values
+  ('96000000-0000-0000-0000-000000000004', '2026-09-14', 7, '09:00', '12:00'),
+  ('96000000-0000-0000-0000-000000000006', '2026-09-21', 1, '13:00', '16:00');
+
 insert into public.digital_products (
   id, name, slug, description, image_path, price_amount,
   content_type, content_path, content_mime_type, content_file_name, content_size_bytes, is_published

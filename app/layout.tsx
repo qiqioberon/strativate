@@ -20,6 +20,7 @@ import './mentor-management.css'
 import './admin-mentoring-tables.css'
 import './mentor-weekly-controls.css'
 import './profile-management.css'
+import './calendar-integration.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://strativate.id'),
@@ -28,23 +29,9 @@ export const metadata: Metadata = {
   openGraph: { title: 'Strativate', description: brandDescription, locale: 'id_ID', type: 'website' },
 }
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-poppins',
-})
-
-export const viewport: Viewport = { colorScheme: 'light', themeColor: '#FF7A00' }
+const poppins = Poppins({ subsets: ['latin'], weight: ['400','500','600','700','800','900'], variable: '--font-poppins' })
+export const viewport: Viewport = { colorScheme:'light', themeColor:'#FF7A00' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="id" className="bg-background" data-scroll-behavior="smooth">
-      <body className={`${poppins.variable} ${poppins.className} antialiased`}>
-        <ToastProvider>
-          {children}
-          {process.env.VERCEL && <Analytics />}
-        </ToastProvider>
-      </body>
-    </html>
-  )
+  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={`${poppins.variable} ${poppins.className} antialiased`}><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
 }
