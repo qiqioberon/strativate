@@ -21,6 +21,7 @@ import './admin-mentoring-tables.css'
 import './mentor-weekly-controls.css'
 import './profile-management.css'
 import './calendar-integration.css'
+import './calendar-mobile-polish.css'
 import './marketing-mobile-product-polish.css'
 
 export const metadata: Metadata = {
