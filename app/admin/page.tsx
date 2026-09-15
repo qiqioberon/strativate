@@ -25,7 +25,7 @@ type NavItem = { id: Section; label: string; icon: typeof LayoutDashboard }
 const groups: { label: string; items: NavItem[] }[] = [
  {label:'Operasional',items:[{id:'Overview',label:'Ringkasan',icon:LayoutDashboard},{id:'Orders',label:'Pesanan',icon:ReceiptText},{id:'Mentoring Sessions',label:'Mentoring Sessions',icon:UsersRound},{id:'Calendar',label:'Jadwal',icon:CalendarDays},{id:'Cart Links',label:'Cart Links',icon:ShoppingCart}]},
  {label:'Pengguna',items:[{id:'Mentees',label:'Mentees',icon:UsersRound},{id:'Mentors',label:'Mentors',icon:UsersRound}]},
- {label:'Produk',items:[{id:'Private Mentoring',label:'Private Mentoring',icon:PackageOpen},{id:'Digital Products',label:'Produk Digital',icon:PackageOpen}]},
+ { label: 'Produk', items: [{ id: 'Private Mentoring', label: 'Private Mentoring', icon: PackageOpen }, { id: 'Digital Products', label: 'Produk Digital', icon: PackageOpen }] },
  {label:'Konten',items:[{id:'Hero Posters',label:'Hero Posters',icon:Images}]},
  {label:'Bisnis',items:[{id:'Reports',label:'Laporan',icon:FileBarChart2}]},
  {label:'Data master',items:[{id:'Institutions',label:'Institusi',icon:Building2},{id:'Referral Sources',label:'Sumber Referral',icon:Building2},{id:'Competition Interests',label:'Minat Kompetisi',icon:Building2}]},
