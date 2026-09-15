@@ -19,6 +19,7 @@ import './mentor-marquee.css'
 import './mentor-management.css'
 import './admin-mentoring-tables.css'
 import './mentor-weekly-controls.css'
+import './profile-management.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://strativate.id'),

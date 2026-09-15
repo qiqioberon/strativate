@@ -3,36 +3,36 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const participants = readFileSync('components/admin/people.tsx', 'utf8')
+const migration = readFileSync('supabase/migrations/202609150003_profile_whatsapp_admin_mentee_sorting.sql', 'utf8')
 
-test('participant management renders profile records as a semantic table', () => {
+test('Mentee management renders contact records as a semantic sortable table', () => {
   assert.match(participants, /data-testid="participant-table"/)
-  assert.match(participants, /<th scope="col">Peserta<\/th>/)
-  assert.match(participants, /<th scope="col">Username<\/th>/)
-  assert.match(participants, /<th scope="col">ID akun<\/th>/)
-  assert.match(participants, /<th scope="col">Bergabung<\/th>/)
-  assert.match(participants, /<th scope="col">Peran<\/th>/)
-  assert.doesNotMatch(participants, /className="admin-record"/)
+  assert.match(participants, /SortableTableHeader label="Mentee"/)
+  assert.match(participants, /SortableTableHeader label="Email"/)
+  assert.match(participants, /SortableTableHeader label="WhatsApp"/)
+  assert.match(participants, /SortableTableHeader label="Institusi"/)
+  assert.match(participants, /SortableTableHeader label="Bergabung"/)
+  assert.match(participants, /ops-icon-button/)
+  assert.match(participants, /<dialog/)
 })
 
-test('participant listing requests an exact total and renders numbered pagination', () => {
-  assert.match(participants, /\.from\('profiles'\)/)
-  assert.match(participants, /\.select\('\*', \{ count: 'exact' \}\)/)
-  assert.match(participants, /\.eq\('role', 'mentee'\)/)
-  assert.match(participants, /setTotalPeople\(nextTotal\)/)
+test('Mentee listing uses server pagination, search, and sorting through an admin-only projection', () => {
+  assert.match(participants, /list_admin_mentees_page/)
+  assert.match(participants, /p_query: query\.trim\(\)/)
+  assert.match(participants, /p_sort_key:/)
+  assert.match(participants, /p_sort_direction:/)
   assert.match(participants, /<TablePagination/)
   assert.match(participants, /totalItems=\{totalPeople\}/)
-  assert.match(participants, /label="Pagination peserta"/)
+  assert.match(participants, /label="Pagination mentee"/)
+  assert.match(migration, /count\(\*\) over\(\)/)
+  assert.match(migration, /limit greatest/)
+  assert.match(migration, /offset greatest/)
 })
 
-test('participant current-page search and reload remain available', () => {
-  assert.match(participants, /visiblePeople = people\.filter/)
-  assert.match(participants, /Cari pada halaman ini/)
-  assert.match(participants, />Muat ulang<\/button>/)
-})
-
-test('participant UUID remains secondary monospace data instead of the primary identity', () => {
-  assert.match(participants, /className=\{dataStyles\.mono\}/)
-  assert.match(participants, /title=\{person\.id\}/)
-  assert.match(participants, /className=\{dataStyles\.identity\}/)
-  assert.match(participants, /displayName\(person\)/)
+test('Mentee modal is read-only and includes onboarding context instead of admin mutation controls', () => {
+  assert.match(participants, /Detail mentee · read-only/)
+  assert.match(participants, /Status onboarding/)
+  assert.match(participants, /Sumber informasi/)
+  assert.match(participants, /Minat kompetisi/)
+  assert.doesNotMatch(participants, /update\(|delete\(|upsert\(/)
 })

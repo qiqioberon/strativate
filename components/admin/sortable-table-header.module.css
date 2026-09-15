@@ -1,0 +1,33 @@
+.button {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.button svg {
+  flex: 0 0 auto;
+  opacity: .72;
+}
+
+.button:hover,
+.button:focus-visible {
+  color: #c75f00;
+}
+
+.button:focus-visible {
+  outline: 2px solid #ffb676;
+  outline-offset: 3px;
+  border-radius: 4px;
+}

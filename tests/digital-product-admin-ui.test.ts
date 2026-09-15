@@ -19,17 +19,13 @@ test('public Digital Products rollout has one env-backed runtime decision', () =
   assert.doesNotMatch(featureFlags, /digitalProducts:\s*false/)
 })
 
-test('Digital Product controller renders protected-media domain fields in a semantic paginated table', () => {
+test('Digital Product controller renders protected-media domain fields in a sortable semantic paginated table', () => {
   assert.match(manager, /data-testid="digital-product-table"/)
-  assert.match(manager, /<th scope="col">Produk<\/th>/)
-  assert.match(manager, /<th scope="col">Jenis<\/th>/)
-  assert.match(manager, /<th scope="col">Harga<\/th>/)
-  assert.match(manager, /<th scope="col">Status<\/th>/)
-  assert.match(manager, /<th scope="col">Materi terlindungi<\/th>/)
-  assert.match(manager, /<th scope="col">Diperbarui<\/th>/)
+  for (const label of ['Produk', 'Jenis', 'Harga', 'Status', 'Materi terlindungi', 'Diperbarui']) assert.match(manager, new RegExp(`SortableTableHeader label="${label}"`))
   assert.match(manager, /product\.slug/)
   assert.match(manager, /product\.content_type/)
   assert.match(manager, /product\.is_published/)
+  assert.match(manager, /const sortedProducts = useMemo/)
   assert.match(manager, /const pagedProducts = useMemo/)
   assert.match(manager, /pagedProducts\.map/)
   assert.match(manager, /<TablePagination/)
