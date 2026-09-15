@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { formatRupiah } from '@/lib/commerce/money'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 
-const AUTOPLAY_MS = 7000
+const AUTOPLAY_MS = 5000
 
 export function DigitalProductCarousel({ products }: { products: PublicDigitalProduct[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -58,7 +58,11 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
             key={product.id}
             style={{ transform: `translateX(${(index - activeIndex) * 100}%)` }}
           >
-            <Link href={`/produk-digital/${product.slug}`} tabIndex={index === activeIndex ? 0 : -1}>
+            <Link
+              href={`/produk-digital/${product.slug}`}
+              tabIndex={index === activeIndex ? 0 : -1}
+              data-testid={`digital-product-detail-link-${product.slug}`}
+            >
               <div className="digital-product-carousel__media">
                 <Image
                   src={product.imageUrl}

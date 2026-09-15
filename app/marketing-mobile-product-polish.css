@@ -1,0 +1,22 @@
+/* Small, late-loading layout corrections for the public mobile header and homepage Digital Product carousel. */
+.digital-product-carousel {
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.digital-product-carousel__viewport {
+  aspect-ratio: 4 / 5;
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .marketing-header__inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .marketing-header__actions {
+    grid-column: 2;
+    justify-self: end;
+    margin-left: 0;
+  }
+}
