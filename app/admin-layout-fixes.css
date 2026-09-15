@@ -12,6 +12,7 @@
 
 .ops-page {
   grid-template-columns: minmax(0, 1fr);
+  overflow-x: clip;
 }
 
 .ops-page .role-card {
@@ -62,7 +63,14 @@
 }
 
 .ops-table-wrap {
+  display: block;
+  box-sizing: border-box;
+  contain: inline-size;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
 }
 
 .ops-dialog {
