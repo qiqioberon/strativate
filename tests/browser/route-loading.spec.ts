@@ -23,7 +23,7 @@ test('hard load uses a dedicated wordmark intro before normal interaction', asyn
   await expect(intro).toHaveCount(0)
 })
 
-test('pending internal App Router navigation shows only the compact branded loader', async ({ page }) => {
+test('pending internal navigation keeps the current UI visible without a global loader', async ({ page }) => {
   const gate = createGate()
   let intercepted = false
 
@@ -37,7 +37,6 @@ test('pending internal App Router navigation shows only the compact branded load
   })
 
   await page.goto('/')
-  await expect(page.locator('html')).toHaveAttribute('data-strativate-client-ready', 'true')
   await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0, { timeout: 2000 })
 
   const nav = page.getByRole('navigation', { name: 'Navigasi utama' })
@@ -45,49 +44,25 @@ test('pending internal App Router navigation shows only the compact branded load
   await expect(programLink).toBeVisible()
 
   const navigation = programLink.click()
-  const overlay = page.getByTestId('route-loading-overlay')
-  await expect(overlay).toBeVisible()
-  await expect(page.getByTestId('route-loading-mark')).toBeVisible()
-  await expect(page.getByTestId('route-loading-wordmark')).toHaveCount(0)
-  expect(intercepted).toBe(true)
+  await expect.poll(() => intercepted).toBe(true)
+  await expect(page.getByTestId('route-loading-overlay')).toHaveCount(0)
+  await expect(nav).toBeVisible()
+  await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0)
 
   gate.release()
   await navigation
   await expect(page).toHaveURL(/\/program$/)
-  await expect(overlay).toHaveCount(0)
   await expect(page.getByTestId('program-directory-section')).toBeVisible()
 })
 
-test('reduced motion keeps the route loader static while navigation is pending', async ({ page }) => {
+test('reduced motion shortens only the initial intro and never enables a route overlay', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  const gate = createGate()
-  let intercepted = false
-
-  await page.route('**/program**', async (route) => {
-    const headers = route.request().headers()
-    if (!intercepted && headers.rsc === '1') {
-      intercepted = true
-      await gate.wait
-    }
-    await route.continue()
-  })
-
+  await page.clock.install()
   await page.goto('/')
-  await expect(page.locator('html')).toHaveAttribute('data-strativate-client-ready', 'true')
-  await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0, { timeout: 1000 })
 
-  const programLink = page
-    .getByRole('navigation', { name: 'Navigasi utama' })
-    .getByRole('link', { name: 'Program', exact: true })
-  const navigation = programLink.click()
-
-  const overlay = page.getByTestId('route-loading-overlay')
-  await expect(overlay).toBeVisible()
-  await expect(page.getByTestId('route-loading-mark').locator('img')).toHaveCSS('animation-name', 'none')
-  expect(intercepted).toBe(true)
-
-  gate.release()
-  await navigation
-  await expect(page).toHaveURL(/\/program$/)
-  await expect(overlay).toHaveCount(0)
+  const intro = page.getByTestId('initial-brand-intro')
+  await expect(intro).toBeVisible()
+  await page.clock.fastForward(240)
+  await expect(intro).toHaveCount(0)
+  await expect(page.getByTestId('route-loading-overlay')).toHaveCount(0)
 })
