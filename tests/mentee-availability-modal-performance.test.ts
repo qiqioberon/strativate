@@ -15,6 +15,16 @@ test('mentee availability dialog is explicitly centered after global CSS resets'
   assert.match(rule, /margin:\s*auto/)
 })
 
+test('disabled availability days never look like an active loading target', () => {
+  const css = read('../app/mentee-mentor-availability.css')
+  const disabledRule = css.match(/\.mentee-availability-day:disabled\.is-available\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+
+  assert.match(disabledRule, /cursor:\s*not-allowed/)
+  assert.doesNotMatch(disabledRule, /cursor:\s*progress/)
+  assert.match(disabledRule, /transform:\s*none/)
+  assert.match(css, /\.mentee-availability-day\.is-available:not\(:disabled\):hover/)
+})
+
 test('date detail revalidation scopes availability work to the clicked mentor date', () => {
   const explorer = read('../components/dashboard/mentor-availability-explorer.tsx')
   const route = read('../app/api/mentee/mentor-availability/route.ts')
