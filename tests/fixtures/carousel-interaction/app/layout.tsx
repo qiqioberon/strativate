@@ -7,6 +7,7 @@ import '../../../../app/admin-mentoring-tables.css'
 import '../../../../app/mentor-weekly-controls.css'
 import '../../../../app/profile-management.css'
 import '../../../../app/calendar-integration.css'
+import '../../../../app/admin-mentoring-scheduling.css'
 import '../../../../app/marketing-mobile-product-polish.css'
 import '../../../../app/mentor/dashboard/mentor-operations.css'
 
