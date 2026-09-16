@@ -2,12 +2,16 @@
   position: fixed;
   inset: 0;
   z-index: 12000;
-  display: grid;
+  display: none;
   min-height: 100dvh;
   place-items: center;
   overflow: hidden;
   isolation: isolate;
   background: var(--background);
+}
+
+:global(html[data-strativate-client-ready='true']) .overlay {
+  display: grid;
 }
 
 .overlay::before {
@@ -25,28 +29,6 @@
   position: relative;
   z-index: 1;
   display: grid;
-  width: min(82vw, 34rem);
-  place-items: center;
-}
-
-.wordmark,
-.mark {
-  grid-area: 1 / 1;
-}
-
-.wordmark {
-  display: grid;
-  place-items: center;
-}
-
-.wordmarkImage {
-  width: clamp(13rem, 44vw, 25rem);
-  height: auto;
-}
-
-.mark {
-  position: relative;
-  display: none;
   width: clamp(4.5rem, 12vw, 6.25rem);
   place-items: center;
   aspect-ratio: 471 / 512;
@@ -66,14 +48,6 @@
   border: 2px solid color-mix(in srgb, var(--primary) 34%, transparent);
   border-radius: 999px;
   animation: ring-breathe 1.4s ease-in-out infinite;
-}
-
-:global(html[data-strativate-client-ready='true']) .wordmark {
-  display: none;
-}
-
-:global(html[data-strativate-client-ready='true']) .mark {
-  display: grid;
 }
 
 .srOnly {

@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Poppins } from 'next/font/google'
 
+import { InitialBrandIntro } from '@/components/navigation/initial-brand-intro'
 import { RouteLoadingMode } from '@/components/navigation/route-loading-mode'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { brandDescription } from '@/lib/content/brand'
@@ -37,5 +38,5 @@ const poppins = Poppins({ subsets: ['latin'], weight: ['400','500','600','700','
 export const viewport: Viewport = { colorScheme:'light', themeColor:'#FF7A00' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={`${poppins.variable} ${poppins.className} antialiased`}><RouteLoadingMode /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
+  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={`${poppins.variable} ${poppins.className} antialiased`}><InitialBrandIntro /><RouteLoadingMode /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
 }
