@@ -60,6 +60,4 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Dashboard and auth browser verification
-        env:
-          TEST_BASE_URL: http://localhost:3000
         run: pnpm exec playwright test tests/browser/dashboard-shared-navigation.spec.ts tests/browser/auth-session-persistence.spec.ts

@@ -57,7 +57,7 @@ for (const choice of [
 
     const dialog = await openPasswordChoice(page)
     await dialog.getByRole('button', { name: choice.button, exact: true }).click()
-    await expect(page.getByRole('alert')).toContainText('Tidak dapat masuk')
+    await expect(page.locator('.form-error')).toContainText('Tidak dapat masuk')
 
     expect(observedPreference).toBeDefined()
     if (choice.sessionOnly) expect(observedPreference!.expires).toBe(-1)
