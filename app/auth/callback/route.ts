@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
+import { AUTH_PERSISTENCE_COOKIE } from '@/lib/auth/session-persistence'
 import { createClient } from '@/lib/supabase/server'
 const emailTypes = new Set(['email', 'magiclink', 'signup', 'invite', 'recovery'])
 export async function GET(request: NextRequest) {
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest) {
   } catch { /* Expired callback uses a fixed error page. */ }
   // Never consume a browser-provided next/returnTo URL.
   const response = NextResponse.redirect(new URL(destination, request.url))
+  if (destination === '/auth/error') response.cookies.delete(AUTH_PERSISTENCE_COOKIE)
   response.headers.set('Cache-Control', 'private, no-store')
   response.headers.set('Referrer-Policy', 'no-referrer')
   return response

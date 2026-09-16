@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { resolveMentoringSlug } from '@/lib/program-routes'
 import { isProtectedApplicationPath } from '@/lib/auth/routes'
+import { AUTH_PERSISTENCE_COOKIE, applyAuthCookiePersistence, authPersistenceModeFromCookieValue } from '@/lib/auth/session-persistence'
 export async function proxy(request: NextRequest) {
   // These programs are informational. Even old checkout links should lead to
   // their public guide, before the authentication guard or demo order UI.
@@ -12,9 +13,11 @@ export async function proxy(request: NextRequest) {
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { cookies: {
     getAll: () => request.cookies.getAll(),
     setAll(values) {
-      values.forEach(({ name, value }) => request.cookies.set(name, value))
+      const mode = authPersistenceModeFromCookieValue(request.cookies.get(AUTH_PERSISTENCE_COOKIE)?.value)
+      const persistedValues = applyAuthCookiePersistence(values, mode)
+      persistedValues.forEach(({ name, value }) => request.cookies.set(name, value))
       response = NextResponse.next({ request })
-      values.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+      persistedValues.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
     },
   } })
   const { data: { user } } = await supabase.auth.getUser()
