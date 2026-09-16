@@ -77,7 +77,7 @@ export function MentorPublicationControl({ mentorId, mentorName }: { mentorId: s
     <section className="mentor-account-lifecycle-actions" data-testid="mentor-publication-control">
       <div>
         <p className="kicker">Profil publik mentor</p>
-        {loading ? <><h3>Memuat profil publik…</h3><p>Memeriksa profil yang terhubung langsung ke akun mentor ini.</p></> : profile ? <><h3>{profile.display_name}</h3><p>Slug: <strong>{profile.public_slug}</strong> · Status: <strong>{profile.publication_status === 'published' ? 'Published' : 'Draft'}</strong></p></> : <><h3>Belum memiliki profil publik</h3><p>Buat draft baru untuk akun mentor ini. Legacy public profiles tidak ditautkan otomatis berdasarkan nama atau email.</p></>}
+        {loading ? <><h3>Memuat profil publik…</h3><p>Memeriksa profil publik akun mentor ini.</p></> : profile ? <><h3>{profile.display_name}</h3><p>Slug: <strong>{profile.public_slug}</strong> · Status: <strong>{profile.publication_status === 'published' ? 'Published' : 'Draft'}</strong></p></> : <><h3>Belum memiliki profil publik</h3><p>Buat draft untuk mulai mengelola profil publik akun mentor ini.</p></>}
       </div>
       <div className="button-row mentor-account-lifecycle-buttons">
         {profile ? <>
