@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   buildTwoWeekDateKeys,
   filterMenteeAvailability,
-  replaceMenteeMentorAvailability,
+  replaceMenteeMentorDayAvailability,
   type MenteeAvailabilityDay,
   type MenteeAvailabilityFilters,
   type MenteeAvailabilityMentor,
@@ -115,7 +115,7 @@ export function MentorAvailabilityExplorer() {
     setDetailLoadingKey(loadingKey)
     setNotice('')
     try {
-      const response = await fetch(`/api/mentee/mentor-availability?mentorId=${encodeURIComponent(mentor.mentorId)}`, { cache: 'no-store' })
+      const response = await fetch(`/api/mentee/mentor-availability?mentorId=${encodeURIComponent(mentor.mentorId)}&date=${encodeURIComponent(dateKey)}`, { cache: 'no-store' })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Ketersediaan terbaru belum dapat diverifikasi.')
       const freshPayload = data as MenteeAvailabilityPayload
@@ -123,7 +123,7 @@ export function MentorAvailabilityExplorer() {
       setPayload(current => current ? {
         ...current,
         generatedAt: freshPayload.generatedAt,
-        mentors: replaceMenteeMentorAvailability(current.mentors, mentor.mentorId, freshMentor),
+        mentors: replaceMenteeMentorDayAvailability(current.mentors, mentor.mentorId, dateKey, freshMentor),
       } : current)
       const freshDay = freshMentor?.days.find(day => day.dateKey === dateKey)
       if (!freshMentor || !freshDay) {

@@ -165,3 +165,33 @@ export function replaceMenteeMentorAvailability(
   if (refreshed) next.push(refreshed)
   return next.sort((left, right) => left.mentorName.localeCompare(right.mentorName, 'id-ID') || left.mentorId.localeCompare(right.mentorId))
 }
+
+export function replaceMenteeMentorDayAvailability(
+  mentors: MenteeAvailabilityMentor[],
+  mentorId: string,
+  dateKey: string,
+  refreshed: MenteeAvailabilityMentor | null,
+) {
+  const current = mentors.find(mentor => mentor.mentorId === mentorId)
+  if (!current) return mentors
+
+  const refreshedDay = refreshed?.days.find(day => day.dateKey === dateKey)
+  const days = current.days.filter(day => day.dateKey !== dateKey)
+  if (refreshedDay) days.push(refreshedDay)
+  days.sort((left, right) => left.dateKey.localeCompare(right.dateKey))
+
+  if (!days.length) return replaceMenteeMentorAvailability(mentors, mentorId, null)
+
+  const merged: MenteeAvailabilityMentor = {
+    ...current,
+    ...(refreshed ? {
+      mentorName: refreshed.mentorName,
+      tierId: refreshed.tierId,
+      tierName: refreshed.tierName,
+      timezone: refreshed.timezone,
+      weekStartDate: refreshed.weekStartDate,
+    } : {}),
+    days,
+  }
+  return replaceMenteeMentorAvailability(mentors, mentorId, merged)
+}
