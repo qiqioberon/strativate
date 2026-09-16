@@ -1,14 +1,11 @@
 'use client'
 
-import { CalendarDays, Check, Clock3, Loader2, TriangleAlert, UserRound, X } from 'lucide-react'
+import { CalendarDays, Check, Clock3, Loader2, Search, TriangleAlert, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { dateKeyInTimeZone } from '@/lib/calendar/slot-engine'
-import { DAYS_OF_WEEK } from '@/lib/mentor/availability'
 import {
-  availabilityMatchesFilters,
-  availabilityWeekKind,
+  buildBookableMentorDays,
+  type BookableMentorDay,
   type GoogleCalendarAvailabilityStatus,
-  type SchedulingWeekFilter,
 } from '@/lib/private-mentoring/scheduling-availability'
 
 type AvailabilityRange={start:string;end:string}
@@ -29,70 +26,78 @@ type SlotPayload={
   message:string
 }
 
-function availabilityWeekLabel(start:string,timezone:string){
-  const kind=availabilityWeekKind(start,timezone,new Date())
-  if(kind==='current')return'Minggu ini'
-  if(kind==='next')return'Minggu depan'
-  return 'Availability'
-}
-function availabilityDate(start:string,timezone:string){return new Intl.DateTimeFormat('id-ID',{weekday:'short',day:'numeric',month:'short',timeZone:timezone}).format(new Date(start))}
+type MentorDayGroup={mentor:EligibleMentor;days:BookableMentorDay<Slot>[];slotCount:number}
+
+function availabilityDate(start:string,timezone:string){return new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'short',timeZone:timezone}).format(new Date(start))}
+function availabilityFullDate(start:string,timezone:string){return new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long',timeZone:timezone}).format(new Date(start))}
 function availabilityTime(start:string,end:string,timezone:string){const formatter=new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:timezone});return`${formatter.format(new Date(start))}–${formatter.format(new Date(end))}`}
-function slotInsideRange(slot:Slot,range:AvailabilityRange){return new Date(slot.start).getTime()>=new Date(range.start).getTime()&&new Date(slot.end).getTime()<=new Date(range.end).getTime()}
 function calendarStatusLabel(status:GoogleCalendarAvailabilityStatus){if(status==='verified')return'Google terverifikasi';if(status==='unavailable')return'Google belum terverifikasi';return'Google tidak terhubung'}
 function calendarStatusClass(status:GoogleCalendarAvailabilityStatus){if(status==='verified')return'is-verified';if(status==='unavailable')return'is-warning';return'is-neutral'}
+function daySelectionKey(day:{mentorId:string;dateKey:string}){return`${day.mentorId}:${day.dateKey}`}
 
 export function AdminScheduleDialog({sessionId,onClose,onScheduled}:{sessionId:string|null;onClose:()=>void;onScheduled?:()=>void}){
   const ref=useRef<HTMLDialogElement>(null)
   const [payload,setPayload]=useState<SlotPayload|null>(null)
+  const [selectedDayKey,setSelectedDayKey]=useState<string|null>(null)
   const [selected,setSelected]=useState<Slot|null>(null)
   const [loading,setLoading]=useState(false)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
-  const [weekFilter,setWeekFilter]=useState<SchedulingWeekFilter>('all')
-  const [dayFilter,setDayFilter]=useState<number|null>(null)
+  const [mentorQuery,setMentorQuery]=useState('')
+  const [dateFilter,setDateFilter]=useState('')
+  const [timeStart,setTimeStart]=useState('')
+  const [timeEnd,setTimeEnd]=useState('')
 
   useEffect(()=>{const dialog=ref.current;if(!dialog)return;if(sessionId&&!dialog.open)dialog.showModal();if(!sessionId&&dialog.open)dialog.close()},[sessionId])
   useEffect(()=>{
-    if(!sessionId){setPayload(null);setSelected(null);return}
+    if(!sessionId){setPayload(null);setSelectedDayKey(null);setSelected(null);return}
     let active=true
-    setLoading(true);setError('');setNotice('');setWeekFilter('all');setDayFilter(null)
+    setLoading(true);setError('');setNotice('');setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('');setSelectedDayKey(null);setSelected(null)
     fetch(`/api/admin/private-mentoring/sessions/${sessionId}/slots`,{cache:'no-store'})
-      .then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'Slot belum dapat dimuat.');if(active){setPayload(data);setSelected(null)}})
+      .then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'Slot belum dapat dimuat.');if(active)setPayload(data)})
       .catch(err=>{if(active)setError(err.message)})
       .finally(()=>{if(active)setLoading(false)})
     return()=>{active=false}
   },[sessionId])
 
   const eligibleMentors=payload?.context.mentors??[]
-  const filteredSlots=useMemo(()=>{
-    const now=new Date()
-    return(payload?.slots??[]).filter(slot=>availabilityMatchesFilters(slot,slot.timezone,now,weekFilter,dayFilter))
-  },[dayFilter,payload,weekFilter])
-  const filteredAvailabilityByMentor=useMemo(()=>{
-    const now=new Date()
-    return new Map(eligibleMentors.map(mentor=>[
-      mentor.mentorId,
-      mentor.availability.filter(range=>availabilityMatchesFilters(range,mentor.timezone,now,weekFilter,dayFilter)),
-    ]))
-  },[dayFilter,eligibleMentors,weekFilter])
-  const byDay=useMemo(()=>{
-    const map=new Map<string,Map<string,Slot[]>>()
-    for(const slot of filteredSlots){
-      const day=dateKeyInTimeZone(slot.start,slot.timezone)
-      if(!map.has(day))map.set(day,new Map())
-      const mentors=map.get(day)!
-      if(!mentors.has(slot.mentorId))mentors.set(slot.mentorId,[])
-      mentors.get(slot.mentorId)!.push(slot)
+  const filters=useMemo(()=>({mentorQuery,date:dateFilter,timeStart,timeEnd}),[dateFilter,mentorQuery,timeEnd,timeStart])
+  const bookableDays=useMemo(()=>buildBookableMentorDays({mentors:eligibleMentors,slots:payload?.slots??[],filters}),[eligibleMentors,filters,payload])
+  const mentorGroups=useMemo(()=>{
+    const mentorById=new Map(eligibleMentors.map(mentor=>[mentor.mentorId,mentor]))
+    const groups=new Map<string,MentorDayGroup>()
+    for(const day of bookableDays){
+      const mentor=mentorById.get(day.mentorId)
+      if(!mentor)continue
+      const existing=groups.get(day.mentorId)
+      if(existing){existing.days.push(day);existing.slotCount+=day.slots.length}
+      else groups.set(day.mentorId,{mentor,days:[day],slotCount:day.slots.length})
     }
-    return[...map.entries()]
-  },[filteredSlots])
-  useEffect(()=>{
-    if(selected&&!filteredSlots.some(slot=>slot.mentorId===selected.mentorId&&slot.start===selected.start))setSelected(null)
-  },[filteredSlots,selected])
+    return[...groups.values()]
+  },[bookableDays,eligibleMentors])
+  const selectedDay=useMemo(()=>selectedDayKey?bookableDays.find(day=>daySelectionKey(day)===selectedDayKey)??null:null,[bookableDays,selectedDayKey])
+  const visibleSlotCount=useMemo(()=>bookableDays.reduce((total,day)=>total+day.slots.length,0),[bookableDays])
+  const activeFilterCount=[mentorQuery.trim(),dateFilter,timeStart,timeEnd].filter(Boolean).length
+  const hasFilters=activeFilterCount>0
+  const invalidTimeRange=Boolean(timeStart&&timeEnd&&timeStart>timeEnd)
 
-  const emptyMessage=payload&&filteredSlots.length===0
-    ?(payload.slots.length>0?'Tidak ada slot aktual yang cocok dengan filter periode atau hari ini. Ubah filter untuk melihat pilihan lain.':payload.message)
+  useEffect(()=>{
+    if(selectedDayKey&&!bookableDays.some(day=>daySelectionKey(day)===selectedDayKey)){setSelectedDayKey(null);setSelected(null)}
+  },[bookableDays,selectedDayKey])
+  useEffect(()=>{
+    if(selected&&(!selectedDay||!selectedDay.slots.some(slot=>slot.mentorId===selected.mentorId&&slot.start===selected.start)))setSelected(null)
+  },[selected,selectedDay])
+
+  function resetFilters(){setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('')}
+  function chooseDay(day:BookableMentorDay<Slot>){const key=daySelectionKey(day);if(selectedDayKey!==key)setSelected(null);setSelectedDayKey(key)}
+
+  const emptyMessage=payload&&bookableDays.length===0
+    ?invalidTimeRange
+      ?'Jam selesai harus sama dengan atau setelah jam mulai.'
+      :payload.slots.length>0&&hasFilters
+        ?'Tidak ada mentor dengan slot tersedia yang cocok dengan filter yang dipilih.'
+        :payload.message
     :''
 
   async function confirm(){
@@ -109,19 +114,25 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled}:{sessionId:s
   }
 
   return <dialog ref={ref} className="calendar-dialog schedule-dialog" onCancel={event=>{event.preventDefault();onClose()}} onClose={onClose} aria-labelledby="schedule-dialog-title">
-    <div className="calendar-dialog__head"><div><p className="kicker">Penjadwalan berbasis availability</p><h3 id="schedule-dialog-title">Jadwalkan Private Mentoring</h3><p>Pilih mentor dan jam yang benar-benar tersedia. Slot dihitung dari availability mentor, sesi Strativate, dan Google Calendar bila dapat diverifikasi.</p></div><button type="button" className="icon-button" onClick={onClose} aria-label="Tutup penjadwalan"><X/></button></div>
+    <div className="calendar-dialog__head"><div><p className="kicker">Penjadwalan berbasis availability</p><h3 id="schedule-dialog-title">Jadwalkan Private Mentoring</h3><p>Pilih mentor, tanggal, lalu waktu yang tersedia. Pilihan dihitung dari availability mentor, sesi Strativate, dan Google Calendar bila dapat diverifikasi.</p></div><button type="button" className="icon-button" onClick={onClose} aria-label="Tutup penjadwalan"><X/></button></div>
     <div className="schedule-dialog__body">
       {payload?<div className="schedule-dialog__summary" aria-label="Ringkasan sesi"><div><span>Fokus sesi</span><strong>{payload.context.focusName||'Belum dipilih'}</strong></div><div><span>Tier mentor</span><strong>{payload.context.requiredTierName||'Sesuai paket'}</strong></div><div><span>Durasi</span><strong>{payload.context.durationMinutes} menit</strong></div><div><span>Urutan sesi</span><strong>{payload.context.sessionNumber}/{payload.context.purchasedSessions}</strong></div></div>:null}
 
-      {loading?<p className="calendar-loading"><Loader2 className="spin"/>Menghitung slot aktual…</p>:null}
+      {loading?<p className="calendar-loading"><Loader2 className="spin"/>Menghitung slot tersedia…</p>:null}
 
-      {!loading&&payload?<div className="schedule-filter-bar" aria-label="Filter availability"><div className="schedule-filter-copy"><strong>Filter jadwal</strong><small>Availability yang sudah lewat disembunyikan otomatis.</small></div><label><span>Periode</span><select value={weekFilter} onChange={event=>setWeekFilter(event.target.value as SchedulingWeekFilter)}><option value="all">Minggu ini & depan</option><option value="current">Minggu ini</option><option value="next">Minggu depan</option></select></label><label><span>Hari</span><select value={dayFilter??''} onChange={event=>setDayFilter(event.target.value?Number(event.target.value):null)}><option value="">Semua hari</option>{DAYS_OF_WEEK.map(day=><option key={day.value} value={day.value}>{day.label}</option>)}</select></label></div>:null}
+      {!loading&&payload?<div className="schedule-filter-bar" aria-label="Filter slot tersedia">
+        <div className="schedule-filter-copy"><strong>Temukan jadwal</strong><small>Filter hanya diterapkan pada slot yang saat ini bisa dijadwalkan.</small></div>
+        <label className="schedule-filter-field schedule-filter-field--mentor"><span>Mentor</span><div className="schedule-filter-input"><Search aria-hidden="true"/><input type="search" value={mentorQuery} onChange={event=>setMentorQuery(event.target.value)} placeholder="Cari nama mentor"/></div></label>
+        <label className="schedule-filter-field"><span>Tanggal</span><input type="date" value={dateFilter} onChange={event=>setDateFilter(event.target.value)}/></label>
+        <div className="schedule-filter-field"><span>Rentang waktu</span><div className="schedule-filter-time"><input type="time" aria-label="Jam mulai" value={timeStart} onChange={event=>setTimeStart(event.target.value)}/><span>–</span><input type="time" aria-label="Jam selesai" value={timeEnd} onChange={event=>setTimeEnd(event.target.value)}/></div></div>
+        <div className="schedule-filter-actions"><small>{hasFilters?`${activeFilterCount} filter aktif`:'Semua slot tersedia'}</small>{hasFilters?<button type="button" onClick={resetFilters}><X aria-hidden="true"/>Reset</button>:null}</div>
+      </div>:null}
 
-      {!loading&&payload?<section className="schedule-availability-panel" aria-labelledby="eligible-mentor-heading"><div className="schedule-section-heading"><div><p className="kicker">Ketersediaan mentor</p><h4 id="eligible-mentor-heading">Mentor sesuai tier</h4></div><span>{eligibleMentors.length} mentor aktif</span></div>{eligibleMentors.length?<div className="schedule-mentor-grid">{eligibleMentors.map(mentor=>{const bookableSlots=filteredSlots.filter(slot=>slot.mentorId===mentor.mentorId);const ranges=filteredAvailabilityByMentor.get(mentor.mentorId)??[];return <article className="schedule-mentor-card" key={mentor.mentorId}><div className="schedule-mentor-card__head"><div className="schedule-mentor-identity"><span className="schedule-mentor-avatar" aria-hidden="true"><UserRound/></span><div><strong>{mentor.mentorName}</strong><small>{mentor.timezone}</small></div></div><div className="schedule-mentor-card__badges"><span className={bookableSlots.length?'schedule-ready-badge':'schedule-ready-badge is-empty'}>{bookableSlots.length} slot siap</span>{mentor.googleCalendarStatus?<span className={`schedule-calendar-badge ${calendarStatusClass(mentor.googleCalendarStatus)}`}>{calendarStatusLabel(mentor.googleCalendarStatus)}</span>:null}</div></div><div className="schedule-availability-scroll"><div className="schedule-availability-chips">{ranges.length?ranges.map(range=>{const rangeSlotCount=bookableSlots.filter(slot=>slotInsideRange(slot,range)).length;return <span className={`schedule-availability-chip ${rangeSlotCount?'is-ready':''}`} key={`${mentor.mentorId}-${range.start}-${range.end}`}><CalendarDays aria-hidden="true"/><span><strong>{availabilityWeekLabel(range.start,mentor.timezone)}</strong><small>{availabilityDate(range.start,mentor.timezone)} · {availabilityTime(range.start,range.end,mentor.timezone)}</small><em>{rangeSlotCount?`${rangeSlotCount} slot aktual`:'Belum ada slot aktual'}</em></span></span>}):<p className="schedule-mentor-empty">Tidak ada availability masa depan yang cocok dengan filter ini.</p>}</div></div></article>})}</div>:<div className="schedule-empty-state"><TriangleAlert aria-hidden="true"/><div><strong>Belum ada mentor aktif sesuai tier.</strong><p>Sesi ini membutuhkan mentor tier {payload.context.requiredTierName||'yang sesuai paket'}. Periksa tier dan status mentor di Mentor Management.</p></div></div>}</section>:null}
+      {!loading&&payload?<section className="schedule-availability-panel" aria-labelledby="eligible-mentor-heading"><div className="schedule-section-heading"><div><p className="kicker">Ketersediaan mentor</p><h4 id="eligible-mentor-heading">Mentor sesuai tier</h4></div><span>{mentorGroups.length} mentor · {visibleSlotCount} slot</span></div>{mentorGroups.length?<div className="schedule-mentor-grid">{mentorGroups.map(({mentor,days,slotCount})=><article className="schedule-mentor-card" key={mentor.mentorId}><div className="schedule-mentor-card__head"><div className="schedule-mentor-identity"><span className="schedule-mentor-avatar" aria-hidden="true"><UserRound/></span><div><strong>{mentor.mentorName}</strong><small>{mentor.timezone}</small></div></div><div className="schedule-mentor-card__badges"><span className="schedule-ready-badge">{slotCount} slot</span>{mentor.googleCalendarStatus?<span className={`schedule-calendar-badge ${calendarStatusClass(mentor.googleCalendarStatus)}`}>{calendarStatusLabel(mentor.googleCalendarStatus)}</span>:null}</div></div><div className="schedule-mentor-days">{days.map(day=>{const key=daySelectionKey(day);const isSelected=selectedDayKey===key;return <button type="button" className={`schedule-day-card${isSelected?' is-selected':''}`} aria-pressed={isSelected} key={key} onClick={()=>chooseDay(day)}><span className="schedule-day-card__title"><CalendarDays aria-hidden="true"/><strong>{availabilityDate(day.slots[0].start,day.timezone)}</strong></span><span className="schedule-day-card__ranges">{day.ranges.map(range=><span key={`${range.start}-${range.end}`}>{availabilityTime(range.start,range.end,day.timezone)}</span>)}</span><span className="schedule-day-card__meta">{day.slots.length} slot</span></button>})}</div></article>)}</div>:<div className="schedule-empty-state"><Clock3 aria-hidden="true"/><div><strong>{hasFilters?'Tidak ada slot yang cocok dengan filter.':'Belum ada slot yang bisa dijadwalkan.'}</strong><p>{emptyMessage||'Tidak ada mentor dengan slot tersedia untuk sesi ini.'}</p></div></div>}</section>:null}
 
       {payload?.mentorWarnings?.length?<div className="calendar-warning" role="status"><TriangleAlert/><div><strong>Beberapa Google Calendar belum dapat diverifikasi.</strong>{payload.mentorWarnings.map(item=><span key={item}>{item}</span>)}</div></div>:null}
 
-      {!loading&&payload?<section className="schedule-slot-panel" aria-labelledby="available-slot-heading"><div className="schedule-section-heading"><div><p className="kicker">Slot aktual</p><h4 id="available-slot-heading">Pilih waktu tersedia</h4></div><span>{filteredSlots.length} pilihan</span></div>{emptyMessage?<div className="schedule-empty-state"><Clock3 aria-hidden="true"/><div><strong>Belum ada slot yang bisa dikonfirmasi.</strong><p>{emptyMessage}</p></div></div>:null}<div className="schedule-slot-list">{byDay.map(([day,mentors])=><section key={day} className="schedule-day"><h4><CalendarDays/>{new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long'}).format(new Date(`${day}T12:00:00Z`))}</h4>{[...mentors.entries()].map(([mentorId,slots])=><div className="schedule-mentor" key={mentorId}><div><strong>{slots[0].mentorName}</strong><small>{slots[0].timezone}</small></div><div className="schedule-slots">{slots.map(slot=><button type="button" key={`${slot.mentorId}-${slot.start}`} aria-pressed={selected?.mentorId===slot.mentorId&&selected?.start===slot.start} className={selected?.mentorId===slot.mentorId&&selected?.start===slot.start?'is-selected':''} onClick={()=>setSelected(slot)}><Clock3/>{availabilityTime(slot.start,slot.end,slot.timezone)}{slot.menteeConflict?<small>⚠ Bentrok agenda mentee</small>:null}{slot.googleCalendarStatus==='unavailable'?<small>⚠ Google mentor belum terverifikasi</small>:null}</button>)}</div></div>)}</section>)}</div></section>:null}
+      {!loading&&selectedDay?<section className="schedule-slot-panel" aria-labelledby="available-slot-heading"><div className="schedule-section-heading"><div><p className="kicker">Slot tersedia</p><h4 id="available-slot-heading">Pilih waktu tersedia</h4></div><span>{selectedDay.slots.length} pilihan</span></div><div className="schedule-selected-day"><CalendarDays aria-hidden="true"/><div><strong>{availabilityFullDate(selectedDay.slots[0].start,selectedDay.timezone)}</strong><span>{selectedDay.mentorName} · {selectedDay.timezone}</span></div></div><div className="schedule-slots schedule-slots--selected-day">{selectedDay.slots.map(slot=><button type="button" key={`${slot.mentorId}-${slot.start}`} aria-pressed={selected?.mentorId===slot.mentorId&&selected?.start===slot.start} className={selected?.mentorId===slot.mentorId&&selected?.start===slot.start?'is-selected':''} onClick={()=>setSelected(slot)}><Clock3/>{availabilityTime(slot.start,slot.end,slot.timezone)}{slot.menteeConflict?<small>⚠ Bentrok agenda mentee</small>:null}{slot.googleCalendarStatus==='unavailable'?<small>⚠ Google mentor belum terverifikasi</small>:null}</button>)}</div></section>:null}
 
       {error?<p className="form-error schedule-dialog__feedback" role="alert">{error}</p>:null}{notice?<p className="form-success schedule-dialog__feedback" role="status">{notice}</p>:null}
     </div>
