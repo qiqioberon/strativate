@@ -4,12 +4,13 @@ import { Award } from 'lucide-react'
 import Link from 'next/link'
 import { useState, type MouseEvent } from 'react'
 
-import { AssetMedia } from './asset-media'
-import { MentorDetailModal } from './mentor-detail-modal'
-import type { Mentor } from '@/lib/content/mentors'
+import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 
-function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors: Mentor[]; duplicate?: boolean; onSelect: (mentor: Mentor) => void }) {
-  function openMentor(event: MouseEvent<HTMLAnchorElement>, mentor: Mentor) {
+import { MentorDetailModal } from './mentor-detail-modal'
+import { MentorPortraitMedia } from './mentor-portrait-media'
+
+function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors: PublicMentor[]; duplicate?: boolean; onSelect: (mentor: PublicMentor) => void }) {
+  function openMentor(event: MouseEvent<HTMLAnchorElement>, mentor: PublicMentor) {
     event.preventDefault()
     onSelect(mentor)
   }
@@ -26,7 +27,7 @@ function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors:
           aria-label={duplicate ? undefined : `Lihat detail ${mentor.name}`}
           onClick={(event) => openMentor(event, mentor)}
         >
-          <div className="marketing-mentor-marquee__portrait"><AssetMedia assetKey={mentor.portrait} sizes="108px" /></div>
+          <div className="marketing-mentor-marquee__portrait"><MentorPortraitMedia mentor={mentor} sizes="108px" /></div>
           <div className="marketing-mentor-marquee__content">
             <div className="marketing-mentor-marquee__identity">
               <span className="marketing-mentor-marquee__tier">{mentor.tier ?? 'Mentor Strativate'}</span>
@@ -46,8 +47,10 @@ function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors:
   )
 }
 
-export function MentorMarquee({ mentors }: { mentors: Mentor[] }) {
-  const [selected, setSelected] = useState<Mentor | null>(null)
+export function MentorMarquee({ mentors }: { mentors: PublicMentor[] }) {
+  const [selected, setSelected] = useState<PublicMentor | null>(null)
+
+  if (!mentors.length) return <p className="marketing-mentor-empty" data-testid="mentor-marquee-empty-state">Belum ada mentor publik yang tersedia.</p>
 
   return (
     <>

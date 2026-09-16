@@ -3,6 +3,7 @@
 import { AccountProvider } from '@/components/auth/account-provider'
 import { MentorDashboardClient } from '@/components/mentor/mentor-dashboard-client'
 import type { MentorDashboardData } from '@/lib/mentor/dashboard'
+import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
 import type { Profile } from '@/lib/supabase/database.types'
 
 const profile: Profile = {
@@ -87,6 +88,45 @@ const dashboardData: MentorDashboardData = {
   metadataError: null,
 }
 
+const publicProfile: MyMentorPublicProfileData = {
+  profile: {
+    id: '96000000-0000-0000-0000-000000000001',
+    public_slug: 'mentor-strativate',
+    display_name: 'Mentor Strativate',
+    tier_id: '81000000-0000-0000-0000-000000000001',
+    tier_name: 'Top Student',
+    headline: 'Business Case Mentor',
+    linkedin_url: 'https://www.linkedin.com/in/mentor-strativate/',
+    short_bio: 'Mentor fixture untuk pengujian profil publik yang terpisah dari data akun dan operasional.',
+    portrait_asset_key: 'mentors.navira-putri.portrait',
+    portrait_url: null,
+    photo_status: 'ready',
+    publication_status: 'draft',
+    sort_order: 10,
+  },
+  achievements: [
+    { id: '97000000-0000-0000-0000-000000000001', achievement: 'Winner of Business Case Competition', sort_order: 10 },
+    { id: '97000000-0000-0000-0000-000000000002', achievement: 'Case Team Lead', sort_order: 20 },
+  ],
+  expertise_ids: [
+    '82000000-0000-0000-0000-000000000003',
+    '82000000-0000-0000-0000-000000000005',
+  ],
+  expertise_options: [
+    { id: '82000000-0000-0000-0000-000000000002', name: 'Business Plan', slug: 'business-plan', sort_order: 20, is_active: true, assigned: false },
+    { id: '82000000-0000-0000-0000-000000000003', name: 'Business Case', slug: 'business-case', sort_order: 30, is_active: true, assigned: true },
+    { id: '82000000-0000-0000-0000-000000000005', name: 'Finance', slug: 'finance', sort_order: 50, is_active: false, assigned: true },
+  ],
+}
+
 export default function MentorDashboardFixture() {
-  return <AccountProvider profile={profile} email="mentor@fixture.test"><MentorDashboardClient initialData={dashboardData}/></AccountProvider>
+  return (
+    <AccountProvider profile={profile} email="mentor@fixture.test">
+      <MentorDashboardClient
+        initialData={dashboardData}
+        initialPublicProfile={publicProfile}
+        publicProfileError={null}
+      />
+    </AccountProvider>
+  )
 }

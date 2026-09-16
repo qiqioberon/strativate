@@ -1,20 +1,21 @@
 'use client'
 
 import { RotateCcw, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+
+import type { PublicMentor } from '@/lib/mentor/public-profile-types'
+import { cn } from '@/lib/utils'
 
 import { MentorCard } from './mentor-card'
-import type { Mentor, MentorTier } from '@/lib/content/mentors'
-import { cn } from '@/lib/utils'
 import { MentorDetailModal } from './mentor-detail-modal'
 
-type TierFilter = 'Semua' | MentorTier
+type TierFilter = 'Semua' | string
 
-export function MentorDirectory({ mentors }: { mentors: Mentor[] }) {
+export function MentorDirectory({ mentors }: { mentors: PublicMentor[] }) {
   const [query, setQuery] = useState('')
   const [tier, setTier] = useState<TierFilter>('Semua')
-  const [selected, setSelected] = useState<Mentor | null>(null)
-  const tiers: TierFilter[] = ['Semua', 'Young Professional', 'Top Student']
+  const [selected, setSelected] = useState<PublicMentor | null>(null)
+  const tiers = useMemo<TierFilter[]>(() => ['Semua', ...new Set(mentors.map(mentor => mentor.tier).filter((value): value is string => Boolean(value)))], [mentors])
   const normalized = query.trim().toLocaleLowerCase('id')
   const filtered = mentors.filter((mentor) => {
     const matchesTier = tier === 'Semua' || mentor.tier === tier

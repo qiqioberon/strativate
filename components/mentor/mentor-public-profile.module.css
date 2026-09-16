@@ -1,0 +1,302 @@
+.card {
+  box-sizing: border-box;
+  min-width: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.headerCopy {
+  min-width: 0;
+  flex: 1 1 22rem;
+}
+
+.headerCopy h2,
+.headerCopy p,
+.readOnly p,
+.section p,
+.helper,
+.error,
+.notice {
+  overflow-wrap: anywhere;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.85rem;
+  font-size: 0.9rem;
+}
+
+.error {
+  background: color-mix(in srgb, #dc2626 10%, white);
+  color: #991b1b;
+}
+
+.notice {
+  background: color-mix(in srgb, #16a34a 10%, white);
+  color: #166534;
+}
+
+.readOnly,
+.form,
+.section,
+.fieldset {
+  min-width: 0;
+}
+
+.statusRow {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.status {
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  background: var(--muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+}
+
+.summaryGrid > div {
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--background) 92%, var(--muted));
+}
+
+.summaryGrid dt {
+  margin-bottom: 0.3rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.summaryGrid dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.summaryGrid a {
+  overflow-wrap: anywhere;
+}
+
+.section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.section h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.chips {
+  display: flex;
+  min-width: 0;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.chips span {
+  max-width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 10%, white);
+  overflow-wrap: anywhere;
+}
+
+.achievementList {
+  min-width: 0;
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.achievementList li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.fieldGrid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.fieldGrid label,
+.fullField {
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.fieldGrid input,
+.fullField textarea,
+.achievementRow textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.fullField textarea,
+.achievementRow textarea {
+  resize: vertical;
+}
+
+.fieldset {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+}
+
+.fieldset legend {
+  padding: 0 0.25rem;
+  font-weight: 700;
+}
+
+.fieldsetHeader {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.expertiseGrid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.55rem;
+}
+
+.expertiseOption {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  cursor: pointer;
+}
+
+.expertiseOption input {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+}
+
+.expertiseOption span {
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+.expertiseOption small {
+  color: var(--muted-foreground);
+}
+
+.achievementEditor {
+  min-width: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.achievementRow {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.achievementActions {
+  min-width: 0;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.achievementActions button {
+  max-width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--background);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.helper {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 700px) {
+  .summaryGrid,
+  .fieldGrid,
+  .achievementRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .achievementActions,
+  .actions {
+    justify-content: stretch;
+  }
+
+  .achievementActions button,
+  .actions button {
+    flex: 1 1 auto;
+  }
+}

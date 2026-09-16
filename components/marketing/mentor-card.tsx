@@ -1,13 +1,14 @@
 import { Award, ExternalLink } from 'lucide-react'
 
-import { AssetMedia } from './asset-media'
-import type { Mentor } from '@/lib/content/mentors'
+import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 
-export function MentorCard({ mentor, index, onSelect }: { mentor: Mentor; index: number; onSelect?: (mentor: Mentor) => void }) {
+import { MentorPortraitMedia } from './mentor-portrait-media'
+
+export function MentorCard({ mentor, index, onSelect }: { mentor: PublicMentor; index: number; onSelect?: (mentor: PublicMentor) => void }) {
   return (
     <article id={`mentor-${mentor.slug}`} className="marketing-mentor-card" data-testid={`mentor-card-${mentor.slug}`}>
       <div className="marketing-mentor-card__media">
-        <AssetMedia assetKey={mentor.portrait} sizes="(max-width: 760px) 88vw, 28vw" priority={index < 4} />
+        <MentorPortraitMedia mentor={mentor} sizes="(max-width: 760px) 88vw, 28vw" priority={index < 4} />
         <span className="marketing-mentor-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
       </div>
       <div className="marketing-mentor-card__content">

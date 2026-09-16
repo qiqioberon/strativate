@@ -4,10 +4,12 @@ import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { MentorDirectory } from '@/components/marketing/mentor-directory'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { buttonVariants } from '@/components/ui/button'
-import { mentors } from '@/lib/content/mentors'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
+import { listPublishedMentors } from '@/lib/mentor/public-profile'
 
-export default function MentorPage() {
+export default async function MentorPage() {
+  const mentors = await listPublishedMentors()
+
   return (
     <MarketingShell>
       <main>

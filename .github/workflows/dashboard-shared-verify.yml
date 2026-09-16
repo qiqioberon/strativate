@@ -10,12 +10,21 @@ on:
       - 'app/mentor/dashboard/**'
       - 'app/dashboard/**'
       - 'components/auth/**'
+      - 'components/admin/mentor-*.tsx'
+      - 'components/admin/mentor-*.module.css'
+      - 'components/mentor/**'
       - 'components/dashboard/**'
+      - 'lib/mentor/public-profile*.ts'
+      - 'supabase/migrations/202609170001_mentor_public_profiles_expertise.sql'
+      - 'tests/mentor-public-*.test.ts'
       - 'tests/dashboard-*.test.ts'
       - 'tests/browser/dashboard-shared-navigation.spec.ts'
       - 'tests/browser/auth-session-persistence.spec.ts'
+      - 'tests/browser/mentor-public-profile-management.spec.ts'
+      - 'tests/browser/admin-mentor-expertise-management.spec.ts'
       - 'tests/fixtures/carousel-interaction/app/admin/**'
       - 'tests/fixtures/carousel-interaction/app/mentor/**'
+      - 'tests/fixtures/carousel-interaction/app/public-mentor/**'
       - 'tests/fixtures/carousel-interaction/app/dashboard/**'
       - '.github/workflows/dashboard-shared-verify.yml'
 
@@ -59,5 +68,10 @@ jobs:
           pnpm build
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
-      - name: Dashboard and auth browser verification
-        run: pnpm exec playwright test tests/browser/dashboard-shared-navigation.spec.ts tests/browser/auth-session-persistence.spec.ts
+      - name: Dashboard, auth, and mentor profile browser verification
+        run: >-
+          pnpm exec playwright test
+          tests/browser/dashboard-shared-navigation.spec.ts
+          tests/browser/auth-session-persistence.spec.ts
+          tests/browser/mentor-public-profile-management.spec.ts
+          tests/browser/admin-mentor-expertise-management.spec.ts
