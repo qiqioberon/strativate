@@ -3,9 +3,11 @@ import { ArrowLeft, ArrowRight, Check, Compass } from 'lucide-react'
 
 import { formatRupiah } from '@/lib/commerce/money'
 import { publicContact } from '@/lib/content/brand'
+import type { IntensiveMentoringCatalogView } from '@/lib/intensive-mentoring/types'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
-import { competitionCategories as intensiveCompetitionCategories, type ProgramEditorial } from '@/lib/program-information'
+import type { ProgramEditorial } from '@/lib/program-information'
 import type { PrivateMentoringCatalogView, PrivateMentoringPackageView } from '@/lib/private-mentoring/types'
+import styles from './program-detail.module.css'
 import { ProgramComparison } from './program-comparison'
 
 function groupPackages(packages: PrivateMentoringPackageView[]) {
@@ -20,20 +22,31 @@ function groupPackages(packages: PrivateMentoringPackageView[]) {
 export function ProgramDetail({
   program,
   privateMentoringCatalog = null,
+  intensiveMentoringCatalog = null,
 }: {
   program: ProgramEditorial
   privateMentoringCatalog?: PrivateMentoringCatalogView | null
+  intensiveMentoringCatalog?: IntensiveMentoringCatalogView | null
 }) {
   const isPrivateMentoring = program.slug === 'private-mentoring'
+  const isIntensiveMentoring = program.slug === 'intensive-mentoring'
   const whatsappHref = buildWhatsAppHref(`Halo Strativate, saya ingin berkonsultasi tentang ${program.title}.`)
-  const packages = isPrivateMentoring ? privateMentoringCatalog?.packages ?? [] : []
-  const packageGroups = groupPackages(packages)
-  const minimumPackage = packages.length
-    ? packages.reduce((best, item) => item.priceAmount < best.priceAmount ? item : best)
+  const privatePackages = isPrivateMentoring ? privateMentoringCatalog?.packages ?? [] : []
+  const packageGroups = groupPackages(privatePackages)
+  const minimumPrivatePackage = privatePackages.length
+    ? privatePackages.reduce((best, item) => item.priceAmount < best.priceAmount ? item : best)
+    : null
+  const fixedIntensivePackages = isIntensiveMentoring
+    ? intensiveMentoringCatalog?.packages.filter(item => item.pricingMode === 'fixed' && item.priceAmount !== null) ?? []
+    : []
+  const minimumIntensivePackage = fixedIntensivePackages.length
+    ? fixedIntensivePackages.reduce((best, item) => Number(item.priceAmount) < Number(best.priceAmount) ? item : best)
     : null
   const categories = isPrivateMentoring
     ? privateMentoringCatalog?.competitionCategories.map(item => item.name) ?? []
-    : intensiveCompetitionCategories
+    : isIntensiveMentoring
+      ? intensiveMentoringCatalog?.competitionCategories.map(item => item.name) ?? []
+      : []
 
   return <main className="detail-page program-information">
     <nav className="program-breadcrumb" aria-label="Jejak navigasi" data-testid="program-breadcrumb">
@@ -47,9 +60,12 @@ export function ProgramDetail({
         <h1 data-testid="program-detail-title">{program.title}</h1>
         <p className="detail-lede">{program.detail}</p>
         <div className="detail-price">
-          {isPrivateMentoring && minimumPackage ? <>
-            <strong>Mulai {formatRupiah(minimumPackage.priceAmount)}</strong>
-            <span>{minimumPackage.durationMinutes} menit per sesi · hingga {minimumPackage.maxParticipants} peserta</span>
+          {isPrivateMentoring && minimumPrivatePackage ? <>
+            <strong>Mulai {formatRupiah(minimumPrivatePackage.priceAmount)}</strong>
+            <span>{minimumPrivatePackage.durationMinutes} menit per sesi · hingga {minimumPrivatePackage.maxParticipants} peserta</span>
+          </> : isIntensiveMentoring && minimumIntensivePackage ? <>
+            <strong>Mulai {formatRupiah(Number(minimumIntensivePackage.priceAmount))}</strong>
+            <span>{minimumIntensivePackage.sessionsPerMonth} sesi per bulan · opsi kompetisi internasional melalui konsultasi</span>
           </> : <>
             <strong>Informasi komersial belum tersedia</strong>
             <span>Hubungi tim Strativate untuk informasi program terbaru.</span>
@@ -96,37 +112,59 @@ export function ProgramDetail({
         <div className="program-section-heading">
           <p className="kicker">Paket dan harga</p>
           <h2>Pilih jumlah sesi, lalu konsultasikan kebutuhanmu.</h2>
-          <p>Harga paket berlaku untuk individu atau tim hingga empat peserta. Per-session price diturunkan dari total paket aktif, bukan disimpan sebagai sumber harga terpisah.</p>
+          <p>Harga paket berlaku untuk individu atau tim hingga empat peserta. Harga per sesi dihitung dari total paket aktif.</p>
         </div>
         <div className="program-comparison-grid">
           {packageGroups.map(group => {
             const first = group.packages[0]
-            return <article className="program-price-table" key={group.tierId}>
+            return <article className={`program-price-table ${styles.privatePriceCard}`} key={group.tierId}>
               <div className="program-price-table-heading">
                 <h3>{group.tierName}</h3>
                 <p>{first.durationMinutes} menit/sesi · maks. {first.maxParticipants} peserta</p>
               </div>
-              <table>
-                <thead><tr><th scope="col">Sesi</th><th scope="col">Total</th><th scope="col">Per sesi</th><th scope="col">Referensi</th></tr></thead>
-                <tbody>{group.packages.map(item => <tr key={item.id} data-testid={`private-mentoring-package-${item.mentorTierCode.toLowerCase()}-${item.sessionCount}`}>
-                  <th scope="row">{item.sessionCount}</th>
-                  <td><strong>{formatRupiah(item.priceAmount)}</strong></td>
-                  <td>{formatRupiah(item.pricePerSession)}/session</td>
-                  <td>{item.referencePriceAmount ? <del>{formatRupiah(item.referencePriceAmount)}</del> : '—'}</td>
-                </tr>)}</tbody>
-              </table>
+              <div className={styles.privatePriceScroll}>
+                <table>
+                  <thead><tr><th scope="col">Sesi</th><th scope="col">Total</th><th scope="col">Per sesi</th><th scope="col">Referensi</th></tr></thead>
+                  <tbody>{group.packages.map(item => <tr key={item.id} data-testid={`private-mentoring-package-${item.mentorTierCode.toLowerCase()}-${item.sessionCount}`}>
+                    <th scope="row">{item.sessionCount}</th>
+                    <td><strong>{formatRupiah(item.priceAmount)}</strong></td>
+                    <td>{formatRupiah(item.pricePerSession)}/sesi</td>
+                    <td>{item.referencePriceAmount ? <del>{formatRupiah(item.referencePriceAmount)}</del> : '—'}</td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
             </article>
           })}
         </div>
         <p className="program-pricing-note">Setelah konsultasi, tim Strativate mengirim Cart Link untuk mentee yang dituju. Cart dan checkout tetap menggunakan Shared Commerce dan harga paket aktif.</p>
         <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Tanya paket via WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
-      </> : isPrivateMentoring ? <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Data paket belum dapat dimuat saat ini.</h2><p>Hubungi tim Strativate untuk bantuan dan informasi terbaru.</p></div> : <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Rincian paket dan harga sedang diperbarui.</h2><p>Hubungi tim Strativate untuk informasi program terbaru dan mendiskusikan kebutuhanmu.</p></div>}
+      </> : isIntensiveMentoring && intensiveMentoringCatalog?.packages.length ? <>
+        <div className="program-section-heading"><p className="kicker">Paket dan harga</p><h2>Pilih tingkat pendampingan sesuai timeline kompetisimu.</h2><p>Program nasional memiliki harga tetap. Kompetisi internasional menggunakan rencana yang disesuaikan setelah konsultasi awal.</p></div>
+        <div className={styles.catalogGrid} data-testid="intensive-mentoring-packages">
+          {intensiveMentoringCatalog.packages.map(item => <article className={styles.catalogCard} key={item.id}>
+            <div className={styles.catalogHeader}><span className={styles.badge}>{item.competitionScope === 'international' ? 'Kompetisi Internasional' : 'Kompetisi Nasional'}</span><h3>{item.name}</h3><p>{item.description}</p></div>
+            {item.pricingMode === 'fixed' && item.priceAmount !== null ? <div className={styles.price}><strong>{formatRupiah(item.priceAmount)}</strong>{item.referencePriceAmount ? <del>{formatRupiah(item.referencePriceAmount)}</del> : null}<span>{item.sessionsPerMonth} sesi per bulan</span></div> : <div className={styles.price}><strong>Konsultasi khusus</strong><span>Cakupan dan frekuensi disesuaikan dengan kebutuhan kompetisi.</span></div>}
+            {item.features.length ? <ul className={styles.featureList}>{item.features.map(feature => <li key={feature.id}>{feature.text}</li>)}</ul> : null}
+            {item.pricingMode === 'consultation' ? <a href={whatsappHref} target="_blank" rel="noreferrer" className={styles.consultation}>Konsultasikan kebutuhan <ArrowRight size={14} aria-hidden="true" /></a> : null}
+          </article>)}
+        </div>
+      </> : <div className={styles.fallback}><h3>Informasi paket sedang tidak dapat dimuat.</h3><p>Hubungi tim Strativate untuk informasi program terbaru dan bantuan memilih format mentoring.</p></div>}
     </section>
 
-    <section className="program-section">
+    {isIntensiveMentoring && intensiveMentoringCatalog?.addOns.length ? <section className="program-section" data-reveal data-testid="intensive-mentoring-add-ons">
+      <div className="program-section-heading"><p className="kicker">Add-On Program Opsional</p><h2>Tambahkan dukungan sesuai kebutuhanmu.</h2><p>Pilih evaluasi atau simulasi tambahan yang relevan dengan tahap persiapanmu.</p></div>
+      <div className={styles.catalogGrid}>{intensiveMentoringCatalog.addOns.map(item => <article className={styles.catalogCard} key={item.id}><div className={styles.catalogHeader}><h3>{item.name}</h3><p>{item.description}</p></div><div className={styles.price}><strong>+{formatRupiah(item.priceAmount)}</strong></div>{item.features.length ? <ul className={styles.featureList}>{item.features.map(feature => <li key={feature.id}>{feature.text}</li>)}</ul> : null}{item.termsNote ? <p className="program-pricing-note">{item.termsNote}</p> : null}</article>)}</div>
+    </section> : null}
+
+    {isIntensiveMentoring && intensiveMentoringCatalog?.bundles.length ? <section className="program-section program-section--surface" data-reveal data-testid="intensive-mentoring-bundles">
+      <div className="program-section-heading"><p className="kicker">Bundel dengan Nilai Terbaik</p><h2>Pilih kombinasi yang sesuai dengan tujuanmu.</h2><p>Bundel aktif merangkum paket mentoring dan dukungan tambahan dalam satu pilihan.</p></div>
+      <div className={styles.catalogGrid}>{intensiveMentoringCatalog.bundles.map(item => <article className={`${styles.catalogCard} ${item.badgeText ? styles.catalogCardFeatured : ''}`} key={item.id}>{item.badgeText ? <span className={styles.badge}>{item.badgeText}</span> : null}<div className={styles.catalogHeader}><h3>{item.name}</h3><p>{item.description}</p></div><div className={styles.price}><strong>{formatRupiah(item.priceAmount)}</strong></div>{item.items.length ? <ul className={styles.featureList}>{item.items.map(bundleItem => <li key={bundleItem.id}>{bundleItem.label}</li>)}</ul> : null}</article>)}</div>
+    </section> : null}
+
+    {categories.length ? <section className="program-section">
       <div className="program-section-heading"><p className="kicker">Kategori kompetisi</p><h2>Dukungan lintas bidang.</h2></div>
       <ul className="program-category-list">{categories.map(category => <li key={category}>{category}</li>)}</ul>
-    </section>
+    </section> : null}
 
     <ProgramComparison />
 
