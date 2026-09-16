@@ -33,6 +33,7 @@ export function SessionChoiceDialog({ open, busy, onChoose, onCancel }: Props) {
   return <dialog
     ref={dialogRef}
     className="auth-persistence-dialog"
+    style={{ position: 'fixed', inset: 0, margin: 'auto' }}
     aria-modal="true"
     aria-labelledby="auth-persistence-title"
     aria-describedby="auth-persistence-description"
