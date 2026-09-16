@@ -83,7 +83,7 @@
 .mentee-availability-skeleton-grid i { min-height:94px; border-radius:16px; background:linear-gradient(90deg,#f8f3ef,#fffaf6,#f8f3ef); background-size:200% 100%; animation:mentee-availability-shimmer 1.25s linear infinite; }
 @keyframes mentee-availability-shimmer { to { background-position:-200% 0; } }
 
-.mentee-availability-dialog { width:min(92vw,560px); max-width:none; max-height:88vh; padding:0; overflow:hidden; border:0; border-radius:22px; background:#fff; color:#181411; box-shadow:0 30px 90px #2d180f42; }
+.mentee-availability-dialog { position:fixed; inset:0; margin:auto; width:min(92vw,560px); max-width:none; max-height:88vh; padding:0; overflow:hidden; border:0; border-radius:22px; background:#fff; color:#181411; box-shadow:0 30px 90px #2d180f42; }
 .mentee-availability-dialog::backdrop { background:#24150e80; backdrop-filter:blur(3px); }
 .mentee-availability-dialog__surface { display:grid; max-height:88vh; gap:18px; padding:22px; overflow:auto; }
 .mentee-availability-dialog__head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }

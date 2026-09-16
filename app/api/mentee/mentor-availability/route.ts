@@ -19,17 +19,8 @@ export async function GET(request: Request) {
   if (date && !datePattern.test(date)) return NextResponse.json({ error: 'Tanggal tidak valid.' }, { status: 400 })
 
   try {
-    const payload = await getMenteeMentorAvailability({ mentorId })
-    const result = date
-      ? {
-          ...payload,
-          mentors: payload.mentors.flatMap(mentor => {
-            const days = mentor.days.filter(day => day.dateKey === date)
-            return days.length ? [{ ...mentor, days }] : []
-          }),
-        }
-      : payload
-    return NextResponse.json(result, { headers: { 'Cache-Control': 'private, no-store, max-age=0' } })
+    const payload = await getMenteeMentorAvailability({ mentorId, date: date || undefined })
+    return NextResponse.json(payload, { headers: { 'Cache-Control': 'private, no-store, max-age=0' } })
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : 'Ketersediaan mentor belum dapat dimuat.',

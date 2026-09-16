@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { buildBookableSlots, type SlotMentor, type TimeInterval } from '@/lib/calendar/slot-engine'
-import { getGoogleConnectionStatus, getGoogleFreeBusy } from '@/lib/google-calendar/server'
+import { getGoogleFreeBusy } from '@/lib/google-calendar/server'
 import { availabilityWeekOptions, dateInTimeZone } from '@/lib/mentor/availability'
 import {
   buildMenteeAvailabilityMentors,
@@ -9,7 +9,6 @@ import {
   type MenteeAvailabilityTier,
   type MenteeDiscoveryMentorInput,
 } from '@/lib/private-mentoring/mentee-availability'
-import { resolveGoogleCalendarBusy } from '@/lib/private-mentoring/scheduling-availability'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type MentorProfileRow = {
@@ -98,7 +97,7 @@ function controlledError(message: string) {
   return new Error(message)
 }
 
-export async function getMenteeMentorAvailability(options: { mentorId?: string } = {}): Promise<MenteeAvailabilityPayload> {
+export async function getMenteeMentorAvailability(options: { mentorId?: string; date?: string } = {}): Promise<MenteeAvailabilityPayload> {
   const admin = createAdminClient()
   const now = new Date()
 
@@ -164,12 +163,13 @@ export async function getMenteeMentorAvailability(options: { mentorId?: string }
     if (!tier) return []
     const expected = new Set(weekStartsByMentor.get(mentor.user_id) ?? [])
     const mentorRules = rules.filter(rule => rule.mentor_id === mentor.user_id && expected.has(rule.week_start_date))
-    const availability = mentorRules.map(rule => {
+    const availability = mentorRules.flatMap(rule => {
       const dateKey = addIsoDays(rule.week_start_date, rule.day_of_week - 1)
-      return {
+      if (options.date && dateKey !== options.date) return []
+      return [{
         start: localDateTimeToIso(dateKey, rule.start_time, mentor.timezone),
         end: localDateTimeToIso(dateKey, rule.end_time, mentor.timezone),
-      }
+      }]
     }).sort((left, right) => left.start.localeCompare(right.start))
     if (!availability.length) return []
     return [{
@@ -198,7 +198,7 @@ export async function getMenteeMentorAvailability(options: { mentorId?: string }
   const allAvailability = baseMentors.flatMap(mentor => mentor.availability)
   const horizonStart = allAvailability.reduce((min, range) => range.start < min ? range.start : min, allAvailability[0].start)
   const horizonEnd = allAvailability.reduce((max, range) => range.end > max ? range.end : max, allAvailability[0].end)
-  const busyResult = await admin.from('private_mentoring_sessions')
+  const busyQuery = admin.from('private_mentoring_sessions')
     .select('mentor_id,scheduled_start_at,scheduled_end_at')
     .in('mentor_id', baseMentors.map(mentor => mentor.mentorId))
     .in('status', ['scheduled', 'completed'])
@@ -206,6 +206,18 @@ export async function getMenteeMentorAvailability(options: { mentorId?: string }
     .not('scheduled_end_at', 'is', null)
     .lt('scheduled_start_at', horizonEnd)
     .gt('scheduled_end_at', horizonStart)
+
+  const googleBusyPromise = Promise.all(baseMentors.map(async mentor => {
+    const mentorStart = mentor.availability[0].start
+    const mentorEnd = mentor.availability.reduce((max, range) => range.end > max ? range.end : max, mentor.availability[0].end)
+    try {
+      return [mentor.mentorId, await getGoogleFreeBusy(mentor.mentorId, mentorStart, mentorEnd)] as const
+    } catch {
+      return [mentor.mentorId, [] as TimeInterval[]] as const
+    }
+  }))
+
+  const [busyResult, googleBusyEntries] = await Promise.all([busyQuery, googleBusyPromise])
   if (busyResult.error) throw controlledError('Bentrok jadwal mentor belum dapat diverifikasi.')
 
   const busyByMentor = new Map<string, TimeInterval[]>()
@@ -216,31 +228,18 @@ export async function getMenteeMentorAvailability(options: { mentorId?: string }
     if (current) current.push(interval)
     else busyByMentor.set(row.mentor_id, [interval])
   }
+  const googleBusyByMentor = new Map<string, TimeInterval[]>(googleBusyEntries)
 
-  const slotMentors = await Promise.all(baseMentors.map(async mentor => {
-    const mentorStart = mentor.availability[0].start
-    const mentorEnd = mentor.availability.reduce((max, range) => range.end > max ? range.end : max, mentor.availability[0].end)
-    const connection = await getGoogleConnectionStatus(mentor.mentorId)
-    let googleBusy: TimeInterval[] | null = []
-    if (connection.connected) {
-      try {
-        googleBusy = await getGoogleFreeBusy(mentor.mentorId, mentorStart, mentorEnd)
-      } catch {
-        googleBusy = null
-      }
-    }
-    const calendar = resolveGoogleCalendarBusy({ connected: connection.connected, busy: googleBusy })
-    return {
-      mentorId: mentor.mentorId,
-      mentorName: mentor.mentorName,
-      tierId: mentor.tierId,
-      active: true,
-      timezone: mentor.timezone,
-      availability: mentor.availability,
-      strativateBusy: busyByMentor.get(mentor.mentorId) ?? [],
-      googleBusy: calendar.googleBusy,
-    } satisfies SlotMentor
-  }))
+  const slotMentors = baseMentors.map(mentor => ({
+    mentorId: mentor.mentorId,
+    mentorName: mentor.mentorName,
+    tierId: mentor.tierId,
+    active: true,
+    timezone: mentor.timezone,
+    availability: mentor.availability,
+    strativateBusy: busyByMentor.get(mentor.mentorId) ?? [],
+    googleBusy: googleBusyByMentor.get(mentor.mentorId) ?? [],
+  } satisfies SlotMentor))
 
   const tierIds = [...new Set(baseMentors.map(mentor => mentor.tierId))]
   const slots = tierIds.flatMap(requiredTierId => buildBookableSlots({
