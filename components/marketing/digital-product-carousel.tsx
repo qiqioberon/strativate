@@ -80,30 +80,41 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
             </Link>
           </article>
         ))}
-      </div>
 
-      <div className="digital-product-carousel__controls">
-        {hasMultiple ? (
-          <div className="digital-product-carousel__arrows">
-            <button type="button" onClick={() => select(activeIndex - 1)} aria-label="Produk Digital sebelumnya">
-              <ArrowLeft aria-hidden="true" size={17} />
-            </button>
-            <button type="button" onClick={() => select(activeIndex + 1)} aria-label="Produk Digital berikutnya">
-              <ArrowRight aria-hidden="true" size={17} />
-            </button>
+        <div className="digital-product-carousel__controls">
+          {hasMultiple ? (
+            <>
+              <button
+                className="digital-product-carousel__arrow digital-product-carousel__arrow--previous"
+                type="button"
+                onClick={() => select(activeIndex - 1)}
+                aria-label="Produk Digital sebelumnya"
+              >
+                <ArrowLeft aria-hidden="true" size={18} />
+              </button>
+              <button
+                className="digital-product-carousel__arrow digital-product-carousel__arrow--next"
+                type="button"
+                onClick={() => select(activeIndex + 1)}
+                aria-label="Produk Digital berikutnya"
+              >
+                <ArrowRight aria-hidden="true" size={18} />
+              </button>
+            </>
+          ) : null}
+
+          <div className="digital-product-carousel__dots" aria-label="Pilih slide Produk Digital">
+            {products.map((product, index) => (
+              <button
+                key={product.id}
+                type="button"
+                aria-label={`Tampilkan ${product.name}`}
+                aria-current={index === activeIndex ? 'true' : undefined}
+                className={index === activeIndex ? 'is-active' : undefined}
+                onClick={() => select(index)}
+              />
+            ))}
           </div>
-        ) : <span />}
-        <div className="digital-product-carousel__dots" aria-label="Pilih slide Produk Digital">
-          {products.map((product, index) => (
-            <button
-              key={product.id}
-              type="button"
-              aria-label={`Tampilkan ${product.name}`}
-              aria-current={index === activeIndex ? 'true' : undefined}
-              className={index === activeIndex ? 'is-active' : undefined}
-              onClick={() => select(index)}
-            />
-          ))}
         </div>
       </div>
     </div>

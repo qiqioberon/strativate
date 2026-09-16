@@ -1,12 +1,125 @@
-/* Small, late-loading layout corrections for the public mobile header and homepage Digital Product carousel. */
+/* Late-loading layout corrections for the public header and homepage Digital Product editorial showcase. */
+.marketing-product-library {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(255, 122, 0, .08), transparent 30%),
+    #fff;
+}
+
+.marketing-product-library__grid {
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(360px, 1.18fr);
+  align-items: center;
+  gap: clamp(42px, 7vw, 108px);
+}
+
+.marketing-product-library__copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  min-width: 0;
+}
+
+.marketing-product-library__copy h2 {
+  max-width: 720px;
+  margin-top: 14px;
+  font-size: clamp(2.35rem, 4.8vw, 4.8rem);
+  font-weight: 620;
+  letter-spacing: -.07em;
+  line-height: .96;
+}
+
+.marketing-product-library__copy h2 em {
+  color: var(--marketing-orange, #ff7a00);
+  font-style: normal;
+}
+
+.marketing-product-library__lede {
+  max-width: 540px;
+  margin-top: 22px;
+  color: var(--marketing-muted, #71645e);
+  font-size: .82rem;
+  line-height: 1.7;
+}
+
+.marketing-product-library__cta {
+  margin-top: 24px;
+}
+
+.marketing-product-library__showcase {
+  position: relative;
+  min-width: 0;
+}
+
 .digital-product-carousel {
-  width: min(100%, 520px);
+  width: min(100%, 620px);
   margin-inline: auto;
 }
 
 .digital-product-carousel__viewport {
-  aspect-ratio: 4 / 5;
+  position: relative;
+  aspect-ratio: 5 / 6;
   min-height: 0;
+}
+
+.digital-product-carousel__slide {
+  padding-bottom: 50px;
+}
+
+.digital-product-carousel__controls {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: block;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.digital-product-carousel__arrow,
+.digital-product-carousel__dots button {
+  pointer-events: auto;
+}
+
+.digital-product-carousel__arrow {
+  position: absolute;
+  top: 43%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(218, 195, 179, .9);
+  border-radius: 999px;
+  background: rgba(255, 253, 250, .94);
+  box-shadow: 0 10px 30px rgba(56, 33, 20, .14);
+  color: #201713;
+  cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
+}
+
+.digital-product-carousel__arrow--previous {
+  left: 16px;
+}
+
+.digital-product-carousel__arrow--next {
+  right: 16px;
+}
+
+.digital-product-carousel__dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  display: flex;
+  max-width: calc(100% - 96px);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  transform: translateX(-50%);
+}
+
+.digital-product-carousel__dots button {
+  border: 1px solid #dfd1c6;
+  background: rgba(255, 253, 250, .96);
 }
 
 @media (max-width: 1080px) {
@@ -18,5 +131,82 @@
     grid-column: 2;
     justify-self: end;
     margin-left: 0;
+  }
+
+  .marketing-product-library__grid {
+    grid-template-columns: minmax(0, .9fr) minmax(330px, 1.1fr);
+    gap: clamp(30px, 5vw, 58px);
+  }
+
+  .marketing-product-library__copy h2 {
+    font-size: clamp(2.2rem, 5vw, 3.7rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .marketing-product-library__grid {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .marketing-product-library__copy {
+    max-width: 680px;
+  }
+
+  .marketing-product-library__showcase {
+    width: 100%;
+  }
+
+  .digital-product-carousel {
+    width: min(100%, 560px);
+  }
+}
+
+@media (max-width: 560px) {
+  .marketing-product-library__copy h2 {
+    font-size: clamp(2.15rem, 12vw, 3.15rem);
+  }
+
+  .marketing-product-library__lede {
+    margin-top: 17px;
+    font-size: .76rem;
+  }
+
+  .marketing-product-library__cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .digital-product-carousel {
+    width: 100%;
+  }
+
+  .digital-product-carousel__viewport {
+    aspect-ratio: 4 / 5;
+  }
+
+  .digital-product-carousel__arrow {
+    top: 41%;
+    width: 40px;
+    height: 40px;
+  }
+
+  .digital-product-carousel__arrow--previous {
+    left: 10px;
+  }
+
+  .digital-product-carousel__arrow--next {
+    right: 10px;
+  }
+
+  .digital-product-carousel__dots {
+    bottom: 12px;
+    max-width: calc(100% - 72px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digital-product-carousel__arrow {
+    backdrop-filter: none;
   }
 }

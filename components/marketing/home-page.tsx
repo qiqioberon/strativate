@@ -155,9 +155,38 @@ export function HomePage({
       </section>
 
       {digitalProductsEnabled ? (
-        <section className="marketing-section marketing-product-library" data-reveal data-testid="homepage-products-section">
-          <div className="marketing-container">
-            <DigitalProductCarousel products={digitalProducts} />
+        <section
+          className="marketing-section marketing-product-library"
+          aria-labelledby="digital-products-heading"
+          data-reveal
+          data-testid="homepage-products-section"
+        >
+          <div className="marketing-container marketing-product-library__grid">
+            <div className="marketing-product-library__copy">
+              <p className="marketing-kicker">Koleksi digital Strativate</p>
+              <h2 id="digital-products-heading">
+                Belajar tak harus berhenti di sesi.
+                <br />
+                <em>Bawa materinya, lanjutkan ritmemu.</em>
+              </h2>
+              <p className="marketing-product-library__lede">
+                Jelajahi Produk Digital yang tersedia dan pilih materi yang paling relevan untuk mendukung proses belajarmu.
+              </p>
+              <Link
+                className={cn(
+                  buttonVariants({ variant: 'primary', size: 'marketing' }),
+                  'marketing-product-library__cta',
+                )}
+                href="/produk-digital"
+                data-testid="homepage-products-cta"
+              >
+                Jelajahi Produk Digital
+                <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
+              </Link>
+            </div>
+            <div className="marketing-product-library__showcase">
+              <DigitalProductCarousel products={digitalProducts} />
+            </div>
           </div>
         </section>
       ) : null}
