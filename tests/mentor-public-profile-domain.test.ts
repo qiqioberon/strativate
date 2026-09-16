@@ -50,12 +50,16 @@ test('expertise seed uses the exact approved eight stable labels and slugs', () 
   }
 })
 
-test('legacy public roster migration never invents authenticated mentor ownership', () => {
+test('migration never seeds mentor people and every public profile belongs to a mentor account', () => {
   assert.equal(existsSync(migrationPath), true, 'mentor public domain migration must exist')
   const sql = readMigration()
-  assert.match(sql, /legacy public roster remains unlinked/i)
-  assert.match(sql, /mentor_user_id[^\n]*null/i)
-  assert.doesNotMatch(sql, /join\s+auth\.users[\s\S]{0,300}legacy/i)
+  assert.doesNotMatch(sql, /mentor_public_roster_seed/i)
+  assert.doesNotMatch(sql, /insert\s+into\s+public\.mentor_public_profiles[\s\S]{0,1500}jsonb_to_recordset/i)
+  assert.doesNotMatch(sql, /admin_link_mentor_public_profile/i)
+  assert.doesNotMatch(sql, /Navira Putri|Safira Aulia|Aqil Drajat/i)
+  assert.match(sql, /mentor_user_id\s+uuid\s+not null\s+unique\s+references\s+public\.mentor_profiles\(user_id\)\s+on delete cascade/i)
+  assert.match(sql, /publication_status\s+text\s+not null\s+default\s+'draft'/i)
+  assert.match(sql, /values\s*\(p_user_id,\s*v_slug,\s*v_name,\s*v_tier_id,\s*'draft'/i)
 })
 
 test('public mentor RPC explicitly returns public fields only', () => {

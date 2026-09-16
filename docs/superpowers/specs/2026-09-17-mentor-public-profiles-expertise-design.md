@@ -2,306 +2,148 @@
 
 **Date:** 2026-09-17  
 **Repository:** `qiqioberon/strativate`  
-**Base:** `main` at `2294f967f962cdb5fb1cef17d5460b28882abf3c`  
 **Branch:** `feat/mentor-public-profiles-expertise`
 
-## 1. Goal
+## Goal
 
-Move the approved public mentor roster and mentor expertise out of hardcoded frontend business data and into a normalized, security-scoped Supabase domain, while preserving the existing public mentor card/directory presentation and the existing operational mentor/account model.
+Add database-backed public mentor profiles and Mentor Expertise without mixing public/editorial data into the existing operational `mentor_profiles` domain.
 
-The feature adds:
+The feature provides:
 
-- database-backed public mentor profiles;
-- structured mentor achievements;
-- normalized mentor expertise master data;
-- mentor-to-expertise many-to-many assignments;
-- mentor self-service public-profile editing;
-- admin expertise management and mentor publication control;
-- database-backed homepage/directory mentor rendering;
-- safe migration of the current 26 approved public mentor records without inventing account ownership.
+- one public profile per authenticated mentor account;
+- structured achievements;
+- normalized Mentor Expertise and many-to-many assignments;
+- mentor self-service editing;
+- admin expertise management and Draft/Published control;
+- public homepage/directory reads from a safe database RPC.
 
-## 2. Existing Architecture and Boundary
+## Domain Boundary
 
-`public.profiles` remains the generic account identity table. The existing `public.mentor_profiles` table is already the canonical **operational mentor-account domain**: its primary key is `user_id`, it requires an authenticated mentor account, and it owns tier/timezone/account-lifecycle relationships used by scheduling and availability.
+`public.profiles` remains generic account identity. `public.mentor_profiles` remains the operational mentor-account domain for tier, timezone, active status, scheduling, and availability.
 
-It must not be repurposed into the public marketing roster because the approved public roster contains entries that may not yet correspond to authenticated mentor accounts.
+`public.mentor_public_profiles` stores only public/editorial profile data. Every row belongs to a real operational mentor account through a required unique `mentor_user_id` foreign key. There is no separate roster ownership/linking subsystem.
 
-Therefore public presentation data gets its own domain rather than overloading either `profiles` or operational `mentor_profiles`.
+## Database Model
 
-## 3. Approaches Considered
+### `mentor_public_profiles`
 
-### A. Extend operational `mentor_profiles` — rejected
-
-This would force every public roster entry to have an authenticated mentor account and would mix scheduling/account lifecycle with editorial public-profile state. It also risks inventing ownership mappings for existing mentor records.
-
-### B. Dedicated public-profile domain with nullable account ownership — selected
-
-Create `mentor_public_profiles` with its own UUID identity and an optional unique `mentor_user_id` link to the operational mentor account. Existing approved roster entries can remain valid public records with no account owner; an authenticated mentor can own at most one linked public profile.
-
-Advantages:
-
-- preserves all approved legacy directory data;
-- no inferred account mapping;
-- clean separation of account identity, operational mentor state, and public marketing state;
-- supports draft/published publication lifecycle;
-- supports future explicit account-linking without data migration churn.
-
-### C. Keep hardcoded roster as fallback/source alongside DB — rejected
-
-This creates two writable sources of truth and makes publication/security behavior ambiguous. Once the migration is deployed, database records are authoritative. Static code remains only for media asset registry metadata where required.
-
-## 4. Database Model
-
-### 4.1 `mentor_public_profiles`
-
-Columns:
-
-- `id uuid primary key default gen_random_uuid()`
-- `mentor_user_id uuid null unique references mentor_profiles(user_id) on delete set null`
+- `id uuid primary key`
+- `mentor_user_id uuid not null unique references mentor_profiles(user_id) on delete cascade`
 - `public_slug text not null unique`
 - `display_name text not null`
-- `tier_id uuid null references mentor_tiers(id) on delete restrict`
+- `tier_id uuid null references mentor_tiers(id)`
 - `headline text null`
 - `linkedin_url text null`
 - `short_bio text null`
 - `portrait_asset_key text null`
 - `portrait_url text null`
-- `photo_status text not null default 'missing' check in ('ready','missing')`
-- `publication_status text not null default 'draft' check in ('draft','published')`
+- `photo_status text not null default 'missing'`
+- `publication_status text not null default 'draft'`
 - `sort_order integer not null default 0`
-- timestamps with the repository's `touch_updated_at()` trigger
-
-`mentor_user_id` is the ownership link. It is intentionally nullable for imported public mentor records. No name/email matching is performed automatically.
-
-`tier_id`, `publication_status`, and `sort_order` are admin-controlled. Mentor self-service RPCs cannot mutate them.
-
-### 4.2 `mentor_public_achievements`
-
-Structured repeatable public credentials/achievements:
-
-- `id uuid primary key`
-- `mentor_public_profile_id uuid not null references mentor_public_profiles(id) on delete cascade`
-- `achievement text not null`
-- `sort_order integer not null`
 - timestamps
 
-Achievement content is trimmed and length-constrained. UI reorder uses move-up/move-down; save RPC rewrites the owned ordered list transactionally.
+A profile is created only for an existing mentor account and starts as Draft. Mentor self-service cannot change ownership, tier, publication status, or sort order.
 
-### 4.3 `mentor_expertise`
+### `mentor_public_achievements`
 
-Normalized admin-owned master data:
+Ordered achievement rows belonging to a public profile. Save replaces the mentor-owned ordered list transactionally.
 
-- `id uuid primary key`
-- `name text not null`
-- `slug text not null unique`
-- `sort_order integer not null`
-- `is_active boolean not null default true`
-- timestamps
+### `mentor_expertise`
 
-Name is trimmed; a case-insensitive unique index prevents duplicate labels. Slug is generated once at creation and remains unchanged during rename so relationships and external identity are stable.
+Admin-owned master data with stable UUID, name, stable slug, sort order, active status, and timestamps. Case-insensitive name uniqueness prevents duplicate labels. Rename preserves slug.
 
-### 4.4 `mentor_public_profile_expertise`
+### `mentor_public_profile_expertise`
 
-- `mentor_public_profile_id uuid references mentor_public_profiles(id) on delete cascade`
-- `expertise_id uuid references mentor_expertise(id) on delete restrict`
-- `created_at timestamptz`
-- composite primary key `(mentor_public_profile_id, expertise_id)`
+Many-to-many junction between a mentor public profile and expertise. Referenced expertise cannot be hard-deleted; it can be deactivated instead.
 
-Hard deletion of expertise is blocked while referenced. Deactivation does not detach existing mentor assignments.
+## Migration Data
 
-## 5. Initial Data Migration
+The migration seeds **only** the eight agreed Mentor Expertise master values:
 
-Seed the eight approved expertise values with deterministic UUIDs and stable slugs:
+1. Lintas kategori kompetisi
+2. Business Plan
+3. Business Case
+4. Marketing
+5. Finance
+6. Economics
+7. Accounting
+8. Proposal Development
 
-1. Lintas kategori kompetisi — `lintas-kategori-kompetisi`
-2. Business Plan — `business-plan`
-3. Business Case — `business-case`
-4. Marketing — `marketing`
-5. Finance — `finance`
-6. Economics — `economics`
-7. Accounting — `accounting`
-8. Proposal Development — `proposal-development`
+The migration does **not** seed, import, copy, or infer any mentor/person roster. Existing hardcoded mentor content is not automatically inserted into Supabase. A public profile is created only from a real mentor account through the mentor/admin workflow.
 
-Seed operations use stable unique slugs/IDs and conflict-safe inserts so re-execution does not duplicate records.
+Because `202609170001_mentor_public_profiles_expertise.sql` has not been applied to hosted Supabase yet, this correction edits that pending migration directly; no corrective migration is required.
 
-Migrate all 26 approved records currently represented in `lib/content/mentors.ts` into `mentor_public_profiles` as published public records with `mentor_user_id = null`. Preserve:
-
-- slug;
-- public display name;
-- tier mapping by canonical `mentor_tiers` value where supplied;
-- headline/title;
-- LinkedIn URL;
-- portrait asset key and photo status;
-- current ordering;
-- achievements/credentials;
-- expertise assignments.
-
-Do not infer an authenticated account owner from name, slug, LinkedIn, email, or any other heuristic.
-
-The existing asset registry remains the authoritative mapping for current bundled portrait files/fallbacks. `portrait_asset_key` preserves that compatibility. `portrait_url` is available for linked mentor-managed external/storage URLs without forcing an image-upload subsystem into this task.
-
-## 6. Ownership and Mutation API
+## Mutation API
 
 ### Mentor
 
-Mentors use a security-definer RPC such as `save_my_mentor_public_profile(...)` rather than broad table update grants. The RPC:
+`get_my_mentor_public_profile()` reads the authenticated mentor's profile/editor options.
 
-- requires `auth.uid()` to be a current active operational mentor;
-- finds or creates that account's linked draft public profile;
-- allows edits only to mentor-controlled fields: display name, headline, LinkedIn, short bio, portrait URL, achievements, and expertise assignments;
-- never changes tier, publication status, sort order, or ownership;
-- accepts only active expertise as new assignments;
-- permits already-assigned inactive expertise to remain or be removed, so historical assignments do not disappear.
+`save_my_mentor_public_profile(...)`:
 
-A read RPC/query returns the mentor's own profile plus assigned expertise/achievements and the expertise selection list (active master rows plus any inactive rows already assigned).
+- requires an active authenticated mentor account;
+- creates that account's Draft profile when missing;
+- updates mentor-controlled fields only;
+- validates URLs, achievements, and expertise selections;
+- permits an already-assigned inactive expertise to remain or be removed;
+- never changes publication status, tier, sort order, or ownership.
 
 ### Admin
 
-Admin RPCs own sensitive lifecycle operations:
+Admin RPCs:
 
-- upsert expertise master row;
-- reorder expertise;
-- safely delete unused expertise or return a `deactivate_required` result when referenced;
-- activate/deactivate expertise;
-- set a linked mentor profile's publication status;
-- ensure a linked draft public profile exists when an admin wants to manage publication before the mentor has edited it.
+- create/update/reorder/activate/deactivate/safely delete expertise;
+- ensure a Draft public profile exists for a selected mentor account;
+- set that mentor account's public profile to Draft or Published.
 
-Admin publication control is integrated into the existing Mentor Management detail flow rather than creating a second mentor-account management page.
+No account-linking RPC is needed because ownership is established when the profile is created.
 
-## 7. RLS and Grants
+## Security
 
-All new tables enable RLS.
+All new tables enable RLS. Direct browser reads are limited to admin/self requirements; writes happen through scoped RPCs.
 
-Direct browser table privileges remain narrow:
+`list_public_mentors()` is the public boundary and returns only explicit published fields. It never returns account IDs, email, WhatsApp, auth metadata, timezone, availability, active-account state, or Draft profiles.
 
-- service role: full access per repository convention;
-- admin authenticated users: read according to admin policies; mutations happen through admin RPCs;
-- mentor authenticated users: read only their linked public profile/children plus expertise needed for their selector; mutations happen through own-profile RPCs;
-- anonymous users: no direct table mutation and no access to account/private profile tables.
+## Runtime Integration
 
-Public directory rendering uses a dedicated safe function `list_public_mentors()` returning only explicit public columns for `publication_status = 'published'`. It never returns email, WhatsApp, auth metadata, operational availability, mentor-user ownership IDs, or unpublished records.
+`app/mentor/page.tsx` and `app/page.tsx` load published profiles through the server-only `listPublishedMentors()` helper. The public UI keeps its existing card, filter, modal, and marquee presentation as much as possible.
 
-The public RPC may return inactive expertise still assigned to a published mentor so deactivation does not silently rewrite historical public data. Deactivation only prevents new mentor selection.
+`lib/content/mentors.ts` must not be a production runtime source after the DB integration. Bundled media metadata may remain in the asset registry; it is not a mentor roster source of truth.
 
-## 8. Runtime Types and Query Layer
+## Mentor UX
 
-Add clear mentor-public domain types under `lib/mentor/public-profile.ts` and update `lib/supabase/database.types.ts` for new tables/RPCs.
+The mentor Profile section remains split into:
 
-The public server helper follows the existing marketing server-query pattern: server-only Supabase publishable client, safe RPC, explicit DTO mapping, and an intentional empty list on query failure. No service-role credential is used to render public pages.
+1. Account Information
+2. Public Mentor Profile
+3. Operational Mentor Status
 
-Public mentor DTO keeps the current card needs stable:
+The public-profile editor supports display name, headline, LinkedIn, bio, portrait URL, expertise, and ordered achievements. Layout must remain contained without horizontal overflow on mobile.
 
-- slug/name/tier/headline;
-- achievements;
-- expertise;
-- LinkedIn;
-- public portrait asset key or URL;
-- photo status;
-- optional short bio.
+## Admin UX
 
-## 9. Public Marketing Integration
+Admin Data master adds Mentor Expertise with responsive management rows/cards and a centered, internally scrollable create/edit dialog.
 
-`app/mentor/page.tsx` becomes async and loads published mentors from the database before rendering `MentorDirectory`.
+Existing Mentor Management gets publication controls for the selected mentor account. If no public profile exists, admin can create its Draft directly; there is no roster matching/linking UI.
 
-`app/page.tsx` loads published mentors alongside hero posters and other public data and passes them to `HomePage`/`MentorMarquee`.
+## Deployment Safety
 
-The existing MentorDirectory, card, marquee, and detail modal visual structure remains substantially unchanged. Their type import moves from hardcoded content to the public mentor DTO. Media rendering is extended only enough to support either the current asset-registry key or an explicit public portrait URL.
+Apply `202609170001_mentor_public_profiles_expertise.sql` to hosted Supabase before deploying application code that expects the new tables/RPCs.
 
-After database integration is complete, `lib/content/mentors.ts` is no longer imported by production runtime and is removed/demoted so it cannot remain a second source of truth.
+The migration is currently unapplied, so it is safe to correct it in place before deployment.
 
-## 10. Mentor Profile Management UX
+## Verification
 
-The existing account `ProfileForm` remains intact.
+Required checks include:
 
-The Mentor Profile page becomes three clear cards instead of one giant form:
-
-1. **Account Information** — existing `ProfileForm` behavior unchanged.
-2. **Public Mentor Profile** — read-only summary with an edit action, then a contained edit form for public fields/expertise/achievements.
-3. **Operational Mentor Status** — existing tier/timezone/account/availability information remains read-only.
-
-The public-profile form:
-
-- uses responsive two-column fields only where useful and collapses to one column;
-- renders expertise as a scalable checkbox list with wrapping labels;
-- shows assigned inactive expertise with an explicit inactive status;
-- supports achievement add/edit/remove and move-up/move-down actions;
-- contains long URLs/text with `min-width: 0` and `overflow-wrap: anywhere`;
-- preserves stable card geometry and scoped error/success states.
-
-## 11. Admin Expertise UX
-
-Add **Mentor Expertise** under Admin **Data master**.
-
-Reuse existing surface/toolbar language but use a dedicated responsive row/card layout instead of a wide desktop-only table. Each row exposes name, stable slug, status, order, edit, and safe delete/deactivate behavior.
-
-At narrow widths the row stacks naturally; the page never requires horizontal scrolling. The create/edit dialog is explicitly centered and constrained to `calc(100vw - mobile spacing)` and `calc(100dvh - vertical spacing)` with internal scroll when needed.
-
-## 12. CSS Safety
-
-New styling is locally scoped to mentor-public-profile and mentor-expertise surfaces. Do not add broad `dialog`, `form`, `table`, or `input` selectors.
-
-Required invariants:
-
-- all relevant grid/flex children have `min-width: 0`;
-- user-generated text uses safe wrapping;
-- no rigid responsive page widths;
-- no `overflow: hidden` used to conceal broken geometry;
-- no page-level horizontal overflow at 360px or larger;
-- buttons/actions can wrap or stack rather than escape cards.
-
-## 13. Error and Empty States
-
-- no expertise configured: explicit empty state;
-- mentor has no expertise: explicit `No expertise selected` state;
-- no published mentors: directory renders its existing-style intentional empty state instead of crashing;
-- DB query errors stay contained and do not expose backend details;
-- public query failure does not fall back to hardcoded roster because the DB is the sole runtime source after migration.
-
-## 14. Deployment / Migration Safety
-
-Create a new forward migration `202609170001_mentor_public_profiles_expertise.sql`; never edit historical migrations.
-
-The hosted Supabase project must receive this migration before deploying code that switches public mentor queries to the database. Otherwise the public query safely returns no mentor data, but the production roster would temporarily disappear.
-
-The PR must explicitly call out this deployment order and manual hosted-Supabase migration requirement if automated migration deployment is not present.
-
-## 15. Verification
-
-Add tests for:
-
-- exact eight expertise seeds and no duplicate seed identities;
-- schema constraints, FKs, RLS, grants, and RPC boundaries;
-- admin expertise create/rename/reorder/activation/deactivation/safe deletion;
-- mentor own-profile save and cross-mentor denial;
-- inactive expertise retention behavior;
-- achievements persistence/order;
-- published-only public query and absence of private account fields;
-- 26-record migration preservation;
+- exactly eight expertise seed rows;
+- no mentor/person seed data in the migration;
+- required `mentor_user_id` ownership;
+- Draft-by-default profile creation;
+- RLS/RPC/public-field boundaries;
+- mentor self-service and admin expertise/publication behavior;
 - production runtime no longer imports the hardcoded mentor roster;
-- public directory/homepage receive database mentor DTOs;
-- admin expertise and mentor profile layout stability at 360×740, 390×844, 768×1024, 1024×768, 1366×768, 1440×900, and a wide desktop;
-- `document.documentElement.scrollWidth <= window.innerWidth` at required viewports;
-- existing auth, scheduling, mentor management, profile management, marketing, and dashboard regressions.
+- responsive/no-horizontal-overflow browser checks;
+- repository `test`, `typecheck`, `lint`, `build`, and relevant Playwright suites.
 
-Final commands:
-
-```bash
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm test:e2e
-```
-
-Use focused Playwright suites where the complete suite requires hosted dependencies not available in CI, but report exactly what was and was not executed.
-
-## 16. Git / PR
-
-Use meaningful logical batches, not micro-commits:
-
-1. design/plan documentation;
-2. database/domain migration + types/security;
-3. mentor/admin/public UI integration + scoped styling;
-4. tests/docs/final fixes as a verification batch where needed.
-
-Open a PR into `main`; do not merge it. PR notes must include migration deployment order, RLS boundary, layout verification, test results, and known limitations.
+Do not merge until CI provides fresh evidence for the repository checks.

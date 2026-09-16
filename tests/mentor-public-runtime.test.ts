@@ -73,7 +73,7 @@ test('admin exposes mentor expertise master data management', () => {
   assert.match(css, /max-height:\s*calc\(100dvh - 32px\)/)
 })
 
-test('admin publication controls only operate on explicitly linked mentor profiles', () => {
+test('admin publication controls create and publish the selected mentor account profile', () => {
   const publicationPath = join(root, 'components/admin/mentor-publication-control.tsx')
   assert.equal(existsSync(publicationPath), true, 'admin mentor publication control must exist')
   const publication = read('components/admin/mentor-publication-control.tsx')
@@ -82,6 +82,6 @@ test('admin publication controls only operate on explicitly linked mentor profil
   assert.match(publication, /admin_ensure_mentor_public_profile/)
   assert.match(publication, /admin_set_mentor_publication/)
   assert.match(publication, /Belum memiliki profil publik/)
-  assert.doesNotMatch(publication, /admin_link_mentor_public_profile/)
+  assert.doesNotMatch(publication, /legacy public profiles|nama atau email/i)
   assert.match(management, /MentorPublicationControl/)
 })

@@ -32,7 +32,7 @@ export type MentorAvailabilityRule = { id:string; mentor_id:string; week_start_d
 export type ManagedMentor = { user_id:string; email:string; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; tier_id:string|null; tier_code:string|null; tier_name:string|null; timezone:string; is_active:boolean; mentor_setup_completed_at:string|null; created_at:string; availability_configured:boolean; availability_current_week_configured:boolean; availability_next_week_configured:boolean }
 export type MentorPublicationStatus = 'draft' | 'published'
 export type MentorPhotoStatus = 'ready' | 'missing'
-export type MentorPublicProfile = { id:string; mentor_user_id:string|null; public_slug:string; display_name:string; tier_id:string|null; headline:string|null; linkedin_url:string|null; short_bio:string|null; portrait_asset_key:string|null; portrait_url:string|null; photo_status:MentorPhotoStatus; publication_status:MentorPublicationStatus; sort_order:number; created_at:string; updated_at:string }
+export type MentorPublicProfile = { id:string; mentor_user_id:string; public_slug:string; display_name:string; tier_id:string|null; headline:string|null; linkedin_url:string|null; short_bio:string|null; portrait_asset_key:string|null; portrait_url:string|null; photo_status:MentorPhotoStatus; publication_status:MentorPublicationStatus; sort_order:number; created_at:string; updated_at:string }
 export type MentorPublicAchievement = { id:string; mentor_public_profile_id:string; achievement:string; sort_order:number; created_at:string; updated_at:string }
 export type MentorExpertise = { id:string; name:string; slug:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MentorPublicProfileExpertise = { mentor_public_profile_id:string; expertise_id:string; created_at:string }
@@ -78,7 +78,7 @@ export type Database = {
       mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier,"code"|"name">>
       mentor_profiles: Table<MentorProfile, Partial<MentorProfile> & Pick<MentorProfile,"user_id">>
       mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule,"mentor_id"|"week_start_date"|"day_of_week"|"start_time"|"end_time">>
-      mentor_public_profiles: Table<MentorPublicProfile, Partial<MentorPublicProfile> & Pick<MentorPublicProfile,'public_slug'|'display_name'>>
+      mentor_public_profiles: Table<MentorPublicProfile, Partial<MentorPublicProfile> & Pick<MentorPublicProfile,'mentor_user_id'|'public_slug'|'display_name'>>
       mentor_public_achievements: Table<MentorPublicAchievement, Partial<MentorPublicAchievement> & Pick<MentorPublicAchievement,'mentor_public_profile_id'|'achievement'|'sort_order'>>
       mentor_expertise: Table<MentorExpertise, Partial<MentorExpertise> & Pick<MentorExpertise,'name'|'slug'|'sort_order'>>
       mentor_public_profile_expertise: Table<MentorPublicProfileExpertise, Partial<MentorPublicProfileExpertise> & Pick<MentorPublicProfileExpertise,'mentor_public_profile_id'|'expertise_id'>>
@@ -107,7 +107,6 @@ export type Database = {
       admin_reorder_mentor_expertise: { Args:{p_ids:string[]}; Returns:MentorExpertise[] }
       admin_delete_mentor_expertise: { Args:{p_id:string}; Returns:string }
       admin_ensure_mentor_public_profile: { Args:{p_mentor_id:string}; Returns:MentorPublicProfile }
-      admin_link_mentor_public_profile: { Args:{p_public_profile_id:string;p_mentor_id:string}; Returns:MentorPublicProfile }
       admin_set_mentor_publication: { Args:{p_mentor_id:string;p_status:MentorPublicationStatus}; Returns:MentorPublicProfile }
       list_public_mentors: { Args:Record<PropertyKey,never>; Returns:PublicMentorDirectoryRow[] }
       import_institutions_batch: { Args:{p_rows:Json}; Returns:Json }
