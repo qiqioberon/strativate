@@ -24,6 +24,7 @@ import './profile-management.css'
 import './calendar-integration.css'
 import './calendar-mobile-polish.css'
 import './admin-mentoring-scheduling.css'
+import './mentee-mentor-availability.css'
 import './marketing-mobile-product-polish.css'
 
 export const metadata: Metadata = {
