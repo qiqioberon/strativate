@@ -9,6 +9,20 @@
 .auth-heading { margin: 0 0 30px; }
 .auth-mode-switch { justify-content: center; min-height: 48px; margin-top: 4px; border-color: color-mix(in srgb, var(--deep-red) 20%, var(--border)); color: var(--deep-red); background: #fff8f2; }
 .auth-mode-switch:hover { border-color: var(--primary); background: #fff1e5; }
+.auth-persistence-dialog { width: min(92vw, 480px); max-width: none; padding: 0; border: 0; border-radius: 18px; color: var(--foreground); background: transparent; box-shadow: 0 24px 80px rgb(32 15 10 / .28); }
+.auth-persistence-dialog::backdrop { background: rgb(35 14 10 / .58); backdrop-filter: blur(4px); }
+.auth-persistence-dialog__surface { position: relative; display: grid; gap: 20px; padding: 30px; border: 1px solid color-mix(in srgb, var(--deep-red) 12%, var(--border)); border-radius: 18px; background: #fffaf6; }
+.auth-persistence-dialog__close { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; color: var(--muted-foreground); background: transparent; cursor: pointer; }
+.auth-persistence-dialog__close:hover { color: var(--deep-red); background: #fff1e5; }
+.auth-persistence-dialog__close:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.auth-persistence-dialog__icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--deep-red); background: #ffe9d7; }
+.auth-persistence-dialog__copy { display: grid; gap: 9px; padding-right: 34px; }
+.auth-persistence-dialog__copy h2 { margin: 0; font-size: clamp(22px, 5vw, 28px); line-height: 1.08; letter-spacing: -.035em; }
+.auth-persistence-dialog__copy p { margin: 0; color: var(--muted-foreground); font-size: 14px; line-height: 1.6; }
+.auth-persistence-dialog__actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'secondary primary'; gap: 10px; }
+.auth-persistence-dialog__actions .button { justify-content: center; min-height: 48px; }
+.auth-persistence-dialog__primary { grid-area: primary; }
+.auth-persistence-dialog__secondary { grid-area: secondary; }
 .auth-side { position: relative; isolation: isolate; overflow: hidden; min-width: 0; padding: clamp(40px, 5vw, 70px); background: var(--deep-red); }
 .auth-side__grid { position: absolute; z-index: -1; inset: -12%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 18px; opacity: .32; transform: rotate(-8deg); animation: auth-panel-drift 22s ease-in-out infinite alternate; }
 .auth-side__grid::before, .auth-side__grid::after { position: absolute; content: ''; }
@@ -27,8 +41,9 @@
 .auth-side p { max-width: 620px; font-size: clamp(45px, 5vw, 80px); line-height: .95; letter-spacing: -.09em; }
 .auth-side strong { color: var(--yellow); }
 @keyframes auth-panel-drift { from { transform: rotate(-8deg) translate3d(-1.5%, -1%, 0); } to { transform: rotate(-8deg) translate3d(2%, 1.5%, 0); } }
-@media (prefers-reduced-motion: reduce) { .auth-side__grid { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .auth-side__grid { animation: none; }.auth-persistence-dialog::backdrop { backdrop-filter: none; } }
 @media (max-width: 800px) { .auth-back { margin-bottom: 20px; }.auth-heading { margin-bottom: 26px; }.auth-side { display: none; } }
+@media (max-width: 520px) { .auth-persistence-dialog { width: min(calc(100vw - 28px), 480px); }.auth-persistence-dialog__surface { gap: 18px; padding: 24px 18px 18px; }.auth-persistence-dialog__copy { padding-right: 30px; }.auth-persistence-dialog__actions { grid-template-columns: 1fr; grid-template-areas: 'primary' 'secondary'; } }
 .mentor-invitations { margin: 24px 0; padding: 20px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .mentor-invitations h3 { font-weight: 700; }
 .mentor-invitations > p { margin: 10px 0; color: var(--muted-foreground); font-size: 13px; }

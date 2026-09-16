@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { LogOut } from 'lucide-react'
+import { clearBrowserAuthPersistenceMode } from '@/lib/auth/session-persistence'
 import { createClient } from '@/lib/supabase/client'
 export function SignOut({ className, withIcon = false }: { className?: string; withIcon?: boolean }) {
   const [busy, setBusy] = useState(false)
@@ -10,6 +11,7 @@ export function SignOut({ className, withIcon = false }: { className?: string; w
     try {
       const { error } = await createClient().auth.signOut({ scope: 'local' })
       if (error) throw error
+      clearBrowserAuthPersistenceMode()
       window.location.replace('/auth')
     } catch { setError(true); setBusy(false) }
   }
