@@ -60,6 +60,65 @@ function calendarPayload(role: 'admin' | 'mentor' | 'mentee', connected = false)
   }
 }
 
+function denseSchedulePayload() {
+  const now = new Date()
+  const base = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 2, 0, 0))
+  const mentorDefinitions = [
+    { id: mentorId, name: 'Muhammad Aqil — Mentor dengan Nama Panjang untuk Layout' },
+    { id: '93000000-0000-0000-0000-000000000003', name: 'Navira Apriliani — Young Professional' },
+    { id: '93000000-0000-0000-0000-000000000004', name: 'Fajri Alan — Competition Mentor' },
+  ]
+
+  const mentors = mentorDefinitions.map((mentor) => {
+    const availability = Array.from({ length: 10 }, (_, rangeIndex) => {
+      const dayOffset = Math.floor(rangeIndex / 2)
+      const afternoonOffset = rangeIndex % 2 === 0 ? 0 : 5 * 60 * 60_000
+      const start = new Date(base.getTime() + dayOffset * 24 * 60 * 60_000 + afternoonOffset)
+      const end = new Date(start.getTime() + 3.5 * 60 * 60_000)
+      return { start: start.toISOString(), end: end.toISOString() }
+    })
+    return {
+      mentorId: mentor.id,
+      mentorName: mentor.name,
+      timezone: 'Asia/Jakarta',
+      availability,
+      googleCalendarStatus: 'verified' as const,
+    }
+  })
+
+  const slots = mentors.flatMap((mentor) => mentor.availability.flatMap((range) => {
+    const rangeStart = new Date(range.start)
+    return Array.from({ length: 4 }, (_, slotIndex) => {
+      const start = new Date(rangeStart.getTime() + slotIndex * 30 * 60_000)
+      const end = new Date(start.getTime() + 75 * 60_000)
+      return {
+        mentorId: mentor.mentorId,
+        mentorName: mentor.mentorName,
+        timezone: mentor.timezone,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        menteeConflict: false,
+        googleCalendarStatus: 'verified' as const,
+      }
+    })
+  }))
+
+  return {
+    context: {
+      sessionId,
+      focusName: 'Business Analysis & Case Structuring',
+      durationMinutes: 75,
+      sessionNumber: 2,
+      purchasedSessions: 3,
+      requiredTierName: 'Young Professional',
+      mentors,
+    },
+    slots,
+    mentorWarnings: [],
+    message: '',
+  }
+}
+
 async function stubAdminCommerce(page: Page) {
   await page.route('**/rest/v1/rpc/list_admin_commerce_orders', route => route.fulfill({
     status: 200,
@@ -93,6 +152,14 @@ async function stubCalendar(page: Page, role: 'admin' | 'mentor' | 'mentee', con
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify(calendarPayload(role, connected)),
+  }))
+}
+
+async function stubDenseSchedule(page: Page) {
+  await page.route(`**/api/admin/private-mentoring/sessions/${sessionId}/slots`, route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(denseSchedulePayload()),
   }))
 }
 
@@ -203,6 +270,125 @@ test('admin reschedules from an actual slot without a manual datetime field', as
   await schedule.getByRole('button', { name: 'Konfirmasi slot' }).click()
   await expect.poll(() => scheduledBody?.mentorId).toBe(mentorId)
   expect(scheduledBody).toEqual({ mentorId, start: slotStart.toISOString() })
+})
+
+test('dense admin scheduling keeps one primary vertical scroll surface on desktop and mobile', async ({ page }) => {
+  await stubAdminCommerce(page)
+  await stubCalendar(page, 'admin')
+  await stubDenseSchedule(page)
+
+  for (const size of [
+    { width: 1200, height: 780 },
+    { width: 375, height: 667 },
+  ]) {
+    await page.setViewportSize(size)
+    await openAdminCalendar(page, size.width)
+    await page.locator('.calendar-event.strativate').first().click()
+    await page.getByRole('button', { name: 'Reschedule' }).click()
+
+    const schedule = page.getByRole('dialog', { name: 'Jadwalkan Private Mentoring' })
+    await expect(schedule).toBeVisible()
+    await expectDialogInViewport(page, schedule)
+    await expectNoDocumentOverflow(page)
+    await expect(schedule.locator('.schedule-mentor-card')).toHaveCount(3)
+    await expect(schedule.locator('.schedule-availability-chip')).toHaveCount(30)
+    await expect(schedule.locator('.schedule-slots button')).toHaveCount(120)
+    await expect(schedule.getByRole('button', { name: 'Tutup penjadwalan' })).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Batal' })).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Konfirmasi slot' })).toBeVisible()
+
+    const layout = await schedule.evaluate((dialog) => {
+      const body = dialog.querySelector<HTMLElement>('.schedule-dialog__body')!
+      const availabilityPanel = dialog.querySelector<HTMLElement>('.schedule-availability-panel')!
+      const slotPanel = dialog.querySelector<HTMLElement>('.schedule-slot-panel')!
+      const mentorGrid = dialog.querySelector<HTMLElement>('.schedule-mentor-grid')!
+      const availabilityLists = [...dialog.querySelectorAll<HTMLElement>('.schedule-availability-scroll')]
+      const slotList = dialog.querySelector<HTMLElement>('.schedule-slot-panel .schedule-slot-list')!
+      const summary = dialog.querySelector<HTMLElement>('.schedule-dialog__summary')!
+      const filters = dialog.querySelector<HTMLElement>('.schedule-filter-bar')!
+      const style = (element: Element) => getComputedStyle(element)
+      const columns = (element: Element) => style(element).gridTemplateColumns.split(' ').filter(Boolean).length
+      return {
+        dialogHorizontalOverflow: dialog.scrollWidth - dialog.clientWidth,
+        body: {
+          overflowX: style(body).overflowX,
+          overflowY: style(body).overflowY,
+        },
+        availabilityPanel: {
+          clientHeight: availabilityPanel.clientHeight,
+          scrollHeight: availabilityPanel.scrollHeight,
+        },
+        slotPanel: {
+          clientHeight: slotPanel.clientHeight,
+          scrollHeight: slotPanel.scrollHeight,
+        },
+        mentorGrid: {
+          overflowY: style(mentorGrid).overflowY,
+          maxHeight: style(mentorGrid).maxHeight,
+          clientHeight: mentorGrid.clientHeight,
+          scrollHeight: mentorGrid.scrollHeight,
+        },
+        availabilityLists: availabilityLists.map((element) => ({
+          overflowY: style(element).overflowY,
+          maxHeight: style(element).maxHeight,
+          clientHeight: element.clientHeight,
+          scrollHeight: element.scrollHeight,
+        })),
+        slotList: {
+          overflowY: style(slotList).overflowY,
+          maxHeight: style(slotList).maxHeight,
+          clientHeight: slotList.clientHeight,
+          scrollHeight: slotList.scrollHeight,
+        },
+        summaryColumns: columns(summary),
+        mentorColumns: columns(mentorGrid),
+        filterColumns: columns(filters),
+      }
+    })
+
+    expect(layout.dialogHorizontalOverflow).toBeLessThanOrEqual(0.5)
+    expect(layout.body.overflowX).toBe('hidden')
+    expect(layout.body.overflowY).toBe('auto')
+    expect(layout.availabilityPanel.scrollHeight).toBeLessThanOrEqual(layout.availabilityPanel.clientHeight + 1)
+    expect(layout.slotPanel.scrollHeight).toBeLessThanOrEqual(layout.slotPanel.clientHeight + 1)
+    expect(layout.mentorGrid.overflowY).toBe('visible')
+    expect(layout.mentorGrid.maxHeight).toBe('none')
+    expect(layout.mentorGrid.scrollHeight).toBeLessThanOrEqual(layout.mentorGrid.clientHeight + 1)
+    for (const availability of layout.availabilityLists) {
+      expect(availability.overflowY).toBe('visible')
+      expect(availability.maxHeight).toBe('none')
+      expect(availability.scrollHeight).toBeLessThanOrEqual(availability.clientHeight + 1)
+    }
+    expect(layout.slotList.overflowY).toBe('visible')
+    expect(layout.slotList.maxHeight).toBe('none')
+    expect(layout.slotList.scrollHeight).toBeLessThanOrEqual(layout.slotList.clientHeight + 1)
+
+    if (size.width <= 430) {
+      expect(layout.summaryColumns).toBe(1)
+      expect(layout.mentorColumns).toBe(1)
+      expect(layout.filterColumns).toBe(1)
+    } else {
+      expect(layout.summaryColumns).toBe(4)
+      expect(layout.mentorColumns).toBe(2)
+      expect(layout.filterColumns).toBe(3)
+    }
+
+    const lastAvailability = schedule.locator('.schedule-availability-chip').last()
+    await lastAvailability.scrollIntoViewIfNeeded()
+    await expect(lastAvailability).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Batal' })).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Konfirmasi slot' })).toBeVisible()
+
+    const lastSlot = schedule.locator('.schedule-slots button').last()
+    await lastSlot.scrollIntoViewIfNeeded()
+    await expect(lastSlot).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Tutup penjadwalan' })).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Batal' })).toBeVisible()
+    await expect(schedule.getByRole('button', { name: 'Konfirmasi slot' })).toBeVisible()
+
+    await schedule.getByRole('button', { name: 'Batal' }).click()
+    await expect(schedule).toBeHidden()
+  }
 })
 
 test('mentee calendar keeps Strativate schedule read-only with Meet and WhatsApp actions', async ({ page }) => {
