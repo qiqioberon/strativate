@@ -36,19 +36,29 @@ test('schedule dialog filters future availability by week and day and exposes Go
 
 test('mentoring session and scheduling dialogs have dedicated responsive polish loaded after calendar styles',()=>{
   const layout=read('app/layout.tsx')
+  const browserFixtureLayout=read('tests/fixtures/carousel-interaction/app/layout.tsx')
   assert.equal(existsSync('app/admin-mentoring-scheduling.css'),true)
   const css=read('app/admin-mentoring-scheduling.css')
   assert.match(layout,/calendar-integration\.css[\s\S]*admin-mentoring-scheduling\.css/)
+  assert.match(browserFixtureLayout,/calendar-integration\.css[\s\S]*admin-mentoring-scheduling\.css/)
   assert.match(css,/\.mentoring-enrollment-page\s*>\s*dialog\.calendar-dialog:not\(\.schedule-dialog\)/)
   assert.match(css,/\.schedule-dialog__summary/)
   assert.match(css,/\.schedule-mentor-card/)
   assert.match(css,/@media\s*\(max-width:\s*760px\)/)
 })
 
-test('mentor availability and session actions are compact and scrollable',()=>{
+test('schedule dialog keeps one primary vertical scroll surface while session actions stay compact',()=>{
   const css=read('app/admin-mentoring-scheduling.css')
-  assert.match(css,/schedule-availability-scroll[\s\S]*?max-height:[^;}]+;[\s\S]*?overflow-y:auto/)
-  assert.match(css,/schedule-mentor-grid[\s\S]*?max-height:[^;}]+;[\s\S]*?overflow:auto/)
+  assert.match(css,/\.schedule-dialog\{[^}]*max-height:min\(calc\(100dvh - 28px\),920px\);[^}]*overflow:hidden/)
+  assert.match(css,/\.schedule-dialog__body\{[^}]*overflow-x:hidden;overflow-y:auto;[^}]*overscroll-behavior:contain/)
+  assert.match(css,/\.schedule-mentor-grid\{[^}]*align-items:start/)
+  assert.doesNotMatch(css,/\.schedule-mentor-grid\{[^}]*max-height:/)
+  assert.match(css,/\.schedule-availability-scroll\{min-width:0\}/)
+  assert.doesNotMatch(css,/\.schedule-availability-scroll\{[^}]*max-height:/)
+  assert.match(css,/\.schedule-slot-panel \.schedule-slot-list\{max-height:none;overflow:visible;overscroll-behavior:auto;padding:0 16px\}/)
+  assert.match(css,/\.schedule-mentor-identity strong,\.schedule-mentor-identity small\{display:block;overflow-wrap:anywhere\}/)
+  assert.doesNotMatch(css,/\.schedule-mentor-identity strong,\.schedule-mentor-identity small\{[^}]*text-overflow:ellipsis/)
   assert.match(css,/button-row \.button\{[\s\S]*?min-height:34px[\s\S]*?padding:7px 11px/)
   assert.match(css,/mentoring-session-detail-row>\.ops-status\{[\s\S]*?align-self:start/)
+  assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?\.schedule-mentor-grid\{padding:9px\}[\s\S]*?\.schedule-slot-panel \.schedule-slot-list\{padding:0 11px\}/)
 })
