@@ -1,5 +1,17 @@
 # Strativate source conflict register
 
+## 17 September 2026 mentor public-profile ownership resolution
+
+The approved 26-row mentor roster remains the factual bootstrap source, but production runtime ownership now moves to the dedicated database-backed public mentor domain introduced by `202609170001_mentor_public_profiles_expertise.sql`. `public.mentor_public_profiles`, `public.mentor_public_achievements`, `public.mentor_expertise`, and `public.mentor_public_profile_expertise` own public mentor profile content and expertise relationships. Public pages consume only the safe `list_public_mentors()` RPC; `lib/content/mentors.ts` is retained for source/migration provenance and is no longer a production runtime source of truth.
+
+This public-profile domain remains deliberately separate from the existing operational `public.mentor_profiles` table. Operational `mentor_profiles` continues to own authenticated mentor-account state such as tier linkage, timezone, active status, and availability. The public-profile table may optionally link to an operational mentor through `mentor_user_id`, but that relationship must be explicit.
+
+All 26 approved legacy public roster records are migrated as published public profiles with `mentor_user_id = null`. **Ownership must never be inferred from display name, email, title, slug similarity, or any other identity guess.** A mentor account may create its own draft profile through the account-bound RPC, and an administrator may intentionally link an existing legacy public profile only when the ownership relationship is known. The current admin UI deliberately does not expose any name/email auto-link flow.
+
+Portrait migration is staged rather than destructive. Existing approved/fallback media continue through `portrait_asset_key` and the asset registry; `portrait_url` is an optional future-compatible public URL. This phase adds no portrait upload subsystem and does not move or duplicate the existing 19 optimized portraits or seven explicit fallbacks.
+
+Deployment order is mandatory: apply `supabase/migrations/202609170001_mentor_public_profiles_expertise.sql` to hosted Supabase **before** deploying an application revision that calls the new public/mentor/admin RPCs. Until that migration is applied, the previous application version should remain deployed.
+
 ## 16 September 2026 Intensive Mentoring catalog resolution
 
 The current requester explicitly approved using the supplied 2026 Indonesian Intensive Mentoring guidebook as the business source for the domain-owned Intensive Mentoring catalog. The approved database-backed public catalog may therefore use the guidebook's package names and prices for **Intensive** (4 sessions/month, Rp1.150.000 with Rp1.400.000 reference), **Super Intensive** (8 sessions/month, Rp2.200.000 with Rp2.800.000 reference), the consultation-only international competition option, **Laporan Performa Terperinci** (+Rp150.000), **Simulasi Penjurian** (+Rp300.000), **Bundel Skill Builder** (Rp1.250.000), and **Bundel Competition Ready** (Rp2.500.000). Guidebook-backed package/add-on features and bundle composition may also be stored as domain catalog data.
@@ -71,7 +83,7 @@ These conflicts come from the September 2026 frontend content/asset audit. They 
 | Case guide product price | No current runtime product price from the retired catalog; Digital Product domain owns approved records | Prior demo/catalog values conflicted and no supplied product pricing source exists | Enter only approved Digital Product facts in its domain. | P0 |
 | Presentation kit name/price | No approved runtime price/name beyond the Digital Product domain | Prior demo/catalog values conflicted; no supplied product source | Confirm final name, format, description, and price before publication. | P0 |
 | Competition workbook catalog status | No approved runtime product record | Prior demo content included it; no supplied product source | Confirm whether it exists and its final details before publication. | P0 |
-| Mentor identities and proof | Public roster uses supplied workbook/handoff data; no ratings | Earlier demo identities/ratings were not production data | Continue using approved roster sources; ratings only if real system data exists. | Guardrail |
+| Mentor identities and proof | Public runtime now uses the database-backed mentor public-profile domain seeded from the approved 26-row workbook/handoff roster; no ratings. Legacy rows remain deliberately unlinked to authenticated mentor accounts until ownership is explicitly known. | Earlier demo identities/ratings were not production data | Continue using approved profile facts only; never infer account ownership; ratings only if real system data exists. | Guardrail |
 | Brand/hero quote | Current public copy follows approved handoff | Earlier finalist/win framing lacked approved production proof | Do not reintroduce unsupported factual badges/claims. | Guardrail |
 | Contact master | Approved public contact record is centralized | Guidebooks also show phone/email/site/social context | Keep the centralized record synchronized with approved updates. | P1 |
 | SEO metadata | Current canonical domain and metadata are implemented; final campaign OG copy may evolve | Guidebooks/proposal provide no complete SEO master | Keep factual metadata source-backed. | P1 |
