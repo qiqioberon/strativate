@@ -3,10 +3,11 @@
 import { Award, ExternalLink, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
-import { AssetMedia } from './asset-media'
-import type { Mentor } from '@/lib/content/mentors'
+import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 
-export function MentorDetailModal({ mentor, onClose }: { mentor: Mentor | null; onClose: () => void }) {
+import { MentorPortraitMedia } from './mentor-portrait-media'
+
+export function MentorDetailModal({ mentor, onClose }: { mentor: PublicMentor | null; onClose: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -30,11 +31,12 @@ export function MentorDetailModal({ mentor, onClose }: { mentor: Mentor | null; 
       {mentor ? (
         <div className="marketing-mentor-dialog__panel">
           <button className="marketing-mentor-dialog__close" type="button" onClick={() => dialogRef.current?.close()} aria-label="Tutup detail mentor" data-testid="mentor-modal-close-button"><X aria-hidden="true" size={20} /></button>
-          <div className="marketing-mentor-dialog__media"><AssetMedia assetKey={mentor.portrait} sizes="(max-width: 620px) 90vw, 35vw" /></div>
+          <div className="marketing-mentor-dialog__media"><MentorPortraitMedia mentor={mentor} sizes="(max-width: 620px) 90vw, 35vw" /></div>
           <div className="marketing-mentor-dialog__content">
             <span data-testid="mentor-modal-tier">{mentor.tier ?? 'Mentor Strativate'}</span>
             <h2 id="mentor-modal-heading" data-testid="mentor-modal-name">{mentor.name}</h2>
             {mentor.title ? <p data-testid="mentor-modal-title">{mentor.title}</p> : null}
+            {mentor.shortBio ? <p data-testid="mentor-modal-bio">{mentor.shortBio}</p> : null}
             <section className="marketing-mentor-dialog__section" data-testid="mentor-modal-expertise-section">
               <h3><Sparkles aria-hidden="true" size={17} /> Fokus keahlian</h3>
               <div className="marketing-mentor-card__expertise">{mentor.expertise.map((item) => <span key={item}>{item}</span>)}</div>

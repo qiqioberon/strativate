@@ -27,6 +27,7 @@ import { MentorOverview, type MentorDashboardSection } from '@/components/mentor
 import { AvailabilityPanel, MentorProfilePanel, NotificationsPanel } from '@/components/mentor/dashboard/mentor-secondary-sections'
 import { displayName } from '@/lib/auth/rules'
 import { buildMentorOverview, type MentorAvailabilityState, type MentorDashboardData } from '@/lib/mentor/dashboard'
+import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
 
 const nav = [
   { id: 'overview' as const, label: 'Ringkasan', icon: LayoutDashboard },
@@ -39,7 +40,15 @@ const nav = [
   { id: 'profile' as const, label: 'Profil', icon: UserRound },
 ]
 
-export function MentorDashboardClient({ initialData }: { initialData: MentorDashboardData }) {
+export function MentorDashboardClient({
+  initialData,
+  initialPublicProfile,
+  publicProfileError,
+}: {
+  initialData: MentorDashboardData
+  initialPublicProfile: MyMentorPublicProfileData
+  publicProfileError: string | null
+}) {
   const account = useAccount()
   const router = useRouter()
   const [section, setSection] = useState<MentorDashboardSection>('overview')
@@ -73,7 +82,7 @@ export function MentorDashboardClient({ initialData }: { initialData: MentorDash
         {section === 'availability' ? <AvailabilityPanel mentorId={account.id} onSaved={setAvailability} open={open}/> : null}
         {section === 'history' ? <HistoryPanel data={initialData} open={open} onRetry={retry}/> : null}
         {section === 'notifications' ? <NotificationsPanel open={open}/> : null}
-        {section === 'profile' ? <MentorProfilePanel data={{ ...initialData, availability }} open={open}/> : null}
+        {section === 'profile' ? <MentorProfilePanel data={{ ...initialData, availability }} publicProfile={initialPublicProfile} publicProfileError={publicProfileError} open={open}/> : null}
       </div>
     </main>
   </div>

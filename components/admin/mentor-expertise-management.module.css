@@ -1,0 +1,319 @@
+.page {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.header > div {
+  display: grid;
+  min-width: 0;
+  max-width: 760px;
+  gap: 6px;
+}
+
+.header h2,
+.header p {
+  overflow-wrap: anywhere;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.search,
+.filter {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.search {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  padding: 0 11px;
+  border: 1px solid #e4e7e9;
+  border-radius: 11px;
+}
+
+.search input,
+.filter select,
+.dialogBody input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid #e4e7e9;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.search input {
+  border: 0;
+  outline: 0;
+}
+
+.filter select,
+.dialogBody input {
+  padding: 0 11px;
+}
+
+.list {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto) auto;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.identity,
+.meta {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.identity strong,
+.identity code,
+.meta span {
+  overflow-wrap: anywhere;
+}
+
+.identity code {
+  color: var(--muted-foreground);
+  font-size: .72rem;
+}
+
+.meta {
+  justify-items: start;
+  font-size: .75rem;
+}
+
+.actions {
+  display: flex;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.iconButton,
+.deleteButton,
+.closeButton {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #e1e5e8;
+  background: #fff;
+}
+
+.iconButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}
+
+.deleteButton {
+  grid-template-columns: auto auto;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+  color: #a33b35;
+}
+
+.iconButton:disabled,
+.deleteButton:disabled {
+  opacity: .5;
+}
+
+.empty,
+.error,
+.message {
+  min-width: 0;
+  padding: 14px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  border: 1px dashed var(--border);
+  color: var(--muted-foreground);
+  background: #fafbfc;
+}
+
+.error {
+  border: 1px solid #efc2bf;
+  color: #8f2d28;
+  background: #fff7f6;
+}
+
+.message {
+  border: 1px solid #bddfc8;
+  color: #23613e;
+  background: #f4fbf6;
+}
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 90px #22150e33;
+}
+
+.dialog::backdrop {
+  background: #160e0966;
+  backdrop-filter: blur(3px);
+}
+
+.dialogSurface {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+}
+
+.dialogHeader,
+.dialogActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.dialogHeader {
+  border-bottom: 1px solid var(--border);
+}
+
+.dialogHeader > div {
+  min-width: 0;
+}
+
+.dialogHeader h2 {
+  overflow-wrap: anywhere;
+}
+
+.closeButton {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 999px;
+}
+
+.dialogBody {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  padding: 18px;
+  overflow: auto;
+}
+
+.dialogBody label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  font-size: .8rem;
+  font-weight: 650;
+}
+
+.checkbox {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.checkbox input {
+  width: auto;
+  height: auto;
+}
+
+.helper {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: .76rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .toolbar,
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    grid-column: auto;
+    justify-content: stretch;
+  }
+
+  .actions .button,
+  .deleteButton {
+    flex: 1 1 auto;
+  }
+
+  .header > .button {
+    width: 100%;
+  }
+
+  .dialogHeader,
+  .dialogActions,
+  .dialogBody {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .dialogActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

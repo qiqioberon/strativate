@@ -11,15 +11,15 @@ import {
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
+import type { PublicDigitalProduct } from '@/lib/commerce/types'
+import { socialProof } from '@/lib/content/brand'
 import {
   bigClassPlaceholder,
   faqPreview,
 } from '@/lib/content/marketing-content'
-import type { PublicDigitalProduct } from '@/lib/commerce/types'
-import { socialProof } from '@/lib/content/brand'
-import { mentors } from '@/lib/content/mentors'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
+import type { PublicMentor } from '@/lib/mentor/public-profile'
 import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
@@ -32,10 +32,12 @@ import { ProgramCard, type MarketingProgram } from './program-card'
 
 export function HomePage({
   heroPosters,
+  mentors,
   digitalProducts,
   digitalProductsEnabled,
 }: {
   heroPosters: MarketingHeroPosterView[]
+  mentors: PublicMentor[]
   digitalProducts: PublicDigitalProduct[]
   digitalProductsEnabled: boolean
 }) {
