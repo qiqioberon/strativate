@@ -19,7 +19,7 @@ import {
 } from '@/lib/content/marketing-content'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
-import type { PublicMentor } from '@/lib/mentor/public-profile'
+import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
