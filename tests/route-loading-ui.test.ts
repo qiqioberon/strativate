@@ -6,32 +6,41 @@ import test from 'node:test'
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-test('hard-load brand intro is the only global loading concern', () => {
+test('hard-load brand intro owns the one-time bootstrap progress experience', () => {
   assert.equal(existsSync(join(root, 'components/navigation/initial-brand-intro.tsx')), true)
   assert.equal(existsSync(join(root, 'components/navigation/initial-brand-intro.module.css')), true)
   const intro = read('components/navigation/initial-brand-intro.tsx')
   const layout = read('app/layout.tsx')
   assert.match(intro, /variant="wordmark"/)
   assert.match(intro, /data-testid="initial-brand-intro"/)
+  assert.match(intro, /data-testid="initial-load-progress"/)
   assert.match(layout, /InitialBrandIntro/)
   assert.doesNotMatch(layout, /RouteLoadingMode/)
 })
 
-test('hard-load intro owns a short entrance and exit lifecycle', () => {
+test('hard-load intro waits for page load, warms routes, reaches 100, then exits', () => {
   const intro = read('components/navigation/initial-brand-intro.tsx')
   const css = read('components/navigation/initial-brand-intro.module.css')
-  assert.match(intro, /INTRO_EXIT_START_MS\s*=\s*650/)
-  assert.match(intro, /INTRO_REMOVE_MS\s*=\s*900/)
-  assert.match(intro, /prefers-reduced-motion:\s*reduce/)
+  assert.match(intro, /document\.readyState === 'complete'/)
+  assert.match(intro, /addEventListener\('load'/)
+  assert.match(intro, /router\.prefetch/)
+  assert.match(intro, /BOOTSTRAP_DURATION_MS\s*=\s*2400/)
+  assert.match(intro, /Math\.min\(100/)
   assert.match(css, /@keyframes\s+intro-wordmark/)
   assert.match(css, /@keyframes\s+intro-sweep/)
   assert.match(css, /@keyframes\s+intro-exit/)
   assert.match(css, /prefers-reduced-motion:\s*reduce/)
 })
 
-test('internal navigation does not install a root full-screen loading boundary', () => {
-  assert.equal(existsSync(join(root, 'app/loading.tsx')), false)
+test('root loading fallback exists for cache misses without restoring the old client-ready overlay mode', () => {
+  const loading = read('app/loading.tsx')
+  const loader = read('components/navigation/branded-route-loading.tsx')
+  const css = read('components/navigation/branded-route-loading.module.css')
+
+  assert.match(loading, /BrandedRouteLoading/)
+  assert.match(loader, /data-testid="route-loading-overlay"/)
+  assert.match(loader, /data-testid="route-loading-progress"/)
+  assert.match(loader, /role="status"/)
+  assert.match(css, /prefers-reduced-motion:\s*reduce/)
   assert.equal(existsSync(join(root, 'components/navigation/route-loading-mode.tsx')), false)
-  assert.equal(existsSync(join(root, 'components/navigation/branded-route-loading.tsx')), false)
-  assert.equal(existsSync(join(root, 'components/navigation/branded-route-loading.module.css')), false)
 })

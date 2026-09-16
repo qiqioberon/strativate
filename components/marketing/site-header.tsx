@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
@@ -52,6 +52,7 @@ export function SiteHeader({
   accountHref?: string | null
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const authenticated = Boolean(accountHref)
 
@@ -68,12 +69,23 @@ export function SiteHeader({
     return () => window.removeEventListener('keydown', closeOnEscape)
   }, [])
 
+  useEffect(() => {
+    const hrefs = Array.from(new Set([
+      ...navigation.map((item) => item.href),
+      ...(accountHref ? [accountHref] : []),
+      '/auth',
+    ]))
+
+    hrefs.forEach((href) => router.prefetch(href))
+  }, [accountHref, navigation, router])
+
   return (
     <header className="marketing-header">
       <div className="marketing-header__inner">
         <Link
           className="marketing-brand"
           href="/"
+          prefetch={true}
           aria-label="Beranda Strativate"
         >
           <BrandLogo priority />
@@ -88,6 +100,7 @@ export function SiteHeader({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn('marketing-nav__link', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
                 data-testid={`desktop-nav-${item.icon}-link`}
@@ -108,6 +121,7 @@ export function SiteHeader({
                 'marketing-dashboard-link',
               )}
               href={accountHref}
+              prefetch={true}
               data-testid="desktop-dashboard-link"
             >
               <LayoutDashboard aria-hidden="true" size={16} />
@@ -121,6 +135,7 @@ export function SiteHeader({
                   'marketing-login',
                 )}
                 href="/auth"
+                prefetch={true}
                 data-testid="desktop-login-link"
               >
                 <LogIn aria-hidden="true" size={16} />
@@ -132,6 +147,7 @@ export function SiteHeader({
                   'marketing-start',
                 )}
                 href="/auth"
+                prefetch={true}
                 data-testid="desktop-start-learning-link"
               >
                 Mulai belajar
@@ -172,6 +188,7 @@ export function SiteHeader({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn('marketing-mobile-link', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
                 data-testid={`mobile-nav-${item.icon}-link`}
@@ -192,6 +209,7 @@ export function SiteHeader({
             <Link
               className="marketing-mobile-link marketing-mobile-cart-link"
               href="/cart"
+              prefetch={true}
               data-testid="mobile-cart-link"
             >
               <span className="marketing-mobile-link__icon">
@@ -213,6 +231,7 @@ export function SiteHeader({
                   size: 'marketing',
                 })}
                 href={accountHref}
+                prefetch={true}
                 data-testid="mobile-dashboard-link"
               >
                 <LayoutDashboard aria-hidden="true" size={16} /> Dashboard
@@ -225,6 +244,7 @@ export function SiteHeader({
                     size: 'marketing',
                   })}
                   href="/auth"
+                  prefetch={true}
                   data-testid="mobile-login-link"
                 >
                   <LogIn aria-hidden="true" size={16} /> Masuk
@@ -235,6 +255,7 @@ export function SiteHeader({
                     size: 'marketing',
                   })}
                   href="/auth"
+                  prefetch={true}
                   data-testid="mobile-start-learning-link"
                 >
                   Mulai belajar{' '}
