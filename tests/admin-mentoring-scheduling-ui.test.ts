@@ -51,6 +51,8 @@ test('schedule dialog keeps one primary vertical scroll surface while session ac
   const css=read('app/admin-mentoring-scheduling.css')
   assert.match(css,/\.schedule-dialog\{[^}]*max-height:min\(calc\(100dvh - 28px\),920px\);[^}]*overflow:hidden/)
   assert.match(css,/\.schedule-dialog__body\{[^}]*overflow-x:hidden;overflow-y:auto;[^}]*overscroll-behavior:contain/)
+  assert.match(css,/\.schedule-dialog__body\{[^}]*grid-auto-rows:max-content;align-content:start/)
+  assert.match(css,/\.schedule-availability-panel,\.schedule-slot-panel\{min-height:max-content;[^}]*overflow:hidden/)
   assert.match(css,/\.schedule-mentor-grid\{[^}]*align-items:start/)
   assert.doesNotMatch(css,/\.schedule-mentor-grid\{[^}]*max-height:/)
   assert.match(css,/\.schedule-availability-scroll\{min-width:0\}/)

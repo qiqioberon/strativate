@@ -90,7 +90,7 @@ function denseSchedulePayload() {
     const rangeStart = new Date(range.start)
     return Array.from({ length: 4 }, (_, slotIndex) => {
       const start = new Date(rangeStart.getTime() + slotIndex * 30 * 60_000)
-      const end = new Date(start.getTime() + 75 * 60 * 60_000)
+      const end = new Date(start.getTime() + 75 * 60_000)
       return {
         mentorId: mentor.mentorId,
         mentorName: mentor.mentorName,
@@ -299,6 +299,8 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
 
     const layout = await schedule.evaluate((dialog) => {
       const body = dialog.querySelector<HTMLElement>('.schedule-dialog__body')!
+      const availabilityPanel = dialog.querySelector<HTMLElement>('.schedule-availability-panel')!
+      const slotPanel = dialog.querySelector<HTMLElement>('.schedule-slot-panel')!
       const mentorGrid = dialog.querySelector<HTMLElement>('.schedule-mentor-grid')!
       const availabilityLists = [...dialog.querySelectorAll<HTMLElement>('.schedule-availability-scroll')]
       const slotList = dialog.querySelector<HTMLElement>('.schedule-slot-panel .schedule-slot-list')!
@@ -311,6 +313,14 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
         body: {
           overflowX: style(body).overflowX,
           overflowY: style(body).overflowY,
+        },
+        availabilityPanel: {
+          clientHeight: availabilityPanel.clientHeight,
+          scrollHeight: availabilityPanel.scrollHeight,
+        },
+        slotPanel: {
+          clientHeight: slotPanel.clientHeight,
+          scrollHeight: slotPanel.scrollHeight,
         },
         mentorGrid: {
           overflowY: style(mentorGrid).overflowY,
@@ -339,6 +349,8 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
     expect(layout.dialogHorizontalOverflow).toBeLessThanOrEqual(0.5)
     expect(layout.body.overflowX).toBe('hidden')
     expect(layout.body.overflowY).toBe('auto')
+    expect(layout.availabilityPanel.scrollHeight).toBeLessThanOrEqual(layout.availabilityPanel.clientHeight + 1)
+    expect(layout.slotPanel.scrollHeight).toBeLessThanOrEqual(layout.slotPanel.clientHeight + 1)
     expect(layout.mentorGrid.overflowY).toBe('visible')
     expect(layout.mentorGrid.maxHeight).toBe('none')
     expect(layout.mentorGrid.scrollHeight).toBeLessThanOrEqual(layout.mentorGrid.clientHeight + 1)
