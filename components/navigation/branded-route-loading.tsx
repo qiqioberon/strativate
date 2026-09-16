@@ -12,14 +12,9 @@ export function BrandedRouteLoading() {
       data-testid="route-loading-overlay"
     >
       <span className={styles.srOnly}>Memuat halaman</span>
-      <div className={styles.visual} aria-hidden="true">
-        <div className={styles.wordmark} data-testid="route-loading-wordmark">
-          <BrandLogo variant="wordmark" className={styles.wordmarkImage} priority />
-        </div>
-        <div className={styles.mark} data-testid="route-loading-mark">
-          <span className={styles.ring} />
-          <BrandLogo variant="mark" className={styles.markImage} priority />
-        </div>
+      <div className={styles.visual} data-testid="route-loading-mark" aria-hidden="true">
+        <span className={styles.ring} />
+        <BrandLogo variant="mark" className={styles.markImage} priority />
       </div>
     </div>
   )

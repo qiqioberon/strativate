@@ -3,277 +3,123 @@
 **Date:** 2026-09-16  
 **Repository:** `qiqioberon/strativate`  
 **Target branch:** `feat/global-route-loading-transition`  
-**Design status:** Approved for specification; implementation has not started.
+**Design status:** Approved; revised after visual review of the first implementation.
 
 ## 1. Purpose
 
-Add a single, reusable Strativate-branded loading transition for App Router page navigation so slow route changes feel deliberate instead of appearing frozen, while preserving fast navigation when the next route is already available.
+Provide two intentionally different Strativate loading experiences:
 
-The loading UI must use the existing approved Strativate brand assets. It must not introduce a replacement logo, a new visual identity, or a forced minimum delay.
+1. a short branded entrance when the document is first opened or hard-reloaded; and
+2. a truthful compact loader only while a later Next.js App Router navigation is genuinely pending.
 
-## 2. Current Repository Context
+Both experiences reuse the approved brand assets. Internal route navigation must never be delayed merely to show branding.
 
-The application uses the Next.js App Router. The root `app/layout.tsx` owns global styling and wraps application content with `ToastProvider`. There is currently no root `loading.tsx` or `template.tsx`.
+## 2. Root Cause Behind the Revision
 
-Approved brand assets are already centralized through `components/brand/brand-logo.tsx` and `lib/content/asset-registry.ts`. The registry exposes both:
+The first implementation rendered both the horizontal wordmark and standalone mark from the same `app/loading.tsx` fallback and switched them with `data-strativate-client-ready`. Once hydration finished, an initial pending fallback could switch into the same compact treatment used for internal navigation. The two experiences therefore shared one lifecycle and could look effectively identical.
 
-- `brand.logo.primary` → horizontal Strativate wordmark
-- `brand.logo.mark` → standalone Strativate mark
+The fix is architectural rather than cosmetic: hard-load branding and route-level pending feedback must have separate owners.
 
-Protected surfaces such as `/admin`, `/dashboard`, and `/mentor/dashboard` execute server-side `requireAccount()` calls in their layouts. These are legitimate suspension points during navigation and are exactly the type of route work that should be covered by an App Router loading boundary.
+## 3. Final Architecture
 
-The repository already contains a motion-accessibility precedent: marketing reveal effects become immediate when `prefers-reduced-motion: reduce` is enabled.
+### 3.1 `InitialBrandIntro`
 
-The existing UI also contains high stacking contexts, including UI at `z-index: 9999`, so the route-loading overlay must deliberately sit above all normal application surfaces.
+`components/navigation/initial-brand-intro.tsx` is mounted once from the root layout. It server-renders visible, so the branded entrance is present on a hard document load before client effects run.
 
-## 3. Goals
+It uses the approved horizontal wordmark and has its own lifecycle:
 
-1. Show clear feedback when an App Router route is genuinely pending.
-2. Use the existing Strativate wordmark for the initial server-side loading state.
-3. Use the compact Strativate mark for subsequent client-side/internal route loading states.
-4. Cover public, auth, dashboard, mentor, admin, commerce, and other App Router pages without instrumenting every individual link.
-5. Keep navigation completion tied to actual route readiness rather than arbitrary timeout values.
-6. Preserve accessibility, reduced-motion behavior, responsive layout, and application interaction safety.
-7. Add regression coverage for the route-loading contract.
+- visible/entrance phase starts immediately;
+- exit starts at 650 ms;
+- the intro is removed at 900 ms;
+- reduced-motion users receive a static wordmark and the intro is removed after 240 ms.
 
-## 4. Non-Goals
+Because the root layout persists across App Router client navigation, this component does not replay when the user moves between pages. A full reload creates a new document and therefore replays the entrance.
 
-This change does not:
+### 3.2 Root `app/loading.tsx`
 
-- add artificial delays so the animation can be seen;
-- replace mutation-specific pending states, button spinners, checkout processing states, file-viewer loading states, or Midtrans UI;
-- modify authentication, authorization, Supabase, commerce, mentoring, calendar, or other business rules;
-- intercept external links;
-- introduce a third-party progress/loading package;
-- add page-transition animation that keeps the old page alive after the new page is ready;
-- change the approved brand assets.
+The root App Router loading boundary remains the source of truth for actual route pending state. It delegates to `BrandedRouteLoading` and owns no artificial minimum duration.
 
-## 5. Approaches Considered
+### 3.3 `BrandedRouteLoading`
 
-### A. Native App Router loading boundary — selected
+The route loader renders only the approved standalone mark plus a restrained breath/ring treatment. It no longer contains the horizontal wordmark.
 
-Add a root `app/loading.tsx` backed by a reusable branded loading component.
+The overlay is hidden before hydration and becomes eligible to display only when `<html>` contains `data-strativate-client-ready="true"`. This prevents the App Router fallback from visually impersonating the hard-load brand entrance.
 
-**Advantages**
+### 3.4 `RouteLoadingMode`
 
-- lifecycle is controlled by Next.js route readiness;
-- no need to modify every `Link` component;
-- naturally covers server component and protected-layout suspension;
-- automatically disappears when the route is ready;
-- low coupling to business code;
-- no fake progress percentage or guessed completion event.
+The existing hydration marker remains intentionally tiny. It sets `data-strativate-client-ready="true"` once after hydration and removes it on unmount. It does not intercept clicks, observe pathname, own timers, or control route completion.
 
-**Trade-off**
+### 3.5 Layering
 
-A prefetched or immediately available route can complete without visibly showing the loader. This is intentional: the loader exists to communicate real waiting, not manufacture waiting.
+- initial brand intro: `z-index: 12010`;
+- internal route loader: `z-index: 12000`;
+- existing application UI reaches `z-index: 9999`.
 
-### B. Global click/router interception — rejected as the primary mechanism
+If initial page streaming continues after hydration, the compact route loader may exist underneath the intro. The intro remains visually dominant until its short entrance completes; if route work is still pending afterward, the truthful compact loader can remain until Next.js resolves it.
 
-A client provider could listen to internal link clicks and attempt to show an overlay until `usePathname()` changes.
+## 4. Visual Behavior
 
-This is rejected because the repository contains both declarative links and programmatic navigation. A click interceptor would not reliably cover `router.push()`, `router.replace()`, redirects, browser history, or server-driven navigation without expanding into a fragile routing abstraction. It would also make completion detection approximate rather than framework-native.
+### Hard load / reload
 
-### C. Fixed-duration branded splash — rejected
+Use the horizontal Strativate wordmark with a choreography distinct from the internal loader:
 
-A splash could always display for a minimum duration on startup or navigation.
+- a restrained orange sweep crosses the surface;
+- the wordmark resolves from slight vertical offset/blur into a crisp lockup;
+- a short orange accent line resolves below the wordmark;
+- the full overlay fades out at the end of the entrance.
 
-This is rejected because it would make already-fast routes slower, hide real performance characteristics, and create a timer-driven state unrelated to actual route readiness.
+This is a brand entrance, not a spinner and not an indicator of route progress.
 
-## 6. Chosen Architecture
+### Internal navigation
 
-The feature consists of four focused pieces.
+Use only the standalone Strativate mark with the existing subtle breathing mark and ring treatment. Do not rotate the mark and do not show the horizontal wordmark.
 
-### 6.1 `app/loading.tsx`
+If a route is already prefetched/ready, this loader may never become visible. That is intentional.
 
-The root App Router loading boundary renders the branded route-loading component.
+## 5. Accessibility and Motion
 
-This is the source of truth for **visibility**. No client click handler is responsible for deciding when loading starts or ends.
+The hard-load entrance is decorative and `aria-hidden`; it must not force assistive-technology users to wait for a visual flourish.
 
-### 6.2 `components/navigation/branded-route-loading.tsx`
+The internal route loader retains `role="status"`, `aria-live="polite"`, `aria-busy="true"`, and hidden text `Memuat halaman`.
 
-A reusable presentational component renders a fixed, viewport-sized loading surface.
+Under `prefers-reduced-motion: reduce`:
 
-It renders both approved visual forms so CSS can select the appropriate presentation:
+- the hard-load entrance becomes static and short-lived;
+- sweep, blur/transform entrance, and exit animation are disabled;
+- internal mark/ring looping animation is disabled.
 
-- horizontal wordmark for the initial pre-hydration loading mode;
-- standalone mark for post-hydration/internal route loading mode.
+No rapid flashing or large rotational motion is allowed.
 
-The component must not fetch data or know about application business domains.
+## 6. Performance and Routing Constraints
 
-### 6.3 `components/navigation/route-loading-mode.tsx`
+- Reuse `BrandLogo`; no new image assets.
+- No third-party animation package.
+- CSS handles visual animation.
+- Only the hard-load brand entrance owns short timers.
+- Internal route loading owns no timeout, interval, minimum delay, fake progress, click interception, or API request.
+- Existing `Link`, `router.push()`, redirects, browser history, auth, commerce, mentoring, calendar, and database behavior remain unchanged.
 
-A tiny client-only marker is rendered once from the root layout. After the root application hydrates, it sets a stable data attribute on `<html>`, for example:
+## 7. Files
 
-`data-strativate-client-ready="true"`
-
-This marker does **not** show or hide the loader. It only allows the branded loading component to distinguish the pre-hydration boot state from subsequent client navigation.
-
-Behavior is deterministic:
-
-- before root hydration, the loading boundary presents the horizontal wordmark;
-- after hydration, any later route-loading boundary presents the standalone mark.
-
-If unusually slow initial server work outlives root hydration, the loading presentation may naturally move from the boot wordmark treatment to the compact mark treatment. This is acceptable because both communicate the same pending route and avoids adding timing state.
-
-### 6.4 Dedicated styling
-
-Use a focused CSS module next to the loading component rather than adding another broad global stylesheet.
-
-The overlay must use existing design tokens from `globals.css`, primarily:
-
-- `var(--background)` for the main surface;
-- `var(--foreground)` where neutral contrast is needed;
-- `var(--primary)` for restrained Strativate orange motion/accent.
-
-The loader should use `position: fixed`, `inset: 0`, and a stacking level above the repository's existing `9999` layer. The proposed loader layer is `z-index: 12000`.
-
-## 7. Visual Behavior
-
-### Initial loading state
-
-The visual center uses the approved horizontal Strativate wordmark. The surrounding treatment should remain minimal: clean background, subtle brand-colored ambient accent, and one restrained motion cue.
-
-The screen should read as a deliberate brand entrance rather than a generic spinner.
-
-### Internal route loading state
-
-The compact standalone Strativate mark is centered in the same loading surface. Motion may use a subtle scale/breath or surrounding ring treatment, but the mark itself must remain visually recognizable and must not rotate like a generic spinner.
-
-### Duration
-
-There is no minimum display duration.
-
-If a route is already available, the loading boundary may not visibly appear. If a route takes longer, it remains visible until Next.js resolves that route segment.
-
-### Responsive behavior
-
-Logo sizes should use `clamp()` or equivalent responsive constraints so the wordmark and mark remain balanced on mobile and desktop.
-
-The loading surface must cover dynamic viewport height and must not depend on the dimensions of the current page.
-
-## 8. Accessibility
-
-The loading component should provide a live status message such as `Memuat halaman` for assistive technology.
-
-Requirements:
-
-- use an appropriate status semantic, such as `role="status"`;
-- expose concise hidden text describing the pending page load;
-- avoid announcing repeated decorative logo content;
-- keep the overlay non-interactive except that it blocks interaction with stale page content underneath;
-- support `prefers-reduced-motion: reduce` by disabling looping motion and showing a static branded state;
-- do not use rapid flashing, large rotational animation, or motion that can create vestibular discomfort.
-
-The visual logo can be treated as decorative inside the status component when the accessible loading label already identifies the state.
-
-## 9. Interaction and Navigation Semantics
-
-The feature does not take ownership of routing.
-
-`Link`, `router.push()`, redirects, back/forward navigation, and server-side redirects continue to use existing application behavior. The App Router decides whether the loading boundary is needed.
-
-This is important for the current repository because navigation is not exclusively link-based; several components use `useRouter()` and programmatic navigation.
-
-External destinations remain normal browser navigation and are outside this transition subsystem.
-
-## 10. Error Behavior
-
-The loader is not an error screen.
-
-If a route fails, the existing App Router error boundary remains responsible for rendering the error UI. Because visibility is tied to the Suspense/loading boundary rather than a custom global boolean, the loader cannot become permanently stuck because a client-side `finally` callback failed to run.
-
-The implementation must not catch or suppress route errors merely to preserve the loading animation.
-
-## 11. Performance Constraints
-
-The implementation should remain lightweight:
-
-- reuse existing PNG brand assets through `BrandLogo`;
-- no extra animation dependency;
-- CSS-based animation only;
-- no polling;
-- no interval;
-- no route-progress calculation;
-- no minimum timeout;
-- no additional API request.
-
-The root hydration marker performs one DOM attribute update and has no recurring work.
-
-## 12. Proposed File Changes
-
-Expected implementation files:
-
-- **add** `app/loading.tsx`
-- **modify** `app/layout.tsx`
-- **add** `components/navigation/branded-route-loading.tsx`
-- **add** `components/navigation/branded-route-loading.module.css`
-- **add** `components/navigation/route-loading-mode.tsx`
-- **add** `tests/route-loading-ui.test.ts`
-- **add or update** a Playwright browser spec for a delayed internal App Router navigation
-
-No database migrations are required.
-
-## 13. Testing Strategy
-
-### 13.1 Static/contract test
-
-Add a fast Node test that verifies the feature's architectural contract, including:
-
-- root `app/loading.tsx` exists and uses the reusable branded loader;
-- the loader reuses `BrandLogo` rather than a newly hard-coded asset path;
-- both approved `wordmark` and `mark` modes are represented;
-- root layout mounts the client-ready mode marker;
-- reduced-motion styling is present;
-- the loader uses a stacking level above `9999`;
-- implementation does not introduce a forced minimum loading timeout.
-
-This protects the intended architecture against later simplification into ad-hoc route interception.
-
-### 13.2 Browser regression test
-
-Use Playwright to verify a deliberately delayed **internal** navigation. The preferred method is to delay the relevant App Router/RSC request in the test runner rather than add a production-only slow route.
-
-The test should assert:
-
-1. current page is interactive before navigation;
-2. internal navigation begins;
-3. branded loading overlay becomes visible while the route response is delayed;
-4. post-hydration loading uses the compact mark presentation;
-5. stale page interaction is covered while pending;
-6. overlay disappears after the target route resolves;
-7. target page becomes interactive;
-8. reduced-motion emulation removes looping loader animation.
-
-If delaying a real application RSC request proves nondeterministic because of prefetch behavior, the fallback is to add the slow-navigation test only to the existing browser test fixture, not to expose a synthetic slow route in the production application.
-
-### 13.3 Regression suite
-
-After implementation, run at minimum:
-
-- the new route-loading contract test;
-- the new browser loading test;
-- existing public marketing/browser navigation tests;
-- dashboard shared navigation tests;
-- auth/public navigation tests;
-- lint/type/build checks already used by the repository.
-
-## 14. Acceptance Criteria
-
-The feature is complete when all of the following are true:
-
-1. A genuinely pending App Router navigation shows a full-viewport Strativate loading state.
-2. Initial pre-hydration pending state uses the approved horizontal wordmark.
-3. Post-hydration/internal pending state uses the approved standalone mark.
-4. Fast routes are not delayed merely to show the transition.
-5. The overlay disappears according to App Router readiness, not a custom timer.
-6. The loader covers existing high-z-index application UI safely.
-7. Reduced-motion users receive a static equivalent.
-8. The feature works without changes to each individual navigation link.
-9. Business logic, auth rules, and database behavior remain unchanged.
-10. Automated contract and browser regression coverage passes.
-
-## 15. Implementation Boundary
-
-This specification deliberately keeps page loading separate from action loading. If a user submits a form, starts a payment, uploads content, synchronizes a calendar, or triggers another long-running action while staying on the same route, that operation should continue using its domain-specific pending UI.
-
-The global route loader is exclusively for route-level waiting managed by Next.js App Router.
+- `app/layout.tsx`
+- `app/loading.tsx`
+- `components/navigation/initial-brand-intro.tsx`
+- `components/navigation/initial-brand-intro.module.css`
+- `components/navigation/branded-route-loading.tsx`
+- `components/navigation/branded-route-loading.module.css`
+- `components/navigation/route-loading-mode.tsx`
+- `tests/route-loading-ui.test.ts`
+- `tests/browser/route-loading.spec.ts`
+
+No database migration or dependency change is required.
+
+## 8. Acceptance Criteria
+
+1. Opening or hard-reloading the site shows the horizontal wordmark entrance, not the compact route-loader choreography.
+2. The hard-load intro exits around 900 ms and does not replay during client-side page navigation.
+3. Internal pending navigation shows only the compact standalone mark.
+4. Internal route-loader visibility still follows real App Router pending state and has no forced minimum duration.
+5. A fast/prefetched internal route is not slowed down to show animation.
+6. The hard-load intro stays above the internal loader while both can coexist during unusually slow initial streaming.
+7. Reduced-motion users receive static, shortened equivalents.
+8. Business logic, auth, database behavior, and navigation APIs are unchanged.

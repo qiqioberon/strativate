@@ -8,7 +8,22 @@ function createGate() {
   return { wait, release }
 }
 
-test('pending internal App Router navigation shows the compact branded loader', async ({ page }) => {
+test('hard load uses a dedicated wordmark intro before normal interaction', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('/')
+
+  const intro = page.getByTestId('initial-brand-intro')
+  await expect(intro).toBeVisible()
+  await expect(intro).toHaveAttribute('data-phase', 'visible')
+  await expect(intro.locator('img')).toBeVisible()
+
+  await page.clock.fastForward(650)
+  await expect(intro).toHaveAttribute('data-phase', 'leaving')
+  await page.clock.fastForward(250)
+  await expect(intro).toHaveCount(0)
+})
+
+test('pending internal App Router navigation shows only the compact branded loader', async ({ page }) => {
   const gate = createGate()
   let intercepted = false
 
@@ -23,6 +38,7 @@ test('pending internal App Router navigation shows the compact branded loader', 
 
   await page.goto('/')
   await expect(page.locator('html')).toHaveAttribute('data-strativate-client-ready', 'true')
+  await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0, { timeout: 2000 })
 
   const nav = page.getByRole('navigation', { name: 'Navigasi utama' })
   const programLink = nav.getByRole('link', { name: 'Program', exact: true })
@@ -32,7 +48,7 @@ test('pending internal App Router navigation shows the compact branded loader', 
   const overlay = page.getByTestId('route-loading-overlay')
   await expect(overlay).toBeVisible()
   await expect(page.getByTestId('route-loading-mark')).toBeVisible()
-  await expect(page.getByTestId('route-loading-wordmark')).toBeHidden()
+  await expect(page.getByTestId('route-loading-wordmark')).toHaveCount(0)
   expect(intercepted).toBe(true)
 
   gate.release()
@@ -58,6 +74,7 @@ test('reduced motion keeps the route loader static while navigation is pending',
 
   await page.goto('/')
   await expect(page.locator('html')).toHaveAttribute('data-strativate-client-ready', 'true')
+  await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0, { timeout: 1000 })
 
   const programLink = page
     .getByRole('navigation', { name: 'Navigasi utama' })
