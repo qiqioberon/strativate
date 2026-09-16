@@ -10,6 +10,18 @@ async function openPasswordChoice(page: import('@playwright/test').Page) {
   return page.getByRole('dialog', { name: 'Tetap masuk di perangkat ini?' })
 }
 
+async function expectDialogCentered(
+  dialog: import('@playwright/test').Locator,
+  page: import('@playwright/test').Page,
+) {
+  const box = await dialog.boundingBox()
+  const viewport = page.viewportSize()
+  expect(box).not.toBeNull()
+  expect(viewport).not.toBeNull()
+  expect(Math.abs(box!.x + box!.width / 2 - viewport!.width / 2)).toBeLessThanOrEqual(2)
+  expect(Math.abs(box!.y + box!.height / 2 - viewport!.height / 2)).toBeLessThanOrEqual(2)
+}
+
 test('password login asks for persistence before any authentication request', async ({ page }) => {
   let passwordRequests = 0
   page.on('request', request => {
@@ -18,6 +30,7 @@ test('password login asks for persistence before any authentication request', as
 
   const dialog = await openPasswordChoice(page)
   await expect(dialog).toBeVisible()
+  await expectDialogCentered(dialog, page)
   await expect(dialog.getByText('Pilih “Tetap masuk” jika perangkat ini milik pribadi.')).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Tetap masuk', exact: true })).toBeFocused()
   expect(passwordRequests).toBe(0)
@@ -80,6 +93,7 @@ test('persistence choice remains usable and contained on a narrow viewport', asy
   await page.setViewportSize({ width: 360, height: 740 })
   const dialog = await openPasswordChoice(page)
   await expect(dialog).toBeVisible()
+  await expectDialogCentered(dialog, page)
   await expect(dialog.getByRole('button', { name: 'Tetap masuk', exact: true })).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Hanya sesi ini', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
