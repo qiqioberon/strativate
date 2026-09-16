@@ -1,0 +1,84 @@
+.catalogGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.catalogCard {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.catalogCardFeatured {
+  border-color: #ffd0aa;
+  box-shadow: 0 18px 44px rgb(255 122 0 / 8%);
+}
+
+.catalogHeader { display: grid; gap: 8px; }
+.catalogHeader h3 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
+.catalogHeader p { margin: 0; color: var(--muted-foreground); line-height: 1.65; }
+
+.badge {
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #fff0e5;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.price { display: grid; gap: 4px; }
+.price strong { font-size: 25px; letter-spacing: -.04em; }
+.price del { color: var(--muted-foreground); font-size: 12px; }
+.price span { color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
+
+.featureList {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.featureList li { position: relative; padding-left: 18px; color: #48535d; font-size: 13px; line-height: 1.55; }
+.featureList li::before { position: absolute; left: 0; top: .65em; width: 6px; height: 6px; border-radius: 999px; background: var(--primary); content: ''; }
+
+.consultation {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.privatePriceCard { min-width: 0; }
+.privatePriceScroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.privatePriceScroll table { min-width: 520px; }
+
+.fallback {
+  padding: 26px;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  background: #fffaf6;
+}
+.fallback h3 { margin: 0 0 8px; }
+.fallback p { margin: 0; color: var(--muted-foreground); line-height: 1.65; }
+
+@media (max-width: 960px) {
+  .catalogGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .catalogGrid { grid-template-columns: 1fr; }
+  .catalogCard { padding: 20px; }
+  .privatePriceScroll { margin-inline: -1px; }
+}
