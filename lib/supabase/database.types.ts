@@ -30,6 +30,13 @@ export type MentorTier = { id:string; code:string; name:string; sort_order:numbe
 export type MentorProfile = { user_id:string; tier_id:string|null; timezone:string; is_active:boolean; created_at:string; updated_at:string }
 export type MentorAvailabilityRule = { id:string; mentor_id:string; week_start_date:string; day_of_week:number; start_time:string; end_time:string; created_at:string; updated_at:string }
 export type ManagedMentor = { user_id:string; email:string; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; tier_id:string|null; tier_code:string|null; tier_name:string|null; timezone:string; is_active:boolean; mentor_setup_completed_at:string|null; created_at:string; availability_configured:boolean; availability_current_week_configured:boolean; availability_next_week_configured:boolean }
+export type MentorPublicationStatus = 'draft' | 'published'
+export type MentorPhotoStatus = 'ready' | 'missing'
+export type MentorPublicProfile = { id:string; mentor_user_id:string|null; public_slug:string; display_name:string; tier_id:string|null; headline:string|null; linkedin_url:string|null; short_bio:string|null; portrait_asset_key:string|null; portrait_url:string|null; photo_status:MentorPhotoStatus; publication_status:MentorPublicationStatus; sort_order:number; created_at:string; updated_at:string }
+export type MentorPublicAchievement = { id:string; mentor_public_profile_id:string; achievement:string; sort_order:number; created_at:string; updated_at:string }
+export type MentorExpertise = { id:string; name:string; slug:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type MentorPublicProfileExpertise = { mentor_public_profile_id:string; expertise_id:string; created_at:string }
+export type PublicMentorDirectoryRow = { public_slug:string; display_name:string; tier_name:string|null; headline:string|null; linkedin_url:string|null; short_bio:string|null; portrait_asset_key:string|null; portrait_url:string|null; photo_status:string; achievements:string[]; expertise:string[] }
 
 export type CompetitionCategory = { id:string; code:string; slug:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type PrivateMentoringLearningPath = { id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
@@ -71,6 +78,10 @@ export type Database = {
       mentor_tiers: Table<MentorTier, Partial<MentorTier> & Pick<MentorTier,"code"|"name">>
       mentor_profiles: Table<MentorProfile, Partial<MentorProfile> & Pick<MentorProfile,"user_id">>
       mentor_availability_rules: Table<MentorAvailabilityRule, Partial<MentorAvailabilityRule> & Pick<MentorAvailabilityRule,"mentor_id"|"week_start_date"|"day_of_week"|"start_time"|"end_time">>
+      mentor_public_profiles: Table<MentorPublicProfile, Partial<MentorPublicProfile> & Pick<MentorPublicProfile,'public_slug'|'display_name'>>
+      mentor_public_achievements: Table<MentorPublicAchievement, Partial<MentorPublicAchievement> & Pick<MentorPublicAchievement,'mentor_public_profile_id'|'achievement'|'sort_order'>>
+      mentor_expertise: Table<MentorExpertise, Partial<MentorExpertise> & Pick<MentorExpertise,'name'|'slug'|'sort_order'>>
+      mentor_public_profile_expertise: Table<MentorPublicProfileExpertise, Partial<MentorPublicProfileExpertise> & Pick<MentorPublicProfileExpertise,'mentor_public_profile_id'|'expertise_id'>>
       competition_categories: Table<CompetitionCategory, Partial<CompetitionCategory> & Pick<CompetitionCategory,'code'|'slug'|'name'|'sort_order'>>
       private_mentoring_learning_paths: Table<PrivateMentoringLearningPath, Partial<PrivateMentoringLearningPath> & Pick<PrivateMentoringLearningPath,'code'|'slug'|'name'|'description'|'sort_order'>>
       private_mentoring_session_focuses: Table<PrivateMentoringSessionFocus, Partial<PrivateMentoringSessionFocus> & Pick<PrivateMentoringSessionFocus,'code'|'slug'|'name'|'description'|'sort_order'>>
@@ -90,6 +101,15 @@ export type Database = {
       save_mentor_availability: { Args:{p_mentor_id:string;p_week_start_date:string;p_rules:Json}; Returns:MentorAvailabilityRule[] }
       delete_mentor_account: { Args:{p_mentor_id:string}; Returns:undefined }
       delete_mentor_invite: { Args:{p_email:string}; Returns:undefined }
+      get_my_mentor_public_profile: { Args:Record<PropertyKey,never>; Returns:Json }
+      save_my_mentor_public_profile: { Args:{p_display_name:string;p_headline?:string|null;p_linkedin_url?:string|null;p_short_bio?:string|null;p_portrait_url?:string|null;p_expertise_ids?:string[];p_achievements?:string[]}; Returns:Json }
+      admin_upsert_mentor_expertise: { Args:{p_name:string;p_id?:string|null;p_is_active?:boolean;p_sort_order?:number|null}; Returns:MentorExpertise }
+      admin_reorder_mentor_expertise: { Args:{p_ids:string[]}; Returns:MentorExpertise[] }
+      admin_delete_mentor_expertise: { Args:{p_id:string}; Returns:string }
+      admin_ensure_mentor_public_profile: { Args:{p_mentor_id:string}; Returns:MentorPublicProfile }
+      admin_link_mentor_public_profile: { Args:{p_public_profile_id:string;p_mentor_id:string}; Returns:MentorPublicProfile }
+      admin_set_mentor_publication: { Args:{p_mentor_id:string;p_status:MentorPublicationStatus}; Returns:MentorPublicProfile }
+      list_public_mentors: { Args:Record<PropertyKey,never>; Returns:PublicMentorDirectoryRow[] }
       import_institutions_batch: { Args:{p_rows:Json}; Returns:Json }
       is_admin: { Args:Record<PropertyKey,never>; Returns:boolean }
       save_onboarding_step: { Args:{p_step:number;p_data:Json}; Returns:MenteeProfile }
