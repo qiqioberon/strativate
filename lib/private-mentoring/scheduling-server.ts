@@ -7,12 +7,16 @@ import { resolveGoogleCalendarBusy, type GoogleCalendarAvailabilityStatus } from
 type SlotContext = {
   sessionId:string
   status:string
+  topicStatus:'needs_input'|'pending_review'|'confirmed'
   focusName:string|null
+  resolvedTopic:string|null
   requiredTierId:string
   durationMinutes:number
   menteeId:string
   purchasedSessions:number
   sessionNumber:number
+  primaryMentorRequired:boolean
+  primaryMentorId:string|null
   mentors:Array<{
     mentorId:string
     mentorName:string
@@ -23,25 +27,28 @@ type SlotContext = {
     strativate_busy:TimeInterval[]
   }>
 }
+type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 
 function overlap(start:string,end:string,busy:TimeInterval){
   return new Date(start).getTime()<new Date(busy.end).getTime() && new Date(end).getTime()>new Date(busy.start).getTime()
 }
 
 export async function getAdminBookableSlots(sessionId:string) {
-  const supabase = await createClient() as any
-  const {data,error}=await supabase.rpc('admin_get_private_mentoring_slot_context',{p_session_id:sessionId})
+  const supabase = await createClient()
+  const rpc=supabase as unknown as RpcClient
+  const {data,error}=await rpc.rpc<SlotContext>('admin_get_private_mentoring_slot_context',{p_session_id:sessionId})
   if(error||!data) throw new Error(error?.message||'Slot context belum dapat dimuat.')
 
-  const context=data as SlotContext
+  const context=data
   const {data:tier}=await supabase.from('mentor_tiers').select('name').eq('id',context.requiredTierId).maybeSingle()
   const requiredTierName=typeof tier?.name==='string'?tier.name:null
   const resolvedContext={...context,requiredTierName}
   const tierLabel=requiredTierName||'tier paket ini'
 
-  if(!context.focusName) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Mentee perlu memilih fokus sebelum sesi dapat dijadwalkan.'}
+  if(context.topicStatus!=='confirmed'||!context.focusName) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Topik sesi masih menunggu review admin. Konfirmasi topik/scope final sebelum memilih jadwal.'}
   if(context.status==='completed') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah selesai tidak dapat dijadwalkan ulang.'}
   if(context.status==='cancelled') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah dibatalkan tidak dapat dijadwalkan ulang.'}
+  if(context.primaryMentorRequired&&!context.primaryMentorId) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Paket 5 sesi atau lebih membutuhkan mentor utama. Tetapkan mentor utama di detail enrollment sebelum menjadwalkan sesi.'}
   if(!context.mentors.length) return {context:resolvedContext,slots:[],mentorWarnings:[],message:`Belum ada mentor aktif dengan tier ${tierLabel}. Atur tier dan status mentor di Mentor Management sebelum menjadwalkan sesi.`}
 
   const availability=context.mentors.flatMap(mentor=>mentor.availability)
@@ -116,16 +123,16 @@ export async function scheduleAdminPrivateMentoringSession(sessionId:string,ment
   const normalized=new Date(start).toISOString()
   const chosen=available.slots.find(slot=>slot.mentorId===mentorId&&slot.start===normalized)
   if(!chosen) throw new Error('Slot sudah tidak tersedia. Muat ulang pilihan jadwal.')
-  const supabase=await createClient() as any
-  const {data,error}=await supabase.rpc('admin_schedule_private_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized})
+  const supabase=await createClient();const rpc=supabase as unknown as RpcClient
+  const {data,error}=await rpc.rpc('admin_schedule_private_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized})
   if(error) throw new Error(error.message)
   const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
   return {session:data,sync}
 }
 
 export async function cancelAdminPrivateMentoringSession(sessionId:string,currentAdminId:string){
-  const supabase=await createClient() as any
-  const {data,error}=await supabase.rpc('admin_cancel_private_mentoring_session',{p_session_id:sessionId})
+  const supabase=await createClient();const rpc=supabase as unknown as RpcClient
+  const {data,error}=await rpc.rpc('admin_cancel_private_mentoring_session',{p_session_id:sessionId})
   if(error) throw new Error(error.message)
   try {
     const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)

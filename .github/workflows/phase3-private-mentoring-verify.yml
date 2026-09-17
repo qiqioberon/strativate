@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches:
+      - main
       - feat/phase-3-private-mentoring
       - fix/private-mentoring-content-boundary
   workflow_dispatch:

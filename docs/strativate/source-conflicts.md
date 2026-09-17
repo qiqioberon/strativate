@@ -1,5 +1,18 @@
 # Strativate source conflict register
 
+## 17 September 2026 Private Mentoring operating-model and commerce resolution
+
+The current stakeholder update supersedes the operational parts of the 14 September Phase 3 Private Mentoring resolution while preserving that section below as historical provenance.
+
+- A mentee may hold multiple active Private Mentoring enrollments. Repeat purchases remain separate, auditable entitlements keyed by their paid `order_items`; one invoice may contain multiple distinct mentoring Commerce Items. Session Focus remains taxonomy and is **not** a SKU or quantity mechanism.
+- A mentee may submit a required free-text topic/goal plus an optional structured Session Focus. Submission creates `pending_review`; it does not auto-approve a custom topic. Admin resolves the final focus/topic/scope, and append-only topic events preserve request/resolution history separately from the session lifecycle.
+- Topic requests may be changed before a session, including an already scheduled future session. Re-review does not create a second operational session or Calendar event; resolving the changed topic marks the existing Calendar integration pending so the same deterministic Google event is patched. Completed and cancelled sessions are immutable for topic edits.
+- Private packages with **5 sessions or more** use an enrollment-level primary/default mentor. Admin sets or explicitly changes that mentor, exact purchased-tier validation remains mandatory, and reassignment history stores previous/new mentor, actor, timestamp, and reason. Existing legacy enrollments are backfilled only when all assigned historical sessions point to one mentor; mixed-mentor history is never guessed. Packages below 5 sessions remain flexible per session across active mentors in the purchased tier.
+- Availability, Strativate overlap checks, Google busy checks, mentee conflicts, Meet creation, reschedule/cancel reconciliation, and graceful external-sync failure behavior remain part of scheduling. The website still does not expose mentee self-scheduling.
+- Private Mentoring and Intensive Mentoring entitlements may coexist for the same mentee. Active fixed-price Intensive packages, active add-ons, and valid active bundles participate in Shared Commerce → Cart Link → order/payment → normalized paid entitlement. Consultation-priced Intensive packages remain outside checkout. Guarantee-dependent inactive records remain outside public commerce until the existing legal guardrail is separately resolved.
+
+This resolution specifically supersedes the old statements that free-text/custom focus was out of scope and that admin always assigns mentors independently per session. The source-owned Private marketing/editorial boundary and the existing guarantee/refund guardrail remain unchanged.
+
 ## 17 September 2026 mentor public-profile ownership resolution
 
 Public mentor profiles use the dedicated database-backed domain introduced by `202609170001_mentor_public_profiles_expertise.sql`. `public.mentor_profiles` remains the operational mentor-account domain for tier linkage, timezone, active status, scheduling, and availability. `public.mentor_public_profiles` is a one-to-one public/editorial extension: every row must belong to a real mentor account through a required unique `mentor_user_id`.

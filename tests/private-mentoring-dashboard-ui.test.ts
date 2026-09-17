@@ -4,12 +4,16 @@ import test from 'node:test'
 
 const read = (path: string) => { assert.equal(existsSync(path), true, `${path} must exist`); return readFileSync(path, 'utf8') }
 
-test('mentee dashboard exposes seeded focus selection and confirmed schedule as read-only operational data', () => {
+test('mentee dashboard submits free-text topic requests with optional taxonomy and keeps scheduling read-only', () => {
   const component = read('components/dashboard/private-mentoring-sessions.tsx')
+  assert.match(component, /Apa yang ingin kamu bahas/i)
   assert.match(component, /sessionFocuses/)
-  assert.match(component, /set_private_mentoring_session_focus/)
+  assert.match(component, /opsional/i)
+  assert.match(component, /submit_private_mentoring_topic_request/)
+  assert.match(component, /pending_review|menunggu review/i)
   assert.match(component, /scheduledStartAt|scheduled_start_at/)
   assert.match(component, /mentorName|mentor_name/)
+  assert.doesNotMatch(component, /set_private_mentoring_session_focus/)
   assert.doesNotMatch(component, /assign.?mentor|set.?schedule|calendar.?slot/i)
 })
 
