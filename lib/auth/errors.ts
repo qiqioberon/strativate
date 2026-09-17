@@ -4,7 +4,7 @@ export function formError(error: unknown, fallback = 'Permintaan gagal. Periksa 
   const message = 'message' in error ? String(error.message) : ''
   if (code === '23505') return "Data sudah digunakan. Untuk nama pengguna, coba nama lain."
   if (code === "weak_password") return "Kata sandi belum memenuhi kebijakan keamanan. Gunakan kata sandi yang lebih kuat."
-  if (code === "same_password") return "Kata sandi ini sudah digunakan. Masukkan kata sandi yang berbeda."
+  if (code === "same_password") return "Kata sandi baru sama dengan kata sandi akun saat ini. Gunakan kata sandi lain jika ingin mengubahnya."
   if (code === 'invalid_credentials') return "Email atau kata sandi tidak sesuai."
   if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') return 'Terlalu banyak percobaan. Tunggu beberapa saat sebelum mencoba lagi.'
   if (code === '42501' || code === 'PGRST301') return 'Sesi atau izin tidak sesuai. Silakan masuk kembali.'
