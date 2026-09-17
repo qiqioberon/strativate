@@ -18,9 +18,11 @@ import { useState } from 'react'
 
 import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
+import { CompetitionCategoryManagement } from '@/components/admin/competition-category-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { InstitutionManagement } from '@/components/admin/institutions'
+import { IntensiveMentoringManagement } from '@/components/admin/intensive-mentoring-management'
 import { MasterOptions } from '@/components/admin/master-options'
 import { MentorExpertiseManagement } from '@/components/admin/mentor-expertise-management'
 import { MentorManagement } from '@/components/admin/mentor-management'
@@ -44,6 +46,8 @@ type Section =
   | 'Mentees'
   | 'Mentors'
   | 'Private Mentoring'
+  | 'Intensive Mentoring'
+  | 'Competition Categories'
   | 'Digital Products'
   | 'Hero Posters'
   | 'Reports'
@@ -77,6 +81,8 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: 'Produk',
     items: [
       { id: 'Private Mentoring', label: 'Private Mentoring', icon: PackageOpen },
+      { id: 'Intensive Mentoring', label: 'Intensive Mentoring', icon: PackageOpen },
+      { id: 'Competition Categories', label: 'Competition Categories', icon: PackageOpen },
       { id: 'Digital Products', label: 'Produk Digital', icon: PackageOpen },
     ],
   },
@@ -128,6 +134,8 @@ export default function AdminDashboard() {
           {section === 'Mentees' ? <MenteeManagement/> : null}
           {section === 'Mentors' ? <MentorManagement/> : null}
           {section === 'Private Mentoring' ? <PrivateMentoringManagement/> : null}
+          {section === 'Intensive Mentoring' ? <IntensiveMentoringManagement/> : null}
+          {section === 'Competition Categories' ? <CompetitionCategoryManagement/> : null}
           {section === 'Digital Products' ? <DigitalProductManagement/> : null}
           {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
