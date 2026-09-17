@@ -14,3 +14,20 @@ test('admin exposes product catalog masters with table/pagination/dialog pattern
  const privateUi=read('components/admin/private-mentoring-management.tsx')
  assert.doesNotMatch(privateUi,/private-mentoring-catalog-row|private-mentoring-package-row/)
 })
+
+test('mentoring catalog dialogs stay centered and form controls stay contained',()=>{
+ const competitionUi=read('components/admin/competition-category-management.tsx')
+ const css=read('components/admin/mentoring-catalog-management.module.css')
+ assert.doesNotMatch(competitionUi,/row\.slug/)
+ const dialog=css.match(/\.dialog\{([^}]*)\}/)?.[1]??''
+ for(const rule of [/position:fixed/,/inset:0/,/margin:auto/,/overflow:hidden/]) assert.match(dialog,rule)
+ const panel=css.match(/\.dialogPanel\{([^}]*)\}/)?.[1]??''
+ assert.match(panel,/display:grid/)
+ assert.match(panel,/grid-template-rows:auto minmax\(0,1fr\)/)
+ assert.match(panel,/overflow:hidden/)
+ const body=css.match(/\.dialogBody\{([^}]*)\}/)?.[1]??''
+ assert.match(body,/overflow-y:auto/)
+ assert.match(css,/\.field input:not\(\[type='checkbox'\]\)/)
+ assert.match(css,/\.checkbox input\[type='checkbox'\]\{[^}]*width:16px[^}]*height:16px/)
+ assert.match(css,/\.repeatableRow>input,.bundleRow>input,.bundleRow>select\{[^}]*width:100%/)
+})
