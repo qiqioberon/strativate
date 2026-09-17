@@ -89,7 +89,7 @@ export function AuthForm() {
     <div className="auth-heading"><p className="kicker">{register ? 'Mulai perjalananmu' : 'Selamat datang kembali'}</p><h1>{register ? <>Daftar di <em>Strativate.</em></> : <>Raih kemenangan <em>berikutnya.</em></>}</h1><p>{register ? 'Masukkan email untuk menerima tautan verifikasi dan melengkapi profilmu.' : 'Masuk untuk melanjutkan perjalananmu bersama Strativate.'}</p></div>
     <form className="auth-form" onSubmit={submit}>
       <label>Email<input name="email" type="email" required autoComplete="email" maxLength={254} disabled={locked} /></label>
-      {!register && <PasswordInput label="Kata sandi" name="password" required autoComplete="current-password" disabled={locked} />}
+      {!register && <><PasswordInput label="Kata sandi" name="password" required autoComplete="current-password" disabled={locked} /><a className="auth-back" href="/auth/forgot-password">Lupa kata sandi?</a></>}
       {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
       <button className="button button-primary full-button" disabled={locked}>{busy ? 'Memproses…' : register ? 'Kirim tautan email' : 'Masuk'}<ArrowRight size={16} /></button>
       <button className="button button-outline full-button" type="button" onClick={google} disabled={locked}>Lanjutkan dengan Google</button>
