@@ -127,6 +127,7 @@ export function PasswordStage({
   onBack: () => void
 }) {
   const google = registrationMethod === 'google'
+  const passwordRequired = registrationMethod === 'email' && !passwordSaved
   const showInputs = editingPassword || (!passwordSaved && !google)
 
   if (!showInputs && google && !passwordSaved) {
@@ -151,8 +152,8 @@ export function PasswordStage({
 
   return <QuestionStage eyebrow="Keamanan akun" title={passwordSaved ? 'Mau mengganti kata sandimu?' : 'Sekarang, amankan akunmu.'} description={google ? 'Kata sandi ini opsional untuk akun Google, tapi bisa menjadi cara masuk cadangan.' : 'Gunakan minimal 8 karakter.'} onBack={onBack}>
     <form className="onboarding-focused-form" onSubmit={onSubmit}>
-      <PasswordInput label={passwordSaved ? 'Kata sandi baru' : 'Kata sandi'} value={password} onChange={event => onPassword(event.target.value)} minLength={8} maxLength={128} required={!google || editingPassword} autoComplete="new-password" disabled={busy} />
-      <PasswordInput label="Konfirmasi kata sandi" value={confirmation} onChange={event => onConfirmation(event.target.value)} required={!google || !!password} autoComplete="new-password" disabled={busy} />
+      <PasswordInput label={passwordSaved ? 'Kata sandi baru' : passwordRequired ? 'Kata sandi' : 'Kata sandi (opsional)'} value={password} onChange={event => onPassword(event.target.value)} minLength={8} maxLength={128} required={passwordRequired || editingPassword} autoComplete="new-password" disabled={busy} />
+      <PasswordInput label="Konfirmasi kata sandi" value={confirmation} onChange={event => onConfirmation(event.target.value)} required={passwordRequired || editingPassword || !!password} autoComplete="new-password" disabled={busy} />
       <InlineError message={error} />
       <PrimaryAction type="submit" disabled={busy}>{busy ? 'Menyimpan…' : <>Lanjutkan <ArrowRight aria-hidden="true" size={17} /></>}</PrimaryAction>
       {passwordSaved && <button type="button" className="onboarding-text-action" disabled={busy} onClick={onCancelEdit}>Batal ubah kata sandi</button>}

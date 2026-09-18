@@ -97,6 +97,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       router.push(target.route)
       return
     }
+    if (!target.stage) return
     setStage(target.stage)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
@@ -124,6 +125,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
         router.push(transitionTarget.route)
         return
       }
+      if (!transitionTarget.stage) return
       setStage(transitionTarget.stage)
       setTransitionTarget(null)
       setAcknowledgement('')
