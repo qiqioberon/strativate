@@ -1,11 +1,16 @@
 import Link from 'next/link'
-import { CalendarDays, Check, CheckCircle2, ArrowRight } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, CheckCircle2 } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { OnboardingShell } from '@/components/onboarding/shell'
 import { displayLabel } from '@/lib/labels'
 import { getAccount } from '@/lib/auth/server'
 import { getGoogleConnectionStatus } from '@/lib/google-calendar/server'
 import { createClient } from '@/lib/supabase/server'
+
+function summarizeInterests(names: string[]) {
+  if (names.length <= 3) return names.join(' · ')
+  return names.slice(0, 3).join(' · ') + ' · +' + (names.length - 3) + ' lainnya'
+}
 
 export default async function CalendarOnboardingPage({ searchParams }: { searchParams: Promise<{ calendar?: string; reason?: string }> }) {
   const account = await getAccount()
@@ -33,56 +38,42 @@ export default async function CalendarOnboardingPage({ searchParams }: { searchP
   if (interestResult.error) throw new Error('Ringkasan minat belum dapat dimuat.')
 
   const firstName = account.profile.first_name?.trim()
-  const interests = interestResult.data || []
+  const interests = (interestResult.data || []).map(item => displayLabel(item.name))
+  const major = account.mentee.major_or_faculty?.trim()
 
   return <OnboardingShell>
-    <section className="onboarding-completion">
-      <div className="onboarding-completion__icon" aria-hidden="true"><CheckCircle2 size={28} /></div>
-      <p className="kicker">Data utama selesai</p>
+    <section className="onboarding-finale">
+      <div className="onboarding-finale__check" aria-hidden="true"><CheckCircle2 size={34} /></div>
+      <p className="onboarding-eyebrow">Semua data utama tersimpan</p>
       <h1>Semua sudah siap{firstName ? ', ' + firstName : ''}.</h1>
-      <p>Profil utamamu sudah tersimpan. Kamu bisa langsung masuk ke Strativate, atau menyambungkan Google Calendar terlebih dahulu.</p>
+      <p className="onboarding-finale__lead">Kami sudah mengenalmu sedikit lebih baik.</p>
 
-      <div className="onboarding-completion__summary" aria-label="Ringkasan pendaftaran">
-        {institution.data && <div>
-          <span>Tempat belajar</span>
-          <strong>{institution.data.name}</strong>
-        </div>}
-        {interests.length > 0 && <div>
-          <span>Minat kompetisi</span>
-          <strong>{interests.map(item => displayLabel(item.name)).join(', ')}</strong>
-        </div>}
+      <div className="onboarding-finale__identity" aria-label="Ringkasan pendaftaran">
+        {institution.data && <p><strong>{institution.data.name}</strong>{major ? <span>{major}</span> : null}</p>}
+        {interests.length > 0 && <p className="onboarding-finale__interests">{summarizeInterests(interests)}</p>}
       </div>
 
-      {params.calendar === 'denied' && <p className="onboarding-inline-note onboarding-inline-note--warning" role="status">
-        Izin Calendar tidak diberikan. Akunmu tetap aktif dan kamu bisa menghubungkannya nanti dari dashboard.
-      </p>}
+      <div className="onboarding-calendar-choice">
+        <p className="onboarding-eyebrow">Sebelum masuk…</p>
+        <h2>{connection.connected ? 'Jadwalmu sudah terhubung.' : 'Ingin menyambungkan jadwalmu?'}</h2>
+        <p>{connection.connected
+          ? 'Google Calendar siap membantu Strativate melihat konflik jadwal mentoring.'
+          : 'Google Calendar bisa membantu Strativate menampilkan konflik jadwal mentoring. Ini sepenuhnya opsional.'}</p>
 
-      <div className="onboarding-calendar-card">
-        <div className="onboarding-calendar-card__icon" aria-hidden="true"><CalendarDays size={23} /></div>
-        <div className="onboarding-calendar-card__copy">
-          <p className="kicker">Opsional</p>
-          <h2>{connection.connected ? 'Google Calendar sudah terhubung.' : 'Mau menyambungkan jadwalmu?'}</h2>
-          <p>
-            {connection.connected
-              ? 'Strativate dapat membantu menampilkan konflik jadwal bersama sesi mentoring.'
-              : 'Hubungkan Google Calendar agar Strativate bisa membantu menampilkan konflik jadwal bersama sesi mentoring. Ini tidak wajib untuk menyelesaikan pendaftaran.'}
-          </p>
-          {connection.connected && <p className="onboarding-calendar-card__status" role="status">
-            <Check aria-hidden="true" size={16} /> Terhubung sebagai <strong>{connection.accountEmail}</strong>
-          </p>}
-        </div>
-      </div>
+        {params.calendar === 'denied' && <p className="onboarding-error" role="status">
+          Izin Calendar tidak diberikan. Tidak masalah—kamu tetap bisa masuk dan menghubungkannya nanti dari dashboard.
+        </p>}
 
-      <div className="onboarding-actions onboarding-actions--completion">
-        {connection.connected ? <Link className="button button-primary onboarding-actions__primary" href="/auth/continue">
-          Masuk ke Strativate <ArrowRight aria-hidden="true" size={17} />
-        </Link> : <>
-          <a className="button button-primary onboarding-actions__primary" href="/api/google-calendar/connect?returnTo=/onboarding/calendar">
-            Hubungkan Google Calendar
+        {connection.connected ? <>
+          <p className="onboarding-calendar-connected" role="status"><Check aria-hidden="true" size={16} /> Terhubung sebagai <strong>{connection.accountEmail}</strong></p>
+          <Link className="onboarding-primary-action" href="/auth/continue">Masuk ke Strativate <ArrowRight aria-hidden="true" size={17} /></Link>
+        </> : <>
+          <a className="onboarding-calendar-option" href="/api/google-calendar/connect?returnTo=/onboarding/calendar">
+            <span className="onboarding-calendar-option__icon" aria-hidden="true"><CalendarDays size={22} /></span>
+            <span><strong>Hubungkan Google Calendar</strong><small>Bisa dilepas kapan saja dari dashboard.</small></span>
+            <ArrowRight aria-hidden="true" size={19} />
           </a>
-          <Link className="button button-outline onboarding-actions__back" href="/auth/continue">
-            Lewati sekarang
-          </Link>
+          <Link className="onboarding-text-action onboarding-calendar-skip" href="/auth/continue">Lewati sekarang</Link>
         </>}
       </div>
     </section>
