@@ -20,7 +20,7 @@ test('Private Mentoring admin manages only genuine catalog data, never marketing
   assert.match(source, /private_mentoring_packages/)
   assert.match(source, /private_mentoring_learning_paths/)
   assert.match(source, /private_mentoring_session_focuses/)
-  assert.match(source, /competition_categories/)
+  assert.doesNotMatch(source, /competition_categories/)
   assert.doesNotMatch(source, /private_mentoring_programs/)
   assert.doesNotMatch(source, /private_mentoring_highlights/)
   assert.doesNotMatch(source, /private_mentoring_journey_steps/)

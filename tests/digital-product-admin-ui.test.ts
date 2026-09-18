@@ -10,7 +10,7 @@ test('admin navigation exposes Digital Products independently from the public fe
   assert.match(adminPage, /import \{ DigitalProductManagement \} from '@\/components\/admin\/digital-product-management'/)
   assert.match(adminPage, /label: 'Produk'[\s\S]*id: 'Private Mentoring'[\s\S]*id: 'Intensive Mentoring'[\s\S]*id: 'Digital Products'/)
   assert.doesNotMatch(adminPage, /featureFlags\.digitalProducts/)
-  assert.match(adminPage, /section === 'Digital Products'[\s\S]*<DigitalProductManagement \/>/)
+  assert.match(adminPage, /section === 'Digital Products'[\s\S]*<DigitalProductManagement\s*\/>/)
 })
 
 test('public Digital Products rollout has one env-backed runtime decision', () => {
