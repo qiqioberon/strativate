@@ -255,7 +255,7 @@ export function OnboardingWizard({ profile, mentee, names, referrals, interests,
         <span>Langkah {currentStep} dari 4</span>
         <span>{canonicalLabels[currentStep - 1]}</span>
       </div>
-      <ol className="onboarding-progress" aria-label="Progres onboarding">
+      <ol className="onboarding-progress" aria-label="Progres pendaftaran">
         {canonicalLabels.map((label, index) => {
           const number = (index + 1) as CanonicalStep
           const state = number < currentStep ? 'complete' : number === currentStep ? 'current' : 'upcoming'

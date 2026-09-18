@@ -12,7 +12,7 @@ export function OnboardingShell({ children }: { children: ReactNode }) {
 
     <header className="onboarding-shell__header">
       <BrandLogo priority />
-      <SignOut className="onboarding-shell__exit" withIcon />
+      <div className="onboarding-shell__exit-wrap"><SignOut className="onboarding-shell__exit" withIcon /></div>
     </header>
 
     <div className="onboarding-shell__layout">

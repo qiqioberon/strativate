@@ -78,6 +78,18 @@
   height: auto;
 }
 
+.onboarding-shell__exit-wrap {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.onboarding-shell__exit-wrap .form-error {
+  max-width: 220px;
+  font-size: 9px;
+  text-align: right;
+}
+
 .onboarding-shell__exit {
   display: inline-flex;
   min-height: 44px;
@@ -268,7 +280,12 @@
 
 .onboarding-progress li {
   display: grid;
+  flex: initial;
   gap: 7px;
+  padding-top: 0;
+  border-top: 0;
+  color: inherit;
+  font-size: inherit;
 }
 
 .onboarding-progress__track {
