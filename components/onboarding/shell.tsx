@@ -20,7 +20,7 @@ export function OnboardingShell({ children }: { children: ReactNode }) {
         {children}
       </section>
 
-      <aside className="onboarding-shell__aside" aria-label="Panduan onboarding Strativate">
+      <aside className="onboarding-shell__aside" aria-label="Panduan awal Strativate">
         <BrandLogo variant="mark" className="onboarding-shell__mark" />
         <div>
           <p className="kicker">Mulai dengan tenang</p>
