@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type AnimationEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { formError } from '@/lib/auth/errors'
+import { displayLabel } from '@/lib/labels'
 import { usernameError } from '@/lib/auth/rules'
 import { institutionPayload, interestPayload, profilePayload, referralPayload } from '@/lib/onboarding/rules'
 import { createClient } from '@/lib/supabase/client'
@@ -67,7 +68,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
   const institutionName = institution?.name || 'Tempat belajarmu'
   const usernameValidation = username.length > 0 ? usernameError(username) || '' : ''
   const selectedInterestNames = useMemo(
-    () => interests.filter(option => selectedInterests.includes(option.id)).map(option => option.name),
+    () => interests.filter(option => selectedInterests.includes(option.id)).map(option => displayLabel(option.name)),
     [interests, selectedInterests],
   )
 
@@ -174,13 +175,15 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     transitionTo({ stage: 'password' })
   }
 
-  async function saveIdentity(event?: FormEvent<HTMLFormElement>) {
+  async function saveIdentity(event?: FormEvent<HTMLFormElement>, skipPassword = false) {
     event?.preventDefault()
     if (busyRef.current || phase !== 'idle') return
     setError('')
 
+    const effectivePassword = skipPassword ? '' : password
+    const effectiveConfirmation = skipPassword ? '' : confirmation
     const passwordRequired = profile.registration_method === 'email' && !passwordSaved
-    const result = profilePayload({ firstName, lastName, username, password, confirmation, passwordRequired })
+    const result = profilePayload({ firstName, lastName, username, password: effectivePassword, confirmation: effectiveConfirmation, passwordRequired })
     if (result.error) {
       setError(result.error)
       return
@@ -189,8 +192,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       const db = createClient()
-      if (password) {
-        const { error: passwordUpdateError } = await db.auth.updateUser({ password })
+      if (effectivePassword) {
+        const { error: passwordUpdateError } = await db.auth.updateUser({ password: effectivePassword })
         if (passwordUpdateError && passwordUpdateError.code !== 'same_password') throw passwordUpdateError
         setPasswordSaved(true)
         setEditingPassword(false)
@@ -365,7 +368,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       onEditPassword={() => { setEditingPassword(true); clearInteractionError() }}
       onCancelEdit={() => { setEditingPassword(false); setPassword(''); setConfirmation(''); clearInteractionError() }}
       onSubmit={saveIdentity}
-      onSkipGoogle={() => { setPassword(''); setConfirmation(''); void saveIdentity() }}
+      onSkipGoogle={() => { void saveIdentity(undefined, true) }}
       onBack={() => transitionTo({ stage: 'username' })}
     />
 
@@ -432,7 +435,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       onAnimationEnd={handleStageAnimationEnd}
     >
       {renderStage()}
-      <TransitionAcknowledgement message={acknowledgement} />
     </div>
+    <TransitionAcknowledgement message={acknowledgement} />
   </div>
 }

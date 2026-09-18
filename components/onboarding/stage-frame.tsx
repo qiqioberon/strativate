@@ -10,7 +10,7 @@ export function OnboardingProgress({ stage }: { stage: VisualStage }) {
   return <div className="onboarding-progress-minimal" role="progressbar" aria-label="Progres pengenalan Strativate" aria-valuemin={1} aria-valuemax={maximum} aria-valuenow={current}>
     <span className="sr-only">{current} dari {maximum} bagian</span>
     <div className="onboarding-progress-minimal__dots" aria-hidden="true">
-      {Array.from({ length: maximum }, (_, index) => <span key={index} data-state={index < current ? 'filled' : index === current ? 'current' : 'empty'} />)}
+      {Array.from({ length: maximum }, (_, index) => <span key={index} data-state={index < current - 1 ? 'filled' : index === current - 1 ? 'current' : 'empty'} />)}
     </div>
   </div>
 }

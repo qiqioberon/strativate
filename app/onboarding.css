@@ -159,6 +159,7 @@
 }
 
 .onboarding-experience {
+  position: relative;
   display: grid;
   width: min(640px, 100%);
   min-height: min(660px, calc(100dvh - 190px));
