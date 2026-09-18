@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs'
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
 
 const onboardingUserId = '95000000-0000-0000-0000-000000000004'
@@ -72,7 +73,7 @@ async function goToUsername(page: Page) {
   await page.getByRole('button', { name: 'Mulai', exact: true }).click()
   await expect(page.getByRole('heading', { name: /Kami mengenalmu sebagai/ })).toBeVisible()
   await expect(page.getByText('Yuta Fixture', { exact: true })).toBeVisible()
-  await expect(page.getByLabel('Nama pengguna')).toHaveCount(0)
+  await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Kata sandi', { exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
   await page.getByRole('button', { name: /Ya, lanjutkan/ }).click()
@@ -81,12 +82,12 @@ async function goToUsername(page: Page) {
 
 async function goToPassword(page: Page) {
   await goToUsername(page)
-  await page.getByLabel('Nama pengguna').fill('yuta_fixture')
+  await page.getByLabel('Nama pengguna', { exact: true }).fill('yuta_fixture')
   await expect(page.getByLabel('Kata sandi', { exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
   await page.getByRole('button', { name: 'Lanjutkan dari nama pengguna' }).click()
   await expect(page.getByRole('heading', { name: /Kata sandi akunmu sudah siap|Sekarang, amankan akunmu|Akun Google-mu sudah siap/ })).toBeVisible()
-  await expect(page.getByLabel('Nama pengguna')).toHaveCount(0)
+  await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
 }
 
@@ -151,7 +152,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await expect(page.getByRole('heading', { name: 'Siapa namamu?' })).toBeVisible()
     await expect(page.getByLabel('Nama depan')).toBeVisible()
     await expect(page.getByLabel('Nama belakang')).toBeVisible()
-    await expect(page.getByLabel('Nama pengguna')).toHaveCount(0)
+    await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
     await expect(page.getByLabel('Kata sandi', { exact: true })).toHaveCount(0)
 
     await page.getByLabel('Nama depan').fill('Yuta')
@@ -160,11 +161,11 @@ test.describe.serial('immersive deterministic onboarding', () => {
 
     await expect(page.getByRole('heading', { name: 'Mau dipanggil apa di Strativate?' })).toBeVisible()
     await expect(page.getByLabel('Nama depan')).toHaveCount(0)
-    await page.getByLabel('Nama pengguna').fill('yuta_fixture')
+    await page.getByLabel('Nama pengguna', { exact: true }).fill('yuta_fixture')
     await page.getByRole('button', { name: 'Lanjutkan dari nama pengguna' }).click()
 
     await expect(page.getByRole('heading', { name: 'Kata sandi akunmu sudah siap.' })).toBeVisible()
-    await expect(page.getByLabel('Nama pengguna')).toHaveCount(0)
+    await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ubah kata sandi', exact: true }).click()
     await expect(page.getByLabel('Kata sandi baru', { exact: true })).toBeVisible()
     await expect(page.getByLabel('Konfirmasi kata sandi', { exact: true })).toBeVisible()
@@ -174,10 +175,10 @@ test.describe.serial('immersive deterministic onboarding', () => {
     expect(failure.ok()).toBe(true)
 
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).dblclick()
-    await expect(page.getByRole('alert')).toBeVisible()
+    await expect(page.locator('.onboarding-error')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Kata sandi akunmu sudah siap.' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
-    await expectHorizontallyInsideViewport(page, page.getByRole('alert'))
+    await expectHorizontallyInsideViewport(page, page.locator('.onboarding-error'))
 
     const state = await fixtureState(page)
     expect(state.saveCalls).toBe(1)
@@ -250,6 +251,12 @@ test.describe.serial('immersive deterministic onboarding', () => {
     const longInterest = page.getByText('Strategi Transformasi Digital dan Inovasi Bisnis Berkelanjutan untuk Organisasi', { exact: true })
     await expect(longInterest).toBeVisible()
 
+    mkdirSync('test-results/onboarding-screenshots', { recursive: true })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/interests-mobile-390x844.png', fullPage: true })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/interests-desktop-1440x900.png', fullPage: true })
+
     for (const viewport of requiredViewports) {
       await page.setViewportSize(viewport)
       await expectNoHorizontalOverflow(page)
@@ -273,6 +280,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await expectHorizontallyInsideViewport(page, page.locator('.onboarding-calendar-option'))
 
     await expect(page.getByRole('link', { name: /Hubungkan Google Calendar/ })).toBeVisible()
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/completion-mobile-320x568.png', fullPage: true })
     await page.getByRole('link', { name: 'Lewati sekarang', exact: true }).click()
     await expect(page).toHaveURL(/\/dashboard$/)
 
