@@ -49,10 +49,10 @@ test('order details, reports, cart links, mentoring sessions, and institutions u
   assert.match(institutions, /Plus/)
 
   const sessions = read('components/admin/private-mentoring-enrollment-management.tsx')
-  assert.match(sessions, /Session Information/)
-  assert.match(sessions, /Mentor Assignment/)
-  assert.match(sessions, /Schedule/)
-  assert.match(sessions, /Status \/ Action/)
+  assert.match(sessions, /AdminCompetitionEditor/)
+  assert.match(sessions, /AdminSessionOperations/)
+  assert.match(sessions, /AdminScheduleDialog/)
+  assert.match(sessions, /Konfirmasi pembatalan/)
 })
 
 test('admin commerce migration is guarded and reads shared commerce plus payment attempts', () => {
@@ -77,6 +77,6 @@ test('admin operations UI contains wide cards, stable table/dialog containment, 
   assert.match(css, /\.ops-metric > strong\s*\{[\s\S]*?white-space:\s*nowrap[\s\S]*?\}/)
   assert.match(css, /\.ops-table-section\s*\{[\s\S]*?width:\s*100%[\s\S]*?\}/)
   assert.match(css, /\.ops-dialog\s*\{[\s\S]*?position:\s*fixed[\s\S]*?margin:\s*auto[\s\S]*?\}/)
-  assert.match(privateMentoring, /private-mentoring-admin-page/)
-  assert.match(css, /\.private-mentoring-admin-page \.unassigned-row\s*\{[\s\S]*?display:\s*grid[\s\S]*?\}/)
+  assert.match(privateMentoring, /className=\{styles\.page\}/)
+  assert.match(privateMentoring, /className=\{styles\.dialog\}/)
 })

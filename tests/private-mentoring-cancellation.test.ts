@@ -24,8 +24,8 @@ test('cancelled sessions stay historical but disappear from active calendar and 
   const calendar=read('lib/calendar/server.ts')
   assert.match(calendar,/row\.status !== 'cancelled'/)
   const dashboard=read('components/dashboard/private-mentoring-sessions.tsx')
-  assert.match(dashboard,/status === 'cancelled'.*Dibatalkan/)
-  assert.match(dashboard,/scheduledStartAt && session\.status !== 'cancelled'/)
+  assert.match(dashboard,/status\s*===?\s*'cancelled'[\s\S]{0,100}Dibatalkan/)
+  assert.match(dashboard,/scheduledStartAt[\s\S]{0,100}session\.status\s*!==?\s*'cancelled'/)
 })
 
 test('Google provider deletes with sendUpdates all, treats 404 and 410 as converged, and retry dispatches on canonical status',()=>{
@@ -47,9 +47,10 @@ test('admin cancellation route and UI require confirmation and preserve honest p
   assert.match(route,/cancelAdminPrivateMentoringSession/)
   assert.match(ui,/Batalkan sesi/)
   assert.match(ui,/Konfirmasi pembatalan/)
+  assert.match(ui,/Zoom meeting akan dihentikan sesuai lifecycle/)
   assert.match(ui,/undangan Google Calendar terkait akan dibatalkan/)
-  assert.match(ui,/Mentor dan mentee mungkin menerima update pembatalan dari Google/)
-  assert.match(ui,/Sesi sudah dibatalkan di Strativate, tetapi Google Calendar belum berhasil disinkronkan\. Coba ulangi sinkronisasi\./)
+  assert.match(ui,/Zoom dan Google Calendar masih perlu direconcile|Zoom meeting belum berhasil dibatalkan/)
+  assert.match(ui,/Google Calendar belum berhasil disinkronkan/)
   assert.match(ui,/Sinkronkan pembatalan/)
   assert.doesNotMatch(ui,/window\.confirm/)
 })

@@ -57,7 +57,7 @@ export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEdit
   async function markAllRead(){await client.rpc('mark_all_notifications_read');await loadNotifications()}
 
   return <div className={styles.topbarActions} ref={rootRef}>
-    <button type="button" className={styles.iconButton} aria-label={unread?'Buka notifikasi, '+unread+' belum dibaca':'Buka notifikasi'} aria-haspopup="dialog" aria-expanded={openPanel==='notification'} aria-controls="dashboard-notification-popover" onClick={()=>toggle('notification')}>
+    <button type="button" className={styles.iconButton} aria-label="Buka notifikasi" aria-haspopup="dialog" aria-expanded={openPanel==='notification'} aria-controls="dashboard-notification-popover" onClick={()=>toggle('notification')}>
       <Bell aria-hidden="true"/>
       {unread?<span className={styles.notificationCount} aria-hidden="true">{unread>99?'99+':unread}</span>:null}
     </button>

@@ -52,9 +52,12 @@ test('mentee and admin UIs expose request-review-resolve flow and dedicated ment
 test('Calendar sync context uses resolved topic and existing sync implementation PATCHes the same event identity',()=>{
   const sql=read(migrationPath)
   const sync=read('lib/google-calendar/sync.ts')
+  const server=read('lib/google-calendar/server.ts')
   assert.match(sql,/'focusName',coalesce\(s\.resolved_topic,f\.name\)/i)
   assert.match(sql,/'eventId',ci\.google_event_id/i)
-  assert.match(sync,/method:\s*'PATCH'/)
+  assert.match(sync,/createEvent:\s*!input\.eventId/)
+  assert.match(sync,/createConference:\s*false/)
+  assert.match(server,/method:'PATCH'/)
   assert.match(sync,/eventId/i)
 })
 

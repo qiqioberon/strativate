@@ -12,6 +12,15 @@ OAuth refresh tokens are encrypted server-side and are never returned to browser
 4. If the OAuth app is still in Testing, add every account used for Calendar smoke testing under **Test users**.
 5. For managed Google Workspace accounts, ensure the organization allows the requested Calendar scopes.
 
+### OAuth 403 checklist
+
+If Google returns `403 access_denied`, verify the authorization configuration in this order:
+
+1. Open **Google Auth Platform → Audience → Test users** and add the exact Google accounts used for testing while the app remains in Testing.
+2. Confirm Google Calendar API is enabled in the same project as the configured OAuth client.
+3. For managed Google Workspace accounts, confirm the administrator allows the requested third-party Calendar scopes.
+4. After changing Google OAuth or Vercel environment configuration, **redeploy the production deployment** so the running server receives the updated values.
+
 ## 2. OAuth Web application
 
 Create a Web application OAuth client and register the exact callback URI used by the deployment:

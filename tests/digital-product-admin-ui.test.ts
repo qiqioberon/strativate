@@ -8,7 +8,7 @@ const manager = readFileSync('components/admin/digital-product-management.tsx', 
 
 test('admin navigation exposes Digital Products independently from the public feature flag', () => {
   assert.match(adminPage, /import \{ DigitalProductManagement \} from '@\/components\/admin\/digital-product-management'/)
-  assert.match(adminPage, /\{ label: 'Produk', items: \[[\s\S]*id: 'Private Mentoring'[\s\S]*id: 'Digital Products'[\s\S]*\] \}/)
+  assert.match(adminPage, /label: 'Produk'[\s\S]*id: 'Private Mentoring'[\s\S]*id: 'Intensive Mentoring'[\s\S]*id: 'Digital Products'/)
   assert.doesNotMatch(adminPage, /featureFlags\.digitalProducts/)
   assert.match(adminPage, /section === 'Digital Products'[\s\S]*<DigitalProductManagement \/>/)
 })
