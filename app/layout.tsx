@@ -8,6 +8,7 @@ import { brandDescription } from '@/lib/content/brand'
 
 import './globals.css'
 import './auth/auth.css'
+import './onboarding.css'
 import './program-information.css'
 import './marketing.css'
 import './digital-product-ux.css'
@@ -38,5 +39,5 @@ const poppins = Poppins({ subsets: ['latin'], weight: ['400','500','600','700','
 export const viewport: Viewport = { colorScheme:'light', themeColor:'#FF7A00' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={`${poppins.variable} ${poppins.className} antialiased`}><InitialBrandIntro /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
+  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={poppins.variable + ' ' + poppins.className + ' antialiased'}><InitialBrandIntro /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
 }
