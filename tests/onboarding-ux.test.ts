@@ -28,8 +28,8 @@ test('redesign preserves the existing onboarding payload helpers and password se
 })
 
 test('master referral and interest choices remain database-driven', () => {
-  assert.match(page, /db\.from\('referral_sources'\).*eq\('is_active', true\)/s)
-  assert.match(page, /db\.from\('interests'\).*eq\('is_active', true\)/s)
+  assert.match(page, /db\.from\('referral_sources'\)[\s\S]*?eq\('is_active', true\)/)
+  assert.match(page, /db\.from\('interests'\)[\s\S]*?eq\('is_active', true\)/)
   assert.match(wizard, /referrals\.map\(/)
   assert.match(wizard, /interests\.map\(/)
   assert.doesNotMatch(wizard, /const interests = \[/)
@@ -61,7 +61,7 @@ test('onboarding styles are isolated, responsive and reduced-motion safe', () =>
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/)
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/)
   assert.match(css, /overflow-wrap: anywhere/)
-  assert.doesNotMatch(css, /body\s*\{[^}]*overflow-x:\s*hidden/s)
+  assert.doesNotMatch(css, /body\s*\{[^}]*overflow-x:\s*hidden/)
   assert.doesNotMatch(css, /height:\s*800px/)
   assert.doesNotMatch(css, /sleep\(/)
 })

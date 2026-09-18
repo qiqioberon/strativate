@@ -23,7 +23,7 @@ export default async function CalendarOnboardingPage({ searchParams }: { searchP
     db.from('mentee_interests').select('interest_id').eq('user_id', account.profile.id),
   ])
 
-  if (institution.error || selections.error) throw new Error('Ringkasan onboarding belum dapat dimuat.')
+  if (institution.error || selections.error) throw new Error('Ringkasan pendaftaran belum dapat dimuat.')
 
   const interestIds = (selections.data || []).map(item => item.interest_id)
   const interestResult = interestIds.length
@@ -42,7 +42,7 @@ export default async function CalendarOnboardingPage({ searchParams }: { searchP
       <h1>Semua sudah siap{firstName ? ', ' + firstName : ''}.</h1>
       <p>Profil utamamu sudah tersimpan. Kamu bisa langsung masuk ke Strativate, atau menyambungkan Google Calendar terlebih dahulu.</p>
 
-      <div className="onboarding-completion__summary" aria-label="Ringkasan onboarding">
+      <div className="onboarding-completion__summary" aria-label="Ringkasan pendaftaran">
         {institution.data && <div>
           <span>Tempat belajar</span>
           <strong>{institution.data.name}</strong>

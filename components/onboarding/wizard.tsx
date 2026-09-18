@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { displayLabel } from '@/lib/labels'
 import { createClient } from '@/lib/supabase/client'
@@ -81,6 +82,7 @@ function copyForStage(stage: Exclude<VisualStage, 'welcome'>) {
 }
 
 export function OnboardingWizard({ profile, mentee, names, referrals, interests, initialInterests, initialInstitution }: Props) {
+  const router = useRouter()
   const savedStep = canonicalStep(mentee.onboarding_step)
   const introAvailable = savedStep === 1 && !profile.username
   const [stage, setStage] = useState<VisualStage>(introAvailable ? 'welcome' : stageForStep(savedStep))
@@ -212,7 +214,7 @@ export function OnboardingWizard({ profile, mentee, names, referrals, interests,
 
       if (step === 4) {
         if (!data.onboarding_completed_at) throw new Error('Completion missing')
-        window.location.assign('/onboarding/calendar')
+        router.push('/onboarding/calendar')
         return
       }
 
