@@ -109,9 +109,9 @@ test('mentoring operations require confirmation and expose undo without alternat
 
 test('first-time Calendar onboarding is optional and preserves dashboard reconnect path',()=>{
  const onboarding=read('app/onboarding/calendar/page.tsx')
- const wizard=read('components/onboarding/wizard.tsx')
+ const experience=read('components/onboarding/experience.tsx')
  const callback=read('app/api/google-calendar/callback/route.ts')
- assert.match(wizard,/\/onboarding\/calendar/)
+ assert.match(experience,/\/onboarding\/calendar/)
  assert.match(onboarding,/Lewati sekarang/)
  assert.match(onboarding,/Hubungkan Google Calendar/)
  assert.match(callback,/googleCalendarOAuthReturnPath/)
