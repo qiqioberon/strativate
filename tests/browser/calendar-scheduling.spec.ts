@@ -158,6 +158,59 @@ async function stubCalendar(page: Page, role: 'admin' | 'mentor' | 'mentee', con
   }))
 }
 
+
+function manyParticipantCalendarPayload() {
+  const { start, end } = eventTimes()
+  const events = Array.from({ length: 100 }, (_, index) => {
+    const participant = String(index + 1).padStart(3, '0')
+    return {
+      id: `many-participant-${participant}`,
+      source: 'strativate',
+      title: `Mentoring session ${participant}`,
+      start: new Date(start.getTime() + index * 60_000).toISOString(),
+      end: new Date(end.getTime() + index * 60_000).toISOString(),
+      sessionId: `94000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
+      sessionNumber: 1,
+      purchasedSessions: 1,
+      focusName: 'Business Case',
+      status: 'scheduled',
+      mentorName: 'Mentor Fixture',
+      mentorTierName: 'Top Student',
+      menteeName: `Participant ${participant}`,
+      menteeEmail: `participant-${participant}@example.test`,
+      timezone: 'Asia/Jakarta',
+      durationMinutes: 75,
+      meetingUrl: null,
+      providerMeetingUrl: null,
+      manualMeetingUrl: null,
+      googleSyncStatus: 'synced',
+      googleSyncError: null,
+      personId: `95000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
+      personName: `Participant ${participant}`,
+      personColor: `hsl(${(index * 47) % 360} 58% 42%)`,
+    }
+  })
+  return {
+    events,
+    connection: {
+      connected: false,
+      accountEmail: null,
+      status: 'not_connected',
+      scopes: [],
+      lastError: null,
+    },
+    googleError: null,
+  }
+}
+
+async function stubManyParticipantCalendar(page: Page) {
+  await page.route('**/api/calendar/events**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(manyParticipantCalendarPayload()),
+  }))
+}
+
 async function stubDenseSchedule(page: Page) {
   await page.route(`**/api/admin/private-mentoring/sessions/${sessionId}/slots`, route => route.fulfill({
     status: 200,
@@ -207,6 +260,28 @@ async function expectDialogInViewport(page: Page, dialog: Locator) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 0.5)
 }
 
+
+test('many-participant calendar legend stays compact and searchable instead of flooding the toolbar', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 850 })
+  await stubAdminCommerce(page)
+  await stubManyParticipantCalendar(page)
+  await openAdminCalendar(page, 1280)
+
+  const trigger = page.locator('.calendar-legend-menu > button')
+  await expect(trigger).toBeVisible()
+  await expect(trigger).toContainText('101')
+  await expect(page.getByText('Participant 099', { exact: true })).toHaveCount(0)
+  await expectNoDocumentOverflow(page)
+
+  await trigger.click()
+  const legend = page.locator('.calendar-legend-popover')
+  await expect(legend).toBeVisible()
+  await legend.getByRole('searchbox', { name: 'Cari participant' }).fill('Participant 099')
+  await expect(legend.getByText('Participant 099', { exact: true })).toBeVisible()
+  await expect(legend.getByText('Google Calendar eksternal', { exact: true })).toBeVisible()
+  await expectNoDocumentOverflow(page)
+})
+
 test('admin calendar stays contained and event detail stays inside desktop, tablet, and mobile viewports', async ({ page }) => {
   await stubAdminCommerce(page)
   await stubCalendar(page, 'admin')
@@ -248,7 +323,20 @@ test('admin reschedules from an actual slot without a manual datetime field', as
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
-      context: { sessionId, focusName: 'Business Analysis & Case Structuring', durationMinutes: 75, sessionNumber: 2, purchasedSessions: 3 },
+      context: {
+        sessionId,
+        focusName: 'Business Analysis & Case Structuring',
+        durationMinutes: 75,
+        sessionNumber: 2,
+        purchasedSessions: 3,
+        mentors: [{
+          mentorId,
+          mentorName: 'Muhammad Aqil',
+          timezone: 'Asia/Jakarta',
+          availability: [{ start: slotStart.toISOString(), end: slotEnd.toISOString() }],
+          googleCalendarStatus: 'verified',
+        }],
+      },
       slots: [{ mentorId, mentorName: 'Muhammad Aqil', timezone: 'Asia/Jakarta', start: slotStart.toISOString(), end: slotEnd.toISOString(), menteeConflict: false }],
       mentorWarnings: [],
       message: '',
@@ -268,6 +356,8 @@ test('admin reschedules from an actual slot without a manual datetime field', as
   const schedule = page.getByRole('dialog', { name: 'Jadwalkan Private Mentoring' })
   await expect(schedule).toBeVisible()
   await expect(schedule.locator('input[type="datetime-local"]')).toHaveCount(0)
+  await expect(schedule.locator('.schedule-day-card')).toHaveCount(1)
+  await schedule.locator('.schedule-day-card').click()
   await expect(schedule.locator('.schedule-slots button')).toHaveCount(1)
   await schedule.locator('.schedule-slots button').click()
   await schedule.getByRole('button', { name: 'Konfirmasi slot' }).click()
@@ -294,8 +384,10 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
     await expectDialogInViewport(page, schedule)
     await expectNoDocumentOverflow(page)
     await expect(schedule.locator('.schedule-mentor-card')).toHaveCount(3)
-    await expect(schedule.locator('.schedule-availability-chip')).toHaveCount(30)
-    await expect(schedule.locator('.schedule-slots button')).toHaveCount(120)
+    const dayCards = schedule.locator('.schedule-day-card')
+    expect(await dayCards.count()).toBeGreaterThan(0)
+    await dayCards.last().click()
+    expect(await schedule.locator('.schedule-slots button').count()).toBeGreaterThan(0)
     await expect(schedule.getByRole('button', { name: 'Tutup penjadwalan' })).toBeVisible()
     await expect(schedule.getByRole('button', { name: 'Batal' })).toBeVisible()
     await expect(schedule.getByRole('button', { name: 'Konfirmasi slot' })).toBeVisible()
@@ -305,8 +397,8 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
       const availabilityPanel = dialog.querySelector<HTMLElement>('.schedule-availability-panel')!
       const slotPanel = dialog.querySelector<HTMLElement>('.schedule-slot-panel')!
       const mentorGrid = dialog.querySelector<HTMLElement>('.schedule-mentor-grid')!
-      const availabilityLists = [...dialog.querySelectorAll<HTMLElement>('.schedule-availability-scroll')]
-      const slotList = dialog.querySelector<HTMLElement>('.schedule-slot-panel .schedule-slot-list')!
+      const availabilityLists = [...dialog.querySelectorAll<HTMLElement>('.schedule-mentor-days')]
+      const slotList = dialog.querySelector<HTMLElement>('.schedule-slots')!
       const summary = dialog.querySelector<HTMLElement>('.schedule-dialog__summary')!
       const filters = dialog.querySelector<HTMLElement>('.schedule-filter-bar')!
       const style = (element: Element) => getComputedStyle(element)
@@ -373,12 +465,13 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
     } else {
       expect(layout.summaryColumns).toBe(4)
       expect(layout.mentorColumns).toBe(2)
-      expect(layout.filterColumns).toBe(3)
+      expect(layout.filterColumns).toBe(5)
     }
 
-    const lastAvailability = schedule.locator('.schedule-availability-chip').last()
+    const lastAvailability = schedule.locator('.schedule-day-card').last()
     await lastAvailability.scrollIntoViewIfNeeded()
     await expect(lastAvailability).toBeVisible()
+    await lastAvailability.click()
     await expect(schedule.getByRole('button', { name: 'Batal' })).toBeVisible()
     await expect(schedule.getByRole('button', { name: 'Konfirmasi slot' })).toBeVisible()
 
@@ -403,7 +496,9 @@ test('mentee calendar keeps Strativate schedule read-only with provider-neutral 
 
   await expect(page.getByRole('heading', { name: 'Jadwal', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Connect Google Calendar' })).toBeVisible()
-  await expect(page.locator('.calendar-legend')).toContainText('Yuta tes')
+  await page.locator('.calendar-legend-menu > button').click()
+  await expect(page.locator('.calendar-legend-popover')).toContainText('Yuta tes')
+  await page.keyboard.press('Escape')
   await page.locator('.calendar-event.strativate').first().click()
 
   const detail = page.locator('dialog.calendar-dialog:not(.schedule-dialog)')

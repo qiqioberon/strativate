@@ -61,7 +61,7 @@ export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
     <div className="ops-form-stack">
       <label className="ops-field"><span>Kategori (opsional)</span><select value={categoryId} onChange={event=>setCategoryId(event.target.value)}><option value="">Tanpa kategori</option>{categories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <label className="ops-field"><span>Nama lomba / bidang lomba</span><input value={name} maxLength={300} onChange={event=>setName(event.target.value)} placeholder="Contoh: Business Case Competition"/></label>
-      <button className="button button-outline" type="button" disabled={busy} onClick={()=>void save()}><Save aria-hidden="true"/>{busy?'Menyimpan…':'Simpan competition'}</button>
+      <button className="button competition-save-button" type="button" disabled={busy} onClick={()=>void save()}><Save aria-hidden="true"/>{busy?'Menyimpan…':'Simpan lomba'}</button>
       {message?<p className="muted" role="status">{message}</p>:null}
     </div>
   </section>

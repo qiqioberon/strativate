@@ -170,7 +170,16 @@ select test_payments.assert(
   and (select status = 'paid' and paid_at is not null from public.orders),
   'trusted paid transition marks attempt and Order paid'
 );
+select test_payments.assert(
+  (select invoice_number like 'STR-INV-%' and char_length(invoice_number) >= 21 from public.orders),
+  'paid Order receives a readable stable invoice number'
+);
+select test_payments.assert(
+  (select count(*) = 1 and bool_and(status = 'pending') from public.transactional_email_outbox),
+  'paid transition durably enqueues exactly one invoice delivery'
+);
 select set_config('test.paid_at', (select paid_at::text from public.orders), true);
+select set_config('test.invoice_number', (select invoice_number from public.orders), true);
 
 select public.apply_midtrans_payment_status(
   current_setting('test.retry_attempt')::uuid, 'paid', 'settlement', 'midtrans-transaction-1', null, 'bank_transfer'
@@ -178,6 +187,14 @@ select public.apply_midtrans_payment_status(
 select test_payments.assert(
   (select paid_at::text = current_setting('test.paid_at') from public.orders),
   'duplicate paid notification preserves paid_at'
+);
+select test_payments.assert(
+  (select invoice_number = current_setting('test.invoice_number') from public.orders),
+  'duplicate paid notification preserves invoice number'
+);
+select test_payments.assert(
+  (select count(*) = 1 from public.transactional_email_outbox),
+  'duplicate paid notification does not duplicate invoice delivery'
 );
 
 select public.apply_midtrans_payment_status(
@@ -191,4 +208,4 @@ select test_payments.assert(
 reset role;
 
 rollback;
-select 'PASS: Payment Attempt expiry, claim ownership, retry, and monotonic Order transitions' as result;
+select 'PASS: Payment Attempt expiry, claim ownership, retry, invoice dedupe, and monotonic Order transitions' as result;

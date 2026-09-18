@@ -16,7 +16,7 @@ export function AvailabilityPanel({ mentorId, onSaved, open }: { mentorId: strin
 }
 
 export function NotificationsPanel({ open }: { open: (section: MentorDashboardSection) => void }) {
-  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter/></div>
+  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter onOpenRelated={item=>open(item.related_entity==='session'?'assignments':'overview')}/></div>
 }
 
 export function MentorProfilePanel({

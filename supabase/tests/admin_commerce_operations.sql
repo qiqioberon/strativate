@@ -3,19 +3,19 @@ begin;
 
 create schema test_admin_commerce;
 grant usage on schema test_admin_commerce to authenticated;
-create function test_admin_commerce.assert(ok boolean, message text) returns void language plpgsql as $
+create function test_admin_commerce.assert(ok boolean, message text) returns void language plpgsql as '
 begin
-  if ok is distinct from true then raise exception 'ASSERTION FAILED: %', message; end if;
+  if ok is distinct from true then raise exception ''ASSERTION FAILED: %'', message; end if;
 end;
-$;
-create function test_admin_commerce.denied(command text, message text) returns void language plpgsql as $
+';
+create function test_admin_commerce.denied(command text, message text) returns void language plpgsql as '
 begin
   begin execute command;
   exception when insufficient_privilege or check_violation or unique_violation or foreign_key_violation or invalid_parameter_value or raise_exception then return;
   end;
-  raise exception 'UNEXPECTEDLY ALLOWED: %', message;
+  raise exception ''UNEXPECTEDLY ALLOWED: %'', message;
 end;
-$;
+';
 grant execute on all functions in schema test_admin_commerce to authenticated;
 
 select test_admin_commerce.assert(to_regprocedure('public.list_admin_commerce_orders(text,text,timestamp with time zone,timestamp with time zone,integer,integer)') is not null, 'admin order RPC exists');
@@ -74,12 +74,12 @@ select test_admin_commerce.denied($q$select public.create_commerce_cart_link(
 select public.create_commerce_cart_link(
   '99000000-0000-0000-0000-000000000002',
   repeat('b', 64),
-  array[(select id from public.commerce_items where item_kind='private_mentoring' and is_available order by id limit 1)]
+  array[(select commerce_item_id from public.list_admin_purchasable_commerce_items() where item_kind='private_mentoring' order by commerce_item_id limit 1)]
 );
 select public.create_commerce_cart_link(
   '99000000-0000-0000-0000-000000000002',
   repeat('c', 64),
-  array[(select id from public.commerce_items where item_kind='private_mentoring' and is_available order by id limit 1)]
+  array[(select commerce_item_id from public.list_admin_purchasable_commerce_items() where item_kind='private_mentoring' order by commerce_item_id limit 1)]
 );
 select test_admin_commerce.assert((select count(*) = 2 from public.list_admin_cart_links_page()), 'mentoring remains repeat-purchasable through separate Cart Links');
 reset role;

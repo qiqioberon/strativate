@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Bell,
   Building2,
   CalendarDays,
   FileBarChart2,
@@ -35,6 +36,7 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 import { RoleCalendar } from '@/components/calendar/role-calendar'
 import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-sidebar-utilities'
 import { DashboardTopbarActions } from '@/components/dashboard/dashboard-topbar-actions'
+import { DashboardNotificationCenter } from '@/components/dashboard/notification-center'
 import { displayName } from '@/lib/auth/rules'
 
 type Section =
@@ -43,6 +45,7 @@ type Section =
   | 'Mentoring Sessions'
   | 'Calendar'
   | 'Cart Links'
+  | 'Notifications'
   | 'Mentees'
   | 'Mentors'
   | 'Private Mentoring'
@@ -68,6 +71,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Mentoring Sessions', label: 'Mentoring Sessions', icon: UsersRound },
       { id: 'Calendar', label: 'Jadwal', icon: CalendarDays },
       { id: 'Cart Links', label: 'Cart Links', icon: ShoppingCart },
+      { id: 'Notifications', label: 'Notifikasi', icon: Bell },
     ],
   },
   {
@@ -131,6 +135,7 @@ export default function AdminDashboard() {
           {section === 'Mentoring Sessions' ? <PrivateMentoringSessionManagement/> : null}
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}
+          {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={item => navigate(item.related_entity === 'order' ? 'Orders' : item.related_entity === 'session' || item.related_entity === 'enrollment' ? 'Mentoring Sessions' : 'Overview')}/></> : null}
           {section === 'Mentees' ? <MenteeManagement/> : null}
           {section === 'Mentors' ? <MentorManagement/> : null}
           {section === 'Private Mentoring' ? <PrivateMentoringManagement/> : null}

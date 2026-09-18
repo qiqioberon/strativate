@@ -23,6 +23,41 @@ const emptyAdminCommerceReport = {
   best_sellers: [],
 }
 
+async function stubNotifications(page: import('@playwright/test').Page) {
+  const item = {
+    id: '98000000-0000-0000-0000-000000000001',
+    recipient_user_id: null,
+    recipient_role: 'admin',
+    type: 'fixture',
+    title: 'Template',
+    message: 'Template notification fixture',
+    related_entity: null,
+    related_entity_id: null,
+    idempotency_key: 'dashboard-fixture',
+    read_at: null,
+    created_at: '2026-09-19T00:00:00.000Z',
+  }
+
+  await page.route('**/rest/v1/notifications**', async route => {
+    if (route.request().method() === 'HEAD') {
+      await route.fulfill({ status: 200, headers: { 'Content-Range': '0-0/1' }, body: '' })
+      return
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/1' },
+      body: JSON.stringify([item]),
+    })
+  })
+  await page.route('**/rest/v1/rpc/mark_notification_read', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }))
+  await page.route('**/rest/v1/rpc/mark_all_notifications_read', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }))
+}
+
+test.beforeEach(async ({ page }) => {
+  await stubNotifications(page)
+})
+
 async function stubAdminCommerce(page: import('@playwright/test').Page) {
   await page.route('**/rest/v1/rpc/list_admin_commerce_orders', route => route.fulfill({
     status: 200,

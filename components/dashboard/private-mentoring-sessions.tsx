@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarDays, CheckCircle2, Clock3, ExternalLink, Eye, MessageCircle, UserRound, X } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock3, ExternalLink, Eye, MessageCircle, Pencil, Save, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -56,6 +56,7 @@ export function PrivateMentoringSessions({sessions,sessionFocuses}:{sessions:Pri
   const[competitionDrafts,setCompetitionDrafts]=useState<Record<string,CompetitionDraft>>({})
   const[categories,setCategories]=useState<Category[]>([])
   const[selected,setSelected]=useState<PrivateMentoringSessionView|null>(null)
+  const[editingCompetitions,setEditingCompetitions]=useState<Set<string>>(()=>new Set())
   const detailRef=useRef<HTMLDialogElement>(null)
   const enrollmentIds=[...new Set(sessions.map(session=>session.enrollmentId))]
 
@@ -117,6 +118,7 @@ export function PrivateMentoringSessions({sessions,sessionFocuses}:{sessions:Pri
       competition_name:draft.name.trim(),
       competition_updated_at:new Date().toISOString(),
     }}))
+    setEditingCompetitions(current=>{const next=new Set(current);next.delete(enrollmentId);return next})
     setMessage('Competition / bidang lomba tersimpan. Data ini terpisah dari topic/scope tiap sesi.')
     router.refresh()
   }
@@ -135,13 +137,20 @@ export function PrivateMentoringSessions({sessions,sessionFocuses}:{sessions:Pri
       return <section className="workspace-card mentoring-group" key={enrollmentId}>
         <div className="mentoring-group__header"><div><p className="kicker">Private Mentoring · {rows[0]?.mentorTierName}</p><h3>{purchased} sesi mentoring</h3><p>{used} selesai · {remaining} tersisa{purchased>=5?' · Mentor utama: '+(primaryMentor||'menunggu penetapan admin'):''}</p></div><span className="ops-status ops-status--info">{rows[0]?.mentorTierName}</span></div>
 
-        <section className="schedule-day">
+        <section className="schedule-day mentoring-competition-section">
           <div><p className="kicker">Competition / bidang lomba</p><h4>{comp?.competition_name||'Wajib dilengkapi sebelum scheduling'}</h4><p className="muted">Informasi ini berlaku untuk enrollment Private Mentoring ini dan berbeda dari topik/scope tiap sesi.</p></div>
-          <div className="ops-form-stack">
+          {comp?.competition_name&&!editingCompetitions.has(enrollmentId)?<div className="competition-readonly">
+            <div><span>Kategori</span><strong>{comp.competition_category_name||'Tanpa kategori'}</strong></div>
+            <div><span>Nama lomba / bidang lomba</span><strong>{comp.competition_name}</strong></div>
+            <button className="button button-outline" type="button" onClick={()=>setEditingCompetitions(current=>new Set(current).add(enrollmentId))}><Pencil aria-hidden="true"/>Edit</button>
+          </div>:<div className="ops-form-stack competition-edit-form">
             <label className="ops-field"><span>Kategori (opsional)</span><select value={compDraft.categoryId} onChange={event=>setCompetitionDrafts(current=>({...current,[enrollmentId]:{...compDraft,categoryId:event.target.value}}))}><option value="">Tanpa kategori</option>{categories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
             <label className="ops-field"><span>Nama lomba / bidang lomba</span><input value={compDraft.name} maxLength={300} onChange={event=>setCompetitionDrafts(current=>({...current,[enrollmentId]:{...compDraft,name:event.target.value}}))} placeholder="Contoh: Business Case Competition"/></label>
-            <button className="button button-outline" type="button" disabled={busyId==='competition:'+enrollmentId} onClick={()=>void saveCompetition(enrollmentId)}>{busyId==='competition:'+enrollmentId?'Menyimpan…':'Simpan competition'}</button>
-          </div>
+            <div className="button-row">
+              <button className="button competition-save-button" type="button" disabled={busyId==='competition:'+enrollmentId} onClick={()=>void saveCompetition(enrollmentId)}><Save aria-hidden="true"/>{busyId==='competition:'+enrollmentId?'Menyimpan…':'Simpan lomba'}</button>
+              {comp?.competition_name?<button className="button button-ghost" type="button" onClick={()=>{setCompetitionDrafts(current=>({...current,[enrollmentId]:{categoryId:comp.competition_category_id??'',name:comp.competition_name??''}}));setEditingCompetitions(current=>{const next=new Set(current);next.delete(enrollmentId);return next})}}>Batal</button>:null}
+            </div>
+          </div>}
         </section>
 
         <div className="mentoring-session-list">{rows.map(session=>{

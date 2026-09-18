@@ -48,6 +48,15 @@ insert into public.private_mentoring_sessions (id, enrollment_id, session_number
   ('99500000-0000-0000-0000-000000000001','99400000-0000-0000-0000-000000000001',1,'97200000-0000-0000-0000-000000000001','awaiting_scheduling'),
   ('99500000-0000-0000-0000-000000000002','99400000-0000-0000-0000-000000000001',2,'97200000-0000-0000-0000-000000000002','awaiting_scheduling'),
   ('99500000-0000-0000-0000-000000000003','99400000-0000-0000-0000-000000000001',3,'97200000-0000-0000-0000-000000000001','awaiting_scheduling');
+update public.private_mentoring_sessions
+set topic_status='confirmed',
+    resolved_topic='Fixture confirmed topic for cancellation scheduling',
+    topic_updated_at=now()
+where id in (
+  '99500000-0000-0000-0000-000000000001',
+  '99500000-0000-0000-0000-000000000002',
+  '99500000-0000-0000-0000-000000000003'
+);
 update public.private_mentoring_enrollments set competition_name='Fixture Competition', competition_updated_at=now() where id='99400000-0000-0000-0000-000000000001';
 
 insert into public.mentor_availability_rules (mentor_id, week_start_date, day_of_week, start_time, end_time)

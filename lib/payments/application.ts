@@ -6,6 +6,7 @@ import { getOrderWithItems } from '@/lib/commerce/server'
 import type { OrderWithItems } from '@/lib/commerce/types'
 import type { PaymentAttempt } from '@/lib/supabase/database.types'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { deliverPaidInvoiceForOrder } from '@/lib/email/invoice-delivery'
 
 import {
   createMidtransSnapTransaction,
@@ -91,6 +92,16 @@ async function applyProviderStatus(attempt: PaymentAttempt, status: MidtransStat
     p_payment_type: status.paymentType,
   })
   if (error || !data) throw new Error('Payment status could not be applied.')
+  if (status.normalizedStatus === 'paid') {
+    try {
+      await deliverPaidInvoiceForOrder(attempt.order_id)
+    } catch (error) {
+      console.error('Paid invoice delivery could not be started.', {
+        orderId: attempt.order_id,
+        code: error instanceof Error ? error.message : 'unknown',
+      })
+    }
+  }
   return data
 }
 

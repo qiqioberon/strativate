@@ -7,6 +7,8 @@ import {
   Clipboard,
   ExternalLink,
   Link2,
+  Palette,
+  Search,
   Loader2,
   RefreshCw,
   Unplug,
@@ -104,7 +106,10 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
   const [selected, setSelected] = useState<EventItem | null>(null)
   const [scheduleId, setScheduleId] = useState<string | null>(null)
   const [meetingDraft, setMeetingDraft] = useState('')
+  const [legendOpen, setLegendOpen] = useState(false)
+  const [legendQuery, setLegendQuery] = useState('')
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const legendRef = useRef<HTMLDivElement>(null)
 
   const range = useMemo(() => {
     const start = addDays(monday(new Date(cursor.getFullYear(), cursor.getMonth(), 1)), -7)
@@ -156,6 +161,21 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
     }
     if (!selected && dialog.open) dialog.close()
   }, [selected])
+  useEffect(() => {
+    if (!legendOpen) return
+    const closeOutside = (event: PointerEvent) => {
+      if (legendRef.current && !legendRef.current.contains(event.target as Node)) setLegendOpen(false)
+    }
+    const closeEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLegendOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', closeEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', closeEscape)
+    }
+  }, [legendOpen])
 
   const events = useMemo(
     () => payload?.events.filter(event => (event.source === 'strativate' ? showStrativate : showGoogle)) ?? [],
@@ -167,8 +187,12 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
       if (event.source !== 'strativate' || !event.personId || !event.personColor) continue
       people.set(event.personId,{name:event.personName || event.menteeName || 'Mentee',color:event.personColor})
     }
-    return [...people.entries()].map(([id,value])=>({id,...value}))
+    return [...people.entries()].map(([id,value])=>({id,...value})).sort((a,b)=>a.name.localeCompare(b.name,'id-ID'))
   },[payload])
+  const filteredLegend=useMemo(()=>{
+    const query=legendQuery.trim().toLocaleLowerCase('id-ID')
+    return query?legend.filter(item=>item.name.toLocaleLowerCase('id-ID').includes(query)):legend
+  },[legend,legendQuery])
   const weekStart = monday(cursor)
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const monthStart = monday(new Date(cursor.getFullYear(), cursor.getMonth(), 1))
@@ -260,10 +284,20 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
         <label><input type="checkbox" checked={showStrativate} onChange={event => setShowStrativate(event.target.checked)} /><span className="source-badge source-strativate">Strativate Session</span></label>
         <label><input type="checkbox" checked={showGoogle} onChange={event => setShowGoogle(event.target.checked)} /><span className="source-badge source-google">Google Calendar</span></label>
       </div>
-      <div className="calendar-legend" aria-label="Legenda warna kalender">
-        {legend.slice(0, 12).map(item => <span key={item.id}><i style={{ backgroundColor:item.color }} aria-hidden="true"/>{item.name}</span>)}
-        {legend.length > 12 ? <span>+{legend.length - 12} orang lain pada rentang ini</span> : null}
-        <span><i className="calendar-legend__google" aria-hidden="true"/>Google Calendar eksternal</span>
+      <div className="calendar-legend-menu" ref={legendRef}>
+        <button className="button button-outline" type="button" aria-haspopup="dialog" aria-expanded={legendOpen} onClick={()=>setLegendOpen(value=>!value)}><Palette aria-hidden="true"/>Legend <span>{legend.length+1}</span></button>
+        {legendOpen?<div className="calendar-legend-popover" role="dialog" aria-label="Legenda warna kalender">
+          <div className="calendar-legend-popover__head">
+            <div><strong>Legenda kalender</strong><small>Warna participant tetap stabil mengikuti identitas kalender yang tersimpan.</small></div>
+            <button className="icon-button" type="button" aria-label="Tutup legenda" onClick={()=>setLegendOpen(false)}><X aria-hidden="true"/></button>
+          </div>
+          {legend.length>8?<label className="calendar-legend-search"><Search aria-hidden="true"/><input aria-label="Cari participant" type="search" value={legendQuery} onChange={event=>setLegendQuery(event.target.value)} placeholder="Cari participant"/></label>:null}
+          <div className="calendar-legend-list">
+            {filteredLegend.map(item=><span key={item.id}><i style={{backgroundColor:item.color}} aria-hidden="true"/><b>{item.name}</b></span>)}
+            {filteredLegend.length===0?<p className="muted">Participant tidak ditemukan.</p>:null}
+            <span><i className="calendar-legend__google" aria-hidden="true"/><b>Google Calendar eksternal</b></span>
+          </div>
+        </div>:null}
       </div>
 
       {loading ? <p className="calendar-loading"><Loader2 className="spin" />Memuat kalender…</p> : error ? <p className="form-error" role="alert">{error}</p> : null}

@@ -22,16 +22,22 @@ export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEdit
   const [notifications,setNotifications]=useState<Notification[]>([])
   const [notificationLoading,setNotificationLoading]=useState(true)
   const [notificationError,setNotificationError]=useState('')
+  const [unreadCount,setUnreadCount]=useState(0)
   const rootRef=useRef<HTMLDivElement>(null)
   const name=displayName(account)
   const initials=name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'S'
-  const unread=notifications.filter(item=>!item.read_at).length
+  const unread=unreadCount
 
   const loadNotifications=useCallback(async()=>{
     setNotificationLoading(true);setNotificationError('')
-    const {data,error}=await client.from('notifications').select('*').order('created_at',{ascending:false}).limit(30)
-    if(error){setNotificationError('Notifikasi belum dapat dimuat.');setNotificationLoading(false);return}
-    setNotifications(data??[]);setNotificationLoading(false)
+    const [recent,countResult]=await Promise.all([
+      client.from('notifications').select('*').order('created_at',{ascending:false}).limit(30),
+      client.from('notifications').select('id',{count:'exact',head:true}).is('read_at',null),
+    ])
+    if(recent.error||countResult.error){setNotificationError('Notifikasi belum dapat dimuat.');setNotificationLoading(false);return}
+    setNotifications(recent.data??[])
+    setUnreadCount(countResult.count??0)
+    setNotificationLoading(false)
   },[client])
 
   useEffect(()=>{void loadNotifications()},[loadNotifications])

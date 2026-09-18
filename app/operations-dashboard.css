@@ -261,3 +261,50 @@
 .ops-combobox-options button:hover,.ops-combobox-options button.is-active{background:#fff4e8}
 .ops-combobox-options button strong{font-size:.72rem}.ops-combobox-options button span,.ops-combobox-options>p{color:#7d7068;font-size:.64rem}
 .cart-link-product-card.is-disabled{opacity:.62;background:#f7f4f2}.cart-link-product-card.is-disabled .cart-link-product-card__select{cursor:not-allowed}
+
+/* Scalable calendar legend + role-wide notification history. */
+.calendar-legend-menu{position:relative;margin:0 0 12px auto;width:fit-content}
+.calendar-legend-menu>.button{display:inline-flex;align-items:center;gap:7px}
+.calendar-legend-menu>.button>span{min-width:20px;height:20px;display:inline-grid;place-items:center;border-radius:999px;background:#f3ede8;font-size:.65rem}
+.calendar-legend-popover{position:absolute;right:0;top:calc(100% + 8px);z-index:35;width:min(360px,calc(100vw - 32px));padding:14px;border:1px solid #e7ddd5;border-radius:14px;background:#fff;box-shadow:0 18px 44px rgba(39,54,74,.16)}
+.calendar-legend-popover__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.calendar-legend-popover__head strong,.calendar-legend-popover__head small{display:block}
+.calendar-legend-popover__head small{margin-top:3px;color:#7d7169;font-size:.68rem;line-height:1.45}
+.calendar-legend-search{margin-top:12px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;padding:0 10px;border:1px solid #e7ddd5;border-radius:10px}
+.calendar-legend-search svg{width:15px;height:15px;color:#8a7d75}
+.calendar-legend-search input{min-width:0;border:0;outline:0;padding:9px 0;background:transparent}
+.calendar-legend-list{display:grid;gap:5px;max-height:280px;overflow:auto;margin-top:10px;padding-right:3px}
+.calendar-legend-list>span{display:grid;grid-template-columns:12px minmax(0,1fr);align-items:center;gap:8px;padding:7px 8px;border-radius:8px}
+.calendar-legend-list>span:hover{background:#faf7f4}
+.calendar-legend-list i{width:10px;height:10px;border-radius:999px}
+.calendar-legend-list b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.73rem}
+.notification-history{display:grid;gap:14px}
+.notification-history__toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.notification-history__toolbar>div{display:grid;gap:3px}
+.notification-history__toolbar strong{font-size:.88rem}
+.notification-history__toolbar span{color:#81756e;font-size:.68rem}
+.notification-list{display:grid;gap:10px}
+.notification-item{display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;align-items:start;gap:12px;text-align:left}
+.notification-item.is-unread{background:#fffaf5;border-color:#f4c59b;box-shadow:inset 3px 0 0 #ff7a00}
+.notification-history__icon{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:#fff0e2;color:#d75a00}
+.notification-history__icon svg{width:17px;height:17px}
+.notification-history__body{min-width:0;display:grid;gap:6px}
+.notification-history__title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.notification-history__title-row h3{font-size:.86rem}
+.notification-history__title-row time{flex:0 0 auto;color:#8a7d75;font-size:.64rem}
+.notification-history__body>p{margin:0;color:#625a55;font-size:.74rem;line-height:1.55}
+.notification-history__actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#8a7d75;font-size:.64rem}
+.notification-history__actions .text-link{font-size:.68rem}
+.notification-history__more{justify-self:center}
+.notification-history-state{display:grid;justify-items:start;gap:10px}
+.mentoring-group,.mentoring-session-list,.mentoring-session-card,.mentoring-session-card__body{min-width:0;max-width:100%}
+.mentoring-session-card__meta span{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.mentoring-session-card__actions{display:flex;min-width:0;max-width:100%;gap:8px;margin-top:2px;flex-wrap:wrap}
+.mentoring-session-card__actions .button{min-width:0;max-width:100%;min-height:36px;padding-inline:14px;white-space:normal;text-align:center}
+@media(max-width:640px){
+  .calendar-legend-menu{margin-left:0}
+  .calendar-legend-popover{position:fixed;left:16px;right:16px;top:130px;width:auto;max-height:calc(100dvh - 160px)}
+  .notification-history__toolbar,.notification-history__title-row{align-items:flex-start;flex-direction:column}
+  .notification-item{grid-template-columns:32px minmax(0,1fr)!important}
+  .notification-history__icon{width:32px;height:32px}
+}

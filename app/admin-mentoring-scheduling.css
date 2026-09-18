@@ -48,3 +48,80 @@
   .schedule-dialog .calendar-dialog__head{padding:15px 16px}.schedule-dialog .calendar-dialog__head p:last-child{font-size:.7rem}.schedule-dialog__body{padding:11px;gap:11px}.schedule-dialog__summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.schedule-dialog__summary>div{padding:9px 10px}.schedule-filter-bar{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px}.schedule-filter-copy{grid-column:1/-1}.schedule-section-heading{padding:12px 13px}.schedule-mentor-grid{padding:9px}.schedule-mentor-card{padding:11px}.schedule-mentor-days{grid-template-columns:minmax(0,1fr)}.schedule-slots--selected-day{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 11px 12px}.schedule-selected-day{margin:10px 11px 0}.schedule-dialog .calendar-dialog__actions{padding:11px;display:grid;grid-template-columns:1fr 1fr}.schedule-dialog .calendar-dialog__actions .button{width:100%;min-width:0}.schedule-empty-state{margin:9px}
 }
 @media(max-width:430px){.schedule-dialog__summary{grid-template-columns:minmax(0,1fr)}.schedule-filter-bar{grid-template-columns:minmax(0,1fr)}.schedule-filter-copy{grid-column:auto}.schedule-filter-actions{justify-content:space-between}.schedule-filter-time{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.schedule-section-heading{align-items:flex-start;flex-direction:column;gap:7px}.schedule-section-heading>span{align-self:flex-start}.schedule-mentor-card__head{flex-direction:column}.schedule-mentor-card__badges{align-items:flex-start;flex-direction:row;flex-wrap:wrap}.schedule-slots--selected-day{grid-template-columns:minmax(0,1fr)}.mentoring-session-detail-row{grid-template-columns:minmax(0,1fr)}.mentoring-session-detail-row>.ops-status{justify-self:start}.schedule-dialog .calendar-dialog__actions{grid-template-columns:1fr}}
+
+/* Kelola Sesi: one dialog, one primary vertical scroll flow. */
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog){
+  width:min(920px,calc(100vw - 28px));
+  max-height:min(90dvh,900px);
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:#f8fafc;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .calendar-dialog__head{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:#fff;
+  border-bottom:1px solid #eee6df;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .schedule-slot-list{
+  max-height:none;
+  overflow:visible;
+  overscroll-behavior:auto;
+  padding:18px 22px 26px;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) > .schedule-day{
+  margin:18px 22px 0;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .ops-form-stack,
+.mentoring-competition-section .ops-form-stack{
+  display:grid;
+  gap:18px;
+  margin-top:18px;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .ops-field,
+.mentoring-competition-section .ops-field{
+  display:grid;
+  gap:7px;
+}
+.competition-save-button{
+  width:fit-content;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:38px;
+  padding:9px 14px;
+  border:1px solid #157347;
+  border-radius:10px;
+  background:#157347;
+  color:#fff;
+  font:inherit;
+  font-size:.75rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.competition-save-button:hover{background:#11633d}
+.competition-save-button:focus-visible{outline:3px solid rgba(21,115,71,.25);outline-offset:2px}
+.competition-save-button:disabled{cursor:not-allowed;opacity:.55}
+.competition-save-button svg{width:16px;height:16px}
+.competition-readonly{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr)) auto;
+  align-items:end;
+  gap:14px;
+  margin-top:18px;
+  padding:16px;
+  border:1px solid #e8e1dc;
+  border-radius:12px;
+  background:#fffdfa;
+}
+.competition-readonly>div{display:grid;gap:5px}
+.competition-readonly span{font-size:.64rem;font-weight:750;text-transform:uppercase;letter-spacing:.05em;color:#81756e}
+.competition-readonly strong{font-size:.84rem;color:#27364a}
+@media(max-width:720px){
+  .competition-readonly{grid-template-columns:1fr}
+  .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) > .schedule-day{margin-left:14px;margin-right:14px}
+  .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .schedule-slot-list{padding-left:14px;padding-right:14px}
+}
