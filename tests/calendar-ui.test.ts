@@ -18,7 +18,7 @@ test('shared calendar detail exposes duration and timezone and keeps role-correc
   assert.match(calendar, />Durasi</)
   assert.match(calendar, />Timezone</)
   assert.match(calendar, /Retry Google Sync/)
-  assert.match(calendar, /Reset ke Google Meet/)
+  assert.match(calendar, /Reset ke provider link/)\n  assert.match(calendar, /Join Meeting/)\n  assert.match(calendar, /calendar-legend/)
   assert.match(calendar, /Hubungi Admin via WhatsApp/)
   assert.match(calendar, /Atur availability/)
 })

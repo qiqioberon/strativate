@@ -349,3 +349,14 @@
     max-height: calc(100vh - 5.2rem);
   }
 }
+
+.notificationCount{position:absolute;top:-.28rem;right:-.28rem;min-width:1.25rem;height:1.25rem;display:inline-grid;place-items:center;padding:0 .28rem;border:2px solid #fff;border-radius:999px;background:#b42318;color:#fff;font-size:.64rem;font-weight:800}
+.notificationHeaderRow{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.markAllButton{border:0;background:transparent;color:#b3151c;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.72rem;font-weight:700}
+.markAllButton svg{width:.9rem;height:.9rem}
+.notificationUnread{background:#fff2e8;box-shadow:inset 3px 0 0 #dc0d16}
+.unreadLabel{display:inline-flex!important;width:fit-content;margin-bottom:.22rem;border-radius:999px;padding:.12rem .38rem;background:#dc0d16;color:#fff!important;font-size:.6rem!important;font-weight:800;text-transform:uppercase}
+.notificationItem{width:100%;border:0;text-align:left;cursor:pointer}
+.notificationItem small{display:block;margin-top:.3rem;color:#98a2b3;font-size:.66rem}
+.notificationState{display:flex;align-items:center;gap:.45rem;padding:1rem;color:#667085;font-size:.8rem}
+.notificationState button{border:0;background:transparent;color:#b3151c;font-weight:700;cursor:pointer}

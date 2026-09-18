@@ -4,12 +4,13 @@ import { getGoogleConnectionStatus, listPersonalGoogleEvents } from '@/lib/googl
 import { mergeCalendarEvents, type GoogleCalendarEvent, type StrativateCalendarEvent } from './merge'
 
 type AccountShape = { user:{id:string}; profile:{role:'admin'|'mentor'|'mentee'} }
-
 type AnyRow = Record<string, any>
 
-function strativateEvent(row: AnyRow, role: AccountShape['profile']['role']): StrativateCalendarEvent {
+function strativateEvent(row: AnyRow, role: AccountShape['profile']['role'], accountUserId:string, colors:Map<string,string>): StrativateCalendarEvent {
   const start = row.scheduled_start_at
   const end = row.scheduled_end_at
+  const personId = role === 'mentee' ? accountUserId : row.mentee_id ?? accountUserId
+  const personName = role === 'mentee' ? 'Saya' : (row.mentee_name ?? row.mentee_email ?? 'Mentee')
   return {
     id: row.session_id,
     source:'strativate',
@@ -27,9 +28,12 @@ function strativateEvent(row: AnyRow, role: AccountShape['profile']['role']): St
     mentorId:row.mentor_id ?? null,
     mentorName:row.mentor_name ?? null,
     mentorTierName:row.mentor_tier_name ?? null,
-    menteeId:row.mentee_id ?? null,
-    menteeName:row.mentee_name ?? null,
+    menteeId:row.mentee_id ?? (role === 'mentee' ? accountUserId : null),
+    menteeName:row.mentee_name ?? (role === 'mentee' ? 'Saya' : null),
     menteeEmail:role === 'admin' ? row.mentee_email ?? null : null,
+    personId,
+    personName,
+    personColor:colors.get(personId) ?? null,
     timezone:row.mentor_timezone ?? null,
     durationMinutes:row.duration_minutes ?? (start && end ? Math.round((new Date(end).getTime()-new Date(start).getTime())/60000) : null),
     meetingUrl:row.meeting_url ?? null,
@@ -56,7 +60,17 @@ export async function loadCalendarEvents(account: AccountShape, start: string, e
     if (result.error) throw new Error(result.error.message)
     rows = (result.data ?? []).filter((row:AnyRow) => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
   }
-  const strativate = rows.filter(row=>row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at).map(row=>strativateEvent(row,account.profile.role))
+
+  const personIds = [...new Set(rows.map(row => account.profile.role === 'mentee' ? account.user.id : row.mentee_id).filter(Boolean) as string[])]
+  const colorResults = await Promise.all(personIds.map(async personId => {
+    const result = await supabase.rpc('get_calendar_person_color',{p_user_id:personId})
+    return [personId, result.error ? null : result.data] as const
+  }))
+  const colors = new Map(colorResults.flatMap(([personId,color]) => typeof color === 'string' ? [[personId,color] as const] : []))
+
+  const strativate = rows
+    .filter(row=>row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at)
+    .map(row=>strativateEvent(row,account.profile.role,account.user.id,colors))
   const connection = await getGoogleConnectionStatus(account.user.id)
   let google: GoogleCalendarEvent[] = []
   let googleError: string | null = null

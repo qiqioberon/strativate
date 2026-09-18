@@ -84,7 +84,7 @@ export function OnboardingWizard({ profile, mentee, names, referrals, interests,
 
       if (step === 4) {
         if (!data.onboarding_completed_at) throw new Error('Completion missing')
-        window.location.assign('/auth/continue')
+        window.location.assign('/onboarding/calendar')
       } else {
         setStep(step + 1)
         window.scrollTo({ top: 0, behavior: 'smooth' })

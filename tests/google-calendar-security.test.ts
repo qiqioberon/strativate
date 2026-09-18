@@ -27,8 +27,9 @@ test('mentee optional conflict checks request the narrow freebusy scope they act
   assert.match(scopes, /\n  return \[\.\.\.BASE_SCOPES, 'https:\/\/www\.googleapis\.com\/auth\/calendar\.events\.readonly', 'https:\/\/www\.googleapis\.com\/auth\/calendar\.freebusy'\]\n/)
 })
 
-test('Google event retry keeps conferenceData on PATCH when a Meet must be regenerated', () => {
+test('Google event creation is independent from conference creation for Zoom-backed sessions', () => {
   const value = source()
-  assert.doesNotMatch(value, /conferenceData:\s*_conferenceData/)
+  assert.match(value, /if \(input\.createEvent\)/)
+  assert.match(value, /if \(input\.createConference\) body\.conferenceData/)
   assert.match(value, /const \{ id: _id, \.\.\.patchBody \} = body/)
 })

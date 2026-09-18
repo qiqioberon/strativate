@@ -5,7 +5,7 @@ export type ApprovalStatus = "approved" | "pending" | "rejected" | "archived"
 export type RegistrationMethod = "email" | "google" | "invitation"
 export type DigitalProductContentType = "pdf" | "video"
 
-export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
+export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; calendar_color?:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
 export type MenteeProfile = { user_id:string; institution_id:string|null; major_or_faculty:string|null; cohort_year:number|null; referral_source_id:string|null; referral_other_text:string|null; other_interest_text:string|null; onboarding_step:number; onboarding_completed_at:string|null; created_at:string; updated_at:string }
 export type Institution = { id:string; name:string; normalized_name:string; type:InstitutionType; province:string|null; city:string|null; external_id:string|null; source:string; source_url:string|null; approval_status:ApprovalStatus; institution_status:string|null; submitted_by:string|null; created_at:string; updated_at:string }
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
@@ -42,9 +42,9 @@ export type CompetitionCategory = { id:string; code:string; slug:string; name:st
 export type PrivateMentoringLearningPath = { id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type PrivateMentoringSessionFocus = { id:string; code:string; slug:string; name:string; description:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type PrivateMentoringPackage = { id:string; mentor_tier_id:string; session_count:number; price_amount:number; reference_price_amount:number|null; duration_minutes:number; max_participants:number; is_active:boolean; sort_order:number; created_at:string; updated_at:string }
-export type CommerceCartLink = { id:string; mentee_id:string; token_hash:string; status:'active'|'claimed'|'revoked'; claimed_cart_id:string|null; created_by:string; claimed_at:string|null; created_at:string; updated_at:string }
+export type CommerceCartLink = { id:string; mentee_id:string; token_hash:string; status:'active'|'claimed'|'revoked'; claimed_cart_id:string|null; created_by:string; claimed_at:string|null; private_competition_category_id?:string|null; private_competition_name?:string|null; created_at:string; updated_at:string }
 export type CommerceCartLinkItem = { cart_link_id:string; commerce_item_id:string; created_at:string }
-export type PrivateMentoringEnrollment = { id:string; mentee_id:string; order_item_id:string; package_id:string; purchased_sessions:number; learning_path_id:string|null; competition_category_id:string|null; status:'active'|'completed'; created_at:string; updated_at:string }
+export type PrivateMentoringEnrollment = { id:string; mentee_id:string; order_item_id:string; package_id:string; purchased_sessions:number; learning_path_id:string|null; competition_category_id:string|null; competition_name?:string|null; competition_updated_at?:string|null; status:'active'|'completed'; created_at:string; updated_at:string }
 export type PrivateMentoringSessionStatus = 'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled'
 export type PrivateMentoringSession = { id:string; enrollment_id:string; session_number:number; session_focus_id:string|null; mentor_id:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; status:PrivateMentoringSessionStatus; created_at:string; updated_at:string }
 export type CartLinkMentee = { user_id:string; email:string; display_name:string|null }
@@ -53,6 +53,7 @@ export type AdminCartLinkView = { id:string; mentee_id:string; mentee_email:stri
 export type PrivateMentoringSessionViewRow = { session_id:string; enrollment_id:string; session_number:number; status:string; session_focus_id:string|null; focus_name:string|null; mentor_id:string|null; mentor_name:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; mentor_tier_code:string; mentor_tier_name:string; package_id:string; purchased_sessions:number }
 export type AdminPrivateMentoringSessionRow = { session_id:string; enrollment_id:string; mentee_id:string; mentee_email:string; session_number:number; status:string; session_focus_id:string|null; focus_name:string|null; mentor_id:string|null; mentor_name:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; mentor_tier_id:string; mentor_tier_code:string; mentor_tier_name:string; purchased_sessions:number }
 export type EligiblePrivateMentoringMentor = { mentor_id:string; mentor_name:string; tier_id:string; tier_code:string; tier_name:string }
+export type Notification = { id:string; recipient_user_id:string|null; recipient_role:AppRole; type:string; title:string; message:string; related_entity:string|null; related_entity_id:string|null; idempotency_key:string; read_at:string|null; created_at:string }
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = { Row:Row; Insert:Insert; Update:Update; Relationships:[] }
 
@@ -90,6 +91,7 @@ export type Database = {
       commerce_cart_link_items: Table<CommerceCartLinkItem, Partial<CommerceCartLinkItem> & Pick<CommerceCartLinkItem,'cart_link_id'|'commerce_item_id'>>
       private_mentoring_enrollments: Table<PrivateMentoringEnrollment, Partial<PrivateMentoringEnrollment> & Pick<PrivateMentoringEnrollment,'mentee_id'|'order_item_id'|'package_id'|'purchased_sessions'>>
       private_mentoring_sessions: Table<PrivateMentoringSession, Partial<PrivateMentoringSession> & Pick<PrivateMentoringSession,'enrollment_id'|'session_number'>>
+      notifications: Table<Notification, Partial<Notification> & Pick<Notification,'recipient_role'|'type'|'title'|'message'|'idempotency_key'>>
     }
     Views: { [_ in never]: never }
     Functions: {
@@ -132,6 +134,7 @@ export type Database = {
       list_cart_link_mentees: { Args:{p_query?:string}; Returns:CartLinkMentee[] }
       list_purchasable_commerce_items: { Args:{p_query?:string}; Returns:PurchasableCommerceItem[] }
       create_commerce_cart_link: { Args:{p_mentee_id:string;p_token_hash:string;p_commerce_item_ids:string[]}; Returns:string }
+      create_commerce_cart_link_with_context: { Args:{p_mentee_id:string;p_token_hash:string;p_commerce_item_ids:string[];p_competition_category_id?:string|null;p_competition_name?:string|null}; Returns:string }
       list_admin_cart_links: { Args:Record<PropertyKey,never>; Returns:AdminCartLinkView[] }
       claim_commerce_cart_link: { Args:{p_token_hash:string}; Returns:string }
       set_private_mentoring_session_focus: { Args:{p_session_id:string;p_focus_id:string}; Returns:PrivateMentoringSession }
@@ -141,6 +144,8 @@ export type Database = {
       list_my_private_mentoring_sessions: { Args:Record<PropertyKey,never>; Returns:PrivateMentoringSessionViewRow[] }
       list_admin_private_mentoring_sessions: { Args:{p_query?:string}; Returns:AdminPrivateMentoringSessionRow[] }
       list_eligible_private_mentoring_mentors: { Args:{p_session_id:string}; Returns:EligiblePrivateMentoringMentor[] }
+      mark_notification_read: { Args:{p_notification_id:string}; Returns:undefined }
+      mark_all_notifications_read: { Args:Record<PropertyKey,never>; Returns:undefined }
     }
     Enums: { app_role:AppRole; institution_type:InstitutionType; institution_approval_status:ApprovalStatus }
     CompositeTypes: { [_ in never]: never }

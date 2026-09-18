@@ -1,14 +1,13 @@
 'use client'
 
-import { Bell } from 'lucide-react'
-
 import { ProfileForm } from '@/components/auth/profile-form'
+import { DashboardNotificationCenter } from '@/components/dashboard/notification-center'
 import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
 import { MentorPublicProfileForm } from '@/components/mentor/mentor-public-profile-form'
 import type { MentorAvailabilityState, MentorDashboardData } from '@/lib/mentor/dashboard'
 import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
 
-import { availabilityLabel, availabilityTone, EmptyState, MentorPageHeader } from './dashboard-ui'
+import { availabilityLabel, availabilityTone, MentorPageHeader } from './dashboard-ui'
 import type { MentorDashboardSection } from './mentor-overview'
 import styles from './mentor-profile-layout.module.css'
 
@@ -17,7 +16,7 @@ export function AvailabilityPanel({ mentorId, onSaved, open }: { mentorId: strin
 }
 
 export function NotificationsPanel({ open }: { open: (section: MentorDashboardSection) => void }) {
-  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Tidak ada data notifikasi palsu; pusat notifikasi mentor akan tampil di sini ketika backend canonical tersedia." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><EmptyState icon={Bell} title="Belum ada notifikasi operasional." detail="Untuk saat ini, jadwal dan penugasan terbaru dapat Anda pantau langsung dari data canonical." action={<div className="button-row"><button type="button" className="button button-outline" onClick={() => open('calendar')}>Lihat kalender</button><button type="button" className="button button-outline" onClick={() => open('assignments')}>Lihat penugasan</button></div>}/></div>
+  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter/></div>
 }
 
 export function MentorProfilePanel({

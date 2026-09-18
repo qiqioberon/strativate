@@ -156,6 +156,7 @@ select test_private_mentoring.assert(
 
 update public.orders set status = 'paid', paid_at = now() where user_id = '96000000-0000-0000-0000-000000000002';
 select test_private_mentoring.assert((select count(*) = 1 from public.private_mentoring_enrollments where mentee_id = '96000000-0000-0000-0000-000000000002'), 'paid Private Mentoring creates one enrollment');
+update public.private_mentoring_enrollments set competition_name='Fixture Competition', competition_updated_at=now() where mentee_id='96000000-0000-0000-0000-000000000002';
 select test_private_mentoring.assert(
   (select purchased_sessions = 3 from public.private_mentoring_enrollments where mentee_id = '96000000-0000-0000-0000-000000000002'),
   'enrollment snapshots purchased session entitlement'

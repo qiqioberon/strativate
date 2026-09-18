@@ -254,3 +254,10 @@
   .commerce-empty-actions { width:100%; align-items:stretch; flex-direction:column; }
   .commerce-empty-actions .button { width:100%; }
 }
+
+.ops-combobox-options{position:absolute;z-index:90;top:100%;left:0;right:0;display:grid;max-height:260px;overflow:auto;margin-top:6px;padding:6px;border:1px solid #e2d6cf;border-radius:12px;background:#fff;box-shadow:0 16px 42px #2d180f24}
+.ops-field:has(.ops-combobox-options){position:relative}
+.ops-combobox-options button{display:grid;gap:2px;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left}
+.ops-combobox-options button:hover,.ops-combobox-options button.is-active{background:#fff4e8}
+.ops-combobox-options button strong{font-size:.72rem}.ops-combobox-options button span,.ops-combobox-options>p{color:#7d7068;font-size:.64rem}
+.cart-link-product-card.is-disabled{opacity:.62;background:#f7f4f2}.cart-link-product-card.is-disabled .cart-link-product-card__select{cursor:not-allowed}

@@ -1,6 +1,7 @@
 import 'server-only'
 import { buildBookableSlots, type SlotMentor, type TimeInterval } from '@/lib/calendar/slot-engine'
 import { getGoogleConnectionStatus, getGoogleFreeBusy, syncPrivateMentoringSession } from '@/lib/google-calendar/server'
+import { cancelZoomMeeting, reconcileZoomMeeting } from '@/lib/zoom/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveGoogleCalendarBusy, type GoogleCalendarAvailabilityStatus } from './scheduling-availability'
 
@@ -126,20 +127,25 @@ export async function scheduleAdminPrivateMentoringSession(sessionId:string,ment
   const supabase=await createClient();const rpc=supabase as unknown as RpcClient
   const {data,error}=await rpc.rpc('admin_schedule_private_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized})
   if(error) throw new Error(error.message)
+  const zoom=await reconcileZoomMeeting(sessionId)
+  if(zoom.status==='failed') return {session:data,sync:{status:'provider_failed' as const,error:zoom.error,meetingUrl:null,eventId:null},zoom}
+  if(zoom.status==='pending') return {session:data,sync:{status:'provider_pending' as const,meetingUrl:zoom.meetingUrl??null,eventId:null},zoom}
   const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
-  return {session:data,sync}
+  return {session:data,sync,zoom}
 }
 
 export async function cancelAdminPrivateMentoringSession(sessionId:string,currentAdminId:string){
   const supabase=await createClient();const rpc=supabase as unknown as RpcClient
   const {data,error}=await rpc.rpc('admin_cancel_private_mentoring_session',{p_session_id:sessionId})
   if(error) throw new Error(error.message)
+  const zoom=await cancelZoomMeeting(sessionId)
   try {
     const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
-    return {session:data,sync}
+    return {session:data,sync,zoom}
   } catch (syncError) {
     return {
       session:data,
+      zoom,
       sync:{
         status:'failed' as const,
         meetingUrl:null,

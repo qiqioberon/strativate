@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAccount } from '@/lib/auth/server'
-import { completeGoogleCalendarOAuth } from '@/lib/google-calendar/server'
+import { completeGoogleCalendarOAuth, googleCalendarOAuthReturnPath } from '@/lib/google-calendar/server'
 
 function calendarReturnPath(role: 'admin' | 'mentor' | 'mentee') {
   if (role === 'admin') return '/admin'
@@ -16,7 +16,8 @@ export async function GET(request: Request) {
   const oauthError = url.searchParams.get('error')
 
   if (oauthError) {
-    const target = new URL(calendarReturnPath(account.profile.role), url.origin)
+    const requested = await googleCalendarOAuthReturnPath(account.user.id, state)
+    const target = new URL(requested || calendarReturnPath(account.profile.role), url.origin)
     target.searchParams.set('calendar', 'denied')
     target.searchParams.set('reason', oauthError)
     return NextResponse.redirect(target)

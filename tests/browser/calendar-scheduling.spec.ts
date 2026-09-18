@@ -37,6 +37,9 @@ function calendarPayload(role: 'admin' | 'mentor' | 'mentee', connected = false)
       manualMeetingUrl: null,
       googleSyncStatus: 'synced',
       googleSyncError: null,
+      personId: '93000000-0000-0000-0000-000000000099',
+      personName: 'Yuta tes',
+      personColor: '#175CD3',
     },
     ...(connected ? [{
       id: 'google-personal-1',
@@ -391,7 +394,7 @@ test('dense admin scheduling keeps one primary vertical scroll surface on deskto
   }
 })
 
-test('mentee calendar keeps Strativate schedule read-only with Meet and WhatsApp actions', async ({ page }) => {
+test('mentee calendar keeps Strativate schedule read-only with provider-neutral meeting and WhatsApp actions', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 })
   await stubCalendar(page, 'mentee')
   await page.goto('http://localhost:3001/dashboard')
@@ -400,17 +403,18 @@ test('mentee calendar keeps Strativate schedule read-only with Meet and WhatsApp
 
   await expect(page.getByRole('heading', { name: 'Jadwal', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Connect Google Calendar' })).toBeVisible()
+  await expect(page.locator('.calendar-legend')).toContainText('Yuta tes')
   await page.locator('.calendar-event.strativate').first().click()
 
   const detail = page.locator('dialog.calendar-dialog:not(.schedule-dialog)')
-  await expect(detail.getByRole('link', { name: 'Join Google Meet' })).toHaveAttribute('href', 'https://meet.google.com/abc-defg-hij')
+  await expect(detail.getByRole('link', { name: 'Join Meeting' })).toHaveAttribute('href', 'https://meet.google.com/abc-defg-hij')
   await expect(detail.getByRole('link', { name: 'Hubungi Admin via WhatsApp' })).toBeVisible()
   await expect(detail.getByRole('button', { name: 'Reschedule' })).toHaveCount(0)
   await expectDialogInViewport(page, detail)
   await expectNoDocumentOverflow(page)
 })
 
-test('mentor calendar combines connected Google events with assigned Strativate sessions and links to availability', async ({ page }) => {
+test('mentor calendar combines connected Google events with assigned Strativate sessions, legend, and availability', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await stubCalendar(page, 'mentor', true)
   await page.goto('http://localhost:3001/mentor')
@@ -422,7 +426,7 @@ test('mentor calendar combines connected Google events with assigned Strativate 
   await page.locator('.calendar-event.strativate').first().click()
 
   const detail = page.locator('dialog.calendar-dialog:not(.schedule-dialog)')
-  await expect(detail.getByRole('link', { name: 'Join Google Meet' })).toBeVisible()
+  await expect(detail.getByRole('link', { name: 'Join Meeting' })).toBeVisible()
   await expect(detail.getByRole('link', { name: 'Hubungi Admin via WhatsApp' })).toBeVisible()
   await expect(detail.getByRole('button', { name: 'Atur availability' })).toBeVisible()
   await expect(detail.getByRole('button', { name: 'Reschedule' })).toHaveCount(0)

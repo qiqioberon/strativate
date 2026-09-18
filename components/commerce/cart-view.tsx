@@ -1,9 +1,10 @@
 'use client'
 
-import { AlertTriangle, ArrowRight, ShoppingBag, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Loader2, ShoppingBag, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useFormStatus } from 'react-dom'
 
 import { checkoutActiveCart } from '@/app/cart/actions'
 import { buttonVariants } from '@/components/ui/button'
@@ -13,6 +14,15 @@ import type { ActiveCart } from '@/lib/commerce/types'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { ContextBackButton } from './context-back-button'
+
+function CheckoutButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="submit" disabled={pending} aria-busy={pending}>
+      {pending ? <><Loader2 className="spin" aria-hidden="true" size={16} />Menyiapkan checkout…</> : <>Checkout <ArrowRight aria-hidden="true" size={16} /></>}
+    </button>
+  )
+}
 
 function itemKindLabel(kind: string) {
   if (kind === 'digital_product') return 'Produk Digital'
@@ -91,7 +101,7 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
           <span>Ringkasan</span>
           <div><p>Total</p><strong>{formatRupiah(cart.totalAmount)}</strong></div>
           <p>Harga checkout dihitung kembali oleh server dari Commerce Item yang masih tersedia.</p>
-          {cart.hasUnavailableItems ? <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="button" disabled>Checkout tidak tersedia</button> : <form action={checkoutActiveCart}><button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="submit">Checkout <ArrowRight aria-hidden="true" size={16} /></button></form>}
+          {cart.hasUnavailableItems ? <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="button" disabled>Checkout tidak tersedia</button> : <form action={checkoutActiveCart}><CheckoutButton /></form>}
         </aside>
       </div>
     </div>

@@ -88,6 +88,13 @@ export async function beginGoogleCalendarOAuth(userId: string, role: AppRole, re
   return `${AUTH_URL}?${params.toString()}`
 }
 
+export async function googleCalendarOAuthReturnPath(userId: string, state: string | null) {
+  if (!state) return null
+  const { data } = await db().from('google_calendar_oauth_states').select('return_path,expires_at').eq('state_hash', sha256(state)).eq('user_id', userId).maybeSingle()
+  if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null
+  return safeReturnPath(data.return_path)
+}
+
 export async function completeGoogleCalendarOAuth(userId: string, state: string, code: string) {
   const stateHash = sha256(state)
   const admin = db()
@@ -187,7 +194,7 @@ export class GoogleCalendarRestProvider implements CalendarProvider {
     if (input.createConference) body.conferenceData = { createRequest:{ requestId:`strativate-${input.sessionId}-${Date.now()}`, conferenceSolutionKey:{type:'hangoutsMeet'} } }
     const query = new URLSearchParams({ conferenceDataVersion:'1', sendUpdates:'all' })
     const base = `${CALENDAR_API}/calendars/${encodeURIComponent(input.calendarId)}/events`
-    if (input.createConference) {
+    if (input.createEvent) {
       try {
         const created = await googleFetch<GoogleEventApi>(this.organizerUserId, `${base}?${query}`, {method:'POST',body:JSON.stringify(body)})
         return {eventId:created.id,iCalUID:created.iCalUID ?? null,meetingUrl:meetingUrl(created)}
@@ -227,7 +234,7 @@ export async function syncPrivateMentoringSession(sessionId: string, currentAdmi
       calendarId:context.calendarId||'primary',
       eventId:context.eventId,
       summary:`Strativate Private Mentoring — ${context.focusName || 'Mentoring Session'}`,
-      description:`Session ${context.sessionNumber}/${context.purchasedSessions}\nStrativate Private Mentoring\nSession reference: ${sessionId}`,
+      description:`Session ${context.sessionNumber}/${context.purchasedSessions}\nStrativate Private Mentoring\nMeeting: ${context.manualMeetingUrl || context.providerMeetingUrl || 'pending'}\nSession reference: ${sessionId}`,
       start:context.start || '',
       end:context.end || '',
       attendees:[context.menteeEmail, context.mentorEmail || ''],
@@ -238,8 +245,10 @@ export async function syncPrivateMentoringSession(sessionId: string, currentAdmi
       await integration.update({organizer_user_id:organizerUserId,sync_status:'cancelled',sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
       return {status:'cancelled' as const,meetingUrl:null,eventId:context.eventId}
     }
-    const syncStatus = result.meetingUrl ? 'synced' : 'pending'
-    await integration.update({organizer_user_id:organizerUserId,google_event_id:result.eventId,google_ical_uid:result.iCalUID,provider_meeting_url:result.meetingUrl,sync_status:syncStatus,sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
+    const persistedProviderMeetingUrl = result.meetingUrl || context.providerMeetingUrl
+    const effectiveMeetingUrl = context.manualMeetingUrl || persistedProviderMeetingUrl
+    const syncStatus = effectiveMeetingUrl ? 'synced' : 'pending'
+    await integration.update({organizer_user_id:organizerUserId,google_event_id:result.eventId,google_ical_uid:result.iCalUID,provider_meeting_url:persistedProviderMeetingUrl,sync_status:syncStatus,sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
     return {status:syncStatus,meetingUrl:result.effectiveMeetingUrl,eventId:result.eventId}
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Google Calendar synchronization failed.'

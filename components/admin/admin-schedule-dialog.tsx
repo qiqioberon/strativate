@@ -107,7 +107,10 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled}:{sessionId:s
       const response=await fetch(`/api/admin/private-mentoring/sessions/${sessionId}/schedule`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mentorId:selected.mentorId,start:selected.start})})
       const data=await response.json()
       if(!response.ok)throw new Error(data.error||'Jadwal belum dapat disimpan.')
-      setNotice(data.sync?.status==='failed'?'Jadwal tersimpan di Strativate, tetapi sinkronisasi Google gagal. Coba Retry dari detail kalender.':'Jadwal tersimpan dan sinkronisasi Google diproses.')
+      if(data.sync?.status==='provider_failed') setNotice('Jadwal tersimpan di Strativate, tetapi Zoom belum berhasil dibuat atau diperbarui. Gunakan Retry sync dari detail sesi.')
+      else if(data.sync?.status==='provider_pending') setNotice('Jadwal tersimpan. Zoom sedang direconcile; Calendar akan dibuat setelah meeting siap.')
+      else if(data.sync?.status==='failed') setNotice('Zoom siap, tetapi sinkronisasi Google Calendar gagal. Coba Retry sync dari detail sesi.')
+      else setNotice('Jadwal tersimpan. Zoom dan Google Calendar sudah direconcile.')
       onScheduled?.()
     }catch(err){setError(err instanceof Error?err.message:'Jadwal belum dapat disimpan.')}
     finally{setBusy(false)}

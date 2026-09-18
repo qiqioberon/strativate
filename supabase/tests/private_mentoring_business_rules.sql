@@ -74,6 +74,13 @@ select mentor_id,date_trunc('week',local_start)::date,extract(isodow from local_
  ('99100000-0000-0000-0000-000000000004'::uuid,(now()+interval '2 days') at time zone 'Asia/Jakarta'),
  ('99100000-0000-0000-0000-000000000003'::uuid,(now()+interval '3 days') at time zone 'Asia/Jakarta'),
  ('99100000-0000-0000-0000-000000000004'::uuid,(now()+interval '3 days') at time zone 'Asia/Jakarta')) as x(mentor_id,local_start) on conflict do nothing;
+select test_private_mentoring_rules.denied($q$select public.admin_schedule_private_mentoring_session((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'99100000-0000-0000-0000-000000000003',((date_trunc('day',(now()+interval '2 days') at time zone 'Asia/Jakarta')+interval '10 hours') at time zone 'Asia/Jakarta'))$q$,'competition is required before scheduling');
+select public.admin_set_private_mentoring_competition(
+ (select id from public.private_mentoring_enrollments where mentee_id='99100000-0000-0000-0000-000000000002' and purchased_sessions=5),
+ null,
+ 'National Business Case Competition'
+);
+select test_private_mentoring_rules.assert((select competition_name='National Business Case Competition' from public.private_mentoring_enrollments where mentee_id='99100000-0000-0000-0000-000000000002' and purchased_sessions=5),'admin can prefill enrollment competition separately from session topic');
 select public.admin_schedule_private_mentoring_session((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'99100000-0000-0000-0000-000000000003',((date_trunc('day',(now()+interval '2 days') at time zone 'Asia/Jakarta')+interval '10 hours') at time zone 'Asia/Jakarta'));
 
 select set_config('request.jwt.claim.sub','99100000-0000-0000-0000-000000000002',true);
@@ -93,6 +100,10 @@ select public.admin_resolve_private_mentoring_session_topic((select s.id from pu
 select test_private_mentoring_rules.assert((select count(*)=2 from public.list_eligible_private_mentoring_enrollment_mentors((select id from public.private_mentoring_enrollments where mentee_id='99100000-0000-0000-0000-000000000002' and purchased_sessions=3 order by created_at limit 1))),'small package exposes all active same-tier mentors');
 
 select public.admin_set_private_mentoring_session_status((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'completed');
+select public.admin_set_private_mentoring_session_status((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'scheduled');
+select test_private_mentoring_rules.assert((select status='active' from public.private_mentoring_enrollments where mentee_id='99100000-0000-0000-0000-000000000002' and purchased_sessions=5),'undo completion restores enrollment active state');
+select public.admin_set_private_mentoring_session_status((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'completed');
+select test_private_mentoring_rules.assert((select count(*)=3 from public.private_mentoring_session_status_events ev join public.private_mentoring_sessions s on s.id=ev.session_id join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),'complete, undo, and re-complete are audited');
 select set_config('request.jwt.claim.sub','99100000-0000-0000-0000-000000000002',true);
 select test_private_mentoring_rules.denied($q$select public.submit_private_mentoring_topic_request((select s.id from public.private_mentoring_sessions s join public.private_mentoring_enrollments e on e.id=s.enrollment_id where e.mentee_id='99100000-0000-0000-0000-000000000002' and e.purchased_sessions=5 and s.session_number=1),null,'Harus ditolak')$q$,'completed session topic is immutable');
 select test_private_mentoring_rules.assert((select count(*)=1 from public.list_my_intensive_mentoring_entitlements()),'mentee can read Intensive entitlement alongside active Private enrollments');

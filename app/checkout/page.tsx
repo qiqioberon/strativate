@@ -58,7 +58,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
               </div>
               <div className="checkout-order__total"><span>Total</span><strong>{formatRupiah(order.total_amount)}</strong></div>
             </section>
-            {order.status === 'paid' ? <section className="checkout-paid-state"><CheckCircle2 aria-hidden="true" size={28} /><h2>Pembayaran sudah terverifikasi.</h2><p>Produk atau sesi yang dibeli sudah tercatat pada dashboard akunmu.</p><Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/dashboard">Buka Dashboard</Link></section> : <MidtransEmbed orderId={order.id} clientKey={midtrans.clientKey} snapScriptUrl={midtrans.snapScriptUrl} />}
+            {order.status === 'paid' ? <section className="checkout-paid-state"><CheckCircle2 aria-hidden="true" size={28} /><h2>Pembayaran berhasil.</h2><p>Produk atau mentoring yang dibeli sudah tersedia pada dashboard akunmu.</p><Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/dashboard">Buka Dashboard</Link></section> : <MidtransEmbed orderId={order.id} clientKey={midtrans.clientKey} snapScriptUrl={midtrans.snapScriptUrl} />}
           </div>
           <aside className="checkout-customer"><span>Pelanggan</span><strong>{displayName}</strong><p>{account.user.email ?? 'Email akun tidak tersedia'}</p><dl><div><dt>Order</dt><dd>{order.id}</dd></div><div><dt>Status</dt><dd>{statusLabel(order.status)}</dd></div></dl></aside>
         </div>

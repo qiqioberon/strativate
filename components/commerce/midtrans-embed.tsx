@@ -40,8 +40,12 @@ export function MidtransEmbed({
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [canStart, setCanStart] = useState(true)
+  const pollingAttempt = useRef(0)
+  const reconciling = useRef(false)
 
   const reconcile = useCallback(async () => {
+    if (reconciling.current) return
+    reconciling.current = true
     setMessage('Memverifikasi pembayaran…')
     setError(null)
     try {
@@ -65,8 +69,10 @@ export function MidtransEmbed({
         setMessage('Pembayaran masih menunggu konfirmasi.')
       }
     } catch {
-      setError('Status pembayaran belum dapat diverifikasi. Coba verifikasi lagi.')
+      setError('Status pembayaran belum dapat diverifikasi. Sinkronkan status bila koneksi sudah stabil.')
       setMessage('Pembayaran belum dapat dikonfirmasi.')
+    } finally {
+      reconciling.current = false
     }
   }, [orderId, router])
 
@@ -102,6 +108,40 @@ export function MidtransEmbed({
   }, [orderId, router, scriptReady, starting])
 
   useEffect(() => {
+    const paymentStatus = checkout?.payment?.status
+    if (!checkout?.payment || checkout.order.status === 'paid' || paymentStatus === 'failed' || paymentStatus === 'expired' || paymentStatus === 'cancelled') {
+      pollingAttempt.current = 0
+      return
+    }
+
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const delays = [2500, 4000, 6500, 10000, 15000, 20000]
+
+    const schedule = () => {
+      if (cancelled || document.visibilityState !== 'visible' || pollingAttempt.current >= delays.length) return
+      timer = setTimeout(async () => {
+        if (cancelled) return
+        pollingAttempt.current += 1
+        await reconcile()
+        schedule()
+      }, delays[pollingAttempt.current])
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') schedule()
+      else if (timer) clearTimeout(timer)
+    }
+
+    schedule()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [checkout?.order.status, checkout?.payment, reconcile])
+
+  useEffect(() => {
     const token = checkout?.payment?.snapToken
     if (!scriptReady || !token || !window.snap?.embed || checkout?.order.status === 'paid') return
     if (embeddedToken.current === token) return
@@ -115,7 +155,7 @@ export function MidtransEmbed({
         void reconcile()
       },
       onError: () => {
-        setError('Midtrans melaporkan kendala pada pembayaran. Verifikasi status atau coba lagi.')
+        setError('Midtrans melaporkan kendala pada pembayaran. Status akan disinkronkan otomatis; gunakan fallback manual bila diperlukan.')
         void reconcile()
       },
       onClose: () => {
@@ -166,7 +206,7 @@ export function MidtransEmbed({
         ) : null}
         {checkout?.payment ? (
           <button className={buttonVariants({ variant: 'outline', size: 'marketing' })} type="button" onClick={() => void reconcile()}>
-            Verifikasi status
+            Sinkronkan status
           </button>
         ) : null}
       </div>

@@ -31,7 +31,7 @@ test('Private Mentoring admin manages only genuine catalog data, never marketing
 test('generic cart-link admin UI searches mentees and commerce items without manual UUID or custom price', () => {
   const source = read('components/admin/commerce-cart-link-management.tsx')
   assert.match(source, /list_cart_link_mentees/)
-  assert.match(source, /list_purchasable_commerce_items/)
+  assert.match(source, /list_admin_cart_link_items/)\n  assert.match(source, /Sudah dimiliki/)\n  assert.match(source, /role=\"combobox\"/)
   assert.match(source, /api\/admin\/cart-links/)
   assert.match(source, /navigator\.clipboard|copy/i)
   assert.doesNotMatch(source, /placeholder=["'][^"']*uuid/i)
