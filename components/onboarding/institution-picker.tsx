@@ -1,4 +1,6 @@
 'use client'
+
+import { ArrowRight, Check } from 'lucide-react'
 import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Institution, InstitutionType } from '@/lib/supabase/database.types'
@@ -6,33 +8,65 @@ import { formError } from '@/lib/auth/errors'
 import { exactInstitutionMatches, normalizeInstitutionName } from '@/lib/onboarding/rules'
 
 export const institutionLabels: Record<InstitutionType, string> = { university: 'Universitas', sma: 'SMA', smk: 'SMK' }
+
 export function InstitutionPicker({ selected, onSelect, disabled }: { selected: Institution | null; onSelect: (value: Institution | null) => void; disabled: boolean }) {
   const listId = useId()
-  const [query, setQuery] = useState(selected?.name || ''), [type, setType] = useState<InstitutionType>('university')
-  const [results, setResults] = useState<Institution[]>([]), [open, setOpen] = useState(false), [active, setActive] = useState(-1)
-  const [loading, setLoading] = useState(false), [submitting, setSubmitting] = useState(false), [error, setError] = useState('')
-  const [allowDuplicate, setAllowDuplicate] = useState(false), [duplicateWarning, setDuplicateWarning] = useState(false)
+  const [query, setQuery] = useState(selected?.name || '')
+  const [type, setType] = useState<InstitutionType>('university')
+  const [results, setResults] = useState<Institution[]>([])
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [allowDuplicate, setAllowDuplicate] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState(false)
   const normalized = normalizeInstitutionName(query)
+
   useEffect(() => {
-    if (!open || normalized.length < 2) { setResults([]); setLoading(false); return }
+    if (!open || normalized.length < 2) {
+      setResults([])
+      setLoading(false)
+      return
+    }
     const controller = new AbortController()
-    setLoading(true); setError('')
+    setLoading(true)
+    setError('')
     const timer = setTimeout(async () => {
       try {
-        const { data, error } = await createClient().rpc('search_institutions', { p_query: normalized }).abortSignal(controller.signal)
+        const { data, error: searchError } = await createClient().rpc('search_institutions', { p_query: normalized }).abortSignal(controller.signal)
         if (controller.signal.aborted) return
-        if (error) throw error
-        setResults(data || []); setActive(-1)
-      } catch (error) { if (!controller.signal.aborted) setError(formError(error, 'Pencarian institusi gagal. Ketik ulang untuk mencoba lagi.')) }
-      finally { if (!controller.signal.aborted) setLoading(false) }
+        if (searchError) throw searchError
+        setResults(data || [])
+        setActive(-1)
+      } catch (searchError) {
+        if (!controller.signal.aborted) setError(formError(searchError, 'Pencarian institusi gagal. Ketik ulang untuk mencoba lagi.'))
+      } finally {
+        if (!controller.signal.aborted) setLoading(false)
+      }
     }, 300)
-    return () => { clearTimeout(timer); controller.abort() }
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [normalized, open])
-  function choose(value: Institution) { onSelect(value); setQuery(value.name); setOpen(false); setError(''); setDuplicateWarning(false) }
+
+  function choose(value: Institution) {
+    onSelect(value)
+    setQuery(value.name)
+    setOpen(false)
+    setError('')
+    setDuplicateWarning(false)
+  }
+
   function keyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Escape') { setOpen(false); return }
+    if (event.key === 'Escape') {
+      setOpen(false)
+      return
+    }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault(); setOpen(true)
+      event.preventDefault()
+      setOpen(true)
       setActive(index => Math.max(0, Math.min(results.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1))))
     }
     if (event.key === 'Enter' && open) {
@@ -40,35 +74,111 @@ export function InstitutionPicker({ selected, onSelect, disabled }: { selected: 
       if (active >= 0 && results[active]) choose(results[active])
     }
   }
+
   async function submitInstitution() {
-    setSubmitting(true); setError('')
+    if (submitting || disabled || normalized.length < 2) return
+    setSubmitting(true)
+    setError('')
     try {
       const db = createClient()
-      // Recheck just before submission. The RPC also checks concurrent duplicates.
       const { data: candidates, error: searchError } = await db.rpc('search_institutions', { p_query: normalized })
       if (searchError) throw searchError
       setResults(candidates || [])
-      const duplicates = exactInstitutionMatches(normalized, type, (candidates || []).filter(i => i.approval_status === 'approved'))
-      if (duplicates.length && !allowDuplicate) { setDuplicateWarning(true); return }
-      const { data, error } = await db.rpc('submit_institution', { p_name: normalized, p_type: type, p_allow_duplicate: allowDuplicate })
-      if (error) {
-        if (error.code === '23505') { setDuplicateWarning(true); setError('Ada institusi dengan nama yang sama. Pilih hasil pencarian atau konfirmasi bahwa institusimu berbeda.'); return }
-        throw error
+      const duplicates = exactInstitutionMatches(normalized, type, (candidates || []).filter(item => item.approval_status === 'approved'))
+      if (duplicates.length && !allowDuplicate) {
+        setDuplicateWarning(true)
+        return
+      }
+      const { data, error: submitError } = await db.rpc('submit_institution', { p_name: normalized, p_type: type, p_allow_duplicate: allowDuplicate })
+      if (submitError) {
+        if (submitError.code === '23505') {
+          setDuplicateWarning(true)
+          setError('Ada institusi dengan nama yang sama. Pilih hasil pencarian atau konfirmasi bahwa institusimu berbeda.')
+          return
+        }
+        throw submitError
       }
       if (!data) throw new Error('Missing submission')
       choose(data)
-    } catch (error) { setError(formError(error, 'Institusi belum dapat diajukan. Periksa koneksi dan coba lagi.')) }
-    finally { setSubmitting(false) }
+    } catch (submitError) {
+      setError(formError(submitError, 'Institusi belum dapat diajukan. Periksa koneksi dan coba lagi.'))
+    } finally {
+      setSubmitting(false)
+    }
   }
-  return <div className="institution-picker"><label>Institusi<input value={query} maxLength={250} disabled={disabled || submitting} role="combobox" aria-autocomplete="list" aria-expanded={open && normalized.length >= 2} aria-controls={listId} aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined} autoComplete="off" placeholder="Ketik minimal 2 karakter" onFocus={() => setOpen(true)} onKeyDown={keyDown} onChange={e => { setQuery(e.target.value); onSelect(null); setOpen(true); setAllowDuplicate(false); setDuplicateWarning(false) }} /></label>
-    {selected && <p role="status">{institutionLabels[selected.type]}{selected.city ? ` · ${selected.city}` : ''}{selected.approval_status === 'pending' ? ' · Pengajuanmu sedang ditinjau dan sudah dapat digunakan.' : ''}</p>}
-    {open && normalized.length >= 2 && <><div id={listId} role="listbox" aria-label="Hasil pencarian institusi" className="institution-results">
-      {loading ? <p role="status">Mencari institusi…</p> : results.map((item, index) => <button type="button" id={`${listId}-${index}`} role="option" aria-selected={active === index} key={item.id} disabled={submitting || disabled} onClick={() => choose(item)}>{item.name}<small>{institutionLabels[item.type]}{item.city ? ` · ${item.city}` : ''}{item.approval_status === 'pending' ? ' · Pengajuanmu' : ''}</small></button>)}
-      {!loading && !results.length && !error && <p>Institusi tidak ditemukan.</p>}
-    </div>{!selected && <div className="editor-panel"><label>Tipe institusi baru<select value={type} disabled={disabled || submitting} onChange={e => { setType(e.target.value as InstitutionType); setAllowDuplicate(false) }}>{Object.entries(institutionLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-      {duplicateWarning && <><p>Ada nama yang sama. Periksa tipe dan kota pada hasil pencarian.</p><label className="option-label"><input type="checkbox" checked={allowDuplicate} onChange={e => setAllowDuplicate(e.target.checked)} />Institusi saya berbeda meskipun namanya sama.</label></>}
-      <button type="button" className="text-link" disabled={disabled || submitting || loading || normalized.length < 2} onClick={submitInstitution}>{submitting ? 'Mengajukan…' : `+ Gunakan: “${normalized}”`}</button><small>Pengajuan baru akan ditinjau admin.</small>
-    </div>}</>}
-    {error && <p className="form-error" role="alert">{error}</p>}
+
+  return <div className="institution-picker">
+    <label className="onboarding-hero-field">
+      <span className="sr-only">Institusi</span>
+      <input
+        value={query}
+        maxLength={250}
+        disabled={disabled || submitting}
+        role="combobox"
+        aria-label="Institusi"
+        aria-autocomplete="list"
+        aria-expanded={open && normalized.length >= 2}
+        aria-controls={listId}
+        aria-activedescendant={open && active >= 0 ? listId + '-' + active : undefined}
+        autoComplete="off"
+        placeholder="Cari universitas atau sekolah…"
+        onFocus={() => setOpen(true)}
+        onKeyDown={keyDown}
+        onChange={event => {
+          setQuery(event.target.value)
+          onSelect(null)
+          setOpen(true)
+          setAllowDuplicate(false)
+          setDuplicateWarning(false)
+        }}
+      />
+    </label>
+
+    {selected && <div className="institution-selected" role="status">
+      <Check aria-hidden="true" size={17} />
+      <span><strong>{selected.name}</strong><small>{institutionLabels[selected.type]}{selected.city ? ' · ' + selected.city : ''}{selected.approval_status === 'pending' ? ' · Pengajuanmu sedang ditinjau' : ''}</small></span>
+    </div>}
+
+    {open && normalized.length >= 2 && <>
+      <div id={listId} role="listbox" aria-label="Hasil pencarian institusi" className="institution-results">
+        {loading && <p className="institution-results__status" role="status">Mencari institusi…</p>}
+        {!loading && results.map((item, index) => <button
+          type="button"
+          id={listId + '-' + index}
+          role="option"
+          aria-selected={active === index}
+          key={item.id}
+          disabled={submitting || disabled}
+          onClick={() => choose(item)}
+        >
+          <span><strong>{item.name}</strong><small>{institutionLabels[item.type]}{item.city ? ' · ' + item.city : ''}{item.approval_status === 'pending' ? ' · Pengajuanmu' : ''}</small></span>
+          <ArrowRight aria-hidden="true" size={18} />
+        </button>)}
+        {!loading && !results.length && !error && <p className="institution-results__status">Institusi tidak ditemukan.</p>}
+      </div>
+
+      {!selected && <div className="institution-create">
+        <p>Belum ada di daftar? Kamu tetap bisa mengajukannya.</p>
+        <label>
+          <span>Tipe institusi</span>
+          <select value={type} disabled={disabled || submitting} onChange={event => { setType(event.target.value as InstitutionType); setAllowDuplicate(false) }}>
+            {Object.entries(institutionLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+          </select>
+        </label>
+        {duplicateWarning && <div className="institution-duplicate">
+          <p>Ada nama yang sama. Periksa tipe dan kota pada hasil pencarian.</p>
+          <label className="institution-duplicate__check">
+            <input type="checkbox" checked={allowDuplicate} onChange={event => setAllowDuplicate(event.target.checked)} />
+            <span>Institusi saya berbeda meskipun namanya sama.</span>
+          </label>
+        </div>}
+        <button type="button" className="onboarding-text-action" disabled={disabled || submitting || loading || normalized.length < 2} onClick={submitInstitution}>
+          {submitting ? 'Mengajukan…' : 'Gunakan “' + normalized + '”'}
+        </button>
+        <small>Pengajuan baru akan ditinjau admin.</small>
+      </div>}
+    </>}
+
+    {error && <p className="onboarding-error" role="alert">{error}</p>}
   </div>
 }

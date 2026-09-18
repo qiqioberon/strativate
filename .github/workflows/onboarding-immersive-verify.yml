@@ -1,0 +1,87 @@
+name: Onboarding Immersive Verify
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/onboarding/**'
+      - 'components/onboarding/**'
+      - 'lib/onboarding/**'
+      - 'tests/onboarding*.test.ts'
+      - 'tests/browser/onboarding-responsive.spec.ts'
+      - 'tests/fixtures/commerce-backend/server.mjs'
+      - '.github/workflows/onboarding-immersive-verify.yml'
+  workflow_dispatch:
+
+jobs:
+  onboarding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+      SUPABASE_SECRET_KEY: test-secret-key
+      APP_URL: http://localhost:3000
+      MIDTRANS_ENV: sandbox
+      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: test-midtrans-client-key
+      MIDTRANS_SERVER_KEY: test-midtrans-server-key
+      FEATURE_DIGITAL_PRODUCTS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pnpm
+        run: npm install --global pnpm@10.17.1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit and onboarding contract tests
+        run: pnpm test
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Focused onboarding lint
+        run: pnpm exec eslint app/onboarding components/onboarding tests/onboarding-ux.test.ts tests/onboarding-password-idempotency.test.ts tests/browser/onboarding-responsive.spec.ts
+      - name: Database bootstrap and SQL security tests
+        env:
+          PGPASSWORD: postgres
+          TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55439/strativate_test_onboarding
+        run: |
+          createdb -h 127.0.0.1 -p 55439 -U postgres strativate_test_onboarding
+          pnpm test:db -- --bootstrap
+      - name: Start deterministic Supabase fixture
+        run: |
+          node tests/fixtures/commerce-backend/server.mjs > /tmp/onboarding-fixture.log 2>&1 &
+          echo $! > /tmp/onboarding-fixture.pid
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:54321/health && exit 0
+            sleep 1
+          done
+          cat /tmp/onboarding-fixture.log
+          exit 1
+      - name: Build onboarding browser target
+        run: |
+          rm -rf .next
+          pnpm build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Onboarding browser acceptance
+        run: pnpm exec playwright test tests/browser/onboarding-responsive.spec.ts
+      - name: Upload onboarding screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-screenshots
+          path: test-results/onboarding-screenshots
+          if-no-files-found: ignore

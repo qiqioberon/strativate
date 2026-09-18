@@ -29,14 +29,17 @@ const packagePrices = [
 const pmPackages = packagePrices.map(([mentor_tier_id, session_count, price_amount, reference_price_amount], index) => ({ id: `97300000-0000-0000-0000-0000000000${String(index + 1).padStart(2, '0')}`, mentor_tier_id, session_count, price_amount, reference_price_amount, duration_minutes: 75, max_participants: 4, is_active: true, sort_order: index + 1, created_at: now, updated_at: now }))
 
 const onboardingInstitution = { id: '96000000-0000-0000-0000-000000000001', name: 'Institut Teknologi Sepuluh Nopember', normalized_name: 'institut teknologi sepuluh nopember', type: 'university', province: 'Jawa Timur', city: 'Surabaya', external_id: null, source: 'fixture', source_url: null, approval_status: 'approved', institution_status: 'active', submitted_by: null, created_at: now, updated_at: now }
+const longOnboardingInstitution = { ...onboardingInstitution, id: '96000000-0000-0000-0000-000000000002', name: 'Universitas Pembangunan Nasional Veteran Jawa Timur Kampus Internasional Surabaya', normalized_name: 'universitas pembangunan nasional veteran jawa timur kampus internasional surabaya' }
 const referralSources = [
   { id: '96100000-0000-0000-0000-000000000001', name: 'Instagram', sort_order: 1, is_active: true, created_at: now, updated_at: now },
   { id: '96100000-0000-0000-0000-000000000002', name: 'Teman atau komunitas', sort_order: 2, is_active: true, created_at: now, updated_at: now },
+  { id: '96100000-0000-0000-0000-000000000003', name: 'Rekomendasi teman, komunitas kampus, atau organisasi mahasiswa', sort_order: 3, is_active: true, created_at: now, updated_at: now },
 ]
 const onboardingInterests = [
   { id: '96200000-0000-0000-0000-000000000001', name: 'Business Case', sort_order: 1, is_active: true, created_at: now, updated_at: now },
   { id: '96200000-0000-0000-0000-000000000002', name: 'UI/UX', sort_order: 2, is_active: true, created_at: now, updated_at: now },
   { id: '96200000-0000-0000-0000-000000000003', name: 'Scientific Paper', sort_order: 3, is_active: true, created_at: now, updated_at: now },
+  ...Array.from({ length: 10 }, (_, index) => ({ id: '96200000-0000-0000-0000-' + String(index + 4).padStart(12, '0'), name: index === 9 ? 'Strategi Transformasi Digital dan Inovasi Bisnis Berkelanjutan untuk Organisasi' : 'Minat Kompetisi Fixture ' + (index + 4), sort_order: index + 4, is_active: true, created_at: now, updated_at: now })),
 ]
 function initialOnboardingState() {
   return {
@@ -76,6 +79,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/__fixture/reset' && req.method === 'POST') { state = initialState(); return json(req, res, 200, { ok: true }) }
   if (url.pathname === '/__fixture/onboarding-reset' && req.method === 'POST') { onboardingState = initialOnboardingState(); return json(req, res, 200, { ok: true }) }
   if (url.pathname === '/__fixture/onboarding-fail-next-save' && req.method === 'POST') { onboardingState.failNextSave = true; return json(req, res, 200, { ok: true }) }
+  if (url.pathname === '/__fixture/onboarding-mode' && req.method === 'POST') { const body = await readBody(req); onboardingState.profile = { ...onboardingState.profile, registration_method: body.registration_method === 'google' ? 'google' : 'email', password_set_at: body.password_set_at === null ? null : now }; return json(req, res, 200, onboardingState.profile) }
   if (url.pathname === '/__fixture/onboarding-state') return json(req, res, 200, onboardingState)
   if (url.pathname === '/__fixture/state') return json(req, res, 200, { cartItemCount: state.cartItems.length, orderCount: state.order ? 1 : 0, createOrderCalls: state.createOrderCalls, orderId: state.order?.id ?? null, orderStatus: state.order?.status ?? null, productDeleted: state.productDeleted, productAvailable: state.productAvailable })
   if (url.pathname === '/__fixture/mark-paid' && req.method === 'POST') { if (!state.order) createOrder(); state.order.status = 'paid'; state.order.paid_at = now; return json(req, res, 200, { ok: true }) }
@@ -114,7 +118,7 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname.startsWith('/rest/v1/rpc/') && req.method === 'POST') {
     const fn = url.pathname.split('/').pop(); const body = await readBody(req)
-    if (fn === 'search_institutions') return json(req, res, 200, [onboardingInstitution])
+    if (fn === 'search_institutions') return json(req, res, 200, [onboardingInstitution, longOnboardingInstitution])
     if (fn === 'submit_institution') return json(req, res, 200, onboardingInstitution)
     if (fn === 'save_onboarding_step') {
       const user = bearerUser(req)
@@ -122,7 +126,7 @@ const server = http.createServer(async (req, res) => {
       onboardingState.saveCalls += 1
       if (onboardingState.failNextSave) {
         onboardingState.failNextSave = false
-        return json(req, res, 400, { message: 'Fixture save failure' })
+        return json(req, res, 400, { message: 'Data belum dapat disimpan karena layanan fixture sedang mensimulasikan kegagalan jaringan yang panjang untuk memastikan pesan kesalahan tetap terbaca tanpa merusak komposisi onboarding di layar sempit.' })
       }
       const step = Number(body.p_step)
       const data = body.p_data || {}
