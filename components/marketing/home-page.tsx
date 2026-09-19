@@ -25,7 +25,7 @@ import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
 import { AssetMedia } from './asset-media'
-import { DigitalProductCarousel } from './digital-product-carousel'
+import { DigitalProductCardSwap } from './digital-product-card-swap'
 import { HeroCarousel } from './hero-carousel'
 import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
@@ -189,7 +189,7 @@ export function HomePage({
               </Link>
             </div>
             <div className="marketing-product-library__showcase">
-              <DigitalProductCarousel products={digitalProducts} />
+              <DigitalProductCardSwap products={digitalProducts} />
             </div>
           </div>
         </section>
