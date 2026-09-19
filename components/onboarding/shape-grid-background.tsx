@@ -21,7 +21,7 @@ function ease(value: number) {
   return value * value * (3 - 2 * value)
 }
 
-export function OnboardingShapeGrid() {
+export function OnboardingShapeGrid({ className = '', testId }: { className?: string; testId?: string } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -133,7 +133,7 @@ export function OnboardingShapeGrid() {
     }
   }, [])
 
-  return <div className="onboarding-shape-grid" aria-hidden="true">
+  return <div className={`onboarding-shape-grid${className ? ` ${className}` : ''}`} aria-hidden="true" data-testid={testId}>
     <canvas ref={canvasRef} className="onboarding-shape-grid__canvas" />
   </div>
 }
