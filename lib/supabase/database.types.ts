@@ -5,7 +5,7 @@ export type ApprovalStatus = "approved" | "pending" | "rejected" | "archived"
 export type RegistrationMethod = "email" | "google" | "invitation"
 export type DigitalProductContentType = "pdf" | "video"
 
-export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; calendar_color?:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
+export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; avatar_path?:string|null; calendar_color?:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
 export type MenteeProfile = { user_id:string; institution_id:string|null; major_or_faculty:string|null; cohort_year:number|null; referral_source_id:string|null; referral_other_text:string|null; other_interest_text:string|null; onboarding_step:number; onboarding_completed_at:string|null; created_at:string; updated_at:string }
 export type Institution = { id:string; name:string; normalized_name:string; type:InstitutionType; province:string|null; city:string|null; external_id:string|null; source:string; source_url:string|null; approval_status:ApprovalStatus; institution_status:string|null; submitted_by:string|null; created_at:string; updated_at:string }
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }

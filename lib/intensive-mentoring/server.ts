@@ -2,7 +2,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import type { IntensiveMentoringCatalogView } from './types'
+import type { IntensiveEngagementView, IntensiveMentoringCatalogView } from './types'
 
 export async function getPublicIntensiveMentoringCatalog(): Promise<IntensiveMentoringCatalogView | null> {
   const supabase = await createClient() as any
@@ -88,4 +88,33 @@ export async function getPublicIntensiveMentoringCatalog(): Promise<IntensiveMen
     bundles,
     competitionCategories: (categoriesResult.data ?? []).map((row:any) => ({ id: row.id, code: row.code, slug: row.slug, name: row.name, sortOrder: row.sort_order })),
   }
+}
+
+
+type EngagementRow={
+ engagement_id:string;base_entitlement_id:string;base_kind:'package'|'bundle';program_name:string;status:'active'|'completed'|'cancelled';
+ baseline_sessions_per_month:number|null;primary_mentor_id:string|null;primary_mentor_name:string|null;competition_name:string|null;
+ program_stage:IntensiveEngagementView['programStage'];progress_summary:string|null;started_at:string;add_ons:IntensiveEngagementView['addOns'];sessions:IntensiveEngagementView['sessions']
+}
+
+export async function listMyIntensiveMentoringEngagements():Promise<IntensiveEngagementView[]>{
+ const supabase=await createClient() as any
+ const{data,error}=await supabase.rpc('list_my_intensive_mentoring_engagements')
+ if(error){console.error('Intensive Mentoring engagements unavailable',error.message);return[]}
+ return ((data??[]) as EngagementRow[]).map(row=>({
+  engagementId:row.engagement_id,
+  baseEntitlementId:row.base_entitlement_id,
+  baseKind:row.base_kind,
+  programName:row.program_name,
+  status:row.status,
+  baselineSessionsPerMonth:row.baseline_sessions_per_month,
+  primaryMentorId:row.primary_mentor_id,
+  primaryMentorName:row.primary_mentor_name,
+  competitionName:row.competition_name,
+  programStage:row.program_stage,
+  progressSummary:row.progress_summary,
+  startedAt:row.started_at,
+  addOns:Array.isArray(row.add_ons)?row.add_ons:[],
+  sessions:Array.isArray(row.sessions)?row.sessions:[],
+ }))
 }

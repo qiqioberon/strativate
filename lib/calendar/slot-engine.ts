@@ -14,7 +14,7 @@ export type BookableSlot = { mentorId: string; mentorName: string; timezone: str
 type BuildBookableSlotsInput = {
   now: string
   durationMinutes: number
-  requiredTierId: string
+  requiredTierId: string | null
   stepMinutes?: number
   mentors: SlotMentor[]
 }
@@ -44,7 +44,7 @@ export function buildBookableSlots(input: BuildBookableSlotsInput): BookableSlot
 
   const slots: BookableSlot[] = []
   for (const mentor of input.mentors) {
-    if (!mentor.active || mentor.tierId !== input.requiredTierId) continue
+    if (!mentor.active || (input.requiredTierId && mentor.tierId !== input.requiredTierId)) continue
     const busy = [...mentor.strativateBusy, ...mentor.googleBusy]
     for (const range of mentor.availability) {
       const rangeStart = millis(range.start)

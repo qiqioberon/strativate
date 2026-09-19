@@ -14,13 +14,14 @@ function strativateEvent(row: AnyRow, role: AccountShape['profile']['role'], acc
   return {
     id: row.session_id,
     source:'strativate',
-    title:`Private Mentoring · Sesi ${row.session_number}`,
+    title:`${row.mentoring_type==='intensive'?'Intensive Mentoring':'Private Mentoring'} · Sesi ${row.session_number}`,
     start,
     end,
     googleEventId:row.google_event_id ?? null,
     googleICalUid:row.google_ical_uid ?? null,
     sessionId:row.session_id,
     enrollmentId:row.enrollment_id,
+    mentoringType:row.mentoring_type ?? 'private',
     sessionNumber:row.session_number,
     purchasedSessions:row.purchased_sessions,
     focusName:row.focus_name ?? null,
@@ -47,18 +48,21 @@ function strativateEvent(row: AnyRow, role: AccountShape['profile']['role'], acc
 export async function loadCalendarEvents(account: AccountShape, start: string, end: string) {
   const supabase = await createClient() as any
   let rows: AnyRow[] = []
-  if (account.profile.role === 'admin') {
-    const result = await supabase.rpc('list_admin_private_mentoring_calendar_sessions',{p_from:start,p_to:end})
-    if (result.error) throw new Error(result.error.message)
-    rows = result.data ?? []
-  } else if (account.profile.role === 'mentor') {
-    const result = await supabase.rpc('list_my_mentor_private_mentoring_sessions')
-    if (result.error) throw new Error(result.error.message)
-    rows = (result.data ?? []).filter((row:AnyRow) => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
-  } else {
-    const result = await supabase.rpc('list_my_private_mentoring_sessions_v2')
-    if (result.error) throw new Error(result.error.message)
-    rows = (result.data ?? []).filter((row:AnyRow) => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at && row.scheduled_end_at > start && row.scheduled_start_at < end)
+  if(account.profile.role==='admin'){
+    const[privateResult,intensiveResult]=await Promise.all([
+      supabase.rpc('list_admin_private_mentoring_calendar_sessions',{p_from:start,p_to:end}),
+      supabase.rpc('list_admin_intensive_mentoring_calendar_sessions',{p_from:start,p_to:end}),
+    ])
+    if(privateResult.error||intensiveResult.error)throw new Error(privateResult.error?.message||intensiveResult.error?.message)
+    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive'}))]
+  }else if(account.profile.role==='mentor'){
+    const[privateResult,intensiveResult]=await Promise.all([supabase.rpc('list_my_mentor_private_mentoring_sessions'),supabase.rpc('list_my_mentor_intensive_mentoring_sessions')])
+    if(privateResult.error||intensiveResult.error)throw new Error(privateResult.error?.message||intensiveResult.error?.message)
+    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive',enrollment_id:row.engagement_id,purchased_sessions:null}))].filter((row:AnyRow)=>row.status!=='cancelled'&&row.scheduled_start_at&&row.scheduled_end_at&&row.scheduled_end_at>start&&row.scheduled_start_at<end)
+  }else{
+    const[privateResult,intensiveResult]=await Promise.all([supabase.rpc('list_my_private_mentoring_sessions_v2'),supabase.rpc('list_my_intensive_mentoring_calendar_sessions')])
+    if(privateResult.error||intensiveResult.error)throw new Error(privateResult.error?.message||intensiveResult.error?.message)
+    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive'}))].filter((row:AnyRow)=>row.status!=='cancelled'&&row.scheduled_start_at&&row.scheduled_end_at&&row.scheduled_end_at>start&&row.scheduled_start_at<end)
   }
 
   const personIds = [...new Set(rows.map(row => account.profile.role === 'mentee' ? account.user.id : row.mentee_id).filter(Boolean) as string[])]
