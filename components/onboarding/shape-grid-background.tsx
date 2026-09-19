@@ -115,7 +115,8 @@ export function OnboardingShapeGrid() {
 
     const handleVisibility = () => {
       pageVisible = !document.hidden
-      pageVisible ? start() : stop()
+      if (pageVisible) start()
+      else stop()
     }
 
     resize()
