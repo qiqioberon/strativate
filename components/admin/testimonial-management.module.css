@@ -104,7 +104,7 @@
 .preview {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 5 / 4;
   overflow: hidden;
   border: 1px dashed #d9dfe4;
   border-radius: 10px 18px 18px 18px;

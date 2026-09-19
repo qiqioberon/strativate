@@ -106,18 +106,18 @@ test('testimonial alt text is generated from the competition name instead of an 
   assert.equal(buildTestimonialAltText(''), 'Peserta Strativate setelah kompetisi.')
 })
 
-test('testimonial image standard is 4:5 at 1200 by 1500 and crops landscape/portrait sources predictably', () => {
+test('testimonial storage image standard is 5:4 at 1200 by 960 and crops sources predictably', () => {
   assert.equal(TESTIMONIAL_IMAGE_WIDTH, 1200)
-  assert.equal(TESTIMONIAL_IMAGE_HEIGHT, 1500)
-  assert.equal(TESTIMONIAL_IMAGE_ASPECT_RATIO, 0.8)
+  assert.equal(TESTIMONIAL_IMAGE_HEIGHT, 960)
+  assert.equal(TESTIMONIAL_IMAGE_ASPECT_RATIO, 1.25)
 
-  const landscape = calculateTestimonialSourceCrop(454, 410, DEFAULT_TESTIMONIAL_CROP)
-  assert.ok(Math.abs(landscape.width / landscape.height - .8) < 0.0001)
+  const landscape = calculateTestimonialSourceCrop(1600, 900, DEFAULT_TESTIMONIAL_CROP)
+  assert.ok(Math.abs(landscape.width / landscape.height - 1.25) < 0.0001)
   assert.ok(landscape.x > 0)
   assert.equal(landscape.y, 0)
 
-  const portrait = calculateTestimonialSourceCrop(454, 605, DEFAULT_TESTIMONIAL_CROP)
-  assert.ok(Math.abs(portrait.width / portrait.height - .8) < 0.0001)
+  const portrait = calculateTestimonialSourceCrop(800, 1200, DEFAULT_TESTIMONIAL_CROP)
+  assert.ok(Math.abs(portrait.width / portrait.height - 1.25) < 0.0001)
   assert.equal(portrait.x, 0)
   assert.ok(portrait.y > 0)
 })
