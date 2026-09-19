@@ -29,7 +29,7 @@ import styles from './digital-product-management.module.css'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
 import { TablePagination } from './table-pagination'
 
-const migrationName = '202609190002_homepage_digital_product_showcase.sql'
+const migrationName = '202609190003_homepage_digital_product_showcase.sql'
 const PRODUCT_PAGE_SIZE = 10
 type ProductSortKey = 'product' | 'type' | 'price' | 'status' | 'homepage' | 'content' | 'updated_at'
 type Draft = { name:string; slug:string; description:string; price:string; contentType:DigitalProductContentType|''; isPublished:boolean; homepageFeatured:boolean; homepageOrder:string }
