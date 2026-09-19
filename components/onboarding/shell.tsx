@@ -29,5 +29,5 @@ function OnboardingShellFrame({ children }: { children: ReactNode }) {
 }
 
 export function OnboardingShell({ children }: { children: ReactNode }) {
-  return <OnboardingMotionProvider><OnboardingShellFrame>{children}</OnboardingMotionProvider>
+  return <OnboardingMotionProvider><OnboardingShellFrame>{children}</OnboardingShellFrame></OnboardingMotionProvider>
 }
