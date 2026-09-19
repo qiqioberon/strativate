@@ -17,6 +17,8 @@ type DigitalProduct = {
   page_count: number | null
   duration_seconds: number | null
   is_published: boolean
+  homepage_featured: boolean
+  homepage_featured_order: number
   created_at: string
   updated_at: string
 }
@@ -36,6 +38,8 @@ const product = (id: string, name: string, slug: string, price: number): Digital
   page_count: null,
   duration_seconds: null,
   is_published: false,
+  homepage_featured: false,
+  homepage_featured_order: 0,
   created_at: '2026-09-14T00:00:00.000Z',
   updated_at: '2026-09-14T00:00:00.000Z',
 })
@@ -90,6 +94,8 @@ test('Digital Product table opens edit flow in a modal instead of an inline edit
   await expect(page.getByTestId('digital-product-dialog')).toBeVisible()
   await expect(page.getByTestId('digital-product-edit-mode')).toBeVisible()
   await expect(page.getByTestId('digital-product-dialog')).toContainText('Business Case Handbook')
+  await expect(page.getByTestId('digital-product-homepage-featured')).not.toBeChecked()
+  await expect(page.getByTestId('digital-product-homepage-order')).toHaveValue('0')
   await page.getByTestId('digital-product-dialog-close').click()
   await expect(page.getByTestId('digital-product-dialog')).toHaveCount(0)
 
