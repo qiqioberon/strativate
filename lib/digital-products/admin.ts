@@ -223,6 +223,7 @@ export function isDigitalProductSetupRequired(error: unknown) {
   const message = typeof candidate.message === 'string' ? candidate.message.toLowerCase() : ''
   return code === 'PGRST205'
     || code === '42P01'
+    || code === '42703'
     || (message.includes('digital_products') && (
       message.includes('does not exist')
       || message.includes('could not find')

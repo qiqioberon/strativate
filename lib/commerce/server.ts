@@ -37,6 +37,24 @@ export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[
   return (data ?? []).map(product => withPublicCover(supabase, product))
 }
 
+export async function listHomepageDigitalProducts(limit = 5): Promise<PublicDigitalProduct[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('digital_products')
+    .select('*')
+    .eq('is_published', true)
+    .eq('homepage_featured', true)
+    .order('homepage_featured_order', { ascending: true })
+    .order('created_at', { ascending: false })
+    .order('id')
+    .limit(limit)
+
+  // Keep the homepage deploy-safe while the additive migration is being applied.
+  if (error?.code === '42703') return (await listPublicDigitalProducts()).slice(0, limit)
+  if (error) throw commerceError('Showcase Produk Digital belum dapat dimuat.', error.code)
+  return (data ?? []).map(product => withPublicCover(supabase, product))
+}
+
 export async function getPublicDigitalProduct(slug: string): Promise<PublicDigitalProduct | null> {
   const supabase = await createClient()
   const { data, error } = await supabase

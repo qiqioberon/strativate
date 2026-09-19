@@ -1,4 +1,4 @@
-import { DigitalProductCarousel } from '../../../../../components/marketing/digital-product-carousel'
+import { DigitalProductCardSwap } from '../../../../../components/marketing/digital-product-card-swap'
 import type { PublicDigitalProduct } from '../../../../../lib/commerce/types'
 
 const now = '2026-09-15T00:00:00.000Z'
@@ -19,6 +19,8 @@ const products: PublicDigitalProduct[] = [
     page_count: null,
     duration_seconds: null,
     is_published: true,
+    homepage_featured: true,
+    homepage_featured_order: 0,
     created_at: now,
     updated_at: now,
   },
@@ -38,11 +40,13 @@ const products: PublicDigitalProduct[] = [
     page_count: null,
     duration_seconds: null,
     is_published: true,
+    homepage_featured: true,
+    homepage_featured_order: 1,
     created_at: now,
     updated_at: now,
   },
 ]
 
-export default function DigitalProductCarouselFixture() {
-  return <main className="marketing-site" style={{ padding: 32 }}><DigitalProductCarousel products={products} /></main>
+export default function DigitalProductCardSwapFixture() {
+  return <main className="marketing-site" style={{ padding: 32, overflow: 'hidden' }}><DigitalProductCardSwap products={products} /></main>
 }
