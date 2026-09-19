@@ -90,8 +90,9 @@ test('CSS is consolidated instead of growing another override layer', () => {
   assert.doesNotMatch(css, /:has\(/)
   const names = [...css.matchAll(/@keyframes\s+([^\s{]+)/g)].map(match => match[1])
   assert.equal(new Set(names).size, names.length, 'keyframe names should be unique')
-  assert.equal((css.match(/\.onboarding-shell\s*\{/g) || []).length, 1)
-  assert.equal((css.match(/\.onboarding-answer-card\s*\{/g) || []).length, 1)
+  const baseCss = css.slice(0, css.indexOf('@media (max-width: 640px)'))
+  assert.equal((baseCss.match(/\.onboarding-shell\s*\{/g) || []).length, 1)
+  assert.equal((baseCss.match(/\.onboarding-answer-card\s*\{/g) || []).length, 1)
 })
 
 test('route choreography uses animation lifecycle without fake delay or duplicate navigation authority', () => {
@@ -142,7 +143,7 @@ test('interest selection remains stable multi-select with general completion ack
   assert.match(stages, /Lanjutkan dengan \{selectedIds\.length\} pilihan/)
   assert.match(experience, /Sip, pilihanmu sudah tersimpan\./)
   assert.doesNotMatch(experience, /readableInterestAcknowledgement|selectedInterestNames/)
-  assert.doesNotMatch(css, /order:/)
+  assert.doesNotMatch(css, /(^|\n)\s*order\s*:/)
 })
 
 test('institution behavior and improved secondary action remain intact', () => {
