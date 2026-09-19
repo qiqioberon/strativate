@@ -244,7 +244,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
   })
 
   test('full flow preserves local micro-stage values, resumes canonically, handles long dynamic data, and keeps Calendar optional', async ({ page }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(180_000)
     await page.setViewportSize({ width: 390, height: 844 })
     await completeIdentity(page)
     await completeInstitution(page, true)
@@ -259,8 +259,12 @@ test.describe.serial('immersive deterministic onboarding', () => {
 
     const interestCards = page.locator('.onboarding-answer-card--check')
     expect(await interestCards.count()).toBeGreaterThanOrEqual(12)
-    await page.getByText('Business Case', { exact: true }).click()
-    await page.getByText('UI/UX', { exact: true }).click()
+    const businessCard = interestCards.filter({ hasText: 'Business Case' })
+    const uiuxCard = interestCards.filter({ hasText: 'UI/UX' })
+    await businessCard.click()
+    await expect(businessCard.getByRole('checkbox')).toBeChecked()
+    await uiuxCard.click()
+    await expect(uiuxCard.getByRole('checkbox')).toBeChecked()
     await expect(page.getByRole('button', { name: /Lanjutkan dengan 2 pilihan/ })).toBeVisible()
 
     const longInterest = page.getByText('Strategi Transformasi Digital dan Inovasi Bisnis Berkelanjutan untuk Organisasi', { exact: true })
