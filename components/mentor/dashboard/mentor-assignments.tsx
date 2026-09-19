@@ -1,11 +1,12 @@
 'use client'
 
-import { ClipboardList, Eye, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ClipboardList, ExternalLink, Eye, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 import dataStyles from '@/components/admin/data-management.module.css'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
 import { TablePagination } from '@/components/admin/table-pagination'
+import { CopyTextButton } from '@/components/dashboard/copy-text-button'
 import type { MentorDashboardData, MentorSessionRow, MentorSessionStatus } from '@/lib/mentor/dashboard'
 import { SessionDetailDialog } from './mentor-detail-dialogs'
 import type { MentorDashboardSection } from './mentor-overview'
@@ -13,8 +14,19 @@ import { DataError, EmptyState, MentorPageHeader, mentorSessionStatusLabel, sess
 
 type AssignmentSortKey = 'mentee' | 'focus' | 'session' | 'schedule' | 'status'
 const PAGE_SIZE = 8
+function shortId(id:string){return '…'+id.slice(-8)}
 
-export function AssignmentPanel({ data, open, onRetry }: { data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
+export function AssignmentPanel({
+  data,
+  open,
+  onRetry,
+  focusSessionId,
+}: {
+  data: MentorDashboardData
+  open: (section: MentorDashboardSection) => void
+  onRetry: () => void
+  focusSessionId?: string | null
+}) {
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'all' | MentorSessionStatus>('all')
   const [sortKey, setSortKey] = useState<AssignmentSortKey | null>('schedule')
@@ -22,10 +34,16 @@ export function AssignmentPanel({ data, open, onRetry }: { data: MentorDashboard
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<MentorSessionRow | null>(null)
 
+  useEffect(()=>{
+    if(!focusSessionId)return
+    const match=data.sessions.find(session=>session.session_id===focusSessionId)
+    if(match)setSelected(match)
+  },[data.sessions,focusSessionId])
+
   const rows = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('id-ID')
     const filtered = data.sessions.filter(session => {
-      const matchesQuery = !q || [session.mentee_name, session.mentee_email, session.focus_name, `sesi ${session.session_number}`].some(value => value?.toLocaleLowerCase('id-ID').includes(q))
+      const matchesQuery = !q || [session.session_id,session.mentee_name, session.mentee_email, session.focus_name, `sesi ${session.session_number}`].some(value => value?.toLocaleLowerCase('id-ID').includes(q))
       return matchesQuery && (status === 'all' || session.status === status)
     })
     if (!sortKey || !direction) return filtered
@@ -43,13 +61,13 @@ export function AssignmentPanel({ data, open, onRetry }: { data: MentorDashboard
   const changeSort = (key: string | null, next: SortDirection) => { setSortKey(key as AssignmentSortKey | null); setDirection(next); setPage(0) }
 
   return <div className="mentor-section">
-    <MentorPageHeader eyebrow="Penugasan" title="Sesi yang menjadi tanggung jawab Anda." detail="Penugasan mengikuti sesi yang benar-benar dialokasikan admin kepada akun mentor Anda; tidak ada alur accept/reject tambahan." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/>
+    <MentorPageHeader eyebrow="Penugasan" title="Sesi yang menjadi tanggung jawab Anda." detail="Cari dengan nama peserta, email, fokus, nomor sesi, atau Session ID. Zoom dapat dibuka langsung dari tabel." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/>
     {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry}/> : <section className={dataStyles.surface}>
       <div className={dataStyles.toolbar}>
-        <label className={dataStyles.searchField}><span>Cari penugasan</span><span className={dataStyles.searchControl}><Search aria-hidden="true"/><input value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Mentee, email, atau fokus"/></span></label>
+        <label className={dataStyles.searchField}><span>Cari penugasan</span><span className={dataStyles.searchControl}><Search aria-hidden="true"/><input value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Session ID, mentee, email, atau fokus"/></span></label>
         <label className={dataStyles.filterField}><span>Status sesi</span><select value={status} onChange={event => { setStatus(event.target.value as 'all' | MentorSessionStatus); setPage(0) }}><option value="all">Semua status</option><option value="scheduled">Terjadwal</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
       </div>
-      {rows.length ? <><div className={dataStyles.tableScroll}><table className={`${dataStyles.table} mentor-ops-table`} data-testid="mentor-assignment-table"><thead><tr><SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Paket</th><SortableTableHeader label="Fokus" sortKey="focus" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Sesi" sortKey="session" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Jadwal" sortKey="schedule" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead><tbody>{visible.map(session => <tr key={session.session_id}><td><div className={dataStyles.identity}><span className={dataStyles.avatar}>{(session.mentee_name || session.mentee_email || 'P').slice(0, 2).toUpperCase()}</span><span className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{session.mentee_name || 'Peserta Strativate'}</strong><span className={dataStyles.secondaryText}>{session.mentee_email || 'Email tidak tersedia'}</span></span></div></td><td><strong>Private Mentoring</strong><div className={dataStyles.secondaryText}>{session.purchased_sessions} sesi dibeli</div></td><td>{session.focus_name || 'Belum dicatat'}</td><td>Sesi {session.session_number}/{session.purchased_sessions}</td><td className={dataStyles.dateCell}>{sessionDate(session, data.timezone)}</td><td><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span></td><td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => setSelected(session)} aria-label={`Lihat detail sesi ${session.session_number} ${session.mentee_name || session.mentee_email}`}><Eye aria-hidden="true" size={14}/>Detail</button></td></tr>)}</tbody></table></div><TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Halaman penugasan mentor"/></> : <EmptyState icon={ClipboardList} title={data.sessions.length ? 'Tidak ada penugasan yang cocok.' : 'Belum ada penugasan.'} detail={data.sessions.length ? 'Ubah pencarian atau filter untuk melihat sesi lain.' : 'Sesi akan muncul setelah admin menjadwalkan Private Mentoring kepada Anda.'}/>} 
+      {rows.length ? <><div className={dataStyles.tableScroll}><table className={`${dataStyles.table} mentor-ops-table`} data-testid="mentor-assignment-table"><thead><tr><th scope="col">Session ID</th><SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Paket</th><SortableTableHeader label="Fokus" sortKey="focus" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Sesi" sortKey="session" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Jadwal" sortKey="schedule" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Zoom</th><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead><tbody>{visible.map(session => <tr key={session.session_id}><td><div className="session-id-cell"><code title={session.session_id}>{shortId(session.session_id)}</code><CopyTextButton value={session.session_id} label="Salin Session ID" copiedLabel="ID disalin"/></div></td><td><div className={dataStyles.identity}><span className={dataStyles.avatar}>{(session.mentee_name || session.mentee_email || 'P').slice(0, 2).toUpperCase()}</span><span className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{session.mentee_name || 'Peserta Strativate'}</strong><span className={dataStyles.secondaryText}>{session.mentee_email || 'Email tidak tersedia'}</span></span></div></td><td><strong>Private Mentoring</strong><div className={dataStyles.secondaryText}>{session.purchased_sessions} sesi dibeli</div></td><td>{session.focus_name || 'Belum dicatat'}</td><td>Sesi {session.session_number}/{session.purchased_sessions}</td><td className={dataStyles.dateCell}>{sessionDate(session, data.timezone)}</td><td><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span></td><td>{session.status==='scheduled'&&session.meeting_url?<div className="mentor-meeting-actions"><a className="button button-primary button-compact" href={session.meeting_url} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true"/>Zoom</a><CopyTextButton value={session.meeting_url} label="Salin link Zoom" copiedLabel="Link disalin"/></div>:<span className={dataStyles.secondaryText}>Belum tersedia</span>}</td><td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => setSelected(session)} aria-label={`Lihat detail sesi ${session.session_number} ${session.mentee_name || session.mentee_email}`}><Eye aria-hidden="true" size={14}/>Detail</button></td></tr>)}</tbody></table></div><TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Halaman penugasan mentor"/></> : <EmptyState icon={ClipboardList} title={data.sessions.length ? 'Tidak ada penugasan yang cocok.' : 'Belum ada penugasan.'} detail={data.sessions.length ? 'Ubah pencarian atau filter untuk melihat sesi lain.' : 'Sesi akan muncul setelah admin menjadwalkan Private Mentoring kepada Anda.'}/>}
     </section>}
     <SessionDetailDialog session={selected} timezone={data.timezone} onClose={() => setSelected(null)}/>
   </div>

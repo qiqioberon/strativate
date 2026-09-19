@@ -530,3 +530,9 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Session reference + direct Zoom operations. */
+.mentor-ops-table{min-width:1320px}
+.mentor-meeting-actions{display:flex;align-items:center;gap:6px;min-width:max-content}
+.mentor-detail-meeting-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mentor-dialog-session-list article>div>small{color:#8a949c;font-size:8px;line-height:1.45;overflow-wrap:anywhere}

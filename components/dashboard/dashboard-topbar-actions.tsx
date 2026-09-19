@@ -14,7 +14,15 @@ import './dashboard-layout-overrides.module.css'
 type Panel = 'notification' | 'account' | null
 const roleLabels: Record<AppRole, string> = { admin:'Admin',mentor:'Mentor',mentee:'User' }
 
-export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEditProfile:()=>void}) {
+export function DashboardTopbarActions({
+  role,
+  onEditProfile,
+  onOpenNotification,
+}: {
+  role: AppRole
+  onEditProfile: () => void
+  onOpenNotification?: (item: Notification) => void
+}) {
   const account=useAccount()
   const router=useRouter()
   const client=useMemo(()=>createClient(),[])
@@ -26,27 +34,39 @@ export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEdit
   const rootRef=useRef<HTMLDivElement>(null)
   const name=displayName(account)
   const initials=name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'S'
-  const unread=unreadCount
 
   const loadNotifications=useCallback(async()=>{
     setNotificationLoading(true);setNotificationError('')
     const [recent,countResult]=await Promise.all([
-      client.from('notifications').select('*').order('created_at',{ascending:false}).limit(30),
+      client.from('notifications').select('*').is('read_at',null).order('created_at',{ascending:false}).limit(30),
       client.from('notifications').select('id',{count:'exact',head:true}).is('read_at',null),
     ])
-    if(recent.error||countResult.error){setNotificationError('Notifikasi belum dapat dimuat.');setNotificationLoading(false);return}
-    setNotifications(recent.data??[])
-    setUnreadCount(countResult.count??0)
+    if(recent.error||countResult.error){
+      setNotificationError('Notifikasi belum dapat dimuat.')
+      setNotificationLoading(false)
+      return
+    }
+    const unreadOnly=(recent.data??[]).filter(item=>!item.read_at)
+    setNotifications(unreadOnly)
+    setUnreadCount(countResult.count??unreadOnly.length)
     setNotificationLoading(false)
   },[client])
 
   useEffect(()=>{void loadNotifications()},[loadNotifications])
   useEffect(()=>{
+    const refresh=()=>void loadNotifications()
+    window.addEventListener('strativate:notifications-changed',refresh)
+    return()=>window.removeEventListener('strativate:notifications-changed',refresh)
+  },[loadNotifications])
+  useEffect(()=>{
     const channel=client.channel('dashboard-notifications-'+account.id)
       .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},payload=>{
         void loadNotifications()
         const row=(payload.new??{}) as Partial<Notification>
-        if(row.type==='meeting_url_changed'||row.type==='session_scheduled'||row.type==='session_cancelled'||row.type==='mentor_assigned'){window.dispatchEvent(new CustomEvent('strativate:operational-refresh'));router.refresh()}
+        if(row.type==='meeting_url_changed'||row.type==='session_scheduled'||row.type==='session_cancelled'||row.type==='mentor_assigned'){
+          window.dispatchEvent(new CustomEvent('strativate:operational-refresh'))
+          router.refresh()
+        }
       }).subscribe()
     return()=>{void client.removeChannel(channel)}
   },[account.id,client,loadNotifications,router])
@@ -59,13 +79,35 @@ export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEdit
   },[])
 
   const toggle=(panel:Exclude<Panel,null>)=>setOpenPanel(current=>current===panel?null:panel)
-  async function markRead(id:string){await client.rpc('mark_notification_read',{p_notification_id:id});await loadNotifications()}
-  async function markAllRead(){await client.rpc('mark_all_notifications_read');await loadNotifications()}
+
+  async function markRead(id:string){
+    const result=await client.rpc('mark_notification_read',{p_notification_id:id})
+    if(!result.error){
+      setNotifications(current=>current.filter(item=>item.id!==id))
+      setUnreadCount(current=>Math.max(0,current-1))
+      window.dispatchEvent(new CustomEvent('strativate:notifications-changed'))
+    }else await loadNotifications()
+  }
+
+  async function openNotification(item:Notification){
+    await markRead(item.id)
+    setOpenPanel(null)
+    onOpenNotification?.(item)
+  }
+
+  async function markAllRead(){
+    const result=await client.rpc('mark_all_notifications_read')
+    if(!result.error){
+      setNotifications([])
+      setUnreadCount(0)
+      window.dispatchEvent(new CustomEvent('strativate:notifications-changed'))
+    }else await loadNotifications()
+  }
 
   return <div className={styles.topbarActions} ref={rootRef}>
     <button type="button" className={styles.iconButton} aria-label="Buka notifikasi" aria-haspopup="dialog" aria-expanded={openPanel==='notification'} aria-controls="dashboard-notification-popover" onClick={()=>toggle('notification')}>
       <Bell aria-hidden="true"/>
-      {unread?<span className={styles.notificationCount} aria-hidden="true">{unread>99?'99+':unread}</span>:null}
+      {unreadCount?<span className={styles.notificationCount} aria-hidden="true">{unreadCount>99?'99+':unreadCount}</span>:null}
     </button>
 
     <button type="button" className={styles.accountButton} aria-label="Buka menu akun" aria-haspopup="dialog" aria-expanded={openPanel==='account'} aria-controls="dashboard-account-popover" onClick={()=>toggle('account')}>
@@ -73,8 +115,8 @@ export function DashboardTopbarActions({role,onEditProfile}:{role:AppRole;onEdit
     </button>
 
     {openPanel==='notification'?<section id="dashboard-notification-popover" className={styles.popover} role="dialog" aria-label="Notifikasi">
-      <div className={styles.popoverHeader}><div className={styles.notificationHeaderRow}><div><strong>Notifikasi</strong><span>{unread?unread+' belum dibaca':'Semua sudah dibaca'}</span></div>{unread?<button type="button" className={styles.markAllButton} onClick={()=>void markAllRead()}><CheckCheck aria-hidden="true"/>Tandai semua dibaca</button>:null}</div></div>
-      {notificationLoading?<p className={styles.notificationState}><Loader2 className="spin" aria-hidden="true"/>Memuat notifikasi…</p>:notificationError?<div className={styles.notificationState} role="alert">{notificationError}<button type="button" onClick={()=>void loadNotifications()}>Coba lagi</button></div>:notifications.length?<div className={styles.notificationList}>{notifications.map(item=><button type="button" className={styles.notificationItem+' '+(!item.read_at?styles.notificationUnread:'')} key={item.id} onClick={()=>void markRead(item.id)} aria-label={item.title+(item.read_at?'':', belum dibaca')}><span className={styles.notificationIcon}><Bell aria-hidden="true"/></span><div>{!item.read_at?<span className={styles.unreadLabel}>Baru</span>:null}<strong>{item.title}</strong><span>{item.message}</span><small>{new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.created_at))}</small></div></button>)}</div>:<p className={styles.notificationState}>Belum ada notifikasi.</p>}
+      <div className={styles.popoverHeader}><div className={styles.notificationHeaderRow}><div><strong>Notifikasi baru</strong><span>{unreadCount?unreadCount+' belum dibaca':'Semua sudah dibaca'}</span></div>{unreadCount?<button type="button" className={styles.markAllButton} onClick={()=>void markAllRead()}><CheckCheck aria-hidden="true"/>Tandai semua dibaca</button>:null}</div></div>
+      {notificationLoading?<p className={styles.notificationState}><Loader2 className="spin" aria-hidden="true"/>Memuat notifikasi…</p>:notificationError?<div className={styles.notificationState} role="alert">{notificationError}<button type="button" onClick={()=>void loadNotifications()}>Coba lagi</button></div>:notifications.length?<div className={styles.notificationList}>{notifications.map(item=><button type="button" className={styles.notificationItem+' '+styles.notificationUnread} key={item.id} onClick={()=>void openNotification(item)} aria-label={item.title+', belum dibaca'}><span className={styles.notificationIcon}><Bell aria-hidden="true"/></span><div><span className={styles.unreadLabel}>Baru</span><strong>{item.title}</strong><span>{item.message}</span><small>{new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.created_at))}</small></div></button>)}</div>:<div className={styles.notificationState}><Bell aria-hidden="true"/><span>Tidak ada notifikasi baru. Riwayat tetap tersedia di halaman Notifikasi.</span></div>}
     </section>:null}
 
     {openPanel==='account'?<section id="dashboard-account-popover" className={styles.popover} role="dialog" aria-label="Informasi akun">

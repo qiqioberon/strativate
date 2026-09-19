@@ -6,6 +6,7 @@ import { MentorAvailabilityEditor } from '@/components/mentor/availability-edito
 import { MentorPublicProfileForm } from '@/components/mentor/mentor-public-profile-form'
 import type { MentorAvailabilityState, MentorDashboardData } from '@/lib/mentor/dashboard'
 import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
+import type { Notification } from '@/lib/supabase/database.types'
 
 import { availabilityLabel, availabilityTone, MentorPageHeader } from './dashboard-ui'
 import type { MentorDashboardSection } from './mentor-overview'
@@ -15,8 +16,8 @@ export function AvailabilityPanel({ mentorId, onSaved, open }: { mentorId: strin
   return <div className="mentor-section"><MentorPageHeader eyebrow="Ketersediaan" title="Buka waktu terbaik Anda untuk sesi." detail="Ketersediaan menentukan slot yang boleh dipilih admin; perubahan tidak memindahkan booking yang sudah ada." action={<button type="button" className="button button-outline" onClick={() => open('calendar')}>Lihat kalender</button>}/><section className="role-card mentor-availability-card"><MentorAvailabilityEditor mentorId={mentorId} mode="mentor" onSaved={onSaved}/></section></div>
 }
 
-export function NotificationsPanel({ open }: { open: (section: MentorDashboardSection) => void }) {
-  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter onOpenRelated={item=>open(item.related_entity==='session'?'assignments':'overview')}/></div>
+export function NotificationsPanel({ open, onOpenRelated }: { open: (section: MentorDashboardSection) => void; onOpenRelated?: (item: Notification) => void }) {
+  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter onOpenRelated={onOpenRelated ?? (item=>open(item.related_entity==='session'?'assignments':'overview'))}/></div>
 }
 
 export function MentorProfilePanel({

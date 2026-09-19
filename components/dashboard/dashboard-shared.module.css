@@ -360,3 +360,14 @@
 .notificationItem small{display:block;margin-top:.3rem;color:#98a2b3;font-size:.66rem}
 .notificationState{display:flex;align-items:center;gap:.45rem;padding:1rem;color:#667085;font-size:.8rem}
 .notificationState button{border:0;background:transparent;color:#b3151c;font-weight:700;cursor:pointer}
+
+/* Stronger action affordance and visually centered notification trigger. */
+.iconButton{border-color:rgba(22,29,37,.46);background:#fff;color:#20262d}
+.iconButton:hover{border-color:#20262d;background:#fff8f1}
+.iconButton[aria-expanded="true"]{border-color:#20262d;background:#fff4e8;box-shadow:0 0 0 3px rgba(255,122,0,.1)}
+.iconButton svg{display:block;width:1.05rem;height:1.05rem}
+.notificationCount{top:-.34rem;right:-.34rem}
+.sidebarLink,.signOut{min-height:2.75rem;border-width:1px;border-style:solid;box-shadow:0 1px 0 rgba(39,54,74,.035)}
+.sidebarLink{border-color:rgba(39,54,74,.24);background:#fff}
+.signOut{border-color:rgba(179,21,28,.34);background:#fff5f5}
+.sidebarLink:active,.signOut:active{transform:translateY(1px)}
