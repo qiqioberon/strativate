@@ -60,18 +60,22 @@ export async function POST(request:Request){
  if(!inserted.data)return NextResponse.json({ok:true,deduplicated:true})
 
  if(meetingId){
-  const integration=await db.from('private_mentoring_session_calendar_integrations').select('session_id').eq('provider_meeting_id',meetingId).maybeSingle()
+  let table:'private_mentoring_session_calendar_integrations'|'intensive_mentoring_session_calendar_integrations'='private_mentoring_session_calendar_integrations'
+  let integration=await db.from(table).select('session_id').eq('provider_meeting_id',meetingId).maybeSingle()
+  if(!integration.data?.session_id){
+   table='intensive_mentoring_session_calendar_integrations'
+   integration=await db.from(table).select('session_id').eq('provider_meeting_id',meetingId).maybeSingle()
+  }
   const sessionId=integration.data?.session_id
   if(sessionId){
-   if(eventType==='meeting.started')await db.from('private_mentoring_session_calendar_integrations').update({provider_sync_status:'ready',provider_sync_error:null}).eq('session_id',sessionId)
-   if(eventType==='meeting.ended')await db.from('private_mentoring_session_calendar_integrations').update({recording_status:'processing'}).eq('session_id',sessionId).eq('recording_status','expected')
+   const target=db.from(table)
+   if(eventType==='meeting.started')await target.update({provider_sync_status:'ready',provider_sync_error:null}).eq('session_id',sessionId)
+   if(eventType==='meeting.ended')await target.update({recording_status:'processing'}).eq('session_id',sessionId).eq('recording_status','expected')
    if(eventType==='recording.completed'){
     const files=Array.isArray(object.recording_files)?(object.recording_files as ZoomRecordingFile[]).map(file=>({id:file.id??null,file_type:file.file_type??null,recording_type:file.recording_type??null,file_size:file.file_size??null,recording_start:file.recording_start??null,recording_end:file.recording_end??null})):[]
-    await db.from('private_mentoring_session_calendar_integrations').update({recording_status:'available',recording_error:null,recording_metadata:{meeting_uuid:object.uuid??null,start_time:object.start_time??null,duration:object.duration??null,files},recording_available_at:new Date().toISOString()}).eq('session_id',sessionId)
+    await target.update({recording_status:'available',recording_error:null,recording_metadata:{meeting_uuid:object.uuid??null,start_time:object.start_time??null,duration:object.duration??null,files},recording_available_at:new Date().toISOString()}).eq('session_id',sessionId)
    }
-   if(eventType==='recording.failed'||eventType==='recording.processing_failed'){
-    await db.from('private_mentoring_session_calendar_integrations').update({recording_status:'failed',recording_error:'Zoom reported a recording processing failure.'}).eq('session_id',sessionId)
-   }
+   if(eventType==='recording.failed'||eventType==='recording.processing_failed')await target.update({recording_status:'failed',recording_error:'Zoom reported a recording processing failure.'}).eq('session_id',sessionId)
   }
  }
  return NextResponse.json({ok:true})

@@ -2,12 +2,17 @@ export type MentorSessionStatus = 'awaiting_focus' | 'awaiting_scheduling' | 'sc
 
 export type MentorSessionRow = {
   session_id: string
+  mentoring_type?: 'private' | 'intensive'
+  program_name?: string | null
+  engagement_id?: string | null
+  resolved_topic?: string | null
+  add_ons?: Array<{name:string;code:string}>
   enrollment_id: string
   mentee_id: string
   mentee_name: string | null
   mentee_email: string
   session_number: number
-  purchased_sessions: number
+  purchased_sessions: number | null
   status: MentorSessionStatus
   focus_name: string | null
   scheduled_start_at: string | null
@@ -48,7 +53,9 @@ export type MentorMenteeSummary = {
   menteeId: string
   menteeName: string
   menteeEmail: string
-  purchasedSessions: number
+  purchasedSessions: number | null
+  mentoringType: 'private' | 'intensive'
+  programName: string
   assignedSessions: number
   progressSessions: number
   completedSessions: number
@@ -153,6 +160,8 @@ export function buildMentorMenteeSummaries(sessions: MentorSessionRow[], now = n
 
     return {
       enrollmentId,
+      mentoringType:first.mentoring_type==='intensive'?'intensive':'private',
+      programName:first.program_name || (first.mentoring_type==='intensive'?'Intensive Mentoring':'Private Mentoring'),
       menteeId: first.mentee_id,
       menteeName: first.mentee_name?.trim() || first.mentee_email || 'Peserta Strativate',
       menteeEmail: first.mentee_email,
