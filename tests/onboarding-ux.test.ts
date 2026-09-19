@@ -21,7 +21,7 @@ test('canonical persistence remains four steps while revision stages stay presen
   for (const stage of ['name-confirmation', 'name-edit', 'username', 'password', 'institution', 'major', 'cohort', 'referral', 'interests']) {
     assert.ok(types.includes("'" + stage + "'"), stage + ' visual stage must exist')
   }
-  for (const step of [1, 2, 3, 4]) assert.match(experience, new RegExp('runCanonicalSave\\\\(' + step + ','))
+  for (const step of [1, 2, 3, 4]) assert.ok(experience.includes('runCanonicalSave(' + step + ','), 'canonical Step ' + step + ' save must remain present')
   assert.doesNotMatch(experience, /runCanonicalSave\([5-9]/)
   assert.doesNotMatch(experience, /localStorage/)
   assert.match(page, /reviewReturnPath=\{revisionTarget \? '\/onboarding\/review' : null\}/)
