@@ -621,7 +621,7 @@
 .institution-create__action:active:not(:disabled) { transform: scale(.99); }
 .institution-create__action:disabled { opacity: .5; cursor: not-allowed; }
 .institution-duplicate { display: grid; gap: 8px; padding: 10px; border-radius: 10px; background: rgb(255 241 230 / .68); }
-.institution-duplicate__check { display: flex !important; grid-template-columns: none; align-items: flex-start; gap: 7px; }
+.institution-create .institution-duplicate__check { display: flex; grid-template-columns: none; align-items: flex-start; gap: 7px; }
 .institution-duplicate__check input { width: 15px; height: 15px; min-height: 15px; margin-top: 1px; }
 
 .onboarding-calendar-stage,

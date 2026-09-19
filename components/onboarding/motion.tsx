@@ -97,14 +97,14 @@ export function OnboardingRouteStage({
   className = '',
 }: {
   children: ReactNode
-  scene: OnboardingScene
+  scene?: OnboardingScene
   className?: string
 }) {
   const { routePhase, setScene, completeRouteExit, completeRouteEnter } = useOnboardingMotion()
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setScene(scene)
+    if (scene) setScene(scene)
   }, [scene, setScene])
 
   useEffect(() => {
