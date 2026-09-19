@@ -85,7 +85,7 @@ export function CardSwap({
   children,
 }: CardSwapProps) {
   const childArray = useMemo(() => Children.toArray(children) as ReactElement<CardProps>[], [children])
-  const refs = useMemo<CardRef[]>(() => childArray.map(() => createRef<HTMLDivElement>()), [childArray.length])
+  const refs = useMemo<CardRef[]>(() => childArray.map(() => createRef<HTMLDivElement>()), [childArray])
   const order = useRef<number[]>(Array.from({ length: childArray.length }, (_, index) => index))
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
   const intervalRef = useRef<number | null>(null)
