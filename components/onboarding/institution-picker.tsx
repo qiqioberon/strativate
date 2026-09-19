@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, Plus } from 'lucide-react'
 import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Institution, InstitutionType } from '@/lib/supabase/database.types'
@@ -158,7 +158,7 @@ export function InstitutionPicker({ selected, onSelect, disabled }: { selected: 
       </div>
 
       {!selected && <div className="institution-create">
-        <p>Belum ada di daftar? Kamu tetap bisa mengajukannya.</p>
+        <p>Belum menemukan institusimu? Kamu bisa mengajukannya sebagai pilihan baru.</p>
         <label>
           <span>Tipe institusi</span>
           <select value={type} disabled={disabled || submitting} onChange={event => { setType(event.target.value as InstitutionType); setAllowDuplicate(false) }}>
@@ -172,8 +172,10 @@ export function InstitutionPicker({ selected, onSelect, disabled }: { selected: 
             <span>Institusi saya berbeda meskipun namanya sama.</span>
           </label>
         </div>}
-        <button type="button" className="onboarding-text-action" disabled={disabled || submitting || loading || normalized.length < 2} onClick={submitInstitution}>
-          {submitting ? 'Mengajukan…' : 'Gunakan “' + normalized + '”'}
+        <button type="button" className="institution-create__action" disabled={disabled || submitting || loading || normalized.length < 2} onClick={submitInstitution}>
+          <Plus aria-hidden="true" size={16} />
+          <span>{submitting ? 'Mengajukan…' : 'Ajukan “' + normalized + '”'}</span>
+          <ArrowRight aria-hidden="true" size={16} />
         </button>
         <small>Pengajuan baru akan ditinjau admin.</small>
       </div>}

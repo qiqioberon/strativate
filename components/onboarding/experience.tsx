@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type AnimationEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type AnimationEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { formError } from '@/lib/auth/errors'
-import { displayLabel } from '@/lib/labels'
 import { usernameError } from '@/lib/auth/rules'
 import { institutionPayload, interestPayload, profilePayload, referralPayload } from '@/lib/onboarding/rules'
 import { createClient } from '@/lib/supabase/client'
@@ -22,7 +21,7 @@ import {
   WelcomeStage,
 } from './stages'
 import { OnboardingProgress } from './stage-frame'
-import { canonicalStep, initialVisualStage, type OnboardingExperienceProps, type TransitionPhase, type VisualStage } from './types'
+import { atmosphereForStage, canonicalStep, initialVisualStage, revisionVisualStage, type OnboardingExperienceProps, type TransitionPhase, type VisualStage } from './types'
 
 type TransitionTarget = { stage: VisualStage; route?: never } | { route: string; stage?: never }
 
@@ -30,16 +29,11 @@ function fullName(firstName: string, lastName: string) {
   return [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
 }
 
-function readableInterestAcknowledgement(names: string[]) {
-  if (names.length === 1) return names[0] + ' — siap, kami sudah mengenal minatmu sedikit lebih baik.'
-  if (names.length === 2) return names[0] + ' dan ' + names[1] + ' — sudah kami catat.'
-  return names.slice(0, 2).join(', ') + ', dan ' + (names.length - 2) + ' lainnya — sudah kami catat.'
-}
-
-export function OnboardingExperience({ profile, mentee, names, referrals, interests, initialInterests, initialInstitution }: OnboardingExperienceProps) {
+export function OnboardingExperience({ profile, mentee, names, referrals, interests, initialInterests, initialInstitution, revisionTarget = null, reviewReturnPath = null }: OnboardingExperienceProps) {
   const router = useRouter()
   const savedStep = canonicalStep(mentee.onboarding_step)
-  const [stage, setStage] = useState<VisualStage>(initialVisualStage(savedStep))
+  const revisionMode = Boolean(revisionTarget && mentee.onboarding_completed_at && reviewReturnPath)
+  const [stage, setStage] = useState<VisualStage>(revisionTarget ? revisionVisualStage(revisionTarget) : initialVisualStage(savedStep))
   const [phase, setPhase] = useState<TransitionPhase>('idle')
   const [transitionTarget, setTransitionTarget] = useState<TransitionTarget | null>(null)
   const [acknowledgement, setAcknowledgement] = useState('')
@@ -67,10 +61,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
   const displayFullName = fullName(firstName, lastName)
   const institutionName = institution?.name || 'Tempat belajarmu'
   const usernameValidation = username.length > 0 ? usernameError(username) || '' : ''
-  const selectedInterestNames = useMemo(
-    () => interests.filter(option => selectedInterests.includes(option.id)).map(option => displayLabel(option.name)),
-    [interests, selectedInterests],
-  )
+  const atmosphere = atmosphereForStage(stage)
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -128,12 +119,14 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       if (!transitionTarget.stage) return
       setStage(transitionTarget.stage)
       setTransitionTarget(null)
-      setAcknowledgement('')
       setPhase('enter')
       window.scrollTo({ top: 0, behavior: 'auto' })
       return
     }
-    if (phase === 'enter') setPhase('idle')
+    if (phase === 'enter') {
+      setPhase('idle')
+      setAcknowledgement('')
+    }
   }
 
   function setPending(value: boolean) {
@@ -204,7 +197,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       await runCanonicalSave(1, result.data as Json)
       setPassword('')
       setConfirmation('')
-      transitionTo({ stage: 'institution' }, '✓ Akunmu sudah siap.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Akunmu sudah diperbarui.')
+      else transitionTo({ stage: 'institution' }, 'Akunmu sudah siap.')
     } catch (submitError) {
       setError(formError(submitError, 'Akunmu belum tersimpan. Periksa data dan koneksi, lalu coba lagi.'))
     } finally {
@@ -248,7 +242,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       await runCanonicalSave(2, result.data as Json)
       if (forceEmptyCohort) setCohort('')
-      transitionTo({ stage: 'referral' }, '✓ ' + institutionName + ' sudah kami catat.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Informasi studimu sudah diperbarui.')
+      else transitionTo({ stage: 'referral' }, institutionName + ' sudah kami catat.')
     } catch (submitError) {
       setError(formError(submitError, 'Informasi studimu belum tersimpan. Coba lagi.'))
     } finally {
@@ -270,7 +265,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      transitionTo({ stage: 'interests' })
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Pilihanmu belum tersimpan. Coba lagi.'))
     } finally {
@@ -291,7 +287,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      transitionTo({ stage: 'interests' })
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Jawabanmu belum tersimpan. Coba lagi.'))
     } finally {
@@ -320,7 +317,8 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       const data = await runCanonicalSave(4, result.data as Json)
       if (!data.onboarding_completed_at) throw new Error('Completion missing')
-      transitionTo({ route: '/onboarding/calendar' }, readableInterestAcknowledgement(selectedInterestNames))
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Pilihanmu sudah diperbarui.')
+      else transitionTo({ route: '/onboarding/calendar' }, 'Sip, pilihanmu sudah tersimpan.')
     } catch (submitError) {
       setError(formError(submitError, 'Minatmu belum tersimpan. Coba lagi.'))
     } finally {
@@ -425,7 +423,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     />
   }
 
-  return <div className="onboarding-experience" data-stage={stage}>
+  return <div className="onboarding-experience" data-stage={stage} data-atmosphere={atmosphere} data-phase={phase} data-revision={revisionMode || undefined}>
     <div className="onboarding-experience__progress"><OnboardingProgress stage={stage} /></div>
     <div
       ref={stageRef}

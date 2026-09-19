@@ -14,6 +14,8 @@ export type VisualStage =
   | 'interests'
 
 export type TransitionPhase = 'idle' | 'exit' | 'enter'
+export type RevisionTarget = 'identity' | 'institution' | 'referral' | 'interests'
+export type OnboardingAtmosphere = 'welcome' | 'identity' | 'institution' | 'referral' | 'interests'
 
 export type OnboardingExperienceProps = {
   profile: Profile
@@ -23,6 +25,8 @@ export type OnboardingExperienceProps = {
   interests: MasterOption[]
   initialInterests: string[]
   initialInstitution: Institution | null
+  revisionTarget?: RevisionTarget | null
+  reviewReturnPath?: string | null
 }
 
 export function canonicalStep(value: number): CanonicalStep {
@@ -54,4 +58,20 @@ const visualProgress: Record<VisualStage, number> = {
 
 export function progressForStage(stage: VisualStage) {
   return visualProgress[stage]
+}
+
+
+export function revisionVisualStage(target: RevisionTarget): VisualStage {
+  if (target === 'identity') return 'name-confirmation'
+  if (target === 'institution') return 'institution'
+  if (target === 'referral') return 'referral'
+  return 'interests'
+}
+
+export function atmosphereForStage(stage: VisualStage): OnboardingAtmosphere {
+  if (stage === 'welcome') return 'welcome'
+  if (stage === 'institution' || stage === 'major' || stage === 'cohort') return 'institution'
+  if (stage === 'referral') return 'referral'
+  if (stage === 'interests') return 'interests'
+  return 'identity'
 }
