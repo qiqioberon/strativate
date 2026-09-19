@@ -316,6 +316,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     test.setTimeout(180_000)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/onboarding')
+    mkdirSync('test-results/onboarding-screenshots', { recursive: true })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/welcome-mobile-390x844.png', fullPage: true })
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/welcome-desktop-1440x900.png', fullPage: true })
@@ -351,7 +352,6 @@ test.describe.serial('immersive deterministic onboarding', () => {
     const longInterest = page.getByText('Strategi Transformasi Digital dan Inovasi Bisnis Berkelanjutan untuk Organisasi', { exact: true })
     await expect(longInterest).toBeVisible()
 
-    mkdirSync('test-results/onboarding-screenshots', { recursive: true })
     await page.setViewportSize({ width: 390, height: 844 })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/interests-mobile-390x844.png', fullPage: true })
     await page.setViewportSize({ width: 1440, height: 900 })
