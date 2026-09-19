@@ -3,11 +3,13 @@
 import type { ReactNode } from 'react'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { SignOut } from '@/components/auth/sign-out'
+import { OnboardingShapeGrid } from './shape-grid-background'
 import { OnboardingMotionProvider, useOnboardingMotion } from './motion'
 
 function OnboardingShellFrame({ children }: { children: ReactNode }) {
   const { scene, routePhase, finalMessage } = useOnboardingMotion()
   return <main className="onboarding-shell" data-scene={scene} data-route-phase={routePhase}>
+    <OnboardingShapeGrid />
     <div className="onboarding-ambient" aria-hidden="true" data-testid="onboarding-ambient">
       <span className="onboarding-ambient__glow onboarding-ambient__glow--orange"><span /></span>
       <span className="onboarding-ambient__glow onboarding-ambient__glow--red"><span /></span>

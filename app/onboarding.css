@@ -87,10 +87,28 @@
   --scene-ring-x: -34px; --scene-ring-y: 18px; --scene-ring-scale: 1;
 }
 
-.onboarding-ambient {
+.onboarding-shape-grid {
   position: fixed;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
+  opacity: .52;
+  pointer-events: none;
+  contain: paint;
+  -webkit-mask-image: radial-gradient(ellipse 48% 52% at 50% 52%, rgb(0 0 0 / .12) 0%, rgb(0 0 0 / .22) 42%, rgb(0 0 0 / .68) 74%, #000 100%);
+  mask-image: radial-gradient(ellipse 48% 52% at 50% 52%, rgb(0 0 0 / .12) 0%, rgb(0 0 0 / .22) 42%, rgb(0 0 0 / .68) 74%, #000 100%);
+}
+
+.onboarding-shape-grid__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.onboarding-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
   overflow: hidden;
   pointer-events: none;
   contain: paint;
@@ -833,6 +851,7 @@
     --scene-orange-opacity: .58;
     --scene-red-opacity: .44;
   }
+  .onboarding-shape-grid { opacity: .4; }
   .onboarding-ambient__glow--orange { top: -18vh; right: -45vw; width: 118vw; }
   .onboarding-ambient__glow--red { left: -62vw; bottom: -22vh; width: 122vw; }
   .onboarding-ambient__ring--one { right: -34vw; bottom: 10vh; width: 76vw; }
