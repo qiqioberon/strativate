@@ -6,7 +6,7 @@ import type { MarketingTestimonial } from '../supabase/database.types'
 
 export type TestimonialFile = Pick<File, 'size' | 'type'>
 export type TestimonialDraftErrors = Partial<Record<
-  'slug' | 'competitionName' | 'achievement' | 'testimonial' | 'altText' | 'file',
+  'slug' | 'competitionName' | 'achievement' | 'testimonial' | 'file',
   string
 >>
 
@@ -38,14 +38,12 @@ export function validateTestimonialDraft({
   competitionName,
   achievement,
   testimonial,
-  altText,
   file,
 }: {
   slug: string
   competitionName: string
   achievement: string
   testimonial: string
-  altText: string
   file: TestimonialFile | null
 }): TestimonialDraftErrors {
   const errors: TestimonialDraftErrors = {}
@@ -53,7 +51,6 @@ export function validateTestimonialDraft({
   if (!competitionName.trim()) errors.competitionName = 'Nama kompetisi wajib diisi.'
   if (!achievement.trim()) errors.achievement = 'Pencapaian wajib diisi.'
   if (!testimonial.trim()) errors.testimonial = 'Isi testimoni wajib diisi.'
-  if (!altText.trim()) errors.altText = 'Teks alternatif gambar wajib diisi.'
   if (file && !TESTIMONIAL_IMAGE_ALLOWED_TYPES.has(file.type)) errors.file = 'Gunakan gambar JPG, PNG, atau WebP.'
   else if (file && file.size > TESTIMONIAL_IMAGE_MAX_FILE_SIZE) errors.file = 'Ukuran gambar maksimal 5 MB.'
   return errors
@@ -64,8 +61,7 @@ export function buildTestimonialPayload({
   competitionName,
   achievement,
   testimonial,
-  participantLabel,
-  altText,
+  storedParticipantLabel,
   imagePath,
   storedImagePath,
   isPublished,
@@ -74,8 +70,7 @@ export function buildTestimonialPayload({
   competitionName: string
   achievement: string
   testimonial: string
-  participantLabel: string
-  altText: string
+  storedParticipantLabel: string | null
   imagePath: string | null
   storedImagePath: string | null
   isPublished: boolean
@@ -85,8 +80,8 @@ export function buildTestimonialPayload({
     competition_name: competitionName.trim(),
     achievement: achievement.trim(),
     testimonial: testimonial.trim(),
-    participant_label: participantLabel.trim() || null,
-    alt_text: altText.trim(),
+    participant_label: storedParticipantLabel,
+    alt_text: buildTestimonialAltText(competitionName),
     image_path: imagePath ?? storedImagePath,
     is_published: isPublished,
   }
@@ -108,4 +103,10 @@ export function reorderTestimonialIds(items: MarketingTestimonial[], index: numb
 export function safeTestimonialFileName(name: string) {
   const normalized = name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')
   return normalized || 'testimonial'
+}
+
+
+export function buildTestimonialAltText(competitionName: string) {
+  const label = competitionName.trim()
+  return label ? `Peserta ${label} setelah kompetisi.` : 'Peserta Strativate setelah kompetisi.'
 }
