@@ -373,7 +373,7 @@
 .onboarding-primary-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 16px 32px rgb(205 84 15 / .22); }
 .onboarding-primary-action:active:not(:disabled) { transform: translateY(0) scale(.985); }
 .onboarding-primary-action:disabled,
-.onboarding-primary-action[aria-disabled='true'] { opacity: .58; cursor: not-allowed; pointer-events: none; }
+.onboarding-primary-action[aria-disabled='true'] { opacity: .58; cursor: default; pointer-events: none; }
 
 .onboarding-text-action,
 .onboarding-back {
@@ -444,7 +444,7 @@
 .onboarding-shell select:focus { border-color: rgb(255 122 0 / .55); background: #fffdfa; box-shadow: 0 0 0 3px rgb(255 122 0 / .09); }
 .onboarding-shell input:disabled,
 .onboarding-shell textarea:disabled,
-.onboarding-shell select:disabled { opacity: .58; cursor: not-allowed; }
+.onboarding-shell select:disabled { opacity: .58; cursor: default; }
 
 .onboarding-shell :is(button, a, input, textarea, select):focus-visible {
   outline: 2px solid rgb(255 122 0 / .72);
@@ -513,7 +513,7 @@
 .onboarding-answer-card:hover:not(:disabled) { transform: translateY(-1px); border-color: rgb(255 122 0 / .28); background: rgb(255 252 247 / .96); }
 .onboarding-answer-card:hover:not(:disabled) > svg { transform: translateX(3px); color: var(--orange); }
 .onboarding-answer-card:active:not(:disabled) { transform: scale(.985); }
-.onboarding-answer-card:disabled { cursor: not-allowed; }
+.onboarding-answer-card:disabled { cursor: default; }
 .onboarding-answer-card[data-selected='true'] {
   border-color: rgb(255 122 0 / .5);
   background: linear-gradient(135deg, rgb(255 247 236 / .98), rgb(255 252 247 / .92));
@@ -642,7 +642,7 @@
 .institution-create__action:hover:not(:disabled) { transform: translateY(-1px); border-color: rgb(255 122 0 / .4); background: #fff7eb; box-shadow: 0 10px 22px rgb(100 54 19 / .05); }
 .institution-create__action:hover:not(:disabled) svg:last-child { transform: translateX(3px); }
 .institution-create__action:active:not(:disabled) { transform: scale(.99); }
-.institution-create__action:disabled { opacity: .5; cursor: not-allowed; }
+.institution-create__action:disabled { opacity: .5; cursor: default; }
 .institution-duplicate { display: grid; gap: 8px; padding: 10px; border-radius: 10px; background: rgb(255 241 230 / .68); }
 .institution-create .institution-duplicate__check { display: flex; grid-template-columns: none; align-items: flex-start; gap: 7px; }
 .institution-duplicate__check input { width: 15px; height: 15px; min-height: 15px; margin-top: 1px; }
