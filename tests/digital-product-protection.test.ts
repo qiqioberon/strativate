@@ -39,8 +39,9 @@ test('global toast is mounted and cart feedback no longer uses temporary inline 
   assert.match(cartView, /useToast/)
 })
 
-test('homepage delegates Digital Product previews to an accessible carousel component', () => {
-  assert.match(home, /DigitalProductCarousel/)
+test('homepage delegates Digital Product previews to the React Bits Card Swap showcase', () => {
+  assert.match(home, /DigitalProductCardSwap/)
+  assert.doesNotMatch(home, /DigitalProductCarousel/)
   assert.doesNotMatch(home, /digitalProducts\.slice\(0, 2\)/)
 })
 
