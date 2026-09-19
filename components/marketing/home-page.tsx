@@ -20,6 +20,7 @@ import {
   faqPreview,
 } from '@/lib/content/marketing-content'
 import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
+import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 import { mentoringProgramEditorial } from '@/lib/program-information'
@@ -30,15 +31,18 @@ import { HeroCarousel } from './hero-carousel'
 import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
+import { TestimonialCircularGallery } from './testimonial-circular-gallery'
 
 export function HomePage({
   heroPosters,
   mentors,
+  testimonials,
   digitalProducts,
   digitalProductsEnabled,
 }: {
   heroPosters: MarketingHeroPosterView[]
   mentors: PublicMentor[]
+  testimonials: MarketingTestimonialView[]
   digitalProducts: PublicDigitalProduct[]
   digitalProductsEnabled: boolean
 }) {
@@ -169,6 +173,26 @@ export function HomePage({
           <MentorMarquee mentors={mentors} />
         </div>
       </section>
+
+      {testimonials.length > 0 ? (
+        <section
+          className="marketing-section marketing-testimonials"
+          aria-labelledby="testimonial-heading"
+          data-reveal
+          data-testid="homepage-testimonials-section"
+        >
+          <div className="marketing-container marketing-testimonials__heading">
+            <p className="marketing-kicker">Cerita dari peserta</p>
+            <h2 id="testimonial-heading">
+              Dari proses yang lebih terarah,
+              <br />
+              <em>lahir hasil yang mereka banggakan.</em>
+            </h2>
+            <p>Jelajahi perjalanan peserta Strativate dan lihat bagaimana proses mentoring membantu mereka mempertajam strategi sebelum kompetisi.</p>
+          </div>
+          <TestimonialCircularGallery items={testimonials} />
+        </section>
+      ) : null}
 
       {digitalProductsEnabled ? (
         <section
