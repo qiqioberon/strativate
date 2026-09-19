@@ -260,7 +260,7 @@
 .ops-combobox-options button{display:grid;gap:2px;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left}
 .ops-combobox-options button:hover,.ops-combobox-options button.is-active{background:#fff4e8}
 .ops-combobox-options button strong{font-size:.72rem}.ops-combobox-options button span,.ops-combobox-options>p{color:#7d7068;font-size:.64rem}
-.cart-link-product-card.is-disabled{opacity:.62;background:#f7f4f2}.cart-link-product-card.is-disabled .cart-link-product-card__select{cursor:not-allowed}
+.cart-link-product-card.is-disabled{opacity:.62;background:#f7f4f2}.cart-link-product-card.is-disabled .cart-link-product-card__select{cursor:default}
 
 /* Scalable calendar legend + role-wide notification history. */
 .calendar-legend-menu{position:relative;margin:0 0 12px auto;width:fit-content}
