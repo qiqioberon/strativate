@@ -602,7 +602,7 @@
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  border-radius: 14px 30px 30px 30px;
+  border-radius: 5.5%;
   transform-origin: center;
   pointer-events: none;
   animation: testimonial-overlay-in 180ms ease-out both;
@@ -685,11 +685,17 @@
 }
 .marketing-testimonial-dialog__media {
   position: relative;
-  min-height: 560px;
+  align-self: center;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  min-height: 0;
   overflow: hidden;
   background: #eaded5;
 }
-.marketing-testimonial-dialog__media img { object-fit: cover; }
+.marketing-testimonial-dialog__media img {
+  object-fit: contain;
+  object-position: center;
+}
 .marketing-testimonial-dialog__content {
   position: relative;
   display: flex;
@@ -764,7 +770,7 @@
     overflow-y: auto;
   }
   .marketing-testimonial-dialog__panel { grid-template-columns: 1fr; }
-  .marketing-testimonial-dialog__media { min-height: 280px; }
+  .marketing-testimonial-dialog__media { min-height: 0; aspect-ratio: 5 / 4; }
   .marketing-testimonial-dialog__content { min-height: 420px; padding: 32px 22px 26px; }
   .marketing-testimonial-dialog__content h2 { padding-right: 34px; }
 }

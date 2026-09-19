@@ -478,13 +478,13 @@ export function TestimonialManagement() {
                     setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
                     setFieldErrors(current => ({ ...current, file: undefined }))
                   }} /></label>
-                  <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB. File baru otomatis disimpan dalam format 4:5.</small>
+                  <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB. File baru otomatis disimpan dalam format 5:4.</small>
                   {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
                   {selectedFile ? (
                     <div className={styles.cropControls} data-testid="testimonial-crop-controls">
                       <div className={styles.cropMeta}>
                         <span>Crop standar</span>
-                        <strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 4:5</strong>
+                        <strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4</strong>
                       </div>
                       <label>
                         Posisi horizontal

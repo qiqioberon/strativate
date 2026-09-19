@@ -38,13 +38,21 @@ test('testimonial gallery continuously moves, pauses on hover, and opens details
   assert.doesNotMatch(gallery, /marketing-testimonial-gallery__hint/)
   assert.match(gallery, /Lihat testimoni/)
   assert.match(gallery, /showModal\(\)/)
+  assert.match(gallery, /centerInitialSequence\(\)/)
+  assert.match(gallery, /const offset = firstMedia\.width \* this\.items\.length/)
+  assert.match(gallery, /const inset = 2/)
   assert.match(gallery, /prefers-reduced-motion: reduce/)
   assert.match(css, /marketing-testimonial-dialog::backdrop/)
+  assert.match(css, /marketing-testimonial-dialog__media[\s\S]*aspect-ratio: 5 \/ 4/)
+  assert.match(css, /marketing-testimonial-dialog__media img[\s\S]*object-fit: contain/)
+  assert.match(css, /marketing-testimonial-gallery__overlay[\s\S]*border-radius: 5\.5%/)
 })
 
 test('admin testimonial manager uploads to Supabase Storage and controls publish/order state', () => {
   assert.match(admin, /TESTIMONIAL_IMAGE_BUCKET/)
   assert.match(admin, /cropTestimonialImage\(selectedFile, crop\)/)
+  assert.match(admin, /File baru otomatis disimpan dalam format 5:4/)
+  assert.match(admin, /TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4/)
   assert.match(admin, /contentType: 'image\/webp'/)
   assert.match(admin, /testimonial-crop-controls/)
   assert.doesNotMatch(admin, /Label peserta \/ tim/)
@@ -74,9 +82,10 @@ test('testimonial gallery only consumes horizontal wheel and horizontal drag int
   assert.match(gallery, /resolveTestimonialDragIntent\(deltaX, deltaY\)/)
 })
 
-test('testimonial section uses a smaller 4:5 gallery scale and shared section typography', () => {
+test('testimonial gallery card remains 4:5 while stored/modal imagery is 5:4', () => {
   assert.match(gallery, /cardHeight = cardWidth \* 1\.25/)
   assert.match(gallery, /Math\.min\(300, this\.screen\.width \* \.2\)/)
   assert.match(css, /marketing-testimonials__heading h2[\s\S]*font-weight: 540/)
   assert.match(css, /height: clamp\(330px, 37vw, 430px\)/)
+  assert.match(css, /aspect-ratio: 5 \/ 4/)
 })
