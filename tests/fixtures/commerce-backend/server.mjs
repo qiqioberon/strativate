@@ -48,6 +48,7 @@ function initialOnboardingState() {
     interestIds: [],
     saveCalls: 0,
     failNextSave: false,
+    googleCalendar: null,
   }
 }
 let onboardingState = initialOnboardingState()
@@ -80,6 +81,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/__fixture/onboarding-reset' && req.method === 'POST') { onboardingState = initialOnboardingState(); return json(req, res, 200, { ok: true }) }
   if (url.pathname === '/__fixture/onboarding-fail-next-save' && req.method === 'POST') { onboardingState.failNextSave = true; return json(req, res, 200, { ok: true }) }
   if (url.pathname === '/__fixture/onboarding-mode' && req.method === 'POST') { const body = await readBody(req); onboardingState.profile = { ...onboardingState.profile, registration_method: body.registration_method === 'google' ? 'google' : 'email', password_set_at: body.password_set_at === null ? null : now }; return json(req, res, 200, onboardingState.profile) }
+  if (url.pathname === '/__fixture/onboarding-calendar' && req.method === 'POST') { const body = await readBody(req); onboardingState.googleCalendar = body.connected ? { user_id: ids.onboardingMentee, account_email: body.account_email || 'yuta.onboarding.fixture.with.a.very.long.address@example.test', encrypted_refresh_token: 'fixture-token-value', granted_scopes: ['calendar.readonly'], status: 'connected', last_error: null, created_at: now, updated_at: now } : null; return json(req, res, 200, onboardingState.googleCalendar) }
   if (url.pathname === '/__fixture/onboarding-state') return json(req, res, 200, onboardingState)
   if (url.pathname === '/__fixture/state') return json(req, res, 200, { cartItemCount: state.cartItems.length, orderCount: state.order ? 1 : 0, createOrderCalls: state.createOrderCalls, orderId: state.order?.id ?? null, orderStatus: state.order?.status ?? null, productDeleted: state.productDeleted, productAvailable: state.productAvailable })
   if (url.pathname === '/__fixture/mark-paid' && req.method === 'POST') { if (!state.order) createOrder(); state.order.status = 'paid'; state.order.paid_at = now; return json(req, res, 200, { ok: true }) }
@@ -106,8 +108,9 @@ const server = http.createServer(async (req, res) => {
     return postgrest(req, res, requested === onboardingInstitution.id ? [onboardingInstitution] : [])
   }
   if (url.pathname === '/rest/v1/google_calendar_connections' && req.method === 'GET') {
-    if (wantsObject(req)) return json(req, res, 200, null)
-    return postgrest(req, res, [])
+    const rows = onboardingState.googleCalendar ? [onboardingState.googleCalendar] : []
+    if (wantsObject(req)) return json(req, res, 200, rows[0] || null)
+    return postgrest(req, res, rows)
   }
   if (url.pathname === '/rest/v1/mentor_profiles' && req.method === 'GET') { const requested = filterEq(url, 'user_id'); return postgrest(req, res, requested === ids.mentor ? [mentorProfile] : []) }
   if (url.pathname === '/rest/v1/digital_products' && req.method === 'GET') { if (state.productDeleted) return postgrest(req, res, []); const slug = filterEq(url, 'slug'); return postgrest(req, res, slug && slug !== state.product.slug ? [] : [state.product]) }
