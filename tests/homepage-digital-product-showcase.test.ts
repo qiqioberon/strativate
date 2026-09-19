@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
-const migration = readFileSync('supabase/migrations/202609190002_homepage_digital_product_showcase.sql', 'utf8')
+const migration = readFileSync('supabase/migrations/202609190003_homepage_digital_product_showcase.sql', 'utf8')
 const server = readFileSync('lib/commerce/server.ts', 'utf8')
 const page = readFileSync('app/page.tsx', 'utf8')
 const manager = readFileSync('components/admin/digital-product-management.tsx', 'utf8')
