@@ -1,5 +1,6 @@
 import { ArrowRight, CalendarDays, Check } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import { BlurText, SplitText } from '@/components/animations/react-bits-text'
 import { getAccount } from '@/lib/auth/server'
 import { OnboardingRouteLink, OnboardingRouteStage } from '@/components/onboarding/motion'
 import { getGoogleConnectionStatus } from '@/lib/google-calendar/server'
@@ -17,10 +18,16 @@ export default async function CalendarOnboardingPage({ searchParams }: { searchP
     <section className="onboarding-calendar-stage">
       <div className="onboarding-calendar-stage__symbol" aria-hidden="true"><CalendarDays size={26} /></div>
       <p className="onboarding-eyebrow">Satu pilihan sebelum pengecekan akhir</p>
-      <h1>{connection.connected ? 'Google Calendar-mu sudah terhubung.' : 'Ingin menghubungkan jadwalmu?'}</h1>
-      <p className="onboarding-calendar-stage__lead">{connection.connected
-        ? 'Koneksi ini membantu Strativate mengenali konflik jadwal mentoring. Pengaturannya bisa kamu kelola dari dashboard.'
-        : 'Google Calendar bisa membantu Strativate mengenali konflik jadwal mentoring. Ini opsional dan bisa diatur lagi dari dashboard.'}</p>
+      <SplitText
+        text={connection.connected ? 'Google Calendar-mu sudah terhubung.' : 'Ingin menghubungkan jadwalmu?'}
+        className="onboarding-calendar-stage__animated-title"
+      />
+      <BlurText
+        text={connection.connected
+          ? 'Koneksi ini membantu Strativate mengenali konflik jadwal mentoring. Pengaturannya bisa kamu kelola dari dashboard.'
+          : 'Google Calendar bisa membantu Strativate mengenali konflik jadwal mentoring. Ini opsional dan bisa diatur lagi dari dashboard.'}
+        className="onboarding-calendar-stage__lead onboarding-calendar-stage__animated-description"
+      />
 
       {params.calendar === 'denied' && <p className="onboarding-calendar-stage__notice" role="status">
         Izin Calendar tidak diberikan. Tidak masalah—kamu bisa melanjutkan tanpa menghubungkannya.

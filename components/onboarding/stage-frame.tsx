@@ -1,5 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { BlurText, SplitText } from '@/components/animations/react-bits-text'
 import { progressForStage, type VisualStage } from './types'
 
 export function OnboardingProgress({ stage }: { stage: VisualStage }) {
@@ -37,8 +38,12 @@ export function QuestionStage({
   return <section className="onboarding-question" data-align={align}>
     <header className="onboarding-question__copy">
       {eyebrow && <p className="onboarding-eyebrow">{eyebrow}</p>}
-      <h1>{title}</h1>
-      {description && <p className="onboarding-question__description">{description}</p>}
+      {typeof title === 'string'
+        ? <SplitText text={title} className="onboarding-question__animated-title" />
+        : <h1>{title}</h1>}
+      {description && (typeof description === 'string'
+        ? <BlurText text={description} className="onboarding-question__description onboarding-question__animated-description" />
+        : <p className="onboarding-question__description">{description}</p>)}
     </header>
     <div className="onboarding-question__interaction" data-motion={interactionMotion}>{children}</div>
     {onBack && <button type="button" className="onboarding-back" onClick={onBack}>

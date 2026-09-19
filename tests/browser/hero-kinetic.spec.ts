@@ -11,6 +11,14 @@ test('homepage hero adds kinetic depth without changing its primary destinations
   await expect(shapeGrid.locator('canvas.onboarding-shape-grid__canvas')).toHaveCount(1)
   await expect(shapeGrid).toHaveCSS('position', 'absolute')
   await expect(stage.locator('.marketing-hero-stage__node')).toHaveCount(3)
+  await expect(page.locator('.marketing-hero__headline')).toHaveAttribute(
+    'aria-label',
+    'Strategi yang kuat dimulai dari cara berpikir yang tajam.',
+  )
+  await expect(page.getByTestId('hero-text-type').locator('.rb-text-type__content')).toHaveText(
+    'cara berpikir yang tajam.',
+    { timeout: 4000 },
+  )
   await expect(page.getByTestId('hero-program-link')).toHaveAttribute('href', '/program')
   await expect(page.getByTestId('hero-mentor-link')).toHaveAttribute('href', '/mentor')
   await expect(page.getByTestId('hero-mentor-link')).toHaveAttribute('data-magnetic-action', 'true')
@@ -35,6 +43,8 @@ test('kinetic hero stays static when reduced motion is requested', async ({ page
 
   const stage = page.getByTestId('hero-kinetic-stage')
   await expect(page.getByTestId('hero-shape-grid').locator('canvas.onboarding-shape-grid__canvas')).toHaveCount(1)
+  await expect(page.getByTestId('hero-text-type').locator('.rb-text-type__content')).toHaveText('cara berpikir yang tajam.')
+  await expect(page.getByTestId('hero-text-type').locator('.rb-text-type__cursor')).toHaveCount(0)
   const stageBox = await stage.boundingBox()
   if (!stageBox) throw new Error('Expected kinetic hero stage bounds')
   await page.mouse.move(stageBox.x + stageBox.width * .8, stageBox.y + stageBox.height * .25)

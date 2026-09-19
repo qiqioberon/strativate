@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+import { TextType } from '@/components/animations/react-bits-text'
 import { OnboardingShapeGrid } from '@/components/onboarding/shape-grid-background'
 import { buttonVariants } from '@/components/ui/button'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
@@ -74,9 +75,21 @@ export function HomePage({
           <div className="marketing-container marketing-hero__grid">
             <div className="marketing-hero__copy">
               <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
-              <h1 className="marketing-hero__headline">
-                <span className="marketing-hero__headline-line">Bangun cara berpikir.</span>
-                <em className="marketing-hero__headline-line marketing-hero__headline-line--accent">Temukan langkahmu.</em>
+              <h1
+                className="marketing-hero__headline"
+                aria-label="Strategi yang kuat dimulai dari cara berpikir yang tajam."
+              >
+                <span className="marketing-hero__headline-line">Strategi yang kuat dimulai dari</span>
+                <em className="marketing-hero__headline-line marketing-hero__headline-line--accent" data-testid="hero-text-type">
+                  <TextType
+                    text={[
+                      'cara berpikir yang tajam.',
+                      'analisis yang terarah.',
+                      'keputusan yang matang.',
+                      'ide yang meyakinkan.',
+                    ]}
+                  />
+                </em>
               </h1>
               <p className="marketing-hero__lede">Bimbingan personal dan program persiapan yang membantumu mengurai tantangan, berlatih dengan fokus, dan bergerak dengan arah yang lebih jelas.</p>
               <div className="marketing-hero__actions">

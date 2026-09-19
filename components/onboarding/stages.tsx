@@ -1,5 +1,6 @@
 import { ArrowRight, Check, CheckCircle2 } from 'lucide-react'
 import type { FormEvent } from 'react'
+import { BlurText, SplitText } from '@/components/animations/react-bits-text'
 import { displayLabel } from '@/lib/labels'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import type { Institution, MasterOption, RegistrationMethod } from '@/lib/supabase/database.types'
@@ -11,8 +12,16 @@ export function WelcomeStage({ firstName, onStart }: { firstName: string; onStar
   return <section className="onboarding-welcome">
     <div className="onboarding-welcome__mark" aria-hidden="true"><BrandLogo variant="mark" priority /></div>
     <p className="onboarding-eyebrow">Strativate</p>
-    <h1>Selamat datang di Strativate{firstName ? ', ' + firstName : ''}.</h1>
-    <p>Sebelum mulai, kami ingin mengenalmu sedikit lebih baik.</p>
+    <SplitText
+      text={`Selamat datang di Strativate${firstName ? ', ' + firstName : ''}.`}
+      className="onboarding-welcome__animated-title"
+      delay={34}
+    />
+    <BlurText
+      text="Sebelum mulai, kami ingin mengenalmu sedikit lebih baik."
+      className="onboarding-welcome__animated-description"
+      delay={30}
+    />
     <PrimaryAction onClick={onStart}>Mulai <ArrowRight aria-hidden="true" size={17} /></PrimaryAction>
   </section>
 }
@@ -268,7 +277,7 @@ export function ReferralStage({
   onOtherText: (value: string) => void
   onSubmitOther: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  return <QuestionStage eyebrow="Satu hal lagi" title={<>Kamu pertama kali menemukan<br className="onboarding-desktop-break" /> Strativate dari mana?</>} description="Pilih jawaban yang paling sesuai." interactionMotion="list">
+  return <QuestionStage eyebrow="Satu hal lagi" title="Kamu pertama kali menemukan Strativate dari mana?" description="Pilih jawaban yang paling sesuai." interactionMotion="list">
     {referrals.length === 0 ? <InlineError message="Pilihan sumber informasi belum tersedia. Muat ulang halaman untuk mencoba lagi." /> : <div className="onboarding-answer-list" data-has-selection={selected && selected !== 'other' ? true : undefined}>
       {referrals.map(option => {
         const active = selected === option.id

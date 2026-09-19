@@ -27,6 +27,13 @@ test('Digital Product Card Swap rotates the front product and opens product deta
   const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth)
   expect(pageWidth).toBeLessThanOrEqual(390)
 
+  const dots = page.locator('.digital-product-card-swap__dots')
+  const firstCard = cards.first()
+  const [dotsBox, firstCardBox] = await Promise.all([dots.boundingBox(), firstCard.boundingBox()])
+  expect(dotsBox).not.toBeNull()
+  expect(firstCardBox).not.toBeNull()
+  expect(dotsBox!.y - (firstCardBox!.y + firstCardBox!.height)).toBeGreaterThanOrEqual(24)
+
   const frontTitle = async () => cards.evaluateAll(nodes => {
     const ordered = nodes.map(node => ({
       title: node.querySelector('h3')?.textContent ?? '',

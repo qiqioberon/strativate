@@ -31,7 +31,23 @@
 
 .marketing-hero__headline { overflow: visible; }
 .marketing-hero__headline-line { display: block; }
-.marketing-hero__headline-line--accent { transform-origin: left center; }
+.marketing-hero__headline-line--accent {
+  min-height: 1.15em;
+  transform-origin: left center;
+}
+.rb-text-type {
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 1ch;
+}
+.rb-text-type__content { white-space: pre-wrap; }
+.rb-text-type__cursor {
+  display: inline-block;
+  margin-left: .055em;
+  font-style: normal;
+  font-weight: 500;
+  opacity: 1;
+}
 .marketing-hero__eyebrow,
 .marketing-hero__headline-line,
 .marketing-hero__lede,
@@ -159,6 +175,7 @@
   .marketing-hero-stage__node--three { bottom: -18px; left: 18%; }
 }
 @media (max-width: 620px) {
+  .marketing-hero__headline-line--accent { min-height: 2.2em; }
   .marketing-hero-shape-grid.onboarding-shape-grid { inset: -40px -18vw -24px; opacity: .42; }
   .marketing-hero__kinetic-surface::after { opacity: .72; }
   .marketing-hero-stage { width: calc(100% - 8px); margin-right: 8px; }
@@ -183,6 +200,7 @@
     clip-path: none;
     animation: none !important;
   }
+  .rb-text-type__cursor { display: none; }
   .marketing-hero-stage__card { transform: none !important; transition: none; }
   .marketing-hero-stage__card::after { display: none; }
   .marketing-hero-stage__node { animation: none; }
