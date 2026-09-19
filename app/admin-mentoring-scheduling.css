@@ -175,3 +175,23 @@
   .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) > .schedule-day{margin-left:14px;margin-right:14px}
   .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .schedule-slot-list{padding-left:14px;padding-right:14px}
 }
+
+
+/* 2026-09-20 mentoring operations professionalization */
+.mentoring-session-dialog-flow{width:min(980px,calc(100vw - 32px));max-height:min(88vh,920px);overflow-y:auto;overscroll-behavior:contain}
+.dialog-close-button,.calendar-dialog__head .icon-button{display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;padding:0;border:1px solid #ded5cf;border-radius:11px;background:#fff;color:#342e2a;cursor:pointer}
+.dialog-close-button svg,.calendar-dialog__head .icon-button svg{width:17px;height:17px}
+.dialog-close-button:hover,.calendar-dialog__head .icon-button:hover{border-color:#25211e;background:#fff8f1}
+.dialog-close-button:focus-visible,.calendar-dialog__head .icon-button:focus-visible{outline:3px solid rgb(255 122 0 / .18);outline-offset:2px}
+.admin-editable-section{display:grid;gap:14px}.admin-editable-section__head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.admin-editable-section__head>div:first-child{display:grid;gap:4px}.admin-editable-section__head h4{font-size:1rem;line-height:1.35}.admin-editable-section__head p:not(.kicker){color:#81756e;font-size:.72rem;line-height:1.55}
+.admin-readonly-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-readonly-grid>div{display:grid;gap:5px;padding:12px;border:1px solid #eee3dc;border-radius:12px;background:#fffaf6}.admin-readonly-grid span{font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8a7b73}.admin-readonly-grid strong{font-size:.76rem;line-height:1.5;overflow-wrap:anywhere}.admin-readonly-grid--topic{grid-template-columns:repeat(2,minmax(0,1fr))}
+.admin-edit-form{padding:14px;border:1px solid #eadfd8;border-radius:14px;background:#fffdfb}.admin-edit-form textarea{font-size:.78rem!important;line-height:1.55!important}
+.admin-topic-readonly{display:grid;gap:12px;padding:14px 0}.admin-session-card{scroll-margin-top:24px}.session-id-cell--admin{margin-top:7px}.session-id-cell--admin code{font-size:.64rem;overflow-wrap:anywhere}
+.ops-reset-action{justify-self:end;align-self:end;min-height:38px}.ops-reset-action svg{width:15px;height:15px}
+.admin-session-operations{display:grid;gap:14px}.provider-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.provider-status-grid>div{display:grid;gap:5px;padding:12px;border:1px solid #e9dfd8;border-radius:12px;background:#fff}.provider-status-grid span,.effective-meeting-row span,.completion-actions>span{font-size:.59rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b7e76}.provider-status-grid strong{font-size:.76rem}.provider-status-grid small{font-size:.65rem;line-height:1.5;color:#a13a32}
+.effective-meeting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #e9dfd8;border-radius:12px;background:#fffaf6}.effective-meeting-row>div:first-child{display:grid;gap:4px}.provider-action-stack{display:grid;gap:10px}.override-editor{display:grid;gap:10px;padding:14px;border:1px solid #eadfd8;border-radius:14px;background:#fffdfb}
+.completion-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #eee6df}.completion-actions>span{margin-right:auto}
+.compact-confirm-dialog{width:min(520px,calc(100vw - 32px));max-height:min(82vh,680px);overflow:auto}.compact-confirm-dialog__body{display:grid;gap:16px;padding-top:4px}.compact-confirm-dialog__body p,.cancellation-consequences{font-size:.78rem;line-height:1.6;color:#625851}.cancellation-consequences{display:grid;gap:7px;padding-left:20px}.compact-confirm-dialog__actions{justify-content:flex-end;margin-top:4px}
+.mentoring-cancel-dialog .mentoring-session-cancel-confirm{background:#b42318;border-color:#b42318;color:#fff}.mentoring-cancel-dialog .mentoring-session-cancel-confirm:hover{background:#8f1c13;border-color:#8f1c13}
+.session-primary-actions{margin-top:14px}
+@media(max-width:760px){.admin-editable-section__head,.effective-meeting-row{align-items:stretch;flex-direction:column}.admin-readonly-grid,.admin-readonly-grid--topic,.provider-status-grid{grid-template-columns:minmax(0,1fr)}.ops-reset-action{justify-self:stretch}.compact-confirm-dialog__actions>*{flex:1}.mentoring-session-dialog-flow{width:min(100%,calc(100vw - 18px));max-height:92vh}}

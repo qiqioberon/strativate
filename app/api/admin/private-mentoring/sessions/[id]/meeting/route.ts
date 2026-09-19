@@ -1,58 +1,67 @@
 import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
 import { requireAccount } from '@/lib/auth/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { setManualMeetingUrl, syncPrivateMentoringSession } from '@/lib/google-calendar/server'
+import { humanizeProviderError } from '@/lib/operations/provider-errors'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 async function requireAdmin(){
- const account=await requireAccount()
- if(account.profile.role!=='admin')return null
- return account
+  const account=await requireAccount()
+  if(account.profile.role!=='admin')return null
+  return account
 }
+
 async function state(sessionId:string){
- const db=createAdminClient() as unknown as SupabaseClient
- const {data,error}=await db.from('private_mentoring_session_calendar_integrations')
-  .select('session_id,meeting_provider,provider_meeting_id,provider_meeting_url,manual_meeting_url,provider_sync_status,provider_sync_error,recording_status,recording_error,sync_status,sync_error')
-  .eq('session_id',sessionId).maybeSingle()
- if(error)throw new Error('Meeting state belum dapat dimuat.')
- const session=await db.from('private_mentoring_sessions').select('status').eq('id',sessionId).maybeSingle()
- const status=session.data?.status??'unknown'
- const historical=status==='completed'||status==='cancelled'
- return{
-  sessionId,
-  status,
-  meetingProvider:historical?null:(data?.meeting_provider??null),
-  providerMeetingId:data?.provider_meeting_id??null,
-  providerMeetingUrl:historical?null:(data?.provider_meeting_url??null),
-  manualMeetingUrl:historical?null:(data?.manual_meeting_url??null),
-  effectiveMeetingUrl:historical?null:(data?.manual_meeting_url??data?.provider_meeting_url??null),
-  providerSyncStatus:data?.provider_sync_status??'pending',
-  providerSyncError:data?.provider_sync_error??null,
-  calendarSyncStatus:data?.sync_status??'pending',
-  calendarSyncError:data?.sync_error??null,
-  recordingStatus:data?.recording_status??'expected',
-  recordingError:data?.recording_error??null,
- }
+  const db=createAdminClient() as unknown as SupabaseClient
+  const {data,error}=await db.from('private_mentoring_session_calendar_integrations')
+    .select('session_id,meeting_provider,provider_meeting_id,provider_meeting_url,manual_meeting_url,provider_sync_status,provider_sync_error,recording_status,recording_error,sync_status,sync_error')
+    .eq('session_id',sessionId).maybeSingle()
+  if(error)throw new Error('Meeting state belum dapat dimuat.')
+  const session=await db.from('private_mentoring_sessions').select('status').eq('id',sessionId).maybeSingle()
+  const status=session.data?.status??'unknown'
+  const historical=status==='completed'||status==='cancelled'
+  return{
+    sessionId,
+    status,
+    meetingProvider:historical?null:(data?.meeting_provider??null),
+    providerMeetingId:data?.provider_meeting_id??null,
+    providerMeetingUrl:historical?null:(data?.provider_meeting_url??null),
+    manualMeetingUrl:historical?null:(data?.manual_meeting_url??null),
+    effectiveMeetingUrl:historical?null:(data?.manual_meeting_url??data?.provider_meeting_url??null),
+    providerSyncStatus:data?.provider_sync_status??'pending',
+    providerSyncError:data?.provider_sync_error?humanizeProviderError('zoom',data.provider_sync_error):null,
+    calendarSyncStatus:data?.sync_status??'pending',
+    calendarSyncError:data?.sync_error?humanizeProviderError('calendar',data.sync_error):null,
+    recordingStatus:data?.recording_status??'expected',
+    recordingError:data?.recording_error?humanizeProviderError('recording',data.recording_error):null,
+  }
 }
+
 export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){
- if(!await requireAdmin())return NextResponse.json({error:'Forbidden'},{status:403})
- const{id}=await params
- try{return NextResponse.json(await state(id))}
- catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Meeting state belum dapat dimuat.'},{status:400})}
+  if(!await requireAdmin())return NextResponse.json({error:'Forbidden'},{status:403})
+  const{id}=await params
+  try{return NextResponse.json(await state(id))}
+  catch(error){
+    console.error('Admin meeting state failed',{sessionId:id,error})
+    return NextResponse.json({error:'Status meeting belum dapat dimuat.'},{status:400})
+  }
 }
+
 export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}){
- const account=await requireAdmin()
- if(!account)return NextResponse.json({error:'Forbidden'},{status:403})
- const{id}=await params
- try{
-  const current=await state(id)
-  if(current.status==='completed'||current.status==='cancelled')return NextResponse.json({error:'Historical sessions cannot change the active meeting override.'},{status:409})
-  const body=await request.json() as{url?:unknown}
-  if(body.url!==null&&typeof body.url!=='string')return NextResponse.json({error:'Meeting URL tidak valid.'},{status:400})
-  await setManualMeetingUrl(id,body.url as string|null)
-  const calendar=await syncPrivateMentoringSession(id,account.user.id)
-  return NextResponse.json({...await state(id),calendar})
- }catch(error){
-  return NextResponse.json({error:error instanceof Error?error.message:'Meeting link belum dapat diubah.'},{status:400})
- }
+  const account=await requireAdmin()
+  if(!account)return NextResponse.json({error:'Forbidden'},{status:403})
+  const{id}=await params
+  try{
+    const current=await state(id)
+    if(current.status==='completed'||current.status==='cancelled')return NextResponse.json({error:'Sesi historis tidak dapat mengubah meeting link aktif.'},{status:409})
+    const body=await request.json() as{url?:unknown}
+    if(body.url!==null&&typeof body.url!=='string')return NextResponse.json({error:'Meeting URL tidak valid.'},{status:400})
+    await setManualMeetingUrl(id,body.url as string|null)
+    await syncPrivateMentoringSession(id,account.user.id)
+    return NextResponse.json(await state(id))
+  }catch(error){
+    console.error('Admin meeting override failed',{sessionId:id,error})
+    return NextResponse.json({error:humanizeProviderError('meeting',error)},{status:400})
+  }
 }

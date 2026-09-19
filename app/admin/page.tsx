@@ -38,6 +38,7 @@ import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-side
 import { DashboardTopbarActions } from '@/components/dashboard/dashboard-topbar-actions'
 import { DashboardNotificationCenter } from '@/components/dashboard/notification-center'
 import { displayName } from '@/lib/auth/rules'
+import type { Notification } from '@/lib/supabase/database.types'
 
 type Section =
   | 'Overview'
@@ -107,12 +108,19 @@ export default function AdminDashboard() {
   const account = useAccount()
   const [section, setSection] = useState<Section>('Overview')
   const [mobile, setMobile] = useState(false)
+  const [relatedTarget, setRelatedTarget] = useState<{ entity: string | null; id: string | null } | null>(null)
 
   const navigate = (value: Section) => { setSection(value); setMobile(false) }
   const navigateOperational = (target: string) => {
     if (target === 'orders') navigate('Orders')
     else if (target === 'sessions') navigate('Mentoring Sessions')
     else if (target === 'reports') navigate('Reports')
+  }
+  const openNotification = (item: Notification) => {
+    setRelatedTarget({ entity: item.related_entity, id: item.related_entity_id })
+    if (item.related_entity === 'order') navigate('Orders')
+    else if (item.related_entity === 'session' || item.related_entity === 'enrollment') navigate('Mentoring Sessions')
+    else navigate('Overview')
   }
   const currentLabel = groups.flatMap(group => group.items).find(item => item.id === section)?.label ?? (section === 'Profile' ? 'Profil' : section)
 
@@ -128,14 +136,14 @@ export default function AdminDashboard() {
       </aside>
       {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu"/> : null}
       <main className="role-main">
-        <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu admin" aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className="role-context">{currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="admin" onEditProfile={() => navigate('Profile')}/></div></header>
+        <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu admin" aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className="role-context">{currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="admin" onEditProfile={() => navigate('Profile')} onOpenNotification={openNotification}/></div></header>
         <div className="role-content">
           {section === 'Overview' ? <AdminCommerceOperations mode="overview" onNavigate={navigateOperational}/> : null}
-          {section === 'Orders' ? <AdminCommerceOperations mode="orders"/> : null}
-          {section === 'Mentoring Sessions' ? <PrivateMentoringSessionManagement/> : null}
+          {section === 'Orders' ? <AdminCommerceOperations mode="orders" focusOrderId={relatedTarget?.entity === 'order' ? relatedTarget.id : null}/> : null}
+          {section === 'Mentoring Sessions' ? <PrivateMentoringSessionManagement focusSessionId={relatedTarget?.entity === 'session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null}/> : null}
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}
-          {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={item => navigate(item.related_entity === 'order' ? 'Orders' : item.related_entity === 'session' || item.related_entity === 'enrollment' ? 'Mentoring Sessions' : 'Overview')}/></> : null}
+          {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={openNotification}/></> : null}
           {section === 'Mentees' ? <MenteeManagement/> : null}
           {section === 'Mentors' ? <MentorManagement/> : null}
           {section === 'Private Mentoring' ? <PrivateMentoringManagement/> : null}

@@ -108,6 +108,13 @@ function meetingBody(value:ZoomContext,autoRecording?:'cloud'|'none'){
   }
 }
 
+function meetingUpdateBody(value:ZoomContext){
+  const body=meetingBody(value)
+  // Keep auto_recording out of PATCH payloads. Zoom retains the cloud-recording
+  // setting requested during creation instead of being silently downgraded.
+  return body
+}
+
 async function mark(sessionId:string,status:string,error:string|null=null){
   await db().rpc('service_mark_zoom_sync',{p_session_id:sessionId,p_status:status,p_error:error})
 }
@@ -145,7 +152,7 @@ export async function reconcileZoomMeeting(sessionId:string){
   try{
     value=await context(sessionId)
     if(claim.data==='update'&&value.providerMeetingId){
-      await zoomFetch<void>(`/meetings/${encodeURIComponent(value.providerMeetingId)}`,{method:'PATCH',body:JSON.stringify(meetingBody(value))})
+      await zoomFetch<void>(`/meetings/${encodeURIComponent(value.providerMeetingId)}`,{method:'PATCH',body:JSON.stringify(meetingUpdateBody(value))})
       await mark(sessionId,'ready',null)
       value=await context(sessionId)
       return {status:'ready' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl}

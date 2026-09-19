@@ -51,7 +51,7 @@ function itemKindLabel(kind: string) {
   return kind.replaceAll('_', ' ')
 }
 
-export function AdminCommerceOperations({ mode, onNavigate }: { mode: Mode; onNavigate?: (section: string) => void }) {
+export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mode: Mode; onNavigate?: (section: string) => void; focusOrderId?: string | null }) {
   const supabase = useMemo(() => createClient(), [])
   const client = supabase as unknown as UntypedClient
   const [orders, setOrders] = useState<AdminCommerceOrder[]>([])
@@ -89,6 +89,16 @@ export function AdminCommerceOperations({ mode, onNavigate }: { mode: Mode; onNa
   }, [client, endDate, mode, page, pageSize, query, startDate, status])
 
   useEffect(() => { const timer = setTimeout(() => { void load() }, 200); return () => clearTimeout(timer) }, [load])
+  useEffect(() => {
+    if (!focusOrderId || mode !== 'orders') return
+    setQuery(focusOrderId)
+    setPage(0)
+  }, [focusOrderId, mode])
+  useEffect(() => {
+    if (!focusOrderId || mode !== 'orders') return
+    const match = orders.find(order => order.order_id === focusOrderId)
+    if (match) setSelected(match)
+  }, [focusOrderId, mode, orders])
   useEffect(() => { const dialog = dialogRef.current; if (!dialog) return; if (selected && !dialog.open) dialog.showModal(); if (!selected && dialog.open) dialog.close() }, [selected])
   function changePageSize(value: number) { setPageSize(value); setPage(0) }
   function toggleCsvField(field: CommerceCsvField) { setCsvFields(current => current.includes(field) ? current.filter(item => item !== field) : [...current, field]) }
