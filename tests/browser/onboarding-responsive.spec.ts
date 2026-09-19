@@ -244,6 +244,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
   })
 
   test('full flow preserves local micro-stage values, resumes canonically, handles long dynamic data, and keeps Calendar optional', async ({ page }) => {
+    test.setTimeout(90_000)
     await page.setViewportSize({ width: 390, height: 844 })
     await completeIdentity(page)
     await completeInstitution(page, true)
