@@ -32,20 +32,30 @@ update public.profiles set role = 'admin' where id = '94000000-0000-0000-0000-00
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '94000000-0000-0000-0000-000000000001', true);
 insert into public.marketing_testimonials
-  (slug, competition_name, achievement, testimonial, image_path, alt_text, sort_order, is_published)
+  (slug, competition_name, achievement, testimonial, image_path, sort_order, is_published)
 values
-  ('visible-story', 'Visible Competition', '1st Place', 'Visible testimonial', 'testimonials/visible.webp', 'Visible team', 10, true),
-  ('draft-story', 'Draft Competition', 'Finalist', 'Draft testimonial', null, 'Draft team', 20, true);
+  ('visible-story', 'Visible Competition', '1st Place', 'Visible testimonial', 'testimonials/visible.webp', 10, true),
+  ('draft-story', 'Draft Competition', 'Finalist', 'Draft testimonial', null, 20, true);
 insert into storage.objects (bucket_id, name, owner_id)
 values ('marketing-testimonials', 'testimonials/visible.webp', '94000000-0000-0000-0000-000000000001');
 select public.reorder_marketing_testimonials(array(select id from public.marketing_testimonials order by sort_order desc));
 select test_testimonials.assert((select sort_order = 1 from public.marketing_testimonials where slug = 'draft-story'), 'admin can reorder testimonials');
+select test_testimonials.assert(
+  not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'marketing_testimonials'
+      and column_name in ('participant_label', 'alt_text')
+  ),
+  'removed testimonial metadata columns stay absent'
+);
 reset role;
 
 set local role anon;
 select test_testimonials.assert((select count(*) = 1 from public.marketing_testimonials), 'anonymous users only see published testimonials with images');
 select test_testimonials.assert((select count(*) = 1 from storage.objects where bucket_id = 'marketing-testimonials'), 'testimonial image is publicly readable');
-select test_testimonials.denied($q$insert into public.marketing_testimonials (slug, competition_name, achievement, testimonial, alt_text) values ('attack', 'Attack', 'Attack', 'Attack', 'Attack')$q$, 'anonymous testimonial insert');
+select test_testimonials.denied($q$insert into public.marketing_testimonials (slug, competition_name, achievement, testimonial) values ('attack', 'Attack', 'Attack', 'Attack')$q$, 'anonymous testimonial insert');
 reset role;
 
 set local role authenticated;

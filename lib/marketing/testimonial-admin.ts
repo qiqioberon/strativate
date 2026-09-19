@@ -61,7 +61,6 @@ export function buildTestimonialPayload({
   competitionName,
   achievement,
   testimonial,
-  storedParticipantLabel,
   imagePath,
   storedImagePath,
   isPublished,
@@ -70,7 +69,6 @@ export function buildTestimonialPayload({
   competitionName: string
   achievement: string
   testimonial: string
-  storedParticipantLabel: string | null
   imagePath: string | null
   storedImagePath: string | null
   isPublished: boolean
@@ -80,8 +78,6 @@ export function buildTestimonialPayload({
     competition_name: competitionName.trim(),
     achievement: achievement.trim(),
     testimonial: testimonial.trim(),
-    participant_label: storedParticipantLabel,
-    alt_text: buildTestimonialAltText(competitionName),
     image_path: imagePath ?? storedImagePath,
     is_published: isPublished,
   }
@@ -98,11 +94,6 @@ export function reorderTestimonialIds(items: MarketingTestimonial[], index: numb
   if (index < 0 || index >= items.length || destination < 0 || destination >= items.length) return ids
   ;[ids[index], ids[destination]] = [ids[destination], ids[index]]
   return ids
-}
-
-export function safeTestimonialFileName(name: string) {
-  const normalized = name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')
-  return normalized || 'testimonial'
 }
 
 
