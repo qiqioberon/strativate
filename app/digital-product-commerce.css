@@ -398,16 +398,18 @@
 }
 
 @media (max-width: 560px) {
-  .digital-product-card-swap { min-height: 542px; }
+  .digital-product-card-swap { min-height: 580px; }
   .rb-card-swap {
     bottom: -20px;
     transform: translateX(50%) scale(.68);
   }
+  .digital-product-card-swap__dots { bottom: -54px; }
 }
 
 @media (max-width: 390px) {
-  .digital-product-card-swap { min-height: 492px; }
+  .digital-product-card-swap { min-height: 530px; }
   .rb-card-swap { transform: translateX(50%) scale(.59); }
+  .digital-product-card-swap__dots { bottom: -58px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

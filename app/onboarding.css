@@ -928,3 +928,41 @@
   .onboarding-review__item:hover,
   .onboarding-primary-action:hover:not(:disabled) { transform: none; }
 }
+
+
+/* React Bits-inspired onboarding text motion. */
+.rb-split-text [data-split-unit],
+.rb-blur-text [data-blur-unit] {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+}
+.onboarding-stage-region .onboarding-question__animated-title,
+.onboarding-stage-region .onboarding-question__animated-description,
+.onboarding-stage-region .onboarding-welcome__animated-title,
+.onboarding-stage-region .onboarding-welcome__animated-description,
+.onboarding-route-stage .rb-split-text,
+.onboarding-route-stage .rb-blur-text {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+.onboarding-question__animated-title,
+.onboarding-welcome__animated-title,
+.onboarding-calendar-stage__animated-title,
+.onboarding-review__animated-title,
+.onboarding-question__animated-description,
+.onboarding-welcome__animated-description,
+.onboarding-calendar-stage__animated-description,
+.onboarding-review__animated-description {
+  overflow: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rb-split-text [data-split-unit],
+  .rb-blur-text [data-blur-unit] {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+}

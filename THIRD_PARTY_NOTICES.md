@@ -1,8 +1,8 @@
 # Third-party notices
 
-## React Bits — Card Swap
+## React Bits — Card Swap and Text Animations
 
-The implementation in `components/marketing/card-swap.tsx` is adapted from the React Bits Card Swap component.
+The implementations in `components/marketing/card-swap.tsx` and `components/animations/react-bits-text.tsx` are adapted from React Bits components by David Haz, including Card Swap, Text Type, Split Text, and Blur Text.
 
 MIT + Commons Clause License Condition v1.0
 

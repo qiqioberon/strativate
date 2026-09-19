@@ -1,5 +1,6 @@
 import { ArrowRight, CalendarDays, CheckCircle2, Pencil, School, Sparkles, UserRound, Waypoints } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import { BlurText, SplitText } from '@/components/animations/react-bits-text'
 import { displayLabel } from '@/lib/labels'
 import { getAccount } from '@/lib/auth/server'
 import { OnboardingRouteLink, OnboardingRouteStage } from '@/components/onboarding/motion'
@@ -53,8 +54,12 @@ export default async function OnboardingReviewPage() {
       <div className="onboarding-review__intro">
         <div className="onboarding-review__symbol" aria-hidden="true"><CheckCircle2 size={28} /></div>
         <p className="onboarding-eyebrow">Pengecekan akhir</p>
-        <h1>Sebelum masuk, periksa sebentar.</h1>
-        <p>Pastikan semuanya sudah sesuai. Kalau ada yang ingin diubah, kamu masih bisa merevisinya tanpa mengulang dari awal.</p>
+        <SplitText text="Sebelum masuk, periksa sebentar." className="onboarding-review__animated-title" />
+        <BlurText
+          text="Pastikan semuanya sudah sesuai. Kalau ada yang ingin diubah, kamu masih bisa merevisinya tanpa mengulang dari awal."
+          className="onboarding-review__animated-description"
+          delay={26}
+        />
       </div>
 
       <div className="onboarding-review__grid" aria-label="Ringkasan data onboarding">
