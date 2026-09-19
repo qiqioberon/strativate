@@ -7,6 +7,7 @@ import {
   FileBarChart2,
   Images,
   LayoutDashboard,
+  MessageSquareQuote,
   Menu,
   PackageOpen,
   ReceiptText,
@@ -28,6 +29,7 @@ import { MasterOptions } from '@/components/admin/master-options'
 import { MentorExpertiseManagement } from '@/components/admin/mentor-expertise-management'
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { MenteeManagement } from '@/components/admin/people'
+import { TestimonialManagement } from '@/components/admin/testimonial-management'
 import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
 import { PrivateMentoringSessionManagement } from '@/components/admin/private-mentoring-enrollment-management'
 import { useAccount } from '@/components/auth/account-provider'
@@ -54,6 +56,7 @@ type Section =
   | 'Competition Categories'
   | 'Digital Products'
   | 'Hero Posters'
+  | 'Testimonials'
   | 'Reports'
   | 'Mentor Expertise'
   | 'Institutions'
@@ -91,7 +94,13 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Digital Products', label: 'Produk Digital', icon: PackageOpen },
     ],
   },
-  { label: 'Konten', items: [{ id: 'Hero Posters', label: 'Hero Posters', icon: Images }] },
+  {
+    label: 'Konten',
+    items: [
+      { id: 'Hero Posters', label: 'Hero Posters', icon: Images },
+      { id: 'Testimonials', label: 'Testimonials', icon: MessageSquareQuote },
+    ],
+  },
   { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
   {
     label: 'Data master',
@@ -151,6 +160,7 @@ export default function AdminDashboard() {
           {section === 'Competition Categories' ? <CompetitionCategoryManagement/> : null}
           {section === 'Digital Products' ? <DigitalProductManagement/> : null}
           {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
+          {section === 'Testimonials' ? <TestimonialManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}

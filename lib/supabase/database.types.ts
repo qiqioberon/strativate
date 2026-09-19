@@ -10,6 +10,7 @@ export type MenteeProfile = { user_id:string; institution_id:string|null; major_
 export type Institution = { id:string; name:string; normalized_name:string; type:InstitutionType; province:string|null; city:string|null; external_id:string|null; source:string; source_url:string|null; approval_status:ApprovalStatus; institution_status:string|null; submitted_by:string|null; created_at:string; updated_at:string }
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MarketingHeroPoster = { id:string; image_path:string; alt_text:string; title:string|null; url:string|null; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; participant_label:string|null; image_path:string|null; alt_text:string; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; created_at:string; updated_at:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
 export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
@@ -66,6 +67,7 @@ export type Database = {
       referral_sources: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption,"name">>
       interests: Table<MasterOption, Partial<MasterOption> & Pick<MasterOption,"name">>
       marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster,"image_path"|"alt_text">>
+      marketing_testimonials: Table<MarketingTestimonial, Partial<MarketingTestimonial> & Pick<MarketingTestimonial,"slug"|"competition_name"|"achievement"|"testimonial"|"alt_text">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
       digital_product_access_sessions: Table<DigitalProductAccessSession, Partial<DigitalProductAccessSession> & Pick<DigitalProductAccessSession,"user_id"|"product_id">>
       commerce_items: Table<CommerceItem, Partial<CommerceItem> & Pick<CommerceItem,"id"|"item_kind">>
@@ -119,6 +121,7 @@ export type Database = {
       complete_mentor_setup: { Args:{p_first_name:string;p_last_name:string;p_username:string}; Returns:Profile }
       merge_institutions: { Args:{p_from:string;p_into:string}; Returns:undefined }
       reorder_marketing_hero_posters: { Args:{p_ids:string[]}; Returns:undefined }
+      reorder_marketing_testimonials: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }

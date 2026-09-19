@@ -1,0 +1,142 @@
+.stateCard {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  gap: 10px;
+  padding: 28px;
+  border: 1px solid #e1e5e8;
+  border-radius: 16px;
+  background: #fff;
+  color: #68727d;
+  text-align: center;
+}
+.stateCard svg { color: var(--primary); }
+.stateCard p { max-width: 680px; font-size: 11px; line-height: 1.6; }
+
+.list { display: grid; gap: 10px; }
+.row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #e7eaed;
+  border-radius: 13px;
+  background: #fff;
+}
+.thumbnail {
+  position: relative;
+  display: grid;
+  width: 90px;
+  height: 72px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px 14px 14px 14px;
+  color: #a67655;
+  background: #fff3e8;
+}
+.thumbnail img { object-fit: cover; }
+.rowCopy { display: grid; min-width: 0; gap: 5px; }
+.rowTitle { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rowTitle strong { font-size: 11px; letter-spacing: -.02em; }
+.achievement { color: #b54d16; font-size: 9px; font-weight: 850; }
+.rowCopy p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #6d7780;
+  font-size: 9px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.rowActions { display: flex; align-items: center; gap: 6px; }
+.rowActions button {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid #dfe4e8;
+  border-radius: 8px;
+  color: #53606b;
+  background: #fff;
+  font-size: 9px;
+  font-weight: 750;
+}
+.rowActions button:hover:not(:disabled) { border-color: #f0a06d; color: #9b3e0c; background: #fff8f2; }
+.rowActions button:disabled { opacity: .42; }
+.rowActions .deleteButton { color: #ad3c42; }
+
+.form { display: grid; gap: 20px; }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.formGrid label,
+.mediaSection label {
+  display: grid;
+  gap: 7px;
+  color: #525e68;
+  font-size: 10px;
+  font-weight: 800;
+}
+.formGrid label > span { color: #8b949d; font-size: 8px; font-weight: 650; }
+.formGrid input,
+.formGrid textarea,
+.mediaSection input {
+  width: 100%;
+  border: 1px solid #dce2e7;
+  border-radius: 9px;
+  outline: 0;
+  color: #27313a;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+}
+.formGrid input { min-height: 42px; padding: 0 11px; }
+.formGrid textarea { padding: 11px; resize: vertical; line-height: 1.6; }
+.formGrid input:focus,
+.formGrid textarea:focus { border-color: #f0a06d; box-shadow: 0 0 0 3px #ff7a0012; }
+.wideField { grid-column: 1 / -1; }
+.mediaSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  align-items: start;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e8ebee;
+}
+.mediaSection small { display: block; margin-top: 7px; color: #7d8790; font-size: 9px; line-height: 1.5; }
+.preview {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  border: 1px dashed #d9dfe4;
+  border-radius: 10px 18px 18px 18px;
+  background: #faf8f5;
+}
+.preview img { object-fit: cover; }
+.preview > div { display: grid; min-height: 150px; place-items: center; gap: 7px; padding: 20px; color: #89929a; text-align: center; font-size: 9px; }
+.preview svg { color: #c06b35; }
+.publishToggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #e4e8eb;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+.publishToggle input { margin-top: 3px; }
+.publishToggle span { display: grid; gap: 2px; }
+.publishToggle strong { font-size: 10px; }
+.publishToggle small { color: #78828b; font-size: 9px; line-height: 1.45; }
+.formActions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+@media (max-width: 900px) {
+  .row { grid-template-columns: 78px minmax(0, 1fr); }
+  .thumbnail { width: 78px; height: 66px; }
+  .rowActions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+@media (max-width: 650px) {
+  .formGrid, .mediaSection { grid-template-columns: 1fr; }
+  .wideField { grid-column: auto; }
+  .preview { min-height: 210px; }
+  .row { grid-template-columns: 64px minmax(0, 1fr); }
+  .thumbnail { width: 64px; height: 58px; }
+  .rowActions { justify-content: flex-start; flex-wrap: wrap; }
+}
