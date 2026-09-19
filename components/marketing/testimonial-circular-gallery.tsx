@@ -482,7 +482,8 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const selected = selectedIndex === null ? null : items[selectedIndex] ?? null
-  const hoveredItem = hover ? items[hover.index] ?? null : null
+  const hoveredIndex = hover?.index ?? null
+  const hoveredItem = hoveredIndex === null ? null : items[hoveredIndex] ?? null
   const overlayStyle = useMemo(() => {
     if (!hover) return undefined
     return {
@@ -529,14 +530,14 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         aria-label="Galeri cerita peserta. Gunakan tombol panah untuk menjelajah dan Enter untuk membuka testimoni."
         data-testid="testimonial-circular-gallery"
       >
-        {hoveredItem && overlayStyle ? (
+        {hoveredItem && overlayStyle && hoveredIndex !== null ? (
           <div className="marketing-testimonial-gallery__overlay" style={overlayStyle} aria-hidden="false">
             <div className="marketing-testimonial-gallery__overlay-content">
               <span>{hoveredItem.competition_name}</span>
               <strong>{hoveredItem.achievement}</strong>
               <button
                 type="button"
-                onClick={() => open(hover.index)}
+                onClick={() => open(hoveredIndex)}
                 data-testimonial-overlay-action
                 data-testid="testimonial-open-button"
               >
