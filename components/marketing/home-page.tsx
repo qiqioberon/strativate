@@ -24,7 +24,6 @@ import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
-import { AssetMedia } from './asset-media'
 import { DigitalProductCardSwap } from './digital-product-card-swap'
 import { HeroCarousel } from './hero-carousel'
 import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
