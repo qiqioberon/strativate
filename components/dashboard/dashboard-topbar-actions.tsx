@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, CheckCheck, ChevronDown, Loader2, PencilLine } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAccount } from '@/components/auth/account-provider'
+import { ProfileAvatar } from '@/components/auth/profile-avatar'
 import { SignOut } from '@/components/auth/sign-out'
 import { displayName } from '@/lib/auth/rules'
 import { createClient } from '@/lib/supabase/client'
@@ -33,7 +34,6 @@ export function DashboardTopbarActions({
   const [unreadCount,setUnreadCount]=useState(0)
   const rootRef=useRef<HTMLDivElement>(null)
   const name=displayName(account)
-  const initials=name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'S'
 
   const loadNotifications=useCallback(async()=>{
     setNotificationLoading(true);setNotificationError('')
@@ -111,7 +111,7 @@ export function DashboardTopbarActions({
     </button>
 
     <button type="button" className={styles.accountButton} aria-label="Buka menu akun" aria-haspopup="dialog" aria-expanded={openPanel==='account'} aria-controls="dashboard-account-popover" onClick={()=>toggle('account')}>
-      <span className={styles.triggerAvatar} aria-hidden="true">{initials}</span><span className={styles.accountName}>{name}</span><ChevronDown className={styles.chevron} aria-hidden="true"/>
+      <ProfileAvatar account={account} className={styles.triggerAvatar}/><span className={styles.accountName}>{name}</span><ChevronDown className={styles.chevron} aria-hidden="true"/>
     </button>
 
     {openPanel==='notification'?<section id="dashboard-notification-popover" className={styles.popover} role="dialog" aria-label="Notifikasi">
@@ -120,7 +120,7 @@ export function DashboardTopbarActions({
     </section>:null}
 
     {openPanel==='account'?<section id="dashboard-account-popover" className={styles.popover} role="dialog" aria-label="Informasi akun">
-      <div className={styles.accountSummary}><span className={styles.accountAvatar} aria-hidden="true">{initials}</span><div className={styles.accountIdentity}><strong>{name}</strong><span>{account.email||'Email akun tidak tersedia'}</span><span className={styles.roleBadge}>{roleLabels[role]}</span></div></div>
+      <div className={styles.accountSummary}><ProfileAvatar account={account} className={styles.accountAvatar}/><div className={styles.accountIdentity}><strong>{name}</strong><span>{account.email||'Email akun tidak tersedia'}</span><span className={styles.roleBadge}>{roleLabels[role]}</span></div></div>
       <div className={styles.divider}/>
       <button type="button" className={styles.profileAction} onClick={()=>{setOpenPanel(null);onEditProfile()}}><PencilLine aria-hidden="true"/>Edit Profil</button>
       <div className={styles.divider}/><SignOut className={styles.accountSignOut} withIcon/>

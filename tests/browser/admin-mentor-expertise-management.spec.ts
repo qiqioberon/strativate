@@ -89,7 +89,7 @@ test('Mentor Expertise filters status and uses modal create/edit controls', asyn
   const dialog = page.getByTestId('mentor-expertise-dialog')
   await dialog.getByLabel('Nama expertise').fill('Market Sizing')
   await dialog.getByRole('button', { name: 'Simpan' }).click()
-  await expect(page.getByRole('status')).toContainText('Expertise berhasil ditambahkan')
+  await expect(page.getByRole('status').filter({hasText:'Expertise berhasil ditambahkan'})).toContainText('Expertise berhasil ditambahkan')
 
   await page.getByTestId('mentor-expertise-row-business-case').getByRole('button', { name: 'Edit' }).click()
   await expect(dialog).toHaveAttribute('open', '')

@@ -36,6 +36,7 @@ type EventItem = {
   end: string
   htmlLink?: string | null
   sessionId?: string
+  mentoringType?: 'private' | 'intensive'
   sessionNumber?: number
   purchasedSessions?: number
   focusName?: string | null
@@ -90,7 +91,8 @@ function supportHref(event: EventItem) {
     minute: '2-digit',
     ...(event.timezone ? { timeZone: event.timezone } : {}),
   }).format(new Date(event.start))
-  const message = `Halo admin Strativate, mau diskusi terkait jadwal Private Mentoring sesi ${event.sessionNumber ?? ''} pada ${when}.`
+  const label=event.mentoringType==='intensive'?'Intensive Mentoring':'Private Mentoring'
+  const message = `Halo admin Strativate, mau diskusi terkait jadwal ${label} sesi ${event.sessionNumber ?? ''} pada ${when}.`
   return `${publicContact.whatsapp}?text=${encodeURIComponent(message)}`
 }
 
@@ -105,6 +107,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
   const [showGoogle, setShowGoogle] = useState(true)
   const [selected, setSelected] = useState<EventItem | null>(null)
   const [scheduleId, setScheduleId] = useState<string | null>(null)
+  const [scheduleKind,setScheduleKind]=useState<'private'|'intensive'>('private')
   const [meetingDraft, setMeetingDraft] = useState('')
   const [legendOpen, setLegendOpen] = useState(false)
   const [legendQuery, setLegendQuery] = useState('')
@@ -216,13 +219,15 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
   }
   async function retrySync(event: EventItem) {
     if (!event.sessionId) return
-    await fetch(`/api/admin/private-mentoring/sessions/${event.sessionId}/sync`, { method: 'POST' })
+    const kind=event.mentoringType==='intensive'?'intensive':'private'
+    await fetch(`/api/admin/${kind}-mentoring/sessions/${event.sessionId}/sync`, { method: 'POST' })
     await load()
     setSelected(null)
   }
   async function saveMeeting(event: EventItem, url: string | null) {
     if (!event.sessionId) return
-    const response = await fetch(`/api/admin/private-mentoring/sessions/${event.sessionId}/meeting`, {
+    const kind=event.mentoringType==='intensive'?'intensive':'private'
+    const response = await fetch(`/api/admin/${kind}-mentoring/sessions/${event.sessionId}/meeting`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ url }),
@@ -308,12 +313,12 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
 
     <dialog ref={dialogRef} className="calendar-dialog" onCancel={event => { event.preventDefault(); setSelected(null) }} onClose={() => setSelected(null)}>
       {selected ? <>
-        <div className="calendar-dialog__head"><div><span className={`source-badge source-${selected.source}`}>{selected.source === 'strativate' ? 'Strativate Session' : 'Google Calendar'}</span><h3>{selected.source === 'strativate' ? `${selected.focusName || 'Private Mentoring'} · Sesi ${selected.sessionNumber}/${selected.purchasedSessions}` : selected.title}</h3></div><button className="icon-button" type="button" onClick={() => setSelected(null)} aria-label="Tutup detail"><X /></button></div>
+        <div className="calendar-dialog__head"><div><span className={`source-badge source-${selected.source}`}>{selected.source === 'strativate' ? 'Strativate Session' : 'Google Calendar'}</span><h3>{selected.source === 'strativate' ? `${selected.mentoringType==='intensive'?'Intensive Mentoring':selected.focusName || 'Private Mentoring'} · Sesi ${selected.sessionNumber}${selected.purchasedSessions?'/'+selected.purchasedSessions:''}` : selected.title}</h3></div><button className="icon-button" type="button" onClick={() => setSelected(null)} aria-label="Tutup detail"><X /></button></div>
         <dl className="calendar-detail-list"><div><dt>Waktu</dt><dd>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short', ...(selected.timezone ? { timeZone: selected.timezone } : {}) }).format(new Date(selected.start))} – {new Intl.DateTimeFormat('id-ID', { timeStyle: 'short', ...(selected.timezone ? { timeZone: selected.timezone } : {}) }).format(new Date(selected.end))}</dd></div>{selected.source === 'strativate' ? <><div><dt>Durasi</dt><dd>{selected.durationMinutes ? `${selected.durationMinutes} menit` : '—'}</dd></div><div><dt>Timezone</dt><dd>{selected.timezone || 'Timezone lokal perangkat'}</dd></div><div><dt>Status</dt><dd>{selected.status}</dd></div>{role === 'admin' ? <><div><dt>Mentee</dt><dd>{selected.menteeName || '—'} · {selected.menteeEmail || '—'}</dd></div><div><dt>Mentor</dt><dd>{selected.mentorName || '—'} · {selected.mentorTierName || '—'}</dd></div><div><dt>Google sync</dt><dd>{selected.googleSyncStatus || 'pending'}{selected.googleSyncError ? ` · ${selected.googleSyncError}` : ''}</dd></div></> : role === 'mentor' ? <div><dt>Mentee</dt><dd>{selected.menteeName || '—'}</dd></div> : <div><dt>Mentor</dt><dd>{selected.mentorName || 'Menunggu admin'}</dd></div>}</> : null}</dl>
-        <div className="calendar-dialog__actions calendar-dialog__actions--wrap">{selected.source === 'google' && selected.htmlLink ? <a className="button button-primary" href={selected.htmlLink} target="_blank" rel="noopener noreferrer"><ExternalLink />Buka di Google Calendar</a> : null}{selected.source === 'strativate' && selected.status === 'scheduled' && selected.meetingUrl ? <><a className="button button-primary" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink />Join Meeting</a><button className="button button-outline" type="button" onClick={() => void navigator.clipboard.writeText(selected.meetingUrl!)}><Clipboard />Copy Meeting Link</button></> : null}{selected.source === 'strativate' && role !== 'admin' ? <a className="button button-outline" href={supportHref(selected)} target="_blank" rel="noopener noreferrer">Hubungi Admin via WhatsApp</a> : null}{role === 'mentor' && selected.source === 'strativate' && onOpenAvailability ? <button className="button button-outline" type="button" onClick={() => { setSelected(null); onOpenAvailability() }}><UsersRound />Atur availability</button> : null}{role === 'admin' && selected.source === 'strativate' ? <><button className="button button-outline" type="button" onClick={() => { setScheduleId(selected.sessionId!); setSelected(null) }}>Reschedule</button>{selected.googleSyncStatus === 'failed' ? <button className="button button-outline" type="button" onClick={() => void retrySync(selected)}><RefreshCw />Retry Google Sync</button> : null}</> : null}</div>
+        <div className="calendar-dialog__actions calendar-dialog__actions--wrap">{selected.source === 'google' && selected.htmlLink ? <a className="button button-primary" href={selected.htmlLink} target="_blank" rel="noopener noreferrer"><ExternalLink />Buka di Google Calendar</a> : null}{selected.source === 'strativate' && selected.status === 'scheduled' && selected.meetingUrl ? <><a className="button button-primary" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink />Join Meeting</a><button className="button button-outline" type="button" onClick={() => void navigator.clipboard.writeText(selected.meetingUrl!)}><Clipboard />Copy Meeting Link</button></> : null}{selected.source === 'strativate' && role !== 'admin' ? <a className="button button-outline" href={supportHref(selected)} target="_blank" rel="noopener noreferrer">Hubungi Admin via WhatsApp</a> : null}{role === 'mentor' && selected.source === 'strativate' && onOpenAvailability ? <button className="button button-outline" type="button" onClick={() => { setSelected(null); onOpenAvailability() }}><UsersRound />Atur availability</button> : null}{role === 'admin' && selected.source === 'strativate' ? <><button className="button button-outline" type="button" onClick={() => { setScheduleKind(selected.mentoringType==='intensive'?'intensive':'private'); setScheduleId(selected.sessionId!); setSelected(null) }}>Reschedule</button>{selected.googleSyncStatus === 'failed' ? <button className="button button-outline" type="button" onClick={() => void retrySync(selected)}><RefreshCw />Retry Google Sync</button> : null}</> : null}</div>
         {role === 'admin' && selected.source === 'strativate' && selected.status === 'scheduled' ? <div className="meeting-override"><label><span>Edit meeting link (override)</span><input type="url" placeholder="https://…" value={meetingDraft} onChange={event => setMeetingDraft(event.target.value)} /></label><div className="button-row"><button className="button button-outline" type="button" onClick={() => void saveMeeting(selected, meetingDraft.trim() || null)}><Link2 />Simpan link</button><button className="button button-ghost" type="button" disabled={!selected.manualMeetingUrl} onClick={() => void saveMeeting(selected, null)}>Reset ke provider link</button></div></div> : null}
       </> : null}
     </dialog>
-    <AdminScheduleDialog sessionId={scheduleId} onClose={() => setScheduleId(null)} onScheduled={() => { void load(); setScheduleId(null) }} />
+    <AdminScheduleDialog sessionId={scheduleId} mentoringKind={scheduleKind} onClose={() => setScheduleId(null)} onScheduled={() => { void load(); setScheduleId(null) }} />
   </div>
 }

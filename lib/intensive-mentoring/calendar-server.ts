@@ -1,11 +1,12 @@
 import 'server-only'
 
+import type {SupabaseClient} from '@supabase/supabase-js'
 import {createAdminClient} from '@/lib/supabase/admin'
 import {GoogleCalendarRestProvider} from '@/lib/google-calendar/server'
 import {reconcileSessionEvent} from '@/lib/google-calendar/sync'
 
 type SyncContext={sessionId:string;sessionNumber:number;purchasedSessions:number|null;status:string;focusName:string|null;resolvedTopic:string|null;start:string|null;end:string|null;menteeEmail:string;mentorEmail:string|null;organizerUserId:string|null;calendarId:string;eventId:string|null;iCalUID:string|null;providerMeetingUrl:string|null;manualMeetingUrl:string|null}
-function db(){return createAdminClient() as any}
+function db(){return createAdminClient() as unknown as SupabaseClient}
 
 export async function syncIntensiveMentoringSession(sessionId:string,currentAdminId?:string|null){
  const admin=db()

@@ -1,0 +1,162 @@
+/* Mentoring session tables must fit dashboard content on desktop and become labeled cards on narrow screens. */
+.mentee-session-table,
+.mentor-ops-table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.mentee-session-table th,
+.mentee-session-table td,
+.mentor-ops-table th,
+.mentor-ops-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mentee-session-table th:nth-child(1) { width: 10%; }
+.mentee-session-table th:nth-child(2) { width: 24%; }
+.mentee-session-table th:nth-child(3) { width: 16%; }
+.mentee-session-table th:nth-child(4) { width: 18%; }
+.mentee-session-table th:nth-child(5) { width: 12%; }
+.mentee-session-table th:nth-child(6) { width: 10%; }
+.mentee-session-table th:nth-child(7) { width: 10%; }
+
+.mentor-ops-table th:nth-child(1) { width: 18%; }
+.mentor-ops-table th:nth-child(2) { width: 16%; }
+.mentor-ops-table th:nth-child(3) { width: 22%; }
+.mentor-ops-table th:nth-child(4) { width: 18%; }
+.mentor-ops-table th:nth-child(5) { width: 10%; }
+.mentor-ops-table th:nth-child(6) { width: 8%; }
+.mentor-ops-table th:nth-child(7) { width: 8%; }
+
+.mentee-session-table td:nth-child(5),
+.mentor-ops-table td:nth-child(5) {
+  white-space: normal;
+}
+
+.mentee-session-table .button,
+.mentor-ops-table .button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+@media (max-width: 820px) {
+  .mentoring-session-table-section .ops-table-wrap,
+  .intensive-admin-operations .ops-table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .mentee-session-table,
+  .mentor-ops-table {
+    display: block;
+    table-layout: auto;
+    border-collapse: separate;
+  }
+
+  .mentee-session-table thead,
+  .mentor-ops-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .mentee-session-table tbody,
+  .mentor-ops-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mentee-session-table tr,
+  .mentor-ops-table tr {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #eadfd7;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .mentee-session-table td,
+  .mentor-ops-table td {
+    display: grid;
+    grid-template-columns: minmax(108px, .42fr) minmax(0, 1fr);
+    gap: 12px;
+    width: auto !important;
+    padding: 9px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #f0e8e3 !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .mentee-session-table td:last-child,
+  .mentor-ops-table td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .mentee-session-table td::before,
+  .mentor-ops-table td::before {
+    content: attr(data-label);
+    color: #8a7d75;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .mentee-session-table td > *,
+  .mentor-ops-table td > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mentor-ops-table td > div {
+    min-width: 0;
+  }
+
+  .mentee-session-table .responsive-table-empty,
+  .mentor-ops-table .responsive-table-empty {
+    padding: 0;
+  }
+
+  .mentee-session-table .responsive-table-empty td,
+  .mentor-ops-table .responsive-table-empty td {
+    display: block;
+    padding: 18px !important;
+    border: 1px dashed #e4d8d0 !important;
+    border-radius: 14px;
+    text-align: center !important;
+  }
+
+  .mentee-session-table .responsive-table-empty td::before,
+  .mentor-ops-table .responsive-table-empty td::before {
+    content: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .mentee-session-table tr,
+  .mentor-ops-table tr {
+    padding: 12px;
+  }
+
+  .mentee-session-table td,
+  .mentor-ops-table td {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .mentee-session-table td::before,
+  .mentor-ops-table td::before {
+    margin-bottom: 1px;
+  }
+}

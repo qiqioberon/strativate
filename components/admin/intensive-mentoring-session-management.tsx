@@ -1,0 +1,90 @@
+'use client'
+
+import {CalendarDays,Eye,Plus,RefreshCw,Save,ShieldAlert,UserRound,X} from 'lucide-react'
+import {useCallback,useEffect,useRef,useState} from 'react'
+import {CopyTextButton} from '@/components/dashboard/copy-text-button'
+import {createClient} from '@/lib/supabase/client'
+import {intensiveStageLabels,type IntensiveProgramStage,type IntensiveSessionView} from '@/lib/intensive-mentoring/types'
+import {AdminScheduleDialog} from './admin-schedule-dialog'
+import {AdminSessionOperations} from './private-mentoring-session-operations'
+
+type AddOn={entitlementId:string|null;name:string;code:string;status?:string;createdAt?:string;source?:'attached'|'bundle'}
+type AdminSession=IntensiveSessionView&{providerSyncStatus?:string;creationReason?:string|null}
+type Engagement={engagement_id:string;mentee_id:string;mentee_name:string|null;mentee_email:string;base_entitlement_id:string;base_kind:'package'|'bundle';program_name:string;status:string;baseline_sessions_per_month:number|null;primary_mentor_id:string|null;primary_mentor_name:string|null;program_stage:IntensiveProgramStage;progress_summary:string|null;created_at:string;add_ons:AddOn[];sessions:AdminSession[];unassigned_add_ons:AddOn[]}
+type Mentor={id:string;name:string}
+type Focus={id:string;name:string}
+type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
+const STAGES=Object.entries(intensiveStageLabels) as [IntensiveProgramStage,string][]
+
+export function IntensiveMentoringSessionManagement(){
+ const[supabase]=useState(()=>createClient())
+ const rpc=supabase as unknown as RpcClient
+ const[rows,setRows]=useState<Engagement[]>([]),[mentors,setMentors]=useState<Mentor[]>([]),[focuses,setFocuses]=useState<Focus[]>([])
+ const[selectedId,setSelectedId]=useState(''),[session,setSession]=useState<AdminSession|null>(null),[scheduleId,setScheduleId]=useState<string|null>(null)
+ const[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState('')
+ const[primaryMentor,setPrimaryMentor]=useState(''),[mentorReason,setMentorReason]=useState('')
+ const[stage,setStage]=useState<IntensiveProgramStage>('goal_setting'),[progress,setProgress]=useState('')
+ const[duration,setDuration]=useState(''),[sessionReason,setSessionReason]=useState('')
+ const[topicFocus,setTopicFocus]=useState(''),[resolvedTopic,setResolvedTopic]=useState(''),[sessionMentor,setSessionMentor]=useState(''),[sessionMentorReason,setSessionMentorReason]=useState('')
+ const dialogRef=useRef<HTMLDialogElement>(null)
+ const selected=rows.find(row=>row.engagement_id===selectedId)??rows[0]??null
+
+ const load=useCallback(async()=>{
+  setLoading(true);setError('')
+  const [engagements,mentorRows,focusRows]=await Promise.all([
+   rpc.rpc<Engagement[]>('list_admin_intensive_mentoring_engagements'),
+   supabase.from('mentor_profiles').select('user_id,is_active').eq('is_active',true),
+   supabase.from('private_mentoring_session_focuses').select('id,name').eq('is_active',true).order('sort_order'),
+  ])
+  if(engagements.error){setError(engagements.error.message);setRows([])}
+  else{const next=engagements.data??[];setRows(next);setSelectedId(current=>current&&next.some(row=>row.engagement_id===current)?current:next[0]?.engagement_id??'')}
+  if(!mentorRows.error&&mentorRows.data?.length){const ids=mentorRows.data.map(row=>row.user_id),profiles=await supabase.from('profiles').select('id,first_name,last_name,username').in('id',ids);if(!profiles.error)setMentors((profiles.data??[]).map(row=>({id:row.id,name:[row.first_name,row.last_name].filter(Boolean).join(' ')||row.username||'Mentor Strativate'})).sort((a,b)=>a.name.localeCompare(b.name,'id-ID')))}
+  if(!focusRows.error)setFocuses((focusRows.data??[]) as Focus[])
+  setLoading(false)
+ },[rpc,supabase])
+
+ useEffect(()=>{void load()},[load])
+ useEffect(()=>{if(!selected)return;setPrimaryMentor(selected.primary_mentor_id??'');setStage(selected.program_stage);setProgress(selected.progress_summary??'')},[selected])
+ useEffect(()=>{const d=dialogRef.current;if(!d)return;if(session&&!d.open)d.showModal();if(!session&&d.open)d.close();if(session){setTopicFocus(session.focusId??'');setResolvedTopic(session.resolvedTopic??session.menteeTopicRequest??'');setSessionMentor(session.mentorId??selected?.primary_mentor_id??'');setSessionMentorReason('')}},[selected,session])
+ useEffect(()=>{const refresh=()=>void load();window.addEventListener('strativate:operational-refresh',refresh);return()=>window.removeEventListener('strativate:operational-refresh',refresh)},[load])
+
+ async function run(key:string,name:string,args:Record<string,unknown>,success:string){setBusy(key);setError('');setMessage('');const result=await rpc.rpc(name,args);setBusy('');if(result.error){setError(result.error.message);return false}setMessage(success);await load();return true}
+ async function savePrimary(){if(!selected||!primaryMentor)return;await run('primary','admin_set_intensive_primary_mentor',{p_engagement_id:selected.engagement_id,p_mentor_id:primaryMentor,p_reason:mentorReason.trim()||null},'Primary mentor Intensive Mentoring diperbarui.')}
+ async function saveStage(){if(!selected)return;await run('stage','admin_set_intensive_program_stage',{p_engagement_id:selected.engagement_id,p_stage:stage,p_progress_summary:progress.trim()||null},'Tahap program dan ringkasan progres diperbarui.')}
+ async function addSession(){if(!selected)return;const minutes=Number(duration);if(!Number.isInteger(minutes)||minutes<15||minutes>240){setError('Masukkan durasi sesi 15–240 menit. Durasi tidak diasumsikan dari paket.');return}const ok=await run('add','admin_add_intensive_mentoring_session',{p_engagement_id:selected.engagement_id,p_duration_minutes:minutes,p_reason:sessionReason.trim()||null},'Sesi baru ditambahkan tanpa mengubah nilai order atau invoice.');if(ok){setDuration('');setSessionReason('')}}
+ async function attachAddOn(entitlementId:string){if(!selected)return;await run('addon:'+entitlementId,'admin_attach_intensive_add_on',{p_entitlement_id:entitlementId,p_engagement_id:selected.engagement_id,p_note:'Admin reconciliation from Intensive Mentoring operations.'},'Add-on ditautkan ke engagement.')}
+ async function resolveTopic(){if(!session||!topicFocus||resolvedTopic.trim().length<2){setError('Pilih fokus dan isi topik final.');return}const ok=await run('topic','admin_resolve_intensive_mentoring_topic',{p_session_id:session.sessionId,p_focus_id:topicFocus,p_resolved_topic:resolvedTopic.trim(),p_note:null},'Topik sesi dikonfirmasi.');if(ok)setSession(current=>current?{...current,focusId:topicFocus,resolvedTopic:resolvedTopic.trim(),topicStatus:'confirmed'}:current)}
+ async function assignSessionMentor(){if(!session||!sessionMentor)return;await run('mentor','admin_assign_intensive_session_mentor',{p_session_id:session.sessionId,p_mentor_id:sessionMentor,p_reason:sessionMentorReason.trim()||null},'Mentor sesi diperbarui dan tercatat di audit.')}
+ async function cancelSession(){if(!session||!window.confirm('Batalkan sesi Intensive Mentoring ini?'))return;setBusy('cancel');setError('');const response=await fetch('/api/admin/intensive-mentoring/sessions/'+session.sessionId+'/cancel',{method:'POST'}),body=await response.json() as{error?:string};setBusy('');if(!response.ok){setError(body.error||'Sesi belum dapat dibatalkan.');return}setMessage('Sesi dibatalkan dan Zoom/Calendar direconcile.');setSession(null);await load()}
+
+ if(loading)return <section className="role-card"><p className="muted">Memuat Intensive Mentoring operations…</p></section>
+ return <div className="intensive-admin-operations">
+  <div className="role-page-title"><div><p className="kicker">Intensive Mentoring</p><h2>Engagement & session operations</h2><p>Baseline paket adalah intensitas layanan, bukan hard cap. Admin dapat menambah sesi sesuai kebutuhan tanpa mengubah order.</p></div><button type="button" className="button button-outline" onClick={()=>void load()}><RefreshCw/>Muat ulang</button></div>
+  {error?<p className="form-error" role="alert">{error}</p>:null}{message?<p className="form-success" role="status">{message}</p>:null}
+  {!rows.length?<section className="role-card"><h3>Belum ada engagement Intensive Mentoring.</h3><p className="muted">Engagement dibuat dari entitlement package atau bundle yang sudah paid.</p></section>:<>
+   <div className="mentoring-enrollment-selector" role="list" aria-label="Pilih engagement Intensive Mentoring">{rows.map(row=><button key={row.engagement_id} type="button" role="listitem" className={'mentoring-enrollment-summary '+(selected?.engagement_id===row.engagement_id?'active':'')} onClick={()=>setSelectedId(row.engagement_id)}><span className="mentoring-enrollment-summary__eyebrow">{row.base_kind==='bundle'?'Bundle':'Package'} · Intensive</span><strong>{row.mentee_name||row.mentee_email}</strong><span>{row.program_name}</span><small>{row.baseline_sessions_per_month?'Baseline '+row.baseline_sessions_per_month+' sesi/bulan':'Baseline custom'} · {row.sessions.length} sesi tercatat</small></button>)}</div>
+   {selected?<>
+    <section className="role-card intensive-admin-config">
+     <div className="ops-section-heading"><div><p className="kicker">Program configuration</p><h3>{selected.program_name}</h3><p>{selected.mentee_name||selected.mentee_email} · {intensiveStageLabels[selected.program_stage]}</p></div><span className="ops-status ops-status--info">{selected.status}</span></div>
+     <div className="intensive-admin-config-grid">
+      <div className="ops-form-stack"><label className="ops-field"><span>Primary / dedicated mentor</span><select value={primaryMentor} onChange={e=>setPrimaryMentor(e.target.value)}><option value="">Pilih mentor</option>{mentors.map(mentor=><option key={mentor.id} value={mentor.id}>{mentor.name}</option>)}</select></label><label className="ops-field"><span>Alasan perubahan <small>opsional</small></span><input value={mentorReason} onChange={e=>setMentorReason(e.target.value)} placeholder="Konteks reassignment"/></label><button type="button" className="button button-primary" disabled={!primaryMentor||busy==='primary'} onClick={()=>void savePrimary()}><UserRound/>Simpan primary mentor</button></div>
+      <div className="ops-form-stack"><label className="ops-field"><span>Tahap program</span><select value={stage} onChange={e=>setStage(e.target.value as IntensiveProgramStage)}>{STAGES.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label className="ops-field"><span>Ringkasan progres <small>opsional</small></span><textarea rows={3} maxLength={3000} value={progress} onChange={e=>setProgress(e.target.value)}/></label><button type="button" className="button button-outline" disabled={busy==='stage'} onClick={()=>void saveStage()}><Save/>Simpan progres</button></div>
+      <div className="ops-form-stack"><label className="ops-field"><span>Durasi sesi baru (menit)</span><input type="number" min={15} max={240} value={duration} onChange={e=>setDuration(e.target.value)} placeholder="Isi eksplisit, mis. 60"/></label><label className="ops-field"><span>Alasan/catatan <small>opsional</small></span><input value={sessionReason} onChange={e=>setSessionReason(e.target.value)} placeholder="Baseline atau hasil diskusi mentee"/></label><button type="button" className="button button-primary" disabled={!duration||busy==='add'} onClick={()=>void addSession()}><Plus/>Tambah sesi</button></div>
+     </div>
+     <div className="intensive-addons"><strong>Add-on terpasang</strong><div>{selected.add_ons.length?selected.add_ons.map(addon=><span className="intensive-addon-chip" key={addon.entitlementId??addon.code}>{addon.name}</span>):<span className="muted">Belum ada add-on terpasang.</span>}</div>{selected.unassigned_add_ons.length?<div className="intensive-unassigned-addons"><ShieldAlert/><div><strong>Add-on belum terasosiasi</strong><p>Riwayat ambigu tidak ditebak otomatis. Pilih hanya jika engagement ini memang benar.</p>{selected.unassigned_add_ons.map(addon=><button type="button" className="button button-outline button-compact" disabled={!addon.entitlementId||busy==='addon:'+addon.entitlementId} onClick={()=>addon.entitlementId&&void attachAddOn(addon.entitlementId)} key={addon.entitlementId??addon.code}>Tautkan {addon.name}</button>)}</div></div>:null}</div>
+    </section>
+    <section className="role-card">
+     <div className="ops-section-heading"><div><p className="kicker">Sessions</p><h3>{selected.sessions.length} sesi operasional</h3><p>Jumlah aktual boleh melampaui baseline dan tidak mengubah invoice.</p></div></div>
+     <div className="ops-table-wrap"><table className="ops-table mentee-session-table"><thead><tr><th>Sesi</th><th>Topik / Fokus</th><th>Mentor</th><th>Jadwal</th><th>Status</th><th>Zoom</th><th>Detail</th></tr></thead><tbody>{selected.sessions.length?selected.sessions.map(item=><tr key={item.sessionId}><td data-label="Sesi"><strong>Sesi {item.sessionNumber}</strong><small>{item.durationMinutes} menit · {item.creationSource==='admin_added'?'Admin added':'Baseline'}</small></td><td data-label="Topik / Fokus"><strong>{item.resolvedTopic||item.focusName||item.menteeTopicRequest||'Belum diajukan'}</strong><small>{item.topicStatus}</small></td><td data-label="Mentor">{item.mentorName||selected.primary_mentor_name||'Belum ditetapkan'}</td><td data-label="Jadwal">{item.scheduledStartAt?new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.scheduledStartAt)):'Belum dijadwalkan'}</td><td data-label="Status"><span className="ops-status ops-status--info">{item.status.replaceAll('_',' ')}</span></td><td data-label="Zoom">{item.status==='scheduled'&&item.meetingUrl?<a className="button button-primary button-compact" href={item.meetingUrl} target="_blank" rel="noopener noreferrer">Zoom</a>:<span className="muted">Belum tersedia</span>}</td><td data-label="Detail"><button type="button" className="button button-outline button-compact" onClick={()=>setSession(item)}><Eye/>Kelola</button></td></tr>):<tr className="responsive-table-empty"><td colSpan={7}>Belum ada sesi. Gunakan Tambah sesi di atas.</td></tr>}</tbody></table></div>
+    </section>
+   </>:null}
+  </>}
+  <AdminScheduleDialog sessionId={scheduleId} mentoringKind="intensive" onClose={()=>setScheduleId(null)} onScheduled={async()=>{setScheduleId(null);await load()}}/>
+  <dialog ref={dialogRef} className="ops-dialog" onCancel={e=>{e.preventDefault();setSession(null)}} onClose={()=>setSession(null)} aria-labelledby="intensive-admin-session-title">{session?<div className="ops-dialog__surface"><header className="ops-dialog__header"><div><p className="kicker">Intensive Mentoring</p><h2 id="intensive-admin-session-title">Kelola sesi {session.sessionNumber}</h2><p>{selected?.program_name} · {selected?.mentee_name||selected?.mentee_email}</p></div><button type="button" className="ops-icon-button" onClick={()=>setSession(null)} aria-label="Tutup detail sesi"><X/></button></header>
+   <div className="session-reference-row"><div><span>Session ID</span><strong>{session.sessionId}</strong></div><CopyTextButton value={session.sessionId} label="Salin Session ID"/></div>
+   <section className="ops-dialog__section"><h3>Topik dan scope</h3><div className="ops-form-stack"><label className="ops-field"><span>Fokus</span><select value={topicFocus} onChange={e=>setTopicFocus(e.target.value)}><option value="">Pilih fokus</option>{focuses.map(focus=><option key={focus.id} value={focus.id}>{focus.name}</option>)}</select></label><label className="ops-field"><span>Topik final</span><textarea rows={4} value={resolvedTopic} onChange={e=>setResolvedTopic(e.target.value)} placeholder={session.menteeTopicRequest||'Tinjau permintaan mentee lalu tetapkan scope final.'}/></label><button type="button" className="button button-primary" disabled={session.status==='completed'||session.status==='cancelled'||busy==='topic'} onClick={()=>void resolveTopic()}><Save/>Konfirmasi topik</button></div></section>
+   <section className="ops-dialog__section"><h3>Mentor & jadwal</h3><div className="ops-form-stack"><label className="ops-field"><span>Mentor sesi</span><select value={sessionMentor} onChange={e=>setSessionMentor(e.target.value)}><option value="">Pilih mentor</option>{mentors.map(mentor=><option key={mentor.id} value={mentor.id}>{mentor.name}</option>)}</select></label><label className="ops-field"><span>Alasan override <small>opsional</small></span><input value={sessionMentorReason} onChange={e=>setSessionMentorReason(e.target.value)}/></label><div className="button-row"><button type="button" className="button button-outline" disabled={!sessionMentor||session.status==='completed'||session.status==='cancelled'||busy==='mentor'} onClick={()=>void assignSessionMentor()}><UserRound/>Simpan mentor sesi</button><button type="button" className="button button-primary" disabled={session.topicStatus!=='confirmed'||session.status==='completed'||session.status==='cancelled'} onClick={()=>{setScheduleId(session.sessionId);setSession(null)}}><CalendarDays/>{session.status==='scheduled'?'Ubah jadwal':'Jadwalkan'}</button><button type="button" className="button mentoring-session-cancel-trigger" disabled={session.status==='completed'||session.status==='cancelled'||busy==='cancel'} onClick={()=>void cancelSession()}>Batalkan sesi</button></div></div></section>
+   <AdminSessionOperations mentoringKind="intensive" sessionId={session.sessionId} status={session.status} menteeName={selected?.mentee_name||selected?.mentee_email||'Mentee'} sessionNumber={session.sessionNumber} mentorName={session.mentorName} scheduledStartAt={session.scheduledStartAt} onChanged={async()=>{await load()}}/>
+  </div>:null}</dialog>
+ </div>
+}

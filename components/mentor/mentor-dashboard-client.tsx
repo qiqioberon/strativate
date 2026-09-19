@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useAccount } from '@/components/auth/account-provider'
+import { ProfileAvatar } from '@/components/auth/profile-avatar'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { RoleCalendar } from '@/components/calendar/role-calendar'
 import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-sidebar-utilities'
@@ -64,7 +65,7 @@ export function MentorDashboardClient({
     setMobile(false)
   }
   const openNotification = (item: Notification) => {
-    if (item.related_entity === 'session') { setFocusSessionId(item.related_entity_id); open('assignments'); return }
+    if (item.related_entity === 'session' || item.related_entity === 'intensive_mentoring_session') { setFocusSessionId(item.related_entity_id); open('assignments'); return }
     open('overview')
   }
   const currentLabel = nav.find(item => item.id === section)?.label || 'Dashboard mentor'
@@ -73,7 +74,7 @@ export function MentorDashboardClient({
   return <div className="role-shell mentor-shell">
     <aside id="mentor-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
       <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Tutup menu mentor"><X aria-hidden="true"/></button></div>
-      <div className="role-person"><span className="role-avatar blue">{accountName.slice(0, 2)}</span><div><strong>{accountName}</strong><small>Akun mentor</small></div></div>
+      <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{accountName}</strong><small>Akun mentor</small></div></div>
       <nav aria-label="Navigasi mentor">{nav.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => open(id)}><Icon aria-hidden="true"/>{label}{id === 'assignments' && overview.upcomingSessions > 0 ? <b aria-label={`${overview.upcomingSessions} sesi mendatang`}>{overview.upcomingSessions}</b> : null}</button>)}</nav>
       <div className="role-sidebar-bottom"><DashboardSidebarUtilities/></div>
     </aside>

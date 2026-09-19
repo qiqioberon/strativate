@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, ExternalLink, Pencil, RefreshCw, RotateCcw, Save, X } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Pencil, RefreshCw, RotateCcw, Save } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
@@ -104,7 +104,7 @@ export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
 }
 
 export function AdminSessionOperations({
-  sessionId,status,menteeName,sessionNumber,mentorName,scheduledStartAt,onChanged,
+  sessionId,status,menteeName,sessionNumber,mentorName,scheduledStartAt,onChanged,mentoringKind='private',
 }:{
   sessionId:string
   status:string
@@ -113,6 +113,7 @@ export function AdminSessionOperations({
   mentorName:string|null
   scheduledStartAt:string|null
   onChanged:()=>void|Promise<void>
+  mentoringKind?:'private'|'intensive'
 }){
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
@@ -125,21 +126,21 @@ export function AdminSessionOperations({
 
   const load=useCallback(async()=>{
     try{
-      const response=await fetch(`/api/admin/private-mentoring/sessions/${sessionId}/meeting`,{cache:'no-store'})
+      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{cache:'no-store'})
       const body=await response.json() as MeetingState&{error?:string}
       if(response.ok){setState(body);setManualUrl(body.manualMeetingUrl??'');return}
       setMessage(body.error||'Status meeting belum dapat dimuat.')
     }catch{
       setMessage('Status meeting belum dapat dimuat.')
     }
-  },[sessionId])
+  },[mentoringKind,sessionId])
   useEffect(()=>{void load()},[load])
 
   async function saveOverride(){
     const trimmed=manualUrl.trim()
     if(!/^https:\/\//i.test(trimmed)){setMessage('Gunakan URL meeting HTTPS yang valid.');return}
     setBusy('meeting');setMessage('')
-    const response=await fetch(`/api/admin/private-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:trimmed})})
+    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:trimmed})})
     const body=await response.json() as MeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Meeting override belum dapat disimpan.');return}
@@ -149,7 +150,7 @@ export function AdminSessionOperations({
 
   async function restoreZoom(){
     setBusy('restore');setMessage('')
-    const response=await fetch(`/api/admin/private-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:null})})
+    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:null})})
     const body=await response.json() as MeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Link Zoom belum dapat dipulihkan.');return}
@@ -159,7 +160,7 @@ export function AdminSessionOperations({
 
   async function retrySync(){
     setBusy('sync');setMessage('')
-    const response=await fetch(`/api/admin/private-mentoring/sessions/${sessionId}/sync`,{method:'POST'})
+    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/sync`,{method:'POST'})
     const body=await response.json() as{error?:string;status?:string}
     setBusy('')
     if(!response.ok&&response.status!==202){setMessage(body.error||'Zoom dan Calendar belum berhasil disinkronkan.');return}
@@ -169,11 +170,11 @@ export function AdminSessionOperations({
 
   async function setStatus(next:'completed'|'scheduled'){
     setBusy(next);setMessage('')
-    const result=await rpc.rpc('admin_set_private_mentoring_session_status',{p_session_id:sessionId,p_status:next})
+    const result=await rpc.rpc(mentoringKind==='private'?'admin_set_private_mentoring_session_status':'admin_set_intensive_session_status',{p_session_id:sessionId,p_status:next})
     setBusy('')
     if(result.error){setMessage('Status sesi belum dapat diperbarui. Coba lagi.');return}
     if(confirmRef.current?.open)confirmRef.current.close()
-    setMessage(next==='completed'?'Sesi ditandai selesai.':'Tanda selesai dibatalkan dan enrollment dihitung ulang.')
+    setMessage(next==='completed'?'Sesi ditandai selesai.':mentoringKind==='private'?'Tanda selesai dibatalkan dan enrollment dihitung ulang.':'Tanda selesai dibatalkan; engagement tetap aktif.')
     await onChanged()
   }
 
@@ -214,9 +215,10 @@ export function AdminSessionOperations({
     </div>
 
     {message?<p className="muted" role="status">{message}</p>:null}
-    <dialog ref={confirmRef} className="calendar-dialog compact-confirm-dialog">
-      <div className="calendar-dialog__head"><div><p className="kicker">Konfirmasi selesai</p><h3>Tandai sesi {sessionNumber} selesai?</h3></div><button className="icon-button" type="button" onClick={()=>confirmRef.current?.close()} aria-label="Tutup konfirmasi"><X/></button></div>
-      <div className="compact-confirm-dialog__body"><p>Progress enrollment akan dihitung ulang. Jika salah, admin masih dapat membatalkan tanda selesai dan transisi tetap diaudit.</p><div className="button-row"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}>Kembali</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}>Ya, tandai selesai</button></div></div>
+    <dialog ref={confirmRef} className="calendar-dialog compact-confirm-dialog" aria-labelledby="complete-session-title">
+      <div className="compact-confirm-dialog__header"><p className="kicker">Konfirmasi selesai</p><h3 id="complete-session-title">Tandai sesi {sessionNumber} selesai?</h3></div>
+      <div className="compact-confirm-dialog__body"><p>{mentoringKind==='private'?'Progress enrollment akan dihitung ulang. Jika salah, admin masih dapat membatalkan tanda selesai dan transisi tetap diaudit.':'Status sesi akan dicatat ke audit Intensive Mentoring. Jika salah, admin masih dapat membatalkan tanda selesai sesuai lifecycle yang tersedia.'}</p></div>
+      <div className="compact-confirm-dialog__footer"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}>Batal</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}>Ya, tandai selesai</button></div>
     </dialog>
   </section>
 }

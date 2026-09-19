@@ -11,7 +11,10 @@ test('admin dashboard exposes Private Mentoring Catalog, generic Cart Links, and
   assert.match(admin, /Mentoring Sessions/)
   assert.match(admin, /PrivateMentoringManagement/)
   assert.match(admin, /CommerceCartLinkManagement/)
-  assert.match(admin, /PrivateMentoringSessionManagement/)
+  assert.match(admin, /AdminMentoringSessionWorkspace/)
+  const workspace = read('components/admin/admin-mentoring-session-workspace.tsx')
+  assert.match(workspace, /PrivateMentoringSessionManagement/)
+  assert.match(workspace, /IntensiveMentoringSessionManagement/)
 })
 
 test('Private Mentoring admin manages only genuine catalog data, never marketing copy', () => {

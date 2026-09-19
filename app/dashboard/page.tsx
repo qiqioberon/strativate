@@ -2,17 +2,18 @@ import { DashboardClient } from './dashboard-client'
 
 import { getActiveCart, listOwnedDigitalProducts, listUserOrders } from '@/lib/commerce/server'
 import { isDigitalProductsEnabled } from '@/lib/features'
-import { getPublicPrivateMentoringCatalog, listMyIntensiveMentoringEntitlements, listMyPrivateMentoringSessions } from '@/lib/private-mentoring/server'
+import { getPublicPrivateMentoringCatalog, listMyPrivateMentoringSessions } from '@/lib/private-mentoring/server'
+import { listMyIntensiveMentoringEngagements } from '@/lib/intensive-mentoring/server'
 
 export default async function MenteeDashboard() {
   const digitalProductsEnabled = isDigitalProductsEnabled()
-  const [ownedDigitalProducts, cart, commerceOrders, privateMentoringCatalog, privateMentoringSessions, intensiveMentoringEntitlements] = await Promise.all([
+  const [ownedDigitalProducts, cart, commerceOrders, privateMentoringCatalog, privateMentoringSessions, intensiveMentoringEngagements] = await Promise.all([
     digitalProductsEnabled ? listOwnedDigitalProducts() : Promise.resolve([]),
     getActiveCart(),
     listUserOrders(),
     getPublicPrivateMentoringCatalog(),
     listMyPrivateMentoringSessions(),
-    listMyIntensiveMentoringEntitlements(),
+    listMyIntensiveMentoringEngagements(),
   ])
 
   return (
@@ -22,7 +23,7 @@ export default async function MenteeDashboard() {
       cart={cart}
       commerceOrders={commerceOrders}
       privateMentoringSessions={privateMentoringSessions}
-      intensiveMentoringEntitlements={intensiveMentoringEntitlements}
+      intensiveMentoringEngagements={intensiveMentoringEngagements}
       sessionFocuses={privateMentoringCatalog?.sessionFocuses ?? []}
     />
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, ChevronDown, Eye, Loader2, Search, X } from 'lucide-react'
+import { Check, ChevronDown, Eye, Loader2, Search, ShieldAlert, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
 import { TablePagination } from '@/components/admin/table-pagination'
@@ -77,7 +77,7 @@ export function CommerceCartLinkManagement(){
     {menteeId?<><label className="ops-field ops-field--wide"><span>Cari produk</span><input value={productQuery} onChange={event=>setProductQuery(event.target.value)} placeholder="Nama produk"/></label><div className="calendar-view-switch" role="tablist" aria-label="Kategori produk"><button type="button" role="tab" aria-selected={catalogTab==='digital'} className={catalogTab==='digital'?'active':''} onClick={()=>setCatalogTab('digital')}>Produk Digital</button><button type="button" role="tab" aria-selected={catalogTab==='private'} className={catalogTab==='private'?'active':''} onClick={()=>setCatalogTab('private')}>Private Mentoring</button><button type="button" role="tab" aria-selected={catalogTab==='intensive'} className={catalogTab==='intensive'?'active':''} onClick={()=>setCatalogTab('intensive')}>Intensive Mentoring</button></div>
      {catalogTab==='digital'?<div className="cart-link-product-grid">{visibleItems.map(productCard)}</div>:null}
      {catalogTab==='private'?<div>{privateFamilies.map(([family,rows])=><section className="schedule-day" key={family}><div className="ops-section-heading"><div><p className="kicker">Mentor tier</p><h4>{family}</h4><p>Pilih package / jumlah sesi.</p></div></div><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
-     {catalogTab==='intensive'?<div>{intensiveGroups.map(([kind,rows])=><section className="schedule-day" key={kind}><h4>{kindLabel(kind)}</h4><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
+     {catalogTab==='intensive'?<div><div className="intensive-cart-legal-note"><ShieldAlert aria-hidden="true"/><div><strong>Item legal-blocked sengaja tidak dapat dipilih</strong><span>Win Guarantee Protection dan Competition Assurance tetap tercatat di katalog admin, tetapi tidak muncul sebagai item checkout sampai persetujuan legal/business selesai.</span></div></div>{intensiveGroups.map(([kind,rows])=><section className="schedule-day" key={kind}><h4>{kindLabel(kind)}</h4><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
      {visibleItems.length===0?<p className="muted">Tidak ada produk yang cocok di kategori ini.</p>:null}
     </>:<div className="cart-link-products__locked">Pilih mentee di atas sebelum memilih produk.</div>}
    </div>

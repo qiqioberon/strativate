@@ -53,6 +53,31 @@ async function stubNotifications(page: Page) {
   await page.route('**/rest/v1/rpc/mark_all_notifications_read', route => json(route, null))
 }
 
+async function stubUnreadNotifications(page:Page){
+  let notifications=Array.from({length:3},(_,index)=>({
+    id:'97000000-0000-0000-0000-'+String(index+1).padStart(12,'0'),
+    recipient_user_id:null,recipient_role:'mentee',type:'session_scheduled',
+    title:index===0?'Jadwal mentoring diperbarui':'Notifikasi '+(index+1),
+    message:index===0?'Pesan notifikasi yang sengaja cukup panjang untuk memastikan line-height, wrapping, dan spacing kartu tetap nyaman pada viewport mobile tanpa mendorong layout keluar layar.':'Pembaruan operasional mentoring.',
+    related_entity:'session',related_entity_id:'fixture-'+index,idempotency_key:'unread-'+index,read_at:null as string|null,created_at:'2026-09-20T0'+index+':00:00.000Z'
+  }))
+  await page.route('**/rest/v1/notifications**',async route=>{
+    const unread=notifications.filter(item=>!item.read_at)
+    const range=unread.length?'0-'+(unread.length-1)+'/'+unread.length:'*/0'
+    if(route.request().method()==='HEAD'){await route.fulfill({status:200,headers:{'Content-Range':range},body:''});return}
+    await json(route,unread,{'Content-Range':range})
+  })
+  await page.route('**/rest/v1/rpc/mark_notification_read',async route=>{
+    const id=(route.request().postDataJSON() as {p_notification_id?:string}).p_notification_id
+    notifications=notifications.map(item=>item.id===id?{...item,read_at:'2026-09-20T05:00:00.000Z'}:item)
+    await json(route,null)
+  })
+  await page.route('**/rest/v1/rpc/mark_all_notifications_read',async route=>{
+    notifications=notifications.map(item=>({...item,read_at:'2026-09-20T05:00:00.000Z'}))
+    await json(route,null)
+  })
+}
+
 async function stubAdminCommerce(page: Page) {
   await page.route('**/rest/v1/rpc/list_admin_commerce_orders', route => json(route, []))
   await page.route('**/rest/v1/rpc/get_admin_commerce_report', route => json(route, [{
@@ -207,6 +232,22 @@ async function stubAdminMentoring(page: Page) {
   })
 }
 
+async function stubAdminIntensive(page:Page){
+  const engagementId='95000000-0000-0000-0000-000000000001'
+  const mentorId='84000000-0000-0000-0000-000000000001'
+  await page.route('**/rest/v1/rpc/list_admin_intensive_mentoring_engagements',route=>json(route,[{
+    engagement_id:engagementId,mentee_id:'92000000-0000-0000-0000-000000000003',mentee_name:'Aqil Aja',mentee_email:'aqil@fixture.test',
+    base_entitlement_id:'95000000-0000-0000-0000-000000000002',base_kind:'bundle',program_name:'Bundel Competition Ready',status:'active',baseline_sessions_per_month:8,
+    primary_mentor_id:mentorId,primary_mentor_name:'Mentor Fixture',program_stage:'review_refinement',progress_summary:'Storyline dan Q&A refinement.',created_at:'2026-09-01T00:00:00.000Z',
+    add_ons:[{entitlementId:null,name:'Laporan Performa Terperinci',code:'DETAILED_PERFORMANCE_REPORT',status:'included',source:'bundle'},{entitlementId:null,name:'Simulasi Penjurian',code:'JUDGING_SIMULATION',status:'included',source:'bundle'}],
+    unassigned_add_ons:[],
+    sessions:[{sessionId:'96000000-0000-0000-0000-000000000001',sessionNumber:1,durationMinutes:60,status:'scheduled',focusId:'81000000-0000-0000-0000-000000000001',focusName:'Idea & Problem Framing',menteeTopicRequest:'Review final storyline.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId,mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',googleSyncStatus:'synced',recordingStatus:'expected',creationSource:'admin_added',creationReason:'Hasil diskusi mentee'}]
+  }]))
+  await page.route('**/rest/v1/mentor_profiles**',route=>json(route,[{user_id:mentorId,is_active:true}]))
+  await page.route('**/rest/v1/profiles**',route=>json(route,[{id:mentorId,first_name:'Mentor',last_name:'Fixture',username:'mentor-fixture'}]))
+  await page.route('**/api/admin/intensive-mentoring/sessions/*/meeting',route=>json(route,{sessionId:'96000000-0000-0000-0000-000000000001',status:'scheduled',meetingProvider:'zoom',providerMeetingId:'123456789',providerMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',manualMeetingUrl:null,effectiveMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',providerSyncError:null,calendarSyncStatus:'synced',calendarSyncError:null,recordingStatus:'expected',recordingError:null}))
+}
+
 async function expectNoDocumentOverflow(page: Page) {
   const viewport = await page.evaluate(() => ({
     width: window.innerWidth,
@@ -327,4 +368,140 @@ test('topbar notification bell shows unread only while history keeps read record
   await page.getByRole('button', { name: 'Notifikasi', exact: true }).click()
   await expect(page.getByText('Pembayaran berhasil', { exact: true })).toBeVisible()
   await expect(page.getByText('Jadwal mentoring diperbarui', { exact: true })).toBeVisible()
+})
+
+
+test('Mentoring Saya mode switcher stays usable without horizontal document overflow across representative widths', async ({ page }) => {
+  await stubMenteeCompetition(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('http://localhost:3001/mentoring-professionalization')
+
+  const privateTab=page.getByRole('tab',{name:/Private Mentoring/})
+  const intensiveTab=page.getByRole('tab',{name:/Intensive Mentoring/})
+  await expect(privateTab).toHaveAttribute('aria-selected','true')
+  await expect(page.locator('.mentoring-enrollment-summary')).toHaveCount(2)
+  await expect(page.getByRole('button',{name:/Detail/}).first()).toBeVisible()
+
+  for(const width of [360,390,768,1024,1280,1440,1920]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+    await expect(page.getByRole('button',{name:/Detail/}).first()).toBeVisible()
+  }
+
+  await intensiveTab.click()
+  await expect(intensiveTab).toHaveAttribute('aria-selected','true')
+  await expect(page.getByRole('heading',{name:'Bundel Competition Ready',exact:true})).toBeVisible()
+  await expect(page.getByText('Laporan Performa Terperinci',{exact:true})).toBeVisible()
+  await expect(page.getByText('Simulasi Penjurian',{exact:true})).toBeVisible()
+  await expect(page.locator('[data-testid="intensive-session-table"]')).toHaveCount(1)
+
+  for(const width of [360,390,768,1024,1280,1440,1920]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+    await expect(page.getByRole('button',{name:'Detail',exact:true}).first()).toBeVisible()
+  }
+})
+
+
+test('admin Intensive operations and completion confirmation remain responsive',async({page})=>{
+  await stubNotifications(page)
+  await stubAdminCommerce(page)
+  await stubAdminMentoring(page)
+  await stubAdminIntensive(page)
+  await page.setViewportSize({width:1280,height:900})
+  await page.goto('http://localhost:3001/admin')
+  await page.getByRole('button',{name:'Mentoring Sessions',exact:true}).click()
+  await page.getByRole('tab',{name:'Intensive Mentoring',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'Engagement & session operations'})).toBeVisible()
+  await expect(page.getByRole('button',{name:/Tambah sesi/})).toBeVisible()
+  await expect(page.getByText('Bundel Competition Ready',{exact:true}).first()).toBeVisible()
+  await expect(page.getByText('Laporan Performa Terperinci',{exact:true})).toBeVisible()
+
+  for(const width of [360,390,768,1024,1280,1440,1920]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+  }
+
+  await page.setViewportSize({width:1024,height:900})
+  await page.getByRole('button',{name:'Kelola',exact:true}).click()
+  const detail=page.locator('dialog[aria-labelledby="intensive-admin-session-title"]')
+  await expect(detail).toBeVisible()
+  await expect(detail.locator('textarea').first()).toHaveValue('Final storyline & Q&A')
+  await detail.getByRole('button',{name:/Tandai selesai/i}).click()
+  const confirm=page.locator('dialog.compact-confirm-dialog')
+  await expect(confirm).toBeVisible()
+  await expect(confirm.getByRole('button',{name:'Batal',exact:true})).toBeVisible()
+  await expect(confirm.getByRole('button',{name:'Ya, tandai selesai',exact:true})).toBeVisible()
+  await expect(confirm.getByRole('button',{name:/Tutup konfirmasi/})).toHaveCount(0)
+  await expectNoDocumentOverflow(page)
+})
+
+
+test('role profile avatar dialog supports drag drop crop save and responsive widths',async({page})=>{
+  await stubNotifications(page)
+  await page.route('**/api/profile/avatar**',async route=>{
+    if(route.request().method()==='POST'){await json(route,{avatarUrl:'/api/profile/avatar?rev=fixture',path:'92000000-0000-0000-0000-000000000003/avatar.webp'});return}
+    await route.fulfill({status:200,contentType:'image/webp',body:Buffer.from('UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AA/v89WAAAAA==','base64')})
+  })
+  await page.setViewportSize({width:1280,height:900})
+  await page.goto('http://localhost:3001/dashboard')
+  await page.getByRole('button',{name:'Profil',exact:true}).click()
+  const trigger=page.getByRole('button',{name:'Ubah foto profil'})
+  await expect(trigger).toBeVisible()
+  await trigger.focus()
+  await trigger.click()
+  const dialog=page.locator('dialog.avatar-editor-dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText('Klik atau tarik foto ke sini')).toBeVisible()
+
+  await page.evaluate(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256
+    const context=canvas.getContext('2d')!;context.fillStyle='#ff7a00';context.fillRect(0,0,256,256);context.fillStyle='#111827';context.fillRect(64,64,128,128)
+    const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('png failed')),'image/png'))
+    const file=new File([blob],'avatar.png',{type:'image/png'})
+    const transfer=new DataTransfer();transfer.items.add(file)
+    const target=document.querySelector('.avatar-dropzone')!
+    target.dispatchEvent(new DragEvent('dragover',{bubbles:true,cancelable:true,dataTransfer:transfer}))
+    target.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:transfer}))
+  })
+  await expect(dialog.getByAltText('Pratinjau foto yang akan dipotong')).toBeVisible()
+  await expect(dialog.getByText('Zoom',{exact:true})).toBeVisible()
+  await expect(dialog.locator('input[type="range"]')).toHaveCount(3)
+
+  for(const width of [360,390,768,1024,1280,1440,1920]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+    await expect(dialog.getByRole('button',{name:'Simpan foto'})).toBeVisible()
+  }
+
+  await dialog.getByRole('button',{name:'Simpan foto'}).click()
+  await expect(dialog).not.toBeVisible()
+  await expect(page.locator('.profile-avatar-edit-trigger img.profile-avatar-image')).toBeVisible()
+})
+
+
+test('notification popover keeps three unread items centered and mobile safe',async({page})=>{
+  await stubUnreadNotifications(page)
+  await page.setViewportSize({width:390,height:844})
+  await page.goto('http://localhost:3001/dashboard')
+  await page.getByRole('button',{name:'Buka notifikasi'}).click()
+  const popover=page.getByRole('dialog',{name:'Notifikasi'})
+  const unread=popover.getByRole('button',{name:/belum dibaca/})
+  await expect(unread).toHaveCount(3)
+  await expect(popover.getByText(/Pesan notifikasi yang sengaja cukup panjang/)).toBeVisible()
+  await expectNoDocumentOverflow(page)
+  const centered=await unread.first().evaluate(button=>{
+    const box=button.querySelector('span')?.getBoundingClientRect()
+    const icon=button.querySelector('span svg')?.getBoundingClientRect()
+    if(!box||!icon)return false
+    const dx=Math.abs((box.left+box.width/2)-(icon.left+icon.width/2))
+    const dy=Math.abs((box.top+box.height/2)-(icon.top+icon.height/2))
+    return box.width>=40&&box.height>=40&&dx<1.5&&dy<1.5
+  })
+  expect(centered).toBe(true)
+  await unread.first().click()
+  await page.getByRole('button',{name:'Buka notifikasi'}).click()
+  await expect(popover.getByRole('button',{name:/belum dibaca/})).toHaveCount(2)
+  await popover.getByRole('button',{name:/Tandai semua dibaca/}).click()
+  await expect(popover.getByText('Tidak ada notifikasi baru.')).toBeVisible()
 })

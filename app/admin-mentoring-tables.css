@@ -27,3 +27,14 @@
 @media (max-width:760px) {
   .mentoring-enrollment-summary, .mentoring-session-checklist { grid-template-columns:minmax(0,1fr); }
 }
+
+.mentoring-enrollment-table{width:100%;min-width:0;table-layout:fixed}
+.mentoring-enrollment-table th,.mentoring-enrollment-table td{min-width:0;overflow-wrap:anywhere}
+.mentoring-enrollment-table th:nth-child(1){width:17%}.mentoring-enrollment-table th:nth-child(2){width:19%}.mentoring-enrollment-table th:nth-child(3){width:20%}.mentoring-enrollment-table th:nth-child(4){width:13%}.mentoring-enrollment-table th:nth-child(5){width:15%}.mentoring-enrollment-table th:nth-child(6){width:10%}.mentoring-enrollment-table th:nth-child(7){width:6%}
+@media(max-width:820px){
+ .mentoring-enrollment-table{display:block}.mentoring-enrollment-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ .mentoring-enrollment-table tbody{display:grid;gap:12px}.mentoring-enrollment-table tr{display:grid;padding:14px;border:1px solid #eadfd7;border-radius:16px;background:#fff}
+ .mentoring-enrollment-table td{display:grid;grid-template-columns:minmax(108px,.42fr) minmax(0,1fr);gap:12px;width:auto!important;padding:9px 0!important;border:0!important;border-bottom:1px solid #f0e8e3!important;text-align:left!important}
+ .mentoring-enrollment-table td:last-child{border-bottom:0!important}.mentoring-enrollment-table td::before{content:attr(data-label);color:#8a7d75;font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+}
+@media(max-width:480px){.mentoring-enrollment-table td{grid-template-columns:1fr;gap:5px}}
