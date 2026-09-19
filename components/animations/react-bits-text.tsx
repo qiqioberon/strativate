@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
+import { usePageMotionReady } from '@/components/navigation/use-page-motion-ready'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -24,8 +25,11 @@ export function SplitText({
 }) {
   const rootRef = useRef<HTMLHeadingElement>(null)
   const words = useMemo(() => text.split(' '), [text])
+  const motionReady = usePageMotionReady()
 
   useEffect(() => {
+    if (!motionReady) return
+
     const root = rootRef.current
     if (!root) return
     const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-split-unit]'))
@@ -53,7 +57,7 @@ export function SplitText({
     return () => {
       tween.kill()
     }
-  }, [delay, duration, startDelay, text])
+  }, [delay, duration, motionReady, startDelay, text])
 
   return (
     <h1
@@ -64,7 +68,7 @@ export function SplitText({
     >
       {words.map((word, index) => (
         <span key={`${word}-${index}`} aria-hidden="true">
-          <span data-split-unit>{word}</span>
+          <span data-split-unit style={motionReady ? undefined : { opacity: 0 }}>{word}</span>
           {index < words.length - 1 ? ' ' : null}
         </span>
       ))}
@@ -87,8 +91,11 @@ export function BlurText({
 }) {
   const rootRef = useRef<HTMLParagraphElement>(null)
   const words = useMemo(() => text.split(' '), [text])
+  const motionReady = usePageMotionReady()
 
   useEffect(() => {
+    if (!motionReady) return
+
     const root = rootRef.current
     if (!root) return
     const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-blur-unit]'))
@@ -116,7 +123,7 @@ export function BlurText({
     return () => {
       tween.kill()
     }
-  }, [delay, duration, startDelay, text])
+  }, [delay, duration, motionReady, startDelay, text])
 
   return (
     <p
@@ -127,7 +134,7 @@ export function BlurText({
     >
       {words.map((word, index) => (
         <span key={`${word}-${index}`} aria-hidden="true">
-          <span data-blur-unit>{word}</span>
+          <span data-blur-unit style={motionReady ? undefined : { opacity: 0 }}>{word}</span>
           {index < words.length - 1 ? ' ' : null}
         </span>
       ))}
@@ -156,6 +163,7 @@ export function TextType({
   const [deleting, setDeleting] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const cursorRef = useRef<HTMLSpanElement>(null)
+  const motionReady = usePageMotionReady()
 
   useEffect(() => {
     const media = window.matchMedia(REDUCED_MOTION_QUERY)
@@ -167,7 +175,7 @@ export function TextType({
 
   useEffect(() => {
     const cursor = cursorRef.current
-    if (!cursor || reducedMotion) return
+    if (!motionReady || !cursor || reducedMotion) return
     const tween = gsap.to(cursor, {
       opacity: 0,
       duration: .48,
@@ -178,10 +186,10 @@ export function TextType({
     return () => {
       tween.kill()
     }
-  }, [reducedMotion])
+  }, [motionReady, reducedMotion])
 
   useEffect(() => {
-    if (reducedMotion || textArray.length === 0) return
+    if (!motionReady || reducedMotion || textArray.length === 0) return
 
     const current = textArray[textIndex] ?? ''
     let timeout: ReturnType<typeof setTimeout> | undefined
@@ -213,12 +221,15 @@ export function TextType({
     initialDelay,
     pauseDuration,
     reducedMotion,
+    motionReady,
     textArray,
     textIndex,
     typingSpeed,
   ])
 
-  const visibleText = reducedMotion ? (textArray[0] ?? '') : displayedText
+  const visibleText = motionReady
+    ? (reducedMotion ? (textArray[0] ?? '') : displayedText)
+    : ''
 
   return (
     <span
@@ -227,7 +238,7 @@ export function TextType({
       data-react-bits-text="type"
     >
       <span className="rb-text-type__content">{visibleText}</span>
-      {!reducedMotion && <span ref={cursorRef} className="rb-text-type__cursor">|</span>}
+      {motionReady && !reducedMotion && <span ref={cursorRef} className="rb-text-type__cursor">|</span>}
     </span>
   )
 }

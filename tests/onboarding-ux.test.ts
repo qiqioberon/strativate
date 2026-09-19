@@ -113,6 +113,9 @@ test('route choreography uses animation lifecycle without fake delay or duplicat
   assert.match(motion, /navigatingRef/)
   assert.match(motion, /if \(navigatingRef\.current\) return false/)
   assert.match(motion, /onAnimationEnd=/)
+  assert.match(motion, /usePageMotionReady/)
+  assert.match(motion, /data-motion-ready=\{motionReady \? 'true' : 'false'\}/)
+  assert.match(css, /data-motion-ready='true'\]\[data-route-phase='enter'\]/)
   assert.match(motion, /inert=\{routePhase === 'exit' \|\| routePhase === 'final-exit'\}/)
   assert.match(motion, /router\.prefetch\(href\)/)
   assert.doesNotMatch(motion, /setTimeout|sleep\(|minimumDelay|setInterval/)
@@ -204,7 +207,7 @@ test('review uses direct section edits, removes duplicate revision menu, and doe
 })
 
 test('review entrance stays staged at a readable pace', () => {
-  assert.match(css, /onboarding-review__symbol \{ animation: onboarding-review-item 380ms 50ms both; \}/)
+  assert.match(css, /data-motion-ready='true'[\s\S]*onboarding-review__symbol \{ animation: onboarding-review-item 380ms 50ms both; \}/)
   assert.match(css, /onboarding-review__item:nth-child\(5\) \{ animation: onboarding-review-item 380ms 560ms both; \}/)
   assert.match(css, /onboarding-review__actions \{ animation: onboarding-review-item 400ms 640ms both; \}/)
 })

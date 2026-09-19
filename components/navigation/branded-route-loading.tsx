@@ -14,6 +14,7 @@ export function BrandedRouteLoading({
       aria-live="polite"
       aria-busy="true"
       data-testid="route-loading-overlay"
+      data-page-motion-blocker="true"
     >
       <span className={styles.sweep} aria-hidden="true" />
       <div className={styles.content}>

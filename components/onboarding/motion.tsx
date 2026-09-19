@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { usePageMotionReady } from '@/components/navigation/use-page-motion-ready'
 import type { OnboardingScene } from './types'
 
 type RoutePhase = 'idle' | 'exit' | 'enter' | 'final-exit'
@@ -102,20 +103,22 @@ export function OnboardingRouteStage({
 }) {
   const { routePhase, setScene, completeRouteExit, completeRouteEnter } = useOnboardingMotion()
   const ref = useRef<HTMLDivElement>(null)
+  const motionReady = usePageMotionReady()
 
   useEffect(() => {
     if (scene) setScene(scene)
   }, [scene, setScene])
 
   useEffect(() => {
-    if (routePhase !== 'enter') return
+    if (!motionReady || routePhase !== 'enter') return
     requestAnimationFrame(() => ref.current?.focus({ preventScroll: true }))
-  }, [routePhase])
+  }, [motionReady, routePhase])
 
   return <div
     ref={ref}
     className={'onboarding-route-stage ' + className}
     data-route-phase={routePhase}
+    data-motion-ready={motionReady ? 'true' : 'false'}
     tabIndex={-1}
     inert={routePhase === 'exit' || routePhase === 'final-exit'}
     aria-hidden={routePhase === 'exit' || routePhase === 'final-exit' ? true : undefined}
