@@ -45,6 +45,18 @@ export function HeroKineticSurface({ children }: { children: ReactNode }) {
   )
 }
 
+export function HeroAmbient() {
+  return (
+    <div className="marketing-hero-ambient" aria-hidden="true" data-testid="hero-ambient">
+      <span className="marketing-hero-ambient__orb marketing-hero-ambient__orb--orange" />
+      <span className="marketing-hero-ambient__orb marketing-hero-ambient__orb--red" />
+      <span className="marketing-hero-ambient__ring marketing-hero-ambient__ring--one" />
+      <span className="marketing-hero-ambient__ring marketing-hero-ambient__ring--two" />
+      <span className="marketing-hero-ambient__beam" />
+    </div>
+  )
+}
+
 export function HeroVisualStage({ children }: { children: ReactNode }) {
   const stageRef = useRef<HTMLDivElement>(null)
 
