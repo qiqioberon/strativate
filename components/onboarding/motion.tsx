@@ -157,8 +157,9 @@ export function OnboardingRouteLink({
     aria-label={ariaLabel}
     aria-disabled={navigating || undefined}
     onClick={event => {
-      if (!shouldHandle(event) || navigating) return
+      if (!shouldHandle(event)) return
       event.preventDefault()
+      if (navigating) return
       beginRoute(href, { finalMessage })
     }}
   >{children}</a>
