@@ -8,6 +8,7 @@ const stages = read('components/onboarding/stages.tsx')
 const frame = read('components/onboarding/stage-frame.tsx')
 const types = read('components/onboarding/types.ts')
 const shell = read('components/onboarding/shell.tsx')
+const shapeGrid = read('components/onboarding/shape-grid-background.tsx')
 const motion = read('components/onboarding/motion.tsx')
 const onboardingLayout = read('app/onboarding/layout.tsx')
 const page = read('app/onboarding/page.tsx')
@@ -50,6 +51,19 @@ test('shell uses canonical Strativate brand assets instead of decorative letter 
   const welcome = stages.slice(stages.indexOf('export function WelcomeStage'), stages.indexOf('export function NameConfirmationStage'))
   assert.match(welcome, /<BrandLogo variant="mark" priority \/>/)
   assert.doesNotMatch(welcome, /<span \/>/)
+})
+
+test('shape grid is subtle, autonomous, and non-interactive', () => {
+  assert.match(shell, /<OnboardingShapeGrid \/>/)
+  assert.match(shapeGrid, /const GRID_BORDER = '#d7d7d7'/)
+  assert.match(shapeGrid, /const GRID_ACCENT = '#ff7a00'/)
+  assert.match(shapeGrid, /const GRID_SIZE = 30/)
+  assert.match(shapeGrid, /const GRID_SPEED = 0\.3/)
+  assert.match(shapeGrid, /prefers-reduced-motion: reduce/)
+  assert.doesNotMatch(shapeGrid, /mousemove|pointermove|click|hoverTrail/)
+  assert.match(css, /\.onboarding-shape-grid \{[\s\S]*pointer-events: none;/)
+  assert.match(css, /mask-image: radial-gradient/)
+  assert.match(css, /\.onboarding-shape-grid \{ opacity: \.4; \}/)
 })
 
 test('autonomous ambient loops are continuous and independent from stage modulation', () => {
