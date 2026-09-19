@@ -942,10 +942,10 @@
 .onboarding-stage-region .onboarding-welcome__animated-description,
 .onboarding-route-stage .rb-split-text,
 .onboarding-route-stage .rb-blur-text {
-  opacity: 1 !important;
-  filter: none !important;
-  transform: none !important;
-  animation: none !important;
+  opacity: 1;
+  filter: none;
+  transform: none;
+  animation: none;
 }
 .onboarding-question__animated-title,
 .onboarding-welcome__animated-title,
@@ -960,9 +960,9 @@
 @media (prefers-reduced-motion: reduce) {
   .rb-split-text [data-split-unit],
   .rb-blur-text [data-blur-unit] {
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
+    opacity: 1;
+    filter: none;
+    transform: none;
     will-change: auto;
   }
 }

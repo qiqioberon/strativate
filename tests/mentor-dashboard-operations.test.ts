@@ -78,7 +78,7 @@ test('mentor navigation and operational tables expose the requested real-data in
   assert.match(client, /data-testid="mentor-mentees-table"/)
   assert.match(client, /data-testid="mentor-history-table"/)
   assert.match(client, /<dialog/)
-  assert.match(client, /Join Meeting/)
+  assert.match(client, /Join Zoom/)
   assert.match(client, /Akun dan profil publik mentor/)
   assert.match(client, /ProfileForm/)
 })

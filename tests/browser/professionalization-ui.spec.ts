@@ -244,7 +244,7 @@ test('mentee competition renders empty form, persists to read-only, and supports
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expectNoDocumentOverflow(page)
-  await expect(page.locator('.mentoring-session-card')).toHaveCount(3)
+  await expect(page.locator('[data-testid="mentee-mentoring-session-table"]')).toHaveCount(1)
 })
 
 test('admin Kelola Sesi uses one primary dialog scroll region with a long session document', async ({ page }) => {
@@ -311,3 +311,20 @@ for (const role of roleHistory) {
     await expectNoDocumentOverflow(page)
   })
 }
+
+
+test('topbar notification bell shows unread only while history keeps read records', async ({ page }) => {
+  await stubNotifications(page)
+  await stubAdminCommerce(page)
+  await page.setViewportSize({ width: 1280, height: 850 })
+  await page.goto('http://localhost:3001/admin')
+
+  await page.getByRole('button', { name: 'Buka notifikasi' }).click()
+  const popover = page.getByRole('dialog', { name: 'Notifikasi' })
+  await expect(popover.getByText('Pembayaran berhasil', { exact: true })).toBeVisible()
+  await expect(popover.getByText('Jadwal mentoring diperbarui', { exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Notifikasi', exact: true }).click()
+  await expect(page.getByText('Pembayaran berhasil', { exact: true })).toBeVisible()
+  await expect(page.getByText('Jadwal mentoring diperbarui', { exact: true })).toBeVisible()
+})

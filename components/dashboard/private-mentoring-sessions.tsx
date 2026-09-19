@@ -43,7 +43,7 @@ function supportHref(session:PrivateMentoringSessionView){
 }
 function canEditTopic(session:PrivateMentoringSessionView){
   if(session.status==='completed'||session.status==='cancelled')return false
-  if(session.status==='scheduled'&&session.scheduledStartAt)return new Date(session.scheduledStartAt).getTime()>Date.now()
+  if(session.scheduledStartAt&&session.status==='scheduled')return new Date(session.scheduledStartAt).getTime()>Date.now()
   return true
 }
 function shortId(id:string){return '…'+id.slice(-8)}

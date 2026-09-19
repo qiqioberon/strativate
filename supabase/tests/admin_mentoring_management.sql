@@ -68,6 +68,11 @@ select test_admin_mentoring_management.assert(
   (select count(*)=3 from public.get_admin_private_mentoring_enrollment_sessions('98400000-0000-0000-0000-000000000001')),
   'modal detail projection returns every session for one enrollment'
 );
+select test_admin_mentoring_management.assert(
+  (select count(*)=1 and max(enrollment_id)='98400000-0000-0000-0000-000000000001'::uuid
+   from public.list_admin_private_mentoring_enrollments_page(p_query=>'98500000-0000-0000-0000-000000000003')),
+  'canonical session UUID search resolves the parent enrollment'
+);
 
 reset role;
 insert into public.mentor_invites(email, invited_by, status, tier_id, created_at) values
