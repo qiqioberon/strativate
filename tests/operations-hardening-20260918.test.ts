@@ -105,7 +105,7 @@ test('mentoring operations require confirmation and expose undo without alternat
  assert.match(admin,/recordingStatus/)
  assert.match(user,/Mentoring Saya/)
  assert.match(user,/Competition \/ bidang lomba/)
- assert.match(user,/Join Meeting/)
+ assert.match(user,/Join Zoom/)
 })
 
 test('first-time Calendar onboarding is optional and preserves dashboard reconnect path',()=>{

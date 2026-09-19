@@ -88,11 +88,13 @@ test('meeting and recording lifecycle events remain handled with webhook dedupli
 
 test('admin UI labels Zoom states human-readably and manual reset returns to Zoom',()=>{
  const ui=read('components/admin/private-mentoring-session-operations.tsx')
+ const labels=ui+read('lib/operations/provider-errors.ts')
  const sync=read('lib/google-calendar/sync.ts')
- assert.match(ui,/state\.meetingProvider==='zoom'\?'Zoom':'Zoom \(pending\)'/)
- for(const label of ['Ready','Synced','Expected','Processing','Available','Unavailable']) assert.ok(ui.includes(label),label)
- assert.match(ui,/Retry Zoom \+ Calendar sync/)
- assert.match(ui,/Reset ke Zoom link/)
+ assert.match(ui,/state\.meetingProvider==='zoom'\?'Zoom':'Zoom · menunggu sinkronisasi'/)
+ for(const label of ['Siap','Sedang diproses','Recording otomatis diminta','Recording tersedia','Recording tidak tersedia']) assert.ok(labels.includes(label),label)
+ assert.match(ui,/Sinkronkan ulang Zoom \+ Kalender/)
+ assert.match(ui,/Kembalikan ke Zoom/)
+ assert.match(ui,/Override link meeting/)
  assert.match(sync,/return manualMeetingUrl \|\| providerMeetingUrl/)
 })
 

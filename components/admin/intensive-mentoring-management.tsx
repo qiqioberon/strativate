@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Catalog tables/RPCs are intentionally accessed through the existing ungenerated Supabase boundary. */
 'use client'
 
 import { Minus, Pencil, Plus, Search, Trash2, X } from 'lucide-react'

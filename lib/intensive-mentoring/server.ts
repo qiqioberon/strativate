@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Catalog tables/RPCs are intentionally accessed through the existing ungenerated Supabase boundary. */
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
