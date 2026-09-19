@@ -4,8 +4,12 @@ test('homepage hero adds kinetic depth without changing its primary destinations
   await page.goto('/')
 
   const surface = page.getByTestId('hero-kinetic-surface')
+  const ambient = page.getByTestId('hero-ambient')
   const stage = page.getByTestId('hero-kinetic-stage')
   await expect(surface).toBeVisible()
+  await expect(ambient).toBeVisible()
+  await expect(ambient.locator('.marketing-hero-ambient__orb')).toHaveCount(2)
+  await expect(ambient.locator('.marketing-hero-ambient__orb').first()).toHaveCSS('animation-name', 'hero-ambient-orbit-orange')
   await expect(stage.locator('.marketing-hero-stage__node')).toHaveCount(3)
   await expect(page.getByTestId('hero-program-link')).toHaveAttribute('href', '/program')
   await expect(page.getByTestId('hero-mentor-link')).toHaveAttribute('href', '/mentor')
@@ -30,6 +34,7 @@ test('kinetic hero stays static when reduced motion is requested', async ({ page
   await page.goto('/')
 
   const stage = page.getByTestId('hero-kinetic-stage')
+  await expect(page.getByTestId('hero-ambient').locator('.marketing-hero-ambient__orb').first()).toHaveCSS('animation-name', 'none')
   const stageBox = await stage.boundingBox()
   if (!stageBox) throw new Error('Expected kinetic hero stage bounds')
   await page.mouse.move(stageBox.x + stageBox.width * .8, stageBox.y + stageBox.height * .25)
