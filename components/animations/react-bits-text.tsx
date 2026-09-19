@@ -47,7 +47,9 @@ export function SplitText({
         force3D: true,
       },
     )
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [delay, duration, text])
 
   return (
@@ -105,7 +107,9 @@ export function BlurText({
         force3D: true,
       },
     )
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [delay, duration, text])
 
   return (
@@ -165,7 +169,9 @@ export function TextType({
       yoyo: true,
       ease: 'power2.inOut',
     })
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [reducedMotion])
 
   useEffect(() => {
