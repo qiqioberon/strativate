@@ -6,7 +6,7 @@ const read=(path:string)=>readFileSync(path,'utf8')
 test('profile avatar storage stays private and owner-scoped',()=>{
  const sql=read('supabase/migrations/202609200004_profile_avatar_storage.sql')
  assert.match(sql,/profile-avatars','profile-avatars',false/i)
- assert.match(sql,/storage\.foldername\(name\)\)\[1\]=auth\.uid\(\)::text/i)
+ assert.match(sql,/split_part\(name,'\/',1\)=auth\.uid\(\)::text/i)
  assert.match(sql,/avatar_path text/i)
  assert.match(sql,/legacy fallback/i)
 })
