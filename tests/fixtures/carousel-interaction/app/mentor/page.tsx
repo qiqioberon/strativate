@@ -36,7 +36,7 @@ const dashboardData: MentorDashboardData = {
       scheduled_end_at: '2026-09-17T03:00:00.000Z',
       mentor_timezone: 'Asia/Jakarta',
       duration_minutes: 60,
-      meeting_url: 'https://meet.google.com/fixture-room',
+      meeting_url: 'https://zoom.us/j/123456789',
       google_event_id: 'fixture-event-1',
       google_ical_uid: 'fixture-ical-1',
       google_sync_status: 'synced',

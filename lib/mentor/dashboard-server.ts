@@ -36,9 +36,12 @@ export async function loadMentorDashboardData(mentorId: string, mentor: MentorPr
   const currentWeek = weeks.find(week => week.kind === 'current')
   const nextWeek = weeks.find(week => week.kind === 'next')
   const availabilityRows = availabilityResult.error ? [] : availabilityResult.data || []
+  const sessions = sessionResult.error ? [] : (sessionResult.data || []).map(session =>
+    session.status === 'scheduled' ? session : { ...session, meeting_url:null }
+  )
 
   return {
-    sessions: sessionResult.error ? [] : sessionResult.data || [],
+    sessions,
     tierName: tierResult.error ? null : tierResult.data?.name || null,
     timezone: mentor.timezone,
     isActive: mentor.is_active,

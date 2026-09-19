@@ -10,7 +10,7 @@ export type SessionSyncInput = {
   manualMeetingUrl: string | null
   providerMeetingUrl?: string | null
 }
-export type UpsertEventInput = Omit<SessionSyncInput, 'manualMeetingUrl' | 'providerMeetingUrl'> & { eventId: string; createEvent: boolean; createConference: boolean }
+export type UpsertEventInput = Omit<SessionSyncInput, 'manualMeetingUrl' | 'providerMeetingUrl'> & { eventId: string; createEvent: boolean }
 export type DeleteEventInput = { calendarId: string; eventId: string }
 export type ProviderEvent = { eventId: string; iCalUID: string | null; meetingUrl: string | null }
 export type EventUpsertProvider = { upsertEvent(input: UpsertEventInput): Promise<ProviderEvent> }
@@ -47,9 +47,8 @@ export async function syncSessionEvent(input: SessionSyncInput, provider: EventU
     end: input.end,
     attendees: [...new Set(input.attendees.filter(Boolean))],
     createEvent: !input.eventId,
-    createConference: false,
   })
-  const providerMeetingUrl = result.meetingUrl || input.providerMeetingUrl || null
+  const providerMeetingUrl = input.providerMeetingUrl || null
   return { ...result, meetingUrl: providerMeetingUrl, effectiveMeetingUrl: resolveMeetingUrl(providerMeetingUrl, input.manualMeetingUrl) }
 }
 

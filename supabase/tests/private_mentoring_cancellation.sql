@@ -81,7 +81,7 @@ set local role service_role;
 select set_config('request.jwt.claim.role', 'service_role', true);
 update public.private_mentoring_session_calendar_integrations
 set google_event_id = 'cancel-event-1',
-    provider_meeting_url = 'https://meet.google.com/cancel-test',
+    provider_meeting_url = 'https://zoom.us/j/123456789',
     sync_status = 'synced'
 where session_id = '99500000-0000-0000-0000-000000000001';
 reset role;

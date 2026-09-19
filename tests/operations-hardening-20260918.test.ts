@@ -31,13 +31,14 @@ test('Zoom provider is server-only, uses account credentials, cloud recording, a
  assert.ok(claim>=0&&create>claim,'DB idempotency claim must happen before Zoom create call')
 })
 
-test('Google Calendar creates events independently from conference creation and preserves provider URL',()=>{
+test('Google Calendar creates events without conferencing and preserves the Zoom provider URL',()=>{
  const sync=read('lib/google-calendar/sync.ts')
  const server=read('lib/google-calendar/server.ts')
  assert.match(sync,/createEvent:\s*!input\.eventId/)
- assert.match(sync,/createConference:\s*false/)
+ assert.doesNotMatch(sync,/createConference|conferenceData/)
  assert.match(server,/if \(input\.createEvent\)/)
- assert.match(server,/result\.meetingUrl \|\| context\.providerMeetingUrl/)
+ assert.doesNotMatch(server,/createConference|conferenceData|hangoutLink|hangoutsMeet/)
+ assert.match(server,/const persistedProviderMeetingUrl = context\.providerMeetingUrl/)
  assert.match(server,/Meeting:/)
 })
 

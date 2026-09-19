@@ -1,6 +1,6 @@
-# Zoom Server-to-Server OAuth setup
+# Zoom + Google Calendar mentoring setup
 
-New Strativate mentoring sessions use **Zoom** as the mandatory video provider. Google Calendar remains the scheduling/free-busy/event provider. Google Meet is legacy-only for historical sessions.
+Strativate uses **Zoom as the sole video-meeting provider for mentoring**. Google Calendar remains enabled for OAuth, free-busy availability, and canonical event create/update/delete sync. Google Calendar must never create conferencing for a mentoring event, and Google Meet is unsupported as an active mentoring provider.
 
 ## Zoom app
 
@@ -16,7 +16,7 @@ ZOOM_DEFAULT_HOST_USER_ID=...
 ZOOM_WEBHOOK_SECRET_TOKEN=...
 ```
 
-Never prefix Zoom credentials with `NEXT_PUBLIC_`.
+Never prefix Zoom credentials with `NEXT_PUBLIC_`. Missing configuration reports the missing variable name without exposing its value.
 
 ## Required Zoom permissions
 
@@ -25,47 +25,44 @@ For an account-level Server-to-Server app, grant the current granular scopes req
 - `meeting:write:meeting:admin` — create/update/delete meetings for the configured account host.
 - `cloud_recording:read:recording:admin` — receive/use cloud-recording completion metadata for account meetings.
 
-If the Zoom app uses classic scopes instead of granular scopes, use the equivalent account-level meeting write and recording read permissions offered by the Zoom Marketplace UI.
+If the Zoom app uses classic scopes instead of granular scopes, use the equivalent account-level meeting write and recording read permissions offered by Zoom Marketplace.
 
-The configured `ZOOM_DEFAULT_HOST_USER_ID` must be a host allowed to create the meeting and must have the license/settings required for Cloud Recording.
+The configured `ZOOM_DEFAULT_HOST_USER_ID` must be a host allowed to create meetings and must have the license/settings required for Cloud Recording.
 
 ## Automatic recording
 
-Strativate requests:
+Strativate requests `settings.auto_recording = "cloud"`. If Zoom rejects cloud recording because the host/account does not support it, Strativate records recording as unavailable and may create the meeting without automatic recording rather than reporting false success.
 
-`settings.auto_recording = "cloud"`
-
-If Zoom rejects cloud recording because the configured host/account does not support it, Strativate records the recording state as `unavailable` with an actionable error. It may then create the meeting without automatic recording rather than reporting a fake recording success.
-
-Recording files/download credentials are not exposed to mentees by default. Only sanitized metadata needed for future permission handling is persisted.
+Recording lifecycle is tracked as `expected → processing → available`, with `failed` or `unavailable` handled explicitly.
 
 ## Webhook
 
-Configure the Zoom event subscription endpoint:
+Production event subscription endpoint:
 
-`https://<your-domain>/api/webhooks/zoom`
+`https://strativate.vercel.app/api/webhooks/zoom`
 
-Subscribe to the relevant meeting lifecycle and cloud-recording events, including:
+Subscribe to the meeting lifecycle and cloud-recording events available to the account/app, including:
 
-- meeting started;
-- meeting ended;
-- recording completed;
-- recording processing/failure events when offered by the account/app.
+- `meeting.started`
+- `meeting.ended`
+- `recording.completed`
+- `recording.failed`
+- `recording.processing_failed` when offered by Zoom
 
-The endpoint:
+The endpoint handles `endpoint.url_validation` before normal signature verification or database access. Its `encryptedToken` is HMAC-SHA256 of Zoom's `plainToken` using `ZOOM_WEBHOOK_SECRET_TOKEN`, hex encoded.
 
-- handles Zoom endpoint URL validation;
-- verifies `x-zm-request-timestamp` and `x-zm-signature`;
-- rejects stale/forged requests;
-- deduplicates retries before mutating provider/recording state.
+Normal webhook events verify `x-zm-request-timestamp` and `x-zm-signature`, reject stale requests, and deduplicate retries before state changes. Strativate does **not** require Zoom's optional Authentication Header setting for this endpoint; authenticity is verified with Zoom signature headers and `ZOOM_WEBHOOK_SECRET_TOKEN`.
 
 ## Provider lifecycle
 
-New scheduling uses the existing `private_mentoring_session_calendar_integrations` row as the single source of provider identity.
+- Create: save DB schedule → idempotent DB claim → create Zoom → persist meeting ID/join URL → create/update Google Calendar event.
+- Retry: reuse an existing Zoom meeting ID; do not create a second meeting.
+- Reschedule: PATCH the same Zoom meeting, then PATCH the same Google Calendar event.
+- Cancel: delete/cancel Zoom and reconcile the existing Google event independently.
+- Manual emergency override: `manual_meeting_url ?? provider_meeting_url`; the provider remains Zoom and resetting the override returns to the Zoom URL.
+- Legacy upcoming/scheduled Google Meet rows: normalize to Zoom-pending while preserving the existing Google Calendar event identity, then create/reconcile Zoom and update that same event.
+- Historical completed/cancelled Google Meet rows: retain old provider URL data only for audit/history, normalize the active provider to none, expose no active meeting URL, and never create a Zoom meeting retroactively.
 
-- Create: DB claim → Zoom create → persist meeting ID/join URL → Google event sync.
-- Retry: existing Zoom meeting ID is reused; no second meeting is created.
-- Reschedule: PATCH the existing Zoom meeting, then update the existing Google event.
-- Cancel: delete/cancel the Zoom meeting and reconcile the Google event independently.
-- Manual override: `manual_meeting_url ?? provider_meeting_url`; reset returns to provider URL.
-- Historical Google Meet: preserved and never auto-converted to Zoom.
+## Google Calendar boundary
+
+Google Calendar remains responsible for OAuth, free-busy, availability/conflict checks, and event create/update/delete sync. Event descriptions contain the effective Zoom/manual override URL. Strativate does not request `conferenceData`, read a Google conference link as the mentoring provider, or fall back to Google Meet.

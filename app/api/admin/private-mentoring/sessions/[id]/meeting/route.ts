@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireAccount } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { setManualMeetingUrl, syncPrivateMentoringSession } from '@/lib/google-calendar/server'
@@ -9,20 +10,22 @@ async function requireAdmin(){
  return account
 }
 async function state(sessionId:string){
- const db=createAdminClient() as any
+ const db=createAdminClient() as unknown as SupabaseClient
  const {data,error}=await db.from('private_mentoring_session_calendar_integrations')
   .select('session_id,meeting_provider,provider_meeting_id,provider_meeting_url,manual_meeting_url,provider_sync_status,provider_sync_error,recording_status,recording_error,sync_status,sync_error')
   .eq('session_id',sessionId).maybeSingle()
  if(error)throw new Error('Meeting state belum dapat dimuat.')
  const session=await db.from('private_mentoring_sessions').select('status').eq('id',sessionId).maybeSingle()
+ const status=session.data?.status??'unknown'
+ const historical=status==='completed'||status==='cancelled'
  return{
   sessionId,
-  status:session.data?.status??'unknown',
-  meetingProvider:data?.meeting_provider??null,
+  status,
+  meetingProvider:historical?null:(data?.meeting_provider??null),
   providerMeetingId:data?.provider_meeting_id??null,
-  providerMeetingUrl:data?.provider_meeting_url??null,
-  manualMeetingUrl:data?.manual_meeting_url??null,
-  effectiveMeetingUrl:session.data?.status==='cancelled'?null:(data?.manual_meeting_url??data?.provider_meeting_url??null),
+  providerMeetingUrl:historical?null:(data?.provider_meeting_url??null),
+  manualMeetingUrl:historical?null:(data?.manual_meeting_url??null),
+  effectiveMeetingUrl:historical?null:(data?.manual_meeting_url??data?.provider_meeting_url??null),
   providerSyncStatus:data?.provider_sync_status??'pending',
   providerSyncError:data?.provider_sync_error??null,
   calendarSyncStatus:data?.sync_status??'pending',
@@ -42,6 +45,8 @@ export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}
  if(!account)return NextResponse.json({error:'Forbidden'},{status:403})
  const{id}=await params
  try{
+  const current=await state(id)
+  if(current.status==='completed'||current.status==='cancelled')return NextResponse.json({error:'Historical sessions cannot change the active meeting override.'},{status:409})
   const body=await request.json() as{url?:unknown}
   if(body.url!==null&&typeof body.url!=='string')return NextResponse.json({error:'Meeting URL tidak valid.'},{status:400})
   await setManualMeetingUrl(id,body.url as string|null)

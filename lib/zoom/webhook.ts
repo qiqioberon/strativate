@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 
 function secret() {
   const value = process.env.ZOOM_WEBHOOK_SECRET_TOKEN
-  if (!value) throw new Error('Zoom webhook secret is not configured.')
+  if (!value) throw new Error('Zoom webhook validation is not configured. Missing: ZOOM_WEBHOOK_SECRET_TOKEN')
   return value
 }
 

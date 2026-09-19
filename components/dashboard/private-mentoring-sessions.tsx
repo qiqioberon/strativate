@@ -30,8 +30,7 @@ function topicStatus(status:PrivateMentoringSessionView['topicStatus']){
 function meetingProvider(url:string|null){
   if(!url)return'Belum tersedia'
   if(/zoom\./i.test(url))return'Zoom'
-  if(/meet\.google/i.test(url))return'Google Meet (legacy)'
-  return'Manual / custom'
+  return'Manual override'
 }
 function supportHref(session:PrivateMentoringSessionView){
   const when=session.scheduledStartAt
@@ -168,7 +167,7 @@ export function PrivateMentoringSessions({sessions,sessionFocuses}:{sessions:Pri
                 <button className="button button-outline" type="button" disabled={busyId===session.sessionId} onClick={()=>void submitTopic(session)}>{session.topicStatus==='confirmed'?'Ajukan perubahan topik':'Kirim untuk review'}</button>
               </div>:null}
               <div className="mentoring-session-card__meta"><span><UserRound aria-hidden="true"/>{session.mentorName??(session.primaryMentorName?'Mentor utama: '+session.primaryMentorName:'Mentor menunggu penugasan admin')}</span><span><CalendarDays aria-hidden="true"/>{session.scheduledStartAt?new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:session.mentorTimezone||undefined}).format(new Date(session.scheduledStartAt)):'Jadwal menunggu admin'}</span><span>{session.status==='completed'?<CheckCircle2 aria-hidden="true"/>:<Clock3 aria-hidden="true"/>}{status.label}</span></div>
-              <div className="button-row mentoring-session-card__actions"><button className="button button-outline" type="button" onClick={()=>setSelected(session)}><Eye aria-hidden="true"/>Lihat detail</button>{session.scheduledStartAt&&session.status!=='cancelled'&&session.meetingUrl?<a className="button button-primary" href={session.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true"/>Join Meeting</a>:null}<a className="button button-outline" href={supportHref(session)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true"/>Hubungi Admin</a></div>
+              <div className="button-row mentoring-session-card__actions"><button className="button button-outline" type="button" onClick={()=>setSelected(session)}><Eye aria-hidden="true"/>Lihat detail</button>{session.scheduledStartAt&&session.status==='scheduled'&&session.meetingUrl?<a className="button button-primary" href={session.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true"/>Join Meeting</a>:null}<a className="button button-outline" href={supportHref(session)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true"/>Hubungi Admin</a></div>
             </div>
           </article>
         })}</div>
@@ -190,7 +189,7 @@ export function PrivateMentoringSessions({sessions,sessionFocuses}:{sessions:Pri
           <div><dt>Timezone</dt><dd>{selected.mentorTimezone||'Timezone lokal'}</dd></div>
           <div><dt>Meeting provider</dt><dd>{meetingProvider(selected.meetingUrl)}</dd></div>
         </dl>
-        <div className="calendar-dialog__actions calendar-dialog__actions--wrap">{selected.status!=='cancelled'&&selected.meetingUrl?<a className="button button-primary" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink/>Join Meeting</a>:null}<a className="button button-outline" href={supportHref(selected)} target="_blank" rel="noopener noreferrer"><MessageCircle/>Hubungi Admin</a></div>
+        <div className="calendar-dialog__actions calendar-dialog__actions--wrap">{selected.status==='scheduled'&&selected.meetingUrl?<a className="button button-primary" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink/>Join Meeting</a>:null}<a className="button button-outline" href={supportHref(selected)} target="_blank" rel="noopener noreferrer"><MessageCircle/>Hubungi Admin</a></div>
       </>:null}
     </dialog>
   </div>

@@ -32,8 +32,8 @@ function calendarPayload(role: 'admin' | 'mentor' | 'mentee', connected = false)
       menteeEmail: 'yuta@example.test',
       timezone: 'Asia/Jakarta',
       durationMinutes: 75,
-      meetingUrl: 'https://meet.google.com/abc-defg-hij',
-      providerMeetingUrl: 'https://meet.google.com/abc-defg-hij',
+      meetingUrl: 'https://zoom.us/j/987654321',
+      providerMeetingUrl: 'https://zoom.us/j/987654321',
       manualMeetingUrl: null,
       googleSyncStatus: 'synced',
       googleSyncError: null,
@@ -502,7 +502,7 @@ test('mentee calendar keeps Strativate schedule read-only with provider-neutral 
   await page.locator('.calendar-event.strativate').first().click()
 
   const detail = page.locator('dialog.calendar-dialog:not(.schedule-dialog)')
-  await expect(detail.getByRole('link', { name: 'Join Meeting' })).toHaveAttribute('href', 'https://meet.google.com/abc-defg-hij')
+  await expect(detail.getByRole('link', { name: 'Join Meeting' })).toHaveAttribute('href', 'https://zoom.us/j/987654321')
   await expect(detail.getByRole('link', { name: 'Hubungi Admin via WhatsApp' })).toBeVisible()
   await expect(detail.getByRole('button', { name: 'Reschedule' })).toHaveCount(0)
   await expectDialogInViewport(page, detail)

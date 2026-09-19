@@ -24,6 +24,32 @@ type MeetingState={
 }
 type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 
+function providerLabel(state:MeetingState){
+  if(state.status==='completed'||state.status==='cancelled')return'Inactive'
+  return state.meetingProvider==='zoom'?'Zoom':'Zoom (pending)'
+}
+function syncLabel(value:string){
+  if(value==='ready')return'Ready'
+  if(value==='synced')return'Synced'
+  if(value==='creating')return'Creating'
+  if(value==='cancelled')return'Cancelled'
+  if(value==='failed')return'Failed'
+  return'Pending'
+}
+function recordingLabel(value:string){
+  if(value==='expected')return'Expected'
+  if(value==='processing')return'Processing'
+  if(value==='available')return'Available'
+  if(value==='unavailable')return'Unavailable'
+  if(value==='failed')return'Failed'
+  if(value==='not_applicable')return'Not applicable'
+  return value.replaceAll('_',' ')
+}
+function effectiveMeetingLabel(state:MeetingState){
+  if(!state.effectiveMeetingUrl)return'Belum tersedia'
+  return state.manualMeetingUrl?'Manual override':'Zoom'
+}
+
 export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
@@ -126,17 +152,17 @@ export function AdminSessionOperations({
   return <section className="meeting-override">
     <div className="ops-section-heading"><div><p className="kicker">Operasi sesi</p><h4>Meeting, provider, recording & completion</h4><p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p></div></div>
     {state?<dl className="calendar-detail-list">
-      <div><dt>Provider</dt><dd>{state.meetingProvider??'Belum dibuat'}</dd></div>
+      <div><dt>Provider</dt><dd>{providerLabel(state)}</dd></div>
       <div><dt>Provider meeting ID</dt><dd>{state.providerMeetingId??'—'}</dd></div>
-      <div><dt>Provider sync</dt><dd>{state.providerSyncStatus}{state.providerSyncError?' · '+state.providerSyncError:''}</dd></div>
-      <div><dt>Calendar sync</dt><dd>{state.calendarSyncStatus}{state.calendarSyncError?' · '+state.calendarSyncError:''}</dd></div>
-      <div><dt>Recording</dt><dd>{state.recordingStatus}{state.recordingError?' · '+state.recordingError:''}</dd></div>
-      <div><dt>Effective meeting link</dt><dd>{state.effectiveMeetingUrl?<a href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer">Buka meeting <ExternalLink aria-hidden="true"/></a>:'Belum tersedia'}</dd></div>
+      <div><dt>Provider sync</dt><dd>{syncLabel(state.providerSyncStatus)}{state.providerSyncError?' · '+state.providerSyncError:''}</dd></div>
+      <div><dt>Calendar sync</dt><dd>{syncLabel(state.calendarSyncStatus)}{state.calendarSyncError?' · '+state.calendarSyncError:''}</dd></div>
+      <div><dt>Recording</dt><dd>{recordingLabel(state.recordingStatus)}{state.recordingError?' · '+state.recordingError:''}</dd></div>
+      <div><dt>Effective meeting link</dt><dd>{state.effectiveMeetingUrl?<a href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer">{effectiveMeetingLabel(state)} <ExternalLink aria-hidden="true"/></a>:'Belum tersedia'}</dd></div>
     </dl>:<p className="muted">Memuat meeting state…</p>}
-    <label className="ops-field"><span>Manual meeting override</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label>
+    {status==='scheduled'?<label className="ops-field"><span>Manual meeting override</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label>:null}
     <div className="button-row">
-      <button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>void updateMeeting()}><Save aria-hidden="true"/>{manualUrl.trim()?'Simpan override':'Reset ke provider link'}</button>
-      <button className="button button-outline" type="button" disabled={busy==='sync'} onClick={()=>void retrySync()}><RefreshCw aria-hidden="true"/>Retry Zoom + Calendar sync</button>
+      {status==='scheduled'?<button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>void updateMeeting()}><Save aria-hidden="true"/>{manualUrl.trim()?'Simpan override':'Reset ke Zoom link'}</button>:null}
+      {status==='scheduled'?<button className="button button-outline" type="button" disabled={busy==='sync'} onClick={()=>void retrySync()}><RefreshCw aria-hidden="true"/>Retry Zoom + Calendar sync</button>:null}
       {status==='scheduled'?<button className="button button-primary" type="button" onClick={()=>confirmRef.current?.showModal()}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
       {status==='completed'?<button className="button button-outline" type="button" disabled={busy==='scheduled'} onClick={()=>void setStatus('scheduled')}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button>:null}
     </div>

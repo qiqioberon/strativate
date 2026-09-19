@@ -18,7 +18,7 @@ function fixture(overrides:any={}) {
  }
 }
 
-test('first sync creates one deterministic Calendar event without Google Meet and retry updates the same event',async()=>{
+test('first sync creates one deterministic Calendar event without conference creation and retry updates the same event',async()=>{
  const mod=await load();assert.ok(mod)
  const calls:any[]=[]
  const provider={upsertEvent:async(input:any)=>{calls.push(input);return{eventId:input.eventId,iCalUID:'ical-1',meetingUrl:null}}}
@@ -30,8 +30,8 @@ test('first sync creates one deterministic Calendar event without Google Meet an
  assert.equal(calls.length,2)
  assert.equal(calls[0].createEvent,true)
  assert.equal(calls[1].createEvent,false)
- assert.equal(calls[0].createConference,false)
- assert.equal(calls[1].createConference,false)
+ assert.equal('createConference' in calls[0],false)
+ assert.equal('createConference' in calls[1],false)
 })
 
 test('reschedule and mentor change patch same Calendar event identity and preserve Zoom URL',async()=>{
@@ -41,7 +41,7 @@ test('reschedule and mentor change patch same Calendar event identity and preser
  const result=await mod.syncSessionEvent(fixture({eventId:'fixed123',start:'2026-09-23T07:00:00.000Z',end:'2026-09-23T08:15:00.000Z',attendees:['mentee@example.com','mentor2@example.com']}),provider)
  assert.equal(calls[0].eventId,'fixed123')
  assert.equal(calls[0].createEvent,false)
- assert.equal(calls[0].createConference,false)
+ assert.equal('createConference' in calls[0],false)
  assert.deepEqual(calls[0].attendees,['mentee@example.com','mentor2@example.com'])
  assert.equal(result.effectiveMeetingUrl,'https://zoom.us/j/123456789')
 })
@@ -52,12 +52,12 @@ test('manual meeting override wins without replacing provider identity',async()=
  assert.equal(mod.resolveMeetingUrl('https://zoom.us/j/provider',null),'https://zoom.us/j/provider')
 })
 
-test('historical Google Meet provider URL remains valid when Calendar patch omits conference data',async()=>{
+test('Calendar response cannot resurrect a Google Meet URL over the Zoom provider URL',async()=>{
  const mod=await load();assert.ok(mod)
- const provider={upsertEvent:async(input:any)=>({eventId:input.eventId,iCalUID:'ical-legacy',meetingUrl:null})}
- const result=await mod.syncSessionEvent(fixture({eventId:'legacy123',providerMeetingUrl:'https://meet.google.com/keep-this'}),provider)
- assert.equal(result.meetingUrl,'https://meet.google.com/keep-this')
- assert.equal(result.effectiveMeetingUrl,'https://meet.google.com/keep-this')
+ const provider={upsertEvent:async(input:any)=>({eventId:input.eventId,iCalUID:'ical-legacy',meetingUrl:'https://meet.google.com/legacy-only'})}
+ const result=await mod.syncSessionEvent(fixture({eventId:'legacy123'}),provider)
+ assert.equal(result.meetingUrl,'https://zoom.us/j/123456789')
+ assert.equal(result.effectiveMeetingUrl,'https://zoom.us/j/123456789')
 })
 
 test('provider errors surface for caller to persist failed sync state',async()=>{
@@ -66,13 +66,14 @@ test('provider errors surface for caller to persist failed sync state',async()=>
  await assert.rejects(()=>mod.syncSessionEvent(fixture(),provider),/calendar unavailable/)
 })
 
-test('scheduled retry never asks Google to generate a conference even if provider URL is temporarily missing',async()=>{
+test('scheduled retry never asks Google to generate a conference when Zoom URL is temporarily missing',async()=>{
  const mod=await load();assert.ok(mod)
  const calls:any[]=[]
  const provider={upsertEvent:async(input:any)=>{calls.push(input);return{eventId:input.eventId,iCalUID:'ical-pending',meetingUrl:null}}}
- await mod.syncSessionEvent(fixture({eventId:'fixed123',providerMeetingUrl:null}),provider)
+ const result=await mod.syncSessionEvent(fixture({eventId:'fixed123',providerMeetingUrl:null}),provider)
  assert.equal(calls[0].createEvent,false)
- assert.equal(calls[0].createConference,false)
+ assert.equal('createConference' in calls[0],false)
+ assert.equal(result.meetingUrl,null)
 })
 
 test('Google cancellation URL targets exact calendar/event and sends attendee updates',async()=>{

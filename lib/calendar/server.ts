@@ -36,9 +36,9 @@ function strativateEvent(row: AnyRow, role: AccountShape['profile']['role'], acc
     personColor:colors.get(personId) ?? null,
     timezone:row.mentor_timezone ?? null,
     durationMinutes:row.duration_minutes ?? (start && end ? Math.round((new Date(end).getTime()-new Date(start).getTime())/60000) : null),
-    meetingUrl:row.meeting_url ?? null,
-    providerMeetingUrl:role === 'admin' ? row.provider_meeting_url ?? null : null,
-    manualMeetingUrl:role === 'admin' ? row.manual_meeting_url ?? null : null,
+    meetingUrl:row.status === 'scheduled' ? row.meeting_url ?? null : null,
+    providerMeetingUrl:role === 'admin' && row.status === 'scheduled' ? row.provider_meeting_url ?? null : null,
+    manualMeetingUrl:role === 'admin' && row.status === 'scheduled' ? row.manual_meeting_url ?? null : null,
     googleSyncStatus:row.google_sync_status ?? 'pending',
     googleSyncError:role === 'admin' ? row.google_sync_error ?? null : null,
   }

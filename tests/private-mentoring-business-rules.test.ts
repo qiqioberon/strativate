@@ -56,7 +56,7 @@ test('Calendar sync context uses resolved topic and existing sync implementation
   assert.match(sql,/'focusName',coalesce\(s\.resolved_topic,f\.name\)/i)
   assert.match(sql,/'eventId',ci\.google_event_id/i)
   assert.match(sync,/createEvent:\s*!input\.eventId/)
-  assert.match(sync,/createConference:\s*false/)
+  assert.doesNotMatch(sync,/createConference|conferenceData/)
   assert.match(server,/method:'PATCH'/)
   assert.match(sync,/eventId/i)
 })

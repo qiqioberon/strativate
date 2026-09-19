@@ -34,9 +34,8 @@ type ConnectionRow = {
 }
 type GoogleTokenResponse = { access_token?: string; refresh_token?: string; expires_in?: number; scope?: string; error?: string; error_description?: string }
 type GoogleEventApi = {
-  id: string; iCalUID?: string; summary?: string; htmlLink?: string; hangoutLink?: string;
+  id: string; iCalUID?: string; summary?: string; htmlLink?: string;
   start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string };
-  conferenceData?: { entryPoints?: Array<{ entryPointType?: string; uri?: string }>; createRequest?: { status?: { statusCode?: string } } };
   extendedProperties?: { private?: Record<string,string> }
 }
 
@@ -176,9 +175,6 @@ export async function getGoogleFreeBusy(userId: string, start: string, end: stri
   return result.calendars?.[row.calendar_id]?.busy ?? []
 }
 
-function meetingUrl(event: GoogleEventApi) {
-  return event.hangoutLink || event.conferenceData?.entryPoints?.find(entry => entry.entryPointType === 'video')?.uri || null
-}
 
 export class GoogleCalendarRestProvider implements CalendarProvider {
   constructor(private organizerUserId: string) {}
@@ -191,20 +187,19 @@ export class GoogleCalendarRestProvider implements CalendarProvider {
       attendees: input.attendees.map(email => ({email})),
       extendedProperties:{ private:{ strativateSessionId:input.sessionId } },
     }
-    if (input.createConference) body.conferenceData = { createRequest:{ requestId:`strativate-${input.sessionId}-${Date.now()}`, conferenceSolutionKey:{type:'hangoutsMeet'} } }
-    const query = new URLSearchParams({ conferenceDataVersion:'1', sendUpdates:'all' })
+    const query = new URLSearchParams({ sendUpdates:'all' })
     const base = `${CALENDAR_API}/calendars/${encodeURIComponent(input.calendarId)}/events`
     if (input.createEvent) {
       try {
         const created = await googleFetch<GoogleEventApi>(this.organizerUserId, `${base}?${query}`, {method:'POST',body:JSON.stringify(body)})
-        return {eventId:created.id,iCalUID:created.iCalUID ?? null,meetingUrl:meetingUrl(created)}
+        return {eventId:created.id,iCalUID:created.iCalUID ?? null,meetingUrl:null}
       } catch (error) {
         if (!(error instanceof Error) || !/409|already exists|duplicate/i.test(error.message)) throw error
       }
     }
     const { id: _id, ...patchBody } = body
     const updated = await googleFetch<GoogleEventApi>(this.organizerUserId, `${base}/${encodeURIComponent(input.eventId)}?${query}`, {method:'PATCH',body:JSON.stringify(patchBody)})
-    return {eventId:updated.id,iCalUID:updated.iCalUID ?? null,meetingUrl:meetingUrl(updated)}
+    return {eventId:updated.id,iCalUID:updated.iCalUID ?? null,meetingUrl:null}
   }
   async deleteEvent(input: DeleteEventInput) {
     try {
@@ -245,7 +240,7 @@ export async function syncPrivateMentoringSession(sessionId: string, currentAdmi
       await integration.update({organizer_user_id:organizerUserId,sync_status:'cancelled',sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)
       return {status:'cancelled' as const,meetingUrl:null,eventId:context.eventId}
     }
-    const persistedProviderMeetingUrl = result.meetingUrl || context.providerMeetingUrl
+    const persistedProviderMeetingUrl = context.providerMeetingUrl
     const effectiveMeetingUrl = context.manualMeetingUrl || persistedProviderMeetingUrl
     const syncStatus = effectiveMeetingUrl ? 'synced' : 'pending'
     await integration.update({organizer_user_id:organizerUserId,google_event_id:result.eventId,google_ical_uid:result.iCalUID,provider_meeting_url:persistedProviderMeetingUrl,sync_status:syncStatus,sync_error:null,last_synced_at:new Date().toISOString()}).eq('session_id',sessionId)

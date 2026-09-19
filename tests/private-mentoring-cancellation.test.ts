@@ -25,7 +25,7 @@ test('cancelled sessions stay historical but disappear from active calendar and 
   assert.match(calendar,/row\.status !== 'cancelled'/)
   const dashboard=read('components/dashboard/private-mentoring-sessions.tsx')
   assert.match(dashboard,/status\s*===?\s*'cancelled'[\s\S]{0,100}Dibatalkan/)
-  assert.match(dashboard,/scheduledStartAt[\s\S]{0,100}session\.status\s*!==?\s*'cancelled'/)
+  assert.match(dashboard,/scheduledStartAt[\s\S]{0,120}session\.status\s*===?\s*'scheduled'/)
 })
 
 test('Google provider deletes with sendUpdates all, treats 404 and 410 as converged, and retry dispatches on canonical status',()=>{

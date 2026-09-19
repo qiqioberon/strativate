@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHash } from 'node:crypto'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const ZOOM_API = 'https://api.zoom.us/v2'
@@ -24,15 +25,28 @@ type ZoomContext = {
 type ZoomMeeting = { id:number|string; join_url?:string; host_id?:string }
 let cachedToken:{value:string;expiresAt:number}|null=null
 
-function db(){ return createAdminClient() as any }
+function db(){ return createAdminClient() as unknown as SupabaseClient }
 
 function config(){
-  const accountId=process.env.ZOOM_ACCOUNT_ID
-  const clientId=process.env.ZOOM_CLIENT_ID
-  const clientSecret=process.env.ZOOM_CLIENT_SECRET
-  const host=process.env.ZOOM_DEFAULT_HOST_USER_ID
-  if(!accountId||!clientId||!clientSecret||!host) throw new Error('Zoom Server-to-Server OAuth is not configured.')
-  return {accountId,clientId,clientSecret,host}
+  const values={
+    accountId:process.env.ZOOM_ACCOUNT_ID,
+    clientId:process.env.ZOOM_CLIENT_ID,
+    clientSecret:process.env.ZOOM_CLIENT_SECRET,
+    host:process.env.ZOOM_DEFAULT_HOST_USER_ID,
+  }
+  const missing=[
+    ['ZOOM_ACCOUNT_ID',values.accountId],
+    ['ZOOM_CLIENT_ID',values.clientId],
+    ['ZOOM_CLIENT_SECRET',values.clientSecret],
+    ['ZOOM_DEFAULT_HOST_USER_ID',values.host],
+  ].filter(([,value])=>!value).map(([name])=>name)
+  if(missing.length)throw new Error(`Zoom Server-to-Server OAuth is not configured. Missing: ${missing.join(', ')}`)
+  return {
+    accountId:values.accountId!,
+    clientId:values.clientId!,
+    clientSecret:values.clientSecret!,
+    host:values.host!,
+  }
 }
 
 async function json<T>(response:Response):Promise<T>{
@@ -76,7 +90,7 @@ function durationMinutes(value:ZoomContext){
   return Math.max(1,Math.round((new Date(value.end).getTime()-new Date(value.start).getTime())/60000))
 }
 
-function meetingBody(value:ZoomContext,autoRecording:'cloud'|'none'){
+function meetingBody(value:ZoomContext,autoRecording?:'cloud'|'none'){
   if(!value.start)throw new Error('Session must be scheduled before Zoom can be created.')
   return {
     topic:`Strativate Private Mentoring — ${value.topic}`,
@@ -89,7 +103,7 @@ function meetingBody(value:ZoomContext,autoRecording:'cloud'|'none'){
       waiting_room:true,
       participant_video:true,
       host_video:true,
-      auto_recording:autoRecording,
+      ...(autoRecording?{auto_recording:autoRecording}:{}),
     },
   }
 }
@@ -111,30 +125,27 @@ async function store(sessionId:string,meeting:ZoomMeeting,recordingStatus:string
   if(result.error)throw new Error(result.error.message)
 }
 
-function legacy(value:ZoomContext){
-  return value.meetingProvider==='google_meet'||value.meetingProvider==='manual'
-}
-
 export async function reconcileZoomMeeting(sessionId:string){
   let value=await context(sessionId)
   if(value.status==='cancelled')return cancelZoomMeeting(sessionId)
-  if(legacy(value))return {status:'ready' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl,legacy:true}
-  if(!value.start||!value.end)return {status:'pending' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl,error:'Session is not scheduled.'}
+  if(value.status==='completed')return {status:'inactive' as const,sessionStatus:value.status,meetingId:value.providerMeetingId,meetingUrl:null}
+  if(!value.start||!value.end)return {status:'pending' as const,meetingId:value.providerMeetingId,meetingUrl:value.meetingProvider==='zoom'?value.providerMeetingUrl:null,error:'Session is not scheduled.'}
 
   const claim=await db().rpc('service_claim_zoom_meeting_creation',{p_session_id:sessionId})
   if(claim.error)throw new Error(claim.error.message)
-  if(claim.data==='legacy'){
+  if(claim.data==='inactive'){
     value=await context(sessionId)
-    return {status:'ready' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl,legacy:true}
+    return {status:'inactive' as const,sessionStatus:value.status,meetingId:value.providerMeetingId,meetingUrl:null}
   }
   if(claim.data==='wait'){
     value=await context(sessionId)
-    return {status:'pending' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl}
+    return {status:'pending' as const,meetingId:value.providerMeetingId,meetingUrl:value.meetingProvider==='zoom'?value.providerMeetingUrl:null}
   }
 
   try{
+    value=await context(sessionId)
     if(claim.data==='update'&&value.providerMeetingId){
-      await zoomFetch<void>(`/meetings/${encodeURIComponent(value.providerMeetingId)}`,{method:'PATCH',body:JSON.stringify(meetingBody(value,'cloud'))})
+      await zoomFetch<void>(`/meetings/${encodeURIComponent(value.providerMeetingId)}`,{method:'PATCH',body:JSON.stringify(meetingBody(value))})
       await mark(sessionId,'ready',null)
       value=await context(sessionId)
       return {status:'ready' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl}
@@ -158,15 +169,15 @@ export async function reconcileZoomMeeting(sessionId:string){
   }catch(error){
     const message=error instanceof Error?error.message:'Zoom meeting reconciliation failed.'
     await mark(sessionId,'failed',message)
-    return {status:'failed' as const,meetingId:value.providerMeetingId,meetingUrl:value.providerMeetingUrl,error:message}
+    return {status:'failed' as const,meetingId:value.providerMeetingId,meetingUrl:value.meetingProvider==='zoom'?value.providerMeetingUrl:null,error:message}
   }
 }
 
 export async function cancelZoomMeeting(sessionId:string){
   const value=await context(sessionId)
-  if(legacy(value)||!value.providerMeetingId){
-    if(!legacy(value))await mark(sessionId,'cancelled',null)
-    return {status:'cancelled' as const,meetingId:value.providerMeetingId,legacy:legacy(value)}
+  if(value.meetingProvider!=='zoom'||!value.providerMeetingId){
+    await mark(sessionId,'cancelled',null)
+    return {status:'cancelled' as const,meetingId:value.meetingProvider==='zoom'?value.providerMeetingId:null,meetingUrl:null}
   }
   try{
     try{
@@ -175,11 +186,11 @@ export async function cancelZoomMeeting(sessionId:string){
       if(!(error instanceof Error)||!/(status 404|status 400|does not exist|3001)/i.test(error.message))throw error
     }
     await mark(sessionId,'cancelled',null)
-    return {status:'cancelled' as const,meetingId:value.providerMeetingId}
+    return {status:'cancelled' as const,meetingId:value.providerMeetingId,meetingUrl:null}
   }catch(error){
     const message=error instanceof Error?error.message:'Zoom meeting cancellation failed.'
     await mark(sessionId,'failed',message)
-    return {status:'failed' as const,meetingId:value.providerMeetingId,error:message}
+    return {status:'failed' as const,meetingId:value.providerMeetingId,meetingUrl:null,error:message}
   }
 }
 
