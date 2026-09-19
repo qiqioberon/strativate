@@ -85,6 +85,56 @@
   display:grid;
   gap:7px;
 }
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) article.schedule-day > .button-row{
+  margin-top:16px;
+  margin-bottom:18px;
+  gap:9px;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) article.schedule-day > .meeting-override{
+  margin-top:0;
+  padding-top:18px;
+  border-top:1px solid #eee6df;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) article.schedule-day > .meeting-override .ops-section-heading{
+  margin-bottom:14px;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .mentoring-session-cancel-trigger{
+  border-color:#efb4b0;
+  background:#fff8f7;
+  color:#b42318;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .mentoring-session-cancel-trigger:hover:not(:disabled){
+  border-color:#d92d20;
+  background:#fff0ee;
+  color:#912018;
+}
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-dialog-flow:not(.schedule-dialog) .mentoring-session-cancel-trigger:focus-visible,
+.mentoring-session-cancel-confirm:focus-visible{
+  outline:3px solid rgb(217 45 32 / .16);
+  outline-offset:2px;
+}
+.mentoring-session-cancel-confirm{
+  min-height:38px;
+  padding:8px 14px;
+  border:1px solid #b42318;
+  border-radius:10px;
+  background:#b42318;
+  color:#fff;
+  font:inherit;
+  font-size:.75rem;
+  font-weight:800;
+  cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.mentoring-session-cancel-confirm:hover:not(:disabled){
+  border-color:#912018;
+  background:#912018;
+}
+.mentoring-session-cancel-confirm:disabled,
+.mentoring-session-cancel-trigger:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
 .competition-save-button{
   width:fit-content;
   display:inline-flex;
