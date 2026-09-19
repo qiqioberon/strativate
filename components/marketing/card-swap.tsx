@@ -148,7 +148,9 @@ export function CardSwap({
 
       const backSlot = slotFor(total - 1, cardDistance, verticalDistance, total)
       timeline.addLabel('return', `promote+=${config.move * config.returnDelay}`)
-      timeline.call(() => gsap.set(frontElement, { zIndex:backSlot.zIndex }), undefined, 'return')
+      timeline.call(() => {
+        gsap.set(frontElement, { zIndex:backSlot.zIndex })
+      }, undefined, 'return')
       timeline.to(frontElement, {
         x:backSlot.x,
         y:backSlot.y,
