@@ -23,6 +23,7 @@ export function QuestionStage({
   backLabel = 'Kembali',
   onBack,
   align = 'center',
+  interactionMotion = 'wrapper',
 }: {
   eyebrow?: string
   title: ReactNode
@@ -31,6 +32,7 @@ export function QuestionStage({
   backLabel?: string
   onBack?: () => void
   align?: 'center' | 'left'
+  interactionMotion?: 'wrapper' | 'list'
 }) {
   return <section className="onboarding-question" data-align={align}>
     <header className="onboarding-question__copy">
@@ -38,7 +40,7 @@ export function QuestionStage({
       <h1>{title}</h1>
       {description && <p className="onboarding-question__description">{description}</p>}
     </header>
-    <div className="onboarding-question__interaction">{children}</div>
+    <div className="onboarding-question__interaction" data-motion={interactionMotion}>{children}</div>
     {onBack && <button type="button" className="onboarding-back" onClick={onBack}>
       <ArrowLeft aria-hidden="true" size={16} /> {backLabel}
     </button>}

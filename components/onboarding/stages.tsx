@@ -268,7 +268,7 @@ export function ReferralStage({
   onOtherText: (value: string) => void
   onSubmitOther: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  return <QuestionStage eyebrow="Satu hal lagi" title={<>Kamu pertama kali menemukan<br className="onboarding-desktop-break" /> Strativate dari mana?</>} description="Pilih jawaban yang paling sesuai.">
+  return <QuestionStage eyebrow="Satu hal lagi" title={<>Kamu pertama kali menemukan<br className="onboarding-desktop-break" /> Strativate dari mana?</>} description="Pilih jawaban yang paling sesuai." interactionMotion="list">
     {referrals.length === 0 ? <InlineError message="Pilihan sumber informasi belum tersedia. Muat ulang halaman untuk mencoba lagi." /> : <div className="onboarding-answer-list" data-has-selection={selected && selected !== 'other' ? true : undefined}>
       {referrals.map(option => {
         const active = selected === option.id
@@ -317,7 +317,7 @@ export function InterestsStage({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
   const selectedNames = interests.filter(option => selectedIds.includes(option.id)).map(option => displayLabel(option.name))
-  return <QuestionStage eyebrow="Minatmu" title="Apa yang paling ingin kamu eksplor di Strativate?" description="Pilih satu atau lebih.">
+  return <QuestionStage eyebrow="Minatmu" title="Apa yang paling ingin kamu eksplor di Strativate?" description="Pilih satu atau lebih." interactionMotion="list">
     <form className="onboarding-focused-form" onSubmit={onSubmit}>
       {interests.length === 0 ? <InlineError message="Daftar minat belum tersedia. Muat ulang halaman untuk mencoba lagi." /> : <div className="onboarding-answer-list onboarding-answer-list--interests">
         {interests.map(option => {

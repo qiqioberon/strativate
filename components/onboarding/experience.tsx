@@ -30,7 +30,7 @@ function fullName(firstName: string, lastName: string) {
 }
 
 export function OnboardingExperience({ profile, mentee, names, referrals, interests, initialInterests, initialInstitution, revisionTarget = null, reviewReturnPath = null }: OnboardingExperienceProps) {
-  const { setScene, beginRoute } = useOnboardingMotion()
+  const { setScene, beginRoute, reducedMotion } = useOnboardingMotion()
   const savedStep = canonicalStep(mentee.onboarding_step)
   const revisionMode = Boolean(revisionTarget && mentee.onboarding_completed_at && reviewReturnPath)
   const [stage, setStage] = useState<VisualStage>(revisionTarget ? revisionVisualStage(revisionTarget) : initialVisualStage(savedStep))
@@ -85,6 +85,15 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     if (target.route) {
       setAcknowledgement(message)
       beginRoute(target.route)
+      return
+    }
+
+    if (reducedMotion) {
+      setAcknowledgement('')
+      setTransitionTarget(null)
+      setPhase('idle')
+      if (target.stage) setStage(target.stage)
+      window.scrollTo({ top: 0, behavior: 'auto' })
       return
     }
 
@@ -177,7 +186,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       await runCanonicalSave(1, result.data as Json)
       setPassword('')
       setConfirmation('')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Akunmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Profil akunmu sudah rapi.')
       else transitionTo({ stage: 'institution' }, 'Akunmu sudah siap.')
     } catch (submitError) {
       setError(formError(submitError, 'Akunmu belum tersimpan. Periksa data dan koneksi, lalu coba lagi.'))
@@ -222,7 +231,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       await runCanonicalSave(2, result.data as Json)
       if (forceEmptyCohort) setCohort('')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Informasi studimu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Detail studimu sudah diperbarui.')
       else transitionTo({ stage: 'referral' }, institutionName + ' sudah kami catat.')
     } catch (submitError) {
       setError(formError(submitError, 'Informasi studimu belum tersimpan. Coba lagi.'))
@@ -245,7 +254,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Minatmu sudah diperbarui.')
       else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Pilihanmu belum tersimpan. Coba lagi.'))
