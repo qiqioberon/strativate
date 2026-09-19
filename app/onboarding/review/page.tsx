@@ -1,9 +1,8 @@
-import Link from 'next/link'
 import { ArrowRight, CalendarDays, CheckCircle2, Pencil, School, Sparkles, UserRound, Waypoints } from 'lucide-react'
 import { redirect } from 'next/navigation'
-import { OnboardingShell } from '@/components/onboarding/shell'
 import { displayLabel } from '@/lib/labels'
 import { getAccount } from '@/lib/auth/server'
+import { OnboardingRouteLink, OnboardingRouteStage } from '@/components/onboarding/motion'
 import { getGoogleConnectionStatus } from '@/lib/google-calendar/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -49,7 +48,7 @@ export default async function OnboardingReviewPage() {
     ? displayLabel(referral.data.name)
     : account.mentee.referral_other_text || 'Belum tersedia'
 
-  return <OnboardingShell>
+  return <OnboardingRouteStage scene="review">
     <section className="onboarding-review">
       <div className="onboarding-review__intro">
         <div className="onboarding-review__symbol" aria-hidden="true"><CheckCircle2 size={28} /></div>
@@ -66,7 +65,7 @@ export default async function OnboardingReviewPage() {
             <strong>{name || account.profile.username || 'Profil Strativate'}</strong>
             <p>@{account.profile.username}</p>
           </div>
-          <Link href={reviseHref('identity')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</Link>
+          <OnboardingRouteLink href={reviseHref('identity')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</OnboardingRouteLink>
         </article>
 
         <article className="onboarding-review__item">
@@ -76,7 +75,7 @@ export default async function OnboardingReviewPage() {
             <strong>{institution.data?.name || 'Belum tersedia'}</strong>
             <p>{[account.mentee.major_or_faculty, account.mentee.cohort_year ? 'Angkatan ' + account.mentee.cohort_year : null].filter(Boolean).join(' · ') || 'Detail tambahan belum diisi'}</p>
           </div>
-          <Link href={reviseHref('institution')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</Link>
+          <OnboardingRouteLink href={reviseHref('institution')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</OnboardingRouteLink>
         </article>
 
         <article className="onboarding-review__item">
@@ -85,7 +84,7 @@ export default async function OnboardingReviewPage() {
             <small>Menemukan Strativate dari</small>
             <strong>{referralText}</strong>
           </div>
-          <Link href={reviseHref('referral')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</Link>
+          <OnboardingRouteLink href={reviseHref('referral')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</OnboardingRouteLink>
         </article>
 
         <article className="onboarding-review__item">
@@ -94,7 +93,7 @@ export default async function OnboardingReviewPage() {
             <small>Minat yang ingin dieksplor</small>
             <strong>{interests.length ? summarizeInterests(interests) : 'Belum tersedia'}</strong>
           </div>
-          <Link href={reviseHref('interests')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</Link>
+          <OnboardingRouteLink href={reviseHref('interests')} className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</OnboardingRouteLink>
         </article>
 
         <article className="onboarding-review__item onboarding-review__item--calendar">
@@ -104,24 +103,15 @@ export default async function OnboardingReviewPage() {
             <strong>{connection.connected ? 'Terhubung' : 'Tidak dihubungkan'}</strong>
             {connection.connected && connection.accountEmail ? <p>{connection.accountEmail}</p> : <p>Opsional, bisa diatur kapan saja.</p>}
           </div>
-          <Link href="/onboarding/calendar" className="onboarding-review__edit"><Pencil size={14} aria-hidden="true" /> Ubah</Link>
+          <span className="onboarding-review__meta">{connection.connected ? 'Kelola nanti di dashboard' : 'Bisa dihubungkan nanti dari dashboard'}</span>
         </article>
       </div>
 
-      <details className="onboarding-review__revision">
-        <summary><Pencil size={15} aria-hidden="true" /> Revisi data</summary>
-        <div className="onboarding-review__revision-links">
-          <Link href={reviseHref('identity')}>Profil akun</Link>
-          <Link href={reviseHref('institution')}>Tempat belajar</Link>
-          <Link href={reviseHref('referral')}>Sumber informasi</Link>
-          <Link href={reviseHref('interests')}>Minat</Link>
-        </div>
-      </details>
 
       <div className="onboarding-review__actions">
-        <Link className="onboarding-primary-action" href="/auth/continue">Semua sudah benar, masuk Strativate <ArrowRight aria-hidden="true" size={17} /></Link>
+        <OnboardingRouteLink className="onboarding-primary-action" href="/auth/continue" finalMessage={'Semua siap, ' + (account.profile.first_name || 'kamu') + '.'}>Semua sudah benar, masuk Strativate <ArrowRight aria-hidden="true" size={17} /></OnboardingRouteLink>
         <p>Kamu tetap bisa mengubah sebagian informasi dari dashboard nanti.</p>
       </div>
     </section>
-  </OnboardingShell>
+  </OnboardingRouteStage>
 }

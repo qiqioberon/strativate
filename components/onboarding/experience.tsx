@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, type AnimationEvent, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
 import { formError } from '@/lib/auth/errors'
 import { usernameError } from '@/lib/auth/rules'
 import { institutionPayload, interestPayload, profilePayload, referralPayload } from '@/lib/onboarding/rules'
@@ -21,6 +20,7 @@ import {
   WelcomeStage,
 } from './stages'
 import { OnboardingProgress } from './stage-frame'
+import { useOnboardingMotion } from './motion'
 import { atmosphereForStage, canonicalStep, initialVisualStage, revisionVisualStage, type OnboardingExperienceProps, type TransitionPhase, type VisualStage } from './types'
 
 type TransitionTarget = { stage: VisualStage; route?: never } | { route: string; stage?: never }
@@ -30,14 +30,13 @@ function fullName(firstName: string, lastName: string) {
 }
 
 export function OnboardingExperience({ profile, mentee, names, referrals, interests, initialInterests, initialInstitution, revisionTarget = null, reviewReturnPath = null }: OnboardingExperienceProps) {
-  const router = useRouter()
+  const { setScene, beginRoute, reducedMotion } = useOnboardingMotion()
   const savedStep = canonicalStep(mentee.onboarding_step)
   const revisionMode = Boolean(revisionTarget && mentee.onboarding_completed_at && reviewReturnPath)
   const [stage, setStage] = useState<VisualStage>(revisionTarget ? revisionVisualStage(revisionTarget) : initialVisualStage(savedStep))
   const [phase, setPhase] = useState<TransitionPhase>('idle')
   const [transitionTarget, setTransitionTarget] = useState<TransitionTarget | null>(null)
   const [acknowledgement, setAcknowledgement] = useState('')
-  const [reducedMotion, setReducedMotion] = useState(false)
   const stageRef = useRef<HTMLDivElement>(null)
   const busyRef = useRef(false)
 
@@ -63,13 +62,10 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
   const usernameValidation = username.length > 0 ? usernameError(username) || '' : ''
   const atmosphere = atmosphereForStage(stage)
 
+
   useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = () => setReducedMotion(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
+    setScene(stage)
+  }, [stage, setScene])
 
   useEffect(() => {
     if (stage === 'welcome') return
@@ -80,27 +76,24 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setError('')
   }
 
-  function swapImmediately(target: TransitionTarget) {
-    setAcknowledgement('')
-    setTransitionTarget(null)
-    setPhase('idle')
-    if (target.route) {
-      router.push(target.route)
-      return
-    }
-    if (!target.stage) return
-    setStage(target.stage)
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }
-
   function transitionTo(target: TransitionTarget, message = '') {
     if (phase !== 'idle') return
     clearInteractionError()
     const active = document.activeElement
     if (active instanceof HTMLElement && stageRef.current?.contains(active)) active.blur()
 
+    if (target.route) {
+      setAcknowledgement(message)
+      beginRoute(target.route)
+      return
+    }
+
     if (reducedMotion) {
-      swapImmediately(target)
+      setAcknowledgement('')
+      setTransitionTarget(null)
+      setPhase('idle')
+      if (target.stage) setStage(target.stage)
+      window.scrollTo({ top: 0, behavior: 'auto' })
       return
     }
 
@@ -112,10 +105,6 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
   function handleStageAnimationEnd(event: AnimationEvent<HTMLDivElement>) {
     if (event.currentTarget !== event.target) return
     if (phase === 'exit' && transitionTarget) {
-      if (transitionTarget.route) {
-        router.push(transitionTarget.route)
-        return
-      }
       if (!transitionTarget.stage) return
       setStage(transitionTarget.stage)
       setTransitionTarget(null)
@@ -197,7 +186,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       await runCanonicalSave(1, result.data as Json)
       setPassword('')
       setConfirmation('')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Akunmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Profil akunmu sudah rapi.')
       else transitionTo({ stage: 'institution' }, 'Akunmu sudah siap.')
     } catch (submitError) {
       setError(formError(submitError, 'Akunmu belum tersimpan. Periksa data dan koneksi, lalu coba lagi.'))
@@ -242,7 +231,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       await runCanonicalSave(2, result.data as Json)
       if (forceEmptyCohort) setCohort('')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Informasi studimu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Detail studimu sudah diperbarui.')
       else transitionTo({ stage: 'referral' }, institutionName + ' sudah kami catat.')
     } catch (submitError) {
       setError(formError(submitError, 'Informasi studimu belum tersimpan. Coba lagi.'))
@@ -265,7 +254,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Sumber informasimu sudah diperbarui.')
       else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Pilihanmu belum tersimpan. Coba lagi.'))
@@ -287,7 +276,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawaban sumbermu sudah diperbarui.')
       else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Jawabanmu belum tersimpan. Coba lagi.'))
@@ -317,7 +306,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       const data = await runCanonicalSave(4, result.data as Json)
       if (!data.onboarding_completed_at) throw new Error('Completion missing')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Pilihanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Minatmu sudah diperbarui.')
       else transitionTo({ route: '/onboarding/calendar' }, 'Sip, pilihanmu sudah tersimpan.')
     } catch (submitError) {
       setError(formError(submitError, 'Minatmu belum tersimpan. Coba lagi.'))
