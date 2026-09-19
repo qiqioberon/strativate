@@ -81,7 +81,42 @@
 }
 
 .closeButton {
-  flex: 0 0 auto;
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #dfe4e8;
+  border-radius: 12px;
+  background: #fff;
+  color: #1f2933;
+  line-height: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(17 24 39 / .04);
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.closeButton svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.closeButton:hover {
+  border-color: #cdd4da;
+  background: #f8fafb;
+  box-shadow: 0 4px 12px rgb(17 24 39 / .06);
+}
+
+.closeButton:active {
+  transform: scale(.96);
+}
+
+.closeButton:focus-visible {
+  outline: 3px solid rgb(255 122 0 / .18);
+  outline-offset: 2px;
 }
 
 .dialogBody {
