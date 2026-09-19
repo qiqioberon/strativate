@@ -224,7 +224,6 @@ export function TestimonialManagement() {
         competitionName: draft.competitionName,
         achievement: draft.achievement,
         testimonial: draft.testimonial,
-        storedParticipantLabel: selected?.participant_label ?? null,
         imagePath: uploadedPath,
         storedImagePath: selected?.image_path ?? null,
         isPublished: draft.isPublished,
@@ -341,7 +340,7 @@ export function TestimonialManagement() {
     const term = query.trim().toLocaleLowerCase('id-ID')
     if (!term) return items
     return items.filter(item => (
-      `${item.competition_name} ${item.achievement} ${item.participant_label ?? ''} ${item.testimonial}`
+      `${item.competition_name} ${item.achievement} ${item.testimonial}`
         .toLocaleLowerCase('id-ID')
         .includes(term)
     ))

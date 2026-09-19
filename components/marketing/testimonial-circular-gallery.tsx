@@ -605,7 +605,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         {selected ? (
           <div className="marketing-testimonial-dialog__panel">
             <div className="marketing-testimonial-dialog__media">
-              <Image src={selected.imageUrl} alt={selected.alt_text} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
+              <Image src={selected.imageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
             </div>
             <div className="marketing-testimonial-dialog__content">
               <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Tutup testimoni">
@@ -616,7 +616,6 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
               <strong className="marketing-testimonial-dialog__achievement">{selected.achievement}</strong>
               <Quote aria-hidden="true" size={25} />
               <blockquote>{selected.testimonial}</blockquote>
-              {selected.participant_label ? <p className="marketing-testimonial-dialog__participant">{selected.participant_label}</p> : null}
             </div>
           </div>
         ) : null}

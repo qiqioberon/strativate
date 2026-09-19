@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const migration = readFileSync(new URL('../supabase/migrations/202609200002_marketing_testimonials.sql', import.meta.url), 'utf8')
+const cleanupMigration = readFileSync(new URL('../supabase/migrations/202609200003_drop_testimonial_metadata.sql', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../supabase/seed/marketing_testimonials.sql', import.meta.url), 'utf8')
 
 test('testimonial migration creates public imagery plus admin-only content mutation', () => {
@@ -30,4 +31,12 @@ test('testimonial seed keeps competition names but localizes testimonial narrati
   assert.match(seed, /Mentor Strativate membawakan setiap sesi/)
   assert.doesNotMatch(seed, /We are truly grateful/)
   assert.doesNotMatch(seed, /We learned so much/)
+})
+
+
+test('testimonial metadata cleanup drops retired database fields without recreating seed data', () => {
+  assert.match(cleanupMigration, /drop column if exists participant_label/i)
+  assert.match(cleanupMigration, /drop column if exists alt_text/i)
+  assert.doesNotMatch(cleanupMigration, /insert into public\.marketing_testimonials/i)
+  assert.doesNotMatch(cleanupMigration, /update public\.marketing_testimonials/i)
 })
