@@ -10,11 +10,11 @@ const commerceCss = readFileSync('app/digital-product-commerce.css', 'utf8')
 const polishPath = 'app/marketing-mobile-product-polish.css'
 const polish = existsSync(polishPath) ? readFileSync(polishPath, 'utf8') : ''
 
-test('Digital Product homepage uses the React Bits Card Swap mechanic with five-second rotation', () => {
+test('Digital Product homepage uses the React Bits Card Swap mechanic with faster automatic rotation', () => {
   assert.match(cardSwap, /import gsap from 'gsap'/)
   assert.match(cardSwap, /y:\s*'\+=500'/)
   assert.match(cardSwap, /perspective|slotFor/)
-  assert.match(productSwap, /delay=\{5000\}/)
+  assert.match(productSwap, /delay=\{3200\}/)
   assert.match(productSwap, /pauseOnHover/)
   assert.match(productSwap, /href=\{\`\/produk-digital\/\$\{product\.slug\}\`\}/)
   assert.match(productSwap, /data-testid=\{\`digital-product-detail-link-\$\{product\.slug\}\`\}/)
