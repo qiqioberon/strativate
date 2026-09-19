@@ -52,14 +52,15 @@ test('mentee sidebar removes support and credit card while retaining canonical W
   assert.match(source,/dashboard-whatsapp-fab/)
 })
 
-test('mentor assignments expose canonical Session ID search and direct Zoom copy actions',()=>{
+test('mentor assignments keep scanning compact and move copy actions into Detail',()=>{
   const source=read('components/mentor/dashboard/mentor-assignments.tsx')
   const detail=read('components/mentor/dashboard/mentor-detail-dialogs.tsx')
   assert.match(source,/session\.session_id/)
   assert.match(source,/placeholder="Session ID/)
   assert.match(source,/Join|>Zoom</)
-  assert.match(source,/CopyTextButton/)
+  assert.doesNotMatch(source,/CopyTextButton/)
   assert.match(detail,/Session ID/)
+  assert.match(detail,/CopyTextButton/)
   assert.match(detail,/Join Zoom/)
 })
 

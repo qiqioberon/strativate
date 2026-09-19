@@ -115,6 +115,6 @@ test('historical runtime surfaces do not expose active meeting links',()=>{
  const meetingRoute=read('app/api/admin/private-mentoring/sessions/[id]/meeting/route.ts')
  assert.match(mentee,/row\.status==='scheduled'\?row\.meeting_url:null/)
  assert.match(calendar,/row\.status === 'scheduled' \? row\.meeting_url/)
- assert.match(mentor,/session\.status === 'scheduled' \? session : \{ \.\.\.session, meeting_url:null \}/)
+ assert.match(mentor,/meeting_url:session\.status==='scheduled'\?session\.meeting_url:null/)
  assert.match(meetingRoute,/const historical=status==='completed'\|\|status==='cancelled'/)
 })
