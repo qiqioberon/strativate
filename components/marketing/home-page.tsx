@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+import { OnboardingShapeGrid } from '@/components/onboarding/shape-grid-background'
 import { buttonVariants } from '@/components/ui/button'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { socialProof } from '@/lib/content/brand'
@@ -26,7 +27,7 @@ import { cn } from '@/lib/utils'
 import { AssetMedia } from './asset-media'
 import { DigitalProductCarousel } from './digital-product-carousel'
 import { HeroCarousel } from './hero-carousel'
-import { HeroAmbient, HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
+import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 
@@ -70,7 +71,7 @@ export function HomePage({
     <main>
       <section className="marketing-hero" data-reveal data-testid="homepage-hero-section">
         <HeroKineticSurface>
-          <HeroAmbient />
+          <OnboardingShapeGrid className="marketing-hero-shape-grid" testId="hero-shape-grid" />
           <div className="marketing-container marketing-hero__grid">
             <div className="marketing-hero__copy">
               <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
