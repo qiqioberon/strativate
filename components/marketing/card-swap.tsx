@@ -1,5 +1,9 @@
 'use client'
 
+// Adapted for Strativate from React Bits Card Swap by David Haz.
+// Copyright (c) 2026 David Haz · MIT + Commons Clause License Condition v1.0.
+// Full third-party notice: /THIRD_PARTY_NOTICES.md
+
 import {
   Children,
   cloneElement,
