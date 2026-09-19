@@ -89,7 +89,10 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === '/rest/v1/profiles' && req.method === 'GET') { const requested = filterEq(url, 'id'); const user = bearerUser(req); return postgrest(req, res, [profileFor(requested || user.id)]) }
   if (url.pathname === '/rest/v1/mentee_profiles' && req.method === 'GET') { const requested = filterEq(url, 'user_id'); return postgrest(req, res, requested === ids.mentee ? [menteeProfile] : requested === ids.onboardingMentee ? [onboardingState.mentee] : []) }
-  if (url.pathname === '/rest/v1/referral_sources' && req.method === 'GET') return postgrest(req, res, referralSources)
+  if (url.pathname === '/rest/v1/referral_sources' && req.method === 'GET') {
+    const requested = filterEq(url, 'id')
+    return postgrest(req, res, requested ? referralSources.filter(item => item.id === requested) : referralSources)
+  }
   if (url.pathname === '/rest/v1/interests' && req.method === 'GET') {
     const selectedOnly = String(url.searchParams.get('id') || '').startsWith('in.')
     return postgrest(req, res, selectedOnly ? onboardingInterests.filter(item => onboardingState.interestIds.includes(item.id)) : onboardingInterests)

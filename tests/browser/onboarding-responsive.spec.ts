@@ -185,8 +185,9 @@ test.describe.serial('immersive deterministic onboarding', () => {
     expect(state.mentee.onboarding_step).toBe(1)
   })
 
-  test('Google password setup is visibly optional and skip preserves the canonical Step 1 contract', async ({ page }) => {
+  test('Google password setup is visibly optional and reduced-motion flow remains functional', async ({ page }) => {
     await setOnboardingMode(page, 'google', false)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await goToPassword(page)
 
     await expect(page.getByRole('heading', { name: 'Akun Google-mu sudah siap.' })).toBeVisible()
@@ -200,6 +201,19 @@ test.describe.serial('immersive deterministic onboarding', () => {
     const state = await fixtureState(page)
     expect(state.saveCalls).toBe(1)
     expect(state.mentee.onboarding_step).toBe(2)
+  })
+
+  test('missing institution query is a discoverable secondary action on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await completeIdentity(page)
+
+    await page.getByLabel('Institusi').fill('Univ Tidak Ada')
+    const action = page.getByRole('button', { name: /Ajukan “Univ Tidak Ada”/ })
+    await expect(action).toBeVisible()
+    await expectHorizontallyInsideViewport(page, action)
+    await expectNoHorizontalOverflow(page)
+    await action.click()
+    await expect(page.getByText('Institut Teknologi Sepuluh Nopember', { exact: true })).toBeVisible()
   })
 
   test('normal referral is one direct save and auto-advances without a redundant Continue button', async ({ page }) => {
@@ -230,6 +244,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
   })
 
   test('full flow preserves local micro-stage values, resumes canonically, handles long dynamic data, and keeps Calendar optional', async ({ page }) => {
+    test.setTimeout(180_000)
     await page.setViewportSize({ width: 390, height: 844 })
     await completeIdentity(page)
     await completeInstitution(page, true)
@@ -244,8 +259,12 @@ test.describe.serial('immersive deterministic onboarding', () => {
 
     const interestCards = page.locator('.onboarding-answer-card--check')
     expect(await interestCards.count()).toBeGreaterThanOrEqual(12)
-    await page.getByText('Business Case', { exact: true }).click()
-    await page.getByText('UI/UX', { exact: true }).click()
+    const businessCard = interestCards.filter({ hasText: 'Kasus Bisnis' })
+    const uiuxCard = interestCards.filter({ hasText: 'UI/UX' })
+    await businessCard.click()
+    await expect(businessCard.getByRole('checkbox')).toBeChecked()
+    await uiuxCard.click()
+    await expect(uiuxCard.getByRole('checkbox')).toBeChecked()
     await expect(page.getByRole('button', { name: /Lanjutkan dengan 2 pilihan/ })).toBeVisible()
 
     const longInterest = page.getByText('Strategi Transformasi Digital dan Inovasi Bisnis Berkelanjutan untuk Organisasi', { exact: true })
@@ -264,30 +283,76 @@ test.describe.serial('immersive deterministic onboarding', () => {
       await expectHorizontallyInsideViewport(page, page.locator('.onboarding-progress-minimal'))
       await expectHorizontallyInsideViewport(page, interestCards.first())
       await expectHorizontallyInsideViewport(page, longInterest)
+      const labelBox = await longInterest.boundingBox()
+      expect(labelBox).not.toBeNull()
+      expect(labelBox!.width).toBeGreaterThan(100)
+      expect(await longInterest.evaluate(element => getComputedStyle(element).wordBreak)).toBe('normal')
       await expectHorizontallyInsideViewport(page, page.getByRole('button', { name: /Lanjutkan dengan 2 pilihan/ }))
     }
 
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.setViewportSize({ width: 320, height: 568 })
-    await expectNoHorizontalOverflow(page)
+    await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: /Lanjutkan dengan 2 pilihan/ }).click()
+    await expect(page.getByText('Sip, pilihanmu sudah tersimpan.', { exact: true })).toBeVisible({ timeout: 1000 })
 
     await expect(page).toHaveURL(/\/onboarding\/calendar$/)
-    await expect(page.getByRole('heading', { name: /Semua sudah siap, Yuta/ })).toBeVisible()
-    await expect(page.getByText('Institut Teknologi Sepuluh Nopember', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Business Case · UI\/UX/)).toBeVisible()
-    await expectNoHorizontalOverflow(page)
-    await expectHorizontallyInsideViewport(page, page.locator('.onboarding-calendar-option'))
+    await expect(page.getByRole('heading', { name: 'Ingin menghubungkan jadwalmu?' })).toBeVisible()
+    await expect(page.getByText('Pengecekan akhir', { exact: true })).toHaveCount(0)
+    const calendarCard = page.locator('.onboarding-calendar-option')
+    await expect(calendarCard).toBeVisible()
 
-    await expect(page.getByRole('link', { name: /Hubungkan Google Calendar/ })).toBeVisible()
-    await page.screenshot({ path: 'test-results/onboarding-screenshots/completion-mobile-320x568.png', fullPage: true })
-    await page.getByRole('link', { name: 'Lewati sekarang', exact: true }).click()
-    await expect(page).toHaveURL(/\/dashboard$/)
+    for (const viewport of requiredViewports) {
+      await page.setViewportSize(viewport)
+      await expectNoHorizontalOverflow(page)
+      await expectHorizontallyInsideViewport(page, calendarCard)
+    }
+
+    await page.setViewportSize({ width: 320, height: 568 })
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/calendar-mobile-320x568.png', fullPage: true })
+    await page.getByRole('link', { name: 'Lewati, lanjut ke ringkasan', exact: true }).click()
+
+    await expect(page).toHaveURL(/\/onboarding\/review$/)
+    await expect(page.getByText('Pengecekan akhir', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sebelum masuk, periksa sebentar.' })).toBeVisible()
+    await expect(page.getByText('Institut Teknologi Sepuluh Nopember', { exact: true })).toBeVisible()
+    await expect(page.getByText(/Kasus Bisnis · UI\/UX/)).toBeVisible()
+    await expect(page.getByText('Tidak dihubungkan', { exact: true })).toBeVisible()
+    await expect(page.getByText('Revisi data', { exact: true })).toBeVisible()
+
+    const reviewCard = page.locator('.onboarding-review__item').first()
+    const finalAction = page.getByRole('link', { name: /Semua sudah benar, masuk Strativate/ })
+    for (const viewport of requiredViewports) {
+      await page.setViewportSize(viewport)
+      await expectNoHorizontalOverflow(page)
+      await expectHorizontallyInsideViewport(page, reviewCard)
+      await expectHorizontallyInsideViewport(page, finalAction)
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/review-mobile-390x844.png', fullPage: true })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.screenshot({ path: 'test-results/onboarding-screenshots/review-desktop-1440x900.png', fullPage: true })
+
+    const studyCard = page.locator('.onboarding-review__item').filter({ hasText: 'Tempat belajar' })
+    await studyCard.getByRole('link', { name: 'Ubah', exact: true }).click()
+    await expect(page).toHaveURL(/\/onboarding\?revisi=1&bagian=institution$/)
+    await expect(page.getByLabel('Institusi')).toHaveValue('Institut Teknologi Sepuluh Nopember')
+    await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
+    await expect(page.getByLabel('Jurusan / fakultas')).toHaveValue('Teknik Informatika dan Rekayasa Perangkat Lunak untuk Sistem Berskala Besar')
+    await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
+    await expect(page.getByLabel('Tahun angkatan')).toHaveValue('2022')
+    await page.getByLabel('Tahun angkatan').fill('2023')
+    await page.getByRole('button', { name: /Simpan & lanjutkan/ }).click()
+
+    await expect(page).toHaveURL(/\/onboarding\/review$/)
+    await expect(page.getByText(/Angkatan 2023/)).toBeVisible()
 
     const state = await fixtureState(page)
-    expect(state.saveCalls).toBe(4)
+    expect(state.saveCalls).toBe(5)
     expect(state.mentee.onboarding_step).toBe(4)
     expect(state.mentee.onboarding_completed_at).not.toBeNull()
     expect(state.interestIds).toHaveLength(2)
+
+    await page.getByRole('link', { name: /Semua sudah benar, masuk Strativate/ }).click()
+    await expect(page).toHaveURL(/\/dashboard$/)
   })
 })
