@@ -92,6 +92,15 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 }
 
+async function waitForBrandIntro(page: Page) {
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+}
+
+async function settleVisualCapture(page: Page) {
+  await page.waitForTimeout(360)
+}
+
 async function expectHorizontallyInsideViewport(page: Page, locator: Locator) {
   const box = await locator.boundingBox()
   const viewport = page.viewportSize()
@@ -316,18 +325,24 @@ test.describe.serial('immersive deterministic onboarding', () => {
     test.setTimeout(180_000)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/onboarding')
+    await waitForBrandIntro(page)
+    await expect(page.getByRole('heading', { name: /Selamat datang di Strativate, Yuta/ })).toBeVisible()
+    await settleVisualCapture(page)
     mkdirSync('test-results/onboarding-screenshots', { recursive: true })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/welcome-mobile-390x844.png', fullPage: true })
     await page.setViewportSize({ width: 1440, height: 900 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/welcome-desktop-1440x900.png', fullPage: true })
 
     await page.setViewportSize({ width: 390, height: 844 })
     await completeIdentity(page)
     await page.setViewportSize({ width: 1440, height: 900 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/institution-desktop-1440x900.png', fullPage: true })
     await page.setViewportSize({ width: 390, height: 844 })
     await completeInstitution(page, true)
     await page.setViewportSize({ width: 1440, height: 900 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/referral-desktop-1440x900.png', fullPage: true })
     await page.setViewportSize({ width: 390, height: 844 })
 
@@ -353,6 +368,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await expect(longInterest).toBeVisible()
 
     await page.setViewportSize({ width: 390, height: 844 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/interests-mobile-390x844.png', fullPage: true })
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/interests-desktop-1440x900.png', fullPage: true })
@@ -393,6 +409,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     }
 
     await page.setViewportSize({ width: 1440, height: 900 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/calendar-desktop-1440x900.png', fullPage: true })
     await page.setViewportSize({ width: 320, height: 568 })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/calendar-mobile-320x568.png', fullPage: true })
@@ -426,6 +443,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     }
 
     await page.setViewportSize({ width: 390, height: 844 })
+    await settleVisualCapture(page)
     await page.screenshot({ path: 'test-results/onboarding-screenshots/review-mobile-390x844.png', fullPage: true })
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.screenshot({ path: 'test-results/onboarding-screenshots/review-desktop-1440x900.png', fullPage: true })
