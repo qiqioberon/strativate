@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils'
 import { AssetMedia } from './asset-media'
 import { DigitalProductCarousel } from './digital-product-carousel'
 import { HeroCarousel } from './hero-carousel'
-import { HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
+import { HeroAmbient, HeroKineticSurface, HeroVisualStage, MagneticAction } from './hero-kinetic'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 
@@ -70,6 +70,7 @@ export function HomePage({
     <main>
       <section className="marketing-hero" data-reveal data-testid="homepage-hero-section">
         <HeroKineticSurface>
+          <HeroAmbient />
           <div className="marketing-container marketing-hero__grid">
             <div className="marketing-hero__copy">
               <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Persiapan kompetisi, lebih terarah</p>
