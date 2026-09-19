@@ -4,108 +4,29 @@
   position: relative;
   isolation: isolate;
 }
-.marketing-hero__kinetic-surface::before,
 .marketing-hero__kinetic-surface::after {
   position: absolute;
   z-index: -1;
   inset: -60px 0 -36px;
+  opacity: .92;
   pointer-events: none;
   content: '';
-}
-.marketing-hero__kinetic-surface::before {
-  opacity: .52;
-  background-image:
-    linear-gradient(rgb(118 77 51 / .045) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(118 77 51 / .045) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 96%);
-}
-.marketing-hero__kinetic-surface::after {
-  opacity: .92;
   background:
     radial-gradient(circle 320px at var(--hero-spot-x) var(--hero-spot-y), rgb(255 122 0 / .11), transparent 70%),
     radial-gradient(circle 220px at calc(var(--hero-spot-x) - 8%) calc(var(--hero-spot-y) + 18%), rgb(255 231 157 / .14), transparent 72%);
   transition: background-position 120ms ease-out;
 }
-
 .marketing-hero__kinetic-surface > .marketing-container { position: relative; z-index: 1; }
-.marketing-hero-ambient {
+.marketing-hero-shape-grid.onboarding-shape-grid {
   position: absolute;
+  inset: -60px 0 -36px;
   z-index: 0;
-  inset: -70px -5vw -50px;
+  opacity: .48;
   overflow: hidden;
   pointer-events: none;
-}
-.marketing-hero-ambient__orb,
-.marketing-hero-ambient__ring,
-.marketing-hero-ambient__beam { position: absolute; display: block; pointer-events: none; will-change: transform; }
-.marketing-hero-ambient__orb { aspect-ratio: 1; border-radius: 50%; filter: blur(8px); mix-blend-mode: multiply; }
-.marketing-hero-ambient__orb--orange {
-  top: 2%;
-  right: 30%;
-  width: clamp(230px, 34vw, 540px);
-  opacity: .26;
-  background: radial-gradient(circle at 42% 42%, rgb(255 190 104 / .8), rgb(255 122 0 / .2) 42%, transparent 72%);
-  animation: hero-ambient-orbit-orange 13.5s ease-in-out -4.2s infinite alternate;
-}
-.marketing-hero-ambient__orb--red {
-  left: 7%;
-  bottom: 2%;
-  width: clamp(190px, 27vw, 430px);
-  opacity: .16;
-  background: radial-gradient(circle at 55% 48%, rgb(220 13 22 / .52), rgb(220 13 22 / .12) 45%, transparent 73%);
-  animation: hero-ambient-orbit-red 17.8s ease-in-out -9.1s infinite alternate;
-}
-.marketing-hero-ambient__ring {
-  border: 1px solid rgb(255 122 0 / .14);
-  border-radius: 50%;
-  opacity: .62;
-}
-.marketing-hero-ambient__ring--one {
-  top: 10%;
-  right: 3%;
-  width: clamp(180px, 25vw, 390px);
-  aspect-ratio: 1;
-  box-shadow: 0 0 0 34px rgb(255 122 0 / .025), 0 0 0 70px rgb(255 122 0 / .018);
-  animation: hero-ambient-ring-one 19s ease-in-out -7s infinite alternate;
-}
-.marketing-hero-ambient__ring--two {
-  left: 39%;
-  bottom: 1%;
-  width: clamp(90px, 13vw, 190px);
-  aspect-ratio: 1;
-  border-color: rgb(179 21 28 / .12);
-  animation: hero-ambient-ring-two 21.5s ease-in-out -12s infinite alternate;
-}
-.marketing-hero-ambient__beam {
-  top: 48%;
-  left: -8%;
-  width: 48%;
-  height: 1px;
-  opacity: .5;
-  background: linear-gradient(90deg, transparent, rgb(255 122 0 / .35), rgb(179 21 28 / .14), transparent);
-  transform-origin: center;
-  animation: hero-ambient-beam 15.5s ease-in-out -6.5s infinite alternate;
-}
-@keyframes hero-ambient-orbit-orange {
-  from { transform: translate3d(-26px,-16px,0) scale(.96); }
-  to { transform: translate3d(44px,28px,0) scale(1.08); }
-}
-@keyframes hero-ambient-orbit-red {
-  from { transform: translate3d(24px,18px,0) scale(.97); }
-  to { transform: translate3d(-38px,-30px,0) scale(1.07); }
-}
-@keyframes hero-ambient-ring-one {
-  from { transform: translate3d(12px,-12px,0) rotate(-4deg) scale(.98); }
-  to { transform: translate3d(-30px,26px,0) rotate(5deg) scale(1.04); }
-}
-@keyframes hero-ambient-ring-two {
-  from { transform: translate3d(-18px,10px,0) rotate(3deg); }
-  to { transform: translate3d(26px,-22px,0) rotate(-5deg) scale(1.05); }
-}
-@keyframes hero-ambient-beam {
-  from { transform: translate3d(-8%,14px,0) rotate(-7deg) scaleX(.88); opacity: .28; }
-  to { transform: translate3d(24%,-18px,0) rotate(-3deg) scaleX(1.08); opacity: .62; }
+  contain: paint;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 98%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 98%);
 }
 
 .marketing-hero__headline { overflow: visible; }
@@ -238,13 +159,7 @@
   .marketing-hero-stage__node--three { bottom: -18px; left: 18%; }
 }
 @media (max-width: 620px) {
-  .marketing-hero-ambient { inset-inline: -24vw; }
-  .marketing-hero-ambient__orb--orange { right: 8%; width: 86vw; opacity: .19; }
-  .marketing-hero-ambient__orb--red { left: 2%; width: 70vw; opacity: .12; }
-  .marketing-hero-ambient__ring--one { right: -18%; width: 58vw; opacity: .45; }
-  .marketing-hero-ambient__ring--two { left: 44%; width: 32vw; opacity: .48; }
-  .marketing-hero-ambient__beam { width: 72%; }
-  .marketing-hero__kinetic-surface::before { background-size: 34px 34px; opacity: .38; }
+  .marketing-hero-shape-grid.onboarding-shape-grid { inset: -40px -18vw -24px; opacity: .42; }
   .marketing-hero__kinetic-surface::after { opacity: .72; }
   .marketing-hero-stage { width: calc(100% - 8px); margin-right: 8px; }
   .marketing-hero-stage__card::after { border-radius: 20px 20px 20px 5px; }
@@ -257,9 +172,6 @@
   .marketing-hero__actions .marketing-hero__magnetic { transform: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .marketing-hero-ambient__orb,
-  .marketing-hero-ambient__ring,
-  .marketing-hero-ambient__beam { animation: none; transform: none; }
   .marketing-hero__kinetic-surface::after { transition: none; }
   .marketing-hero__eyebrow,
   .marketing-hero__headline-line,
