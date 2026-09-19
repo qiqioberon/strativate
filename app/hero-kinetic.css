@@ -36,16 +36,18 @@
   transform-origin: left center;
 }
 .rb-text-type {
-  display: inline-flex;
-  align-items: baseline;
-  min-width: 1ch;
+  display: inline;
 }
-.rb-text-type__content { white-space: pre-wrap; }
+.rb-text-type__content {
+  white-space: normal;
+}
 .rb-text-type__cursor {
   display: inline-block;
   margin-left: .055em;
   font-style: normal;
   font-weight: 500;
+  line-height: .9;
+  vertical-align: .03em;
   opacity: 1;
 }
 .marketing-hero__eyebrow,

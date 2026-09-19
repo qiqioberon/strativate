@@ -21,12 +21,14 @@ export default async function CalendarOnboardingPage({ searchParams }: { searchP
       <SplitText
         text={connection.connected ? 'Google Calendar-mu sudah terhubung.' : 'Ingin menghubungkan jadwalmu?'}
         className="onboarding-calendar-stage__animated-title"
+        startDelay={.1}
       />
       <BlurText
         text={connection.connected
           ? 'Koneksi ini membantu Strativate mengenali konflik jadwal mentoring. Pengaturannya bisa kamu kelola dari dashboard.'
           : 'Google Calendar bisa membantu Strativate mengenali konflik jadwal mentoring. Ini opsional dan bisa diatur lagi dari dashboard.'}
         className="onboarding-calendar-stage__lead onboarding-calendar-stage__animated-description"
+        startDelay={.32}
       />
 
       {params.calendar === 'denied' && <p className="onboarding-calendar-stage__notice" role="status">

@@ -12,13 +12,15 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 export function SplitText({
   text,
   className = '',
-  delay = 42,
-  duration = .68,
+  delay = 56,
+  duration = .9,
+  startDelay = 0,
 }: {
   text: string
   className?: string
   delay?: number
   duration?: number
+  startDelay?: number
 }) {
   const rootRef = useRef<HTMLHeadingElement>(null)
   const words = useMemo(() => text.split(' '), [text])
@@ -42,6 +44,7 @@ export function SplitText({
         y: 0,
         filter: 'blur(0px)',
         duration,
+        delay: startDelay,
         ease: 'power3.out',
         stagger: delay / 1000,
         force3D: true,
@@ -50,7 +53,7 @@ export function SplitText({
     return () => {
       tween.kill()
     }
-  }, [delay, duration, text])
+  }, [delay, duration, startDelay, text])
 
   return (
     <h1
@@ -72,13 +75,15 @@ export function SplitText({
 export function BlurText({
   text,
   className = '',
-  delay = 34,
-  duration = .5,
+  delay = 46,
+  duration = .72,
+  startDelay = 0,
 }: {
   text: string
   className?: string
   delay?: number
   duration?: number
+  startDelay?: number
 }) {
   const rootRef = useRef<HTMLParagraphElement>(null)
   const words = useMemo(() => text.split(' '), [text])
@@ -102,6 +107,7 @@ export function BlurText({
         y: 0,
         filter: 'blur(0px)',
         duration,
+        delay: startDelay,
         ease: 'power2.out',
         stagger: delay / 1000,
         force3D: true,
@@ -110,7 +116,7 @@ export function BlurText({
     return () => {
       tween.kill()
     }
-  }, [delay, duration, text])
+  }, [delay, duration, startDelay, text])
 
   return (
     <p
