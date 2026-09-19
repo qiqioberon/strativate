@@ -65,6 +65,16 @@ insert into public.digital_products (
 insert into public.digital_products (name, slug, description, image_path, price_amount)
 values ('Draft Workbook', 'draft-workbook', 'Draft admin.', 'products/draft-workbook.webp', 25000);
 select test_digital_products.assert((select count(*) = 2 from public.digital_products), 'admin can create and select published and draft Digital Products');
+update public.digital_products
+set homepage_featured = true, homepage_featured_order = 3
+where slug = 'business-case-handbook';
+select test_digital_products.assert(
+  (select homepage_featured and homepage_featured_order = 3 from public.digital_products where slug = 'business-case-handbook'),
+  'admin can configure homepage showcase selection and order'
+);
+select test_digital_products.rejected($q$
+  update public.digital_products set homepage_featured_order = 10000 where slug = 'business-case-handbook'
+$q$, 'homepage showcase order must stay within the supported range');
 
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount, is_published)
@@ -125,6 +135,10 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-0000-0000-000000000002', true);
 select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'mentee can read published Digital Products only');
+select test_digital_products.assert(
+  (select homepage_featured and homepage_featured_order = 3 from public.digital_products where slug = 'business-case-handbook'),
+  'mentee can read homepage showcase metadata on published products'
+);
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized mentee', 'unauthorized-mentee', 'Unauthorized.', 'products/unauthorized-mentee.webp', 1)
@@ -151,6 +165,10 @@ reset role;
 
 set local role anon;
 select test_digital_products.assert((select count(*) = 1 from public.digital_products), 'anonymous visitor can read published Digital Products');
+select test_digital_products.assert(
+  (select homepage_featured and homepage_featured_order = 3 from public.digital_products where slug = 'business-case-handbook'),
+  'anonymous visitor can read homepage showcase metadata on published products'
+);
 select test_digital_products.rejected($q$
   insert into public.digital_products (name, slug, description, image_path, price_amount)
   values ('Unauthorized anonymous', 'unauthorized-anonymous', 'Unauthorized.', 'products/unauthorized-anonymous.webp', 1)
