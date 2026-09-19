@@ -30,6 +30,8 @@ export interface CardSwapProps {
   skewAmount?: number
   easing?: 'linear' | 'elastic'
   ariaLabel?: string
+  activeIndex?: number
+  onActiveIndexChange?: (index:number) => void
   children: ReactNode
 }
 
@@ -82,6 +84,8 @@ export function CardSwap({
   skewAmount = 6,
   easing = 'elastic',
   ariaLabel = 'Produk Digital pilihan',
+  activeIndex,
+  onActiveIndexChange,
   children,
 }: CardSwapProps) {
   const childArray = useMemo(() => Children.toArray(children) as ReactElement<CardProps>[], [children])
@@ -90,6 +94,7 @@ export function CardSwap({
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
   const intervalRef = useRef<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const navigateRef = useRef<(index:number) => void>(() => undefined)
 
   useEffect(() => {
     const total = refs.length
@@ -159,7 +164,9 @@ export function CardSwap({
         ease:config.ease,
       }, 'return')
       timeline.call(() => {
-        order.current = [...rest, front]
+        const nextOrder = [...rest, front]
+        order.current = nextOrder
+        onActiveIndexChange?.(nextOrder[0] ?? front)
       })
     }
 
@@ -170,6 +177,52 @@ export function CardSwap({
       }
     }
 
+    const navigateTo = (targetIndex:number) => {
+      if (targetIndex < 0 || targetIndex >= total) return
+      const targetPosition = order.current.indexOf(targetIndex)
+      if (targetPosition <= 0) {
+        startTimer()
+        return
+      }
+
+      stopTimer()
+      timelineRef.current?.kill()
+      const currentOrder = order.current
+      const nextOrder = [...currentOrder.slice(targetPosition), ...currentOrder.slice(0, targetPosition)]
+
+      if (reducedMotion) {
+        order.current = nextOrder
+        positionAll()
+        onActiveIndexChange?.(targetIndex)
+        startTimer()
+        return
+      }
+
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          order.current = nextOrder
+          onActiveIndexChange?.(targetIndex)
+          startTimer()
+        },
+      })
+      timelineRef.current = timeline
+
+      nextOrder.forEach((cardIndex, position) => {
+        const element = refs[cardIndex]?.current
+        if (!element) return
+        const slot = slotFor(position, cardDistance, verticalDistance, total)
+        timeline.set(element, { zIndex:slot.zIndex }, 0)
+        timeline.to(element, {
+          x:slot.x,
+          y:slot.y,
+          z:slot.z,
+          duration:config.move,
+          ease:config.ease,
+        }, position * .06)
+      })
+    }
+
+    navigateRef.current = navigateTo
     positionAll()
     startTimer()
 
@@ -207,8 +260,13 @@ export function CardSwap({
       node?.removeEventListener('focusin', pause)
       node?.removeEventListener('focusout', resume)
       media.removeEventListener('change', syncMotion)
+      navigateRef.current = () => undefined
     }
-  }, [cardDistance, delay, easing, pauseOnHover, refs, skewAmount, verticalDistance])
+  }, [cardDistance, delay, easing, onActiveIndexChange, pauseOnHover, refs, skewAmount, verticalDistance])
+
+  useEffect(() => {
+    if (typeof activeIndex === 'number') navigateRef.current(activeIndex)
+  }, [activeIndex])
 
   const rendered = childArray.map((child, index) => isValidElement<CardProps>(child)
     ? cloneElement(child, {
