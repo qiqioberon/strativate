@@ -37,5 +37,5 @@ test('public directory and detail consume real Digital Product records', () => {
 test('public Digital Product queries explicitly exclude drafts for every authenticated role', () => {
   const server = readFileSync('lib/commerce/server.ts', 'utf8')
   const publishedFilters = server.match(/\.eq\('is_published', true\)/g) ?? []
-  assert.equal(publishedFilters.length, 2)
+  assert.equal(publishedFilters.length, 3)
 })
