@@ -15,6 +15,9 @@ export function passwordError(password: string, confirmation: string, required: 
   if (!password) return required ? "Kata sandi wajib diisi." : confirmation ? "Isi kata sandi terlebih dahulu." : null
   if (password.length < 8) return "Gunakan kata sandi minimal 8 karakter."
   if (password.length > 128) return "Kata sandi maksimal 128 karakter."
+  if (!/[A-Z]/.test(password)) return "Gunakan setidaknya 1 huruf kapital."
+  if (!/[0-9]/.test(password)) return "Gunakan setidaknya 1 angka."
+  if (!/[^A-Za-z0-9]/.test(password)) return "Gunakan setidaknya 1 simbol."
   if (password !== confirmation) return "Konfirmasi kata sandi tidak sama."
   return null
 }

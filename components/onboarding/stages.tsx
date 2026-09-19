@@ -151,7 +151,7 @@ export function PasswordStage({
     </QuestionStage>
   }
 
-  return <QuestionStage eyebrow="Keamanan akun" title={passwordSaved ? 'Mau mengganti kata sandimu?' : 'Sekarang, amankan akunmu.'} description={google ? 'Kata sandi ini opsional untuk akun Google, tapi bisa menjadi cara masuk cadangan.' : 'Gunakan minimal 8 karakter.'} onBack={onBack}>
+  return <QuestionStage eyebrow="Keamanan akun" title={passwordSaved ? 'Mau mengganti kata sandimu?' : 'Sekarang, amankan akunmu.'} description={google ? 'Kata sandi ini opsional untuk akun Google, tapi bisa menjadi cara masuk cadangan. Jika dibuat, gunakan minimal 8 karakter dengan huruf kapital, angka, dan simbol.' : 'Gunakan minimal 8 karakter dengan huruf kapital, angka, dan simbol.'} onBack={onBack}>
     <form className="onboarding-focused-form" onSubmit={onSubmit}>
       <PasswordInput label={passwordSaved ? 'Kata sandi baru' : passwordRequired ? 'Kata sandi' : 'Kata sandi (opsional)'} value={password} onChange={event => onPassword(event.target.value)} minLength={8} maxLength={128} required={passwordRequired || editingPassword} autoComplete="new-password" disabled={busy} />
       <PasswordInput label="Konfirmasi kata sandi" value={confirmation} onChange={event => onConfirmation(event.target.value)} required={passwordRequired || editingPassword || !!password} autoComplete="new-password" disabled={busy} />

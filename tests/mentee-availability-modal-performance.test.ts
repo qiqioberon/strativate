@@ -19,8 +19,8 @@ test('disabled availability days never look like an active loading target', () =
   const css = read('../app/mentee-mentor-availability.css')
   const disabledRule = css.match(/\.mentee-availability-day:disabled\.is-available\s*\{([\s\S]*?)\}/)?.[1] ?? ''
 
-  assert.match(disabledRule, /cursor:\s*not-allowed/)
-  assert.doesNotMatch(disabledRule, /cursor:\s*progress/)
+  assert.match(disabledRule, /cursor:\s*default/)
+  assert.doesNotMatch(disabledRule, /cursor:\s*(?:wait|progress|not-allowed)/)
   assert.match(disabledRule, /transform:\s*none/)
   assert.match(css, /\.mentee-availability-day\.is-available:not\(:disabled\):hover/)
 })

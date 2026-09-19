@@ -132,7 +132,7 @@
 }
 .mentoring-session-cancel-confirm:disabled,
 .mentoring-session-cancel-trigger:disabled{
-  cursor:not-allowed;
+  cursor:default;
   opacity:.55;
 }
 .competition-save-button{
@@ -154,7 +154,7 @@
 }
 .competition-save-button:hover{background:#11633d}
 .competition-save-button:focus-visible{outline:3px solid rgba(21,115,71,.25);outline-offset:2px}
-.competition-save-button:disabled{cursor:not-allowed;opacity:.55}
+.competition-save-button:disabled{cursor:default;opacity:.55}
 .competition-save-button svg{width:16px;height:16px}
 .competition-readonly{
   display:grid;
