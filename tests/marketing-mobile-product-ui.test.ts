@@ -30,12 +30,13 @@ test('Digital Product homepage section pairs editorial copy with a storefront CT
   assert.doesNotMatch(home, /DigitalProductCarousel/)
 })
 
-test('Card Swap has a contained responsive stage instead of carousel arrows and dots', () => {
+test('Card Swap has a contained responsive stage with simple dots and no arrow controls', () => {
   assert.match(commerceCss, /\.digital-product-card-swap\s*\{[\s\S]*?position:\s*relative[\s\S]*?min-height:/)
   assert.match(commerceCss, /\.rb-card-swap\s*\{[\s\S]*?perspective:\s*900px/)
   assert.match(commerceCss, /\.rb-card-swap__card\s*\{[\s\S]*?transform-style:\s*preserve-3d/)
   assert.match(commerceCss, /@media\s*\(max-width:\s*560px\)[\s\S]*?\.rb-card-swap/)
-  assert.doesNotMatch(productSwap, /ArrowLeft|ArrowRight|__dots/)
+  assert.doesNotMatch(productSwap, /ArrowLeft|ArrowRight/)
+  assert.match(productSwap, /digital-product-card-swap__dots/)
 })
 
 test('Digital Product homepage showcase is two-column on desktop and stacks responsively', () => {
