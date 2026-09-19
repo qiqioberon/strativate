@@ -79,7 +79,7 @@ export function CardSwap({
   height = 400,
   cardDistance = 60,
   verticalDistance = 70,
-  delay = 5000,
+  delay = 3200,
   pauseOnHover = true,
   skewAmount = 6,
   easing = 'elastic',
@@ -105,8 +105,8 @@ export function CardSwap({
     let hoverPaused = false
 
     const config = easing === 'elastic'
-      ? { ease:'elastic.out(0.6,0.9)', drop:1.15, move:1.15, back:1.15, overlap:.82, returnDelay:.05 }
-      : { ease:'power1.inOut', drop:.65, move:.65, back:.65, overlap:.45, returnDelay:.18 }
+      ? { ease:'elastic.out(0.6,0.9)', drop:.75, move:.72, back:.72, overlap:.78, returnDelay:.04 }
+      : { ease:'power1.inOut', drop:.46, move:.44, back:.44, overlap:.42, returnDelay:.12 }
 
     const positionAll = () => {
       order.current.forEach((cardIndex, position) => {
@@ -187,7 +187,12 @@ export function CardSwap({
 
       stopTimer()
       timelineRef.current?.kill()
+
       const currentOrder = order.current
+      const [front] = currentOrder
+      const frontElement = refs[front]?.current
+      if (!frontElement) return
+
       const nextOrder = [...currentOrder.slice(targetPosition), ...currentOrder.slice(0, targetPosition)]
 
       if (reducedMotion) {
@@ -198,6 +203,8 @@ export function CardSwap({
         return
       }
 
+      const frontTargetPosition = nextOrder.indexOf(front)
+      const frontTargetSlot = slotFor(frontTargetPosition, cardDistance, verticalDistance, total)
       const timeline = gsap.timeline({
         onComplete: () => {
           order.current = nextOrder
@@ -207,19 +214,42 @@ export function CardSwap({
       })
       timelineRef.current = timeline
 
+      // Manual navigation keeps the same Card Swap language as autoplay:
+      // the current front card drops away, the selected card is promoted,
+      // then the old front card returns into its new stack position.
+      timeline.to(frontElement, {
+        y: '+=420',
+        duration:config.drop,
+        ease:config.ease,
+      })
+
+      timeline.addLabel('manual-promote', `-=${config.drop * config.overlap}`)
       nextOrder.forEach((cardIndex, position) => {
+        if (cardIndex === front) return
         const element = refs[cardIndex]?.current
         if (!element) return
         const slot = slotFor(position, cardDistance, verticalDistance, total)
-        timeline.set(element, { zIndex:slot.zIndex }, 0)
+        timeline.set(element, { zIndex:slot.zIndex }, 'manual-promote')
         timeline.to(element, {
           x:slot.x,
           y:slot.y,
           z:slot.z,
           duration:config.move,
           ease:config.ease,
-        }, position * .06)
+        }, `manual-promote+=${Math.min(position, 3) * .055}`)
       })
+
+      timeline.addLabel('manual-return', `manual-promote+=${config.move * config.returnDelay}`)
+      timeline.call(() => {
+        gsap.set(frontElement, { zIndex:frontTargetSlot.zIndex })
+      }, undefined, 'manual-return')
+      timeline.to(frontElement, {
+        x:frontTargetSlot.x,
+        y:frontTargetSlot.y,
+        z:frontTargetSlot.z,
+        duration:config.back,
+        ease:config.ease,
+      }, 'manual-return')
     }
 
     navigateRef.current = navigateTo

@@ -11,6 +11,7 @@ import { Card, CardSwap } from './card-swap'
 
 export function DigitalProductCardSwap({ products }: { products: PublicDigitalProduct[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [requestedIndex, setRequestedIndex] = useState(0)
 
   if (products.length === 0) {
     return <p className="marketing-products__empty">Belum ada Produk Digital pilihan untuk beranda.</p>
@@ -23,12 +24,15 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
         height={570}
         cardDistance={46}
         verticalDistance={50}
-        delay={5000}
+        delay={3200}
         skewAmount={4}
         easing="elastic"
         pauseOnHover
-        activeIndex={activeIndex}
-        onActiveIndexChange={setActiveIndex}
+        activeIndex={requestedIndex}
+        onActiveIndexChange={index => {
+          setActiveIndex(index)
+          setRequestedIndex(index)
+        }}
         ariaLabel="Produk Digital pilihan di beranda"
       >
         {products.map(product => (
@@ -66,7 +70,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
               className={activeIndex === index ? 'is-active' : undefined}
               aria-label={`Tampilkan ${product.name}`}
               aria-current={activeIndex === index ? 'true' : undefined}
-              onClick={() => setActiveIndex(index)}
+              onClick={() => setRequestedIndex(index)}
               data-testid={`digital-product-card-dot-${index}`}
             />
           ))}

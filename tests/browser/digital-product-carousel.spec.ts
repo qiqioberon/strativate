@@ -41,14 +41,16 @@ test('Digital Product Card Swap rotates the front product and opens product deta
   const secondDot = page.getByTestId('digital-product-card-dot-1')
   await expect(firstDot).toHaveAttribute('aria-current', 'true')
   await secondDot.click()
-  await expect.poll(frontTitle).toBe('Produk Portrait Dua')
+  await expect(firstDot).toHaveAttribute('aria-current', 'true')
+  await expect.poll(frontTitle, { timeout: 3000 }).toBe('Produk Portrait Dua')
   await expect(secondDot).toHaveAttribute('aria-current', 'true')
 
   await firstDot.click()
-  await expect.poll(frontTitle).toBe('Produk Portrait Satu')
+  await expect(secondDot).toHaveAttribute('aria-current', 'true')
+  await expect.poll(frontTitle, { timeout: 3000 }).toBe('Produk Portrait Satu')
   await expect(firstDot).toHaveAttribute('aria-current', 'true')
 
-  await expect.poll(frontTitle, { timeout: 8000 }).toBe('Produk Portrait Dua')
+  await expect.poll(frontTitle, { timeout: 5500 }).toBe('Produk Portrait Dua')
   await expect(secondDot).toHaveAttribute('aria-current', 'true')
 
   await page.getByTestId('digital-product-detail-link-produk-portrait-dua').click()
