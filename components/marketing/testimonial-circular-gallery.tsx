@@ -278,6 +278,7 @@ class TestimonialGalleryApp {
     this.onResize()
     this.geometry = new Plane(this.gl, { heightSegments: 32, widthSegments: 64 })
     this.createMedias()
+    this.centerInitialSequence()
     this.addEventListeners()
     this.update()
   }
@@ -319,6 +320,16 @@ class TestimonialGalleryApp {
       viewport: this.viewport,
       bend: this.bend,
     }))
+  }
+
+  centerInitialSequence() {
+    const firstMedia = this.medias[0]
+    if (!firstMedia) return
+    const offset = firstMedia.width * this.items.length
+    this.scroll.current = offset
+    this.scroll.target = offset
+    this.scroll.last = offset
+    this.scroll.position = offset
   }
 
   onResize = () => {
@@ -363,6 +374,7 @@ class TestimonialGalleryApp {
   showHover(hit: { media: TestimonialMedia; rect: HoverRect }) {
     this.paused = true
     this.scroll.target = this.scroll.current
+    this.scroll.last = this.scroll.current
     this.hoveredIndex = hit.media.sourceIndex
     this.onHover({ index: hit.media.sourceIndex, rect: hit.rect })
   }
@@ -525,11 +537,12 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
   const hoveredItem = hoveredIndex === null ? null : items[hoveredIndex] ?? null
   const overlayStyle = useMemo(() => {
     if (!hover) return undefined
+    const inset = 2
     return {
-      left: `${hover.rect.left}px`,
-      top: `${hover.rect.top}px`,
-      width: `${hover.rect.width}px`,
-      height: `${hover.rect.height}px`,
+      left: `${hover.rect.left + inset}px`,
+      top: `${hover.rect.top + inset}px`,
+      width: `${Math.max(0, hover.rect.width - inset * 2)}px`,
+      height: `${Math.max(0, hover.rect.height - inset * 2)}px`,
       transform: `rotate(${hover.rect.rotation}rad)`,
     }
   }, [hover])
@@ -605,7 +618,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         {selected ? (
           <div className="marketing-testimonial-dialog__panel">
             <div className="marketing-testimonial-dialog__media">
-              <Image src={selected.imageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
+              <Image src={selected.originalImageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
             </div>
             <div className="marketing-testimonial-dialog__content">
               <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Tutup testimoni">

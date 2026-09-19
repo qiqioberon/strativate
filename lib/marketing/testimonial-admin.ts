@@ -63,6 +63,8 @@ export function buildTestimonialPayload({
   testimonial,
   imagePath,
   storedImagePath,
+  originalImagePath,
+  storedOriginalImagePath,
   isPublished,
 }: {
   slug: string
@@ -71,6 +73,8 @@ export function buildTestimonialPayload({
   testimonial: string
   imagePath: string | null
   storedImagePath: string | null
+  originalImagePath: string | null
+  storedOriginalImagePath: string | null
   isPublished: boolean
 }) {
   return {
@@ -79,6 +83,7 @@ export function buildTestimonialPayload({
     achievement: achievement.trim(),
     testimonial: testimonial.trim(),
     image_path: imagePath ?? storedImagePath,
+    original_image_path: originalImagePath ?? storedOriginalImagePath,
     is_published: isPublished,
   }
 }
@@ -100,4 +105,10 @@ export function reorderTestimonialIds(items: MarketingTestimonial[], index: numb
 export function buildTestimonialAltText(competitionName: string) {
   const label = competitionName.trim()
   return label ? `Peserta ${label} setelah kompetisi.` : 'Peserta Strativate setelah kompetisi.'
+}
+
+export function testimonialOriginalExtension(mimeType: string) {
+  if (mimeType === 'image/png') return 'png'
+  if (mimeType === 'image/webp') return 'webp'
+  return 'jpg'
 }

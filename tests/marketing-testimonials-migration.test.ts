@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const migration = readFileSync(new URL('../supabase/migrations/202609200002_marketing_testimonials.sql', import.meta.url), 'utf8')
 const cleanupMigration = readFileSync(new URL('../supabase/migrations/202609200003_drop_testimonial_metadata.sql', import.meta.url), 'utf8')
+const originalImageMigration = readFileSync(new URL('../supabase/migrations/202609200004_testimonial_original_image.sql', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../supabase/seed/marketing_testimonials.sql', import.meta.url), 'utf8')
 
 test('testimonial migration creates public imagery plus admin-only content mutation', () => {
@@ -39,4 +40,12 @@ test('testimonial metadata cleanup drops retired database fields without recreat
   assert.match(cleanupMigration, /drop column if exists alt_text/i)
   assert.doesNotMatch(cleanupMigration, /insert into public\.marketing_testimonials/i)
   assert.doesNotMatch(cleanupMigration, /update public\.marketing_testimonials/i)
+})
+
+
+test('testimonial original image migration preserves a separate full-resolution modal asset', () => {
+  assert.match(originalImageMigration, /add column if not exists original_image_path text unique/i)
+  assert.match(originalImageMigration, /original_image_path/)
+  assert.match(originalImageMigration, /grant select/i)
+  assert.doesNotMatch(originalImageMigration, /insert into public\.marketing_testimonials/i)
 })

@@ -8,6 +8,7 @@ import {
   isTestimonialSetupRequired,
   normalizeTestimonialSlug,
   reorderTestimonialIds,
+  testimonialOriginalExtension,
   validateTestimonialDraft,
 } from '../lib/marketing/testimonial-admin'
 import {
@@ -29,6 +30,7 @@ function item(id: string, sortOrder: number): MarketingTestimonial {
     achievement: '1st Place',
     testimonial: 'Testimoni peserta.',
     image_path: null,
+    original_image_path: null,
     sort_order: sortOrder,
     is_published: true,
     created_at: '2026-09-20T00:00:00.000Z',
@@ -74,14 +76,17 @@ test('testimonial payload preserves stored image when admin only edits copy', ()
     achievement: '2nd Place',
     testimonial: '  Proses mentoring membuat strategi kami lebih jelas.  ',
     imagePath: null,
-    storedImagePath: 'testimonials/current.webp',
+    storedImagePath: 'testimonials/gallery/current.webp',
+    originalImagePath: null,
+    storedOriginalImagePath: 'testimonials/original/current.jpg',
     isPublished: true,
   }), {
     slug: 'competition-story',
     competition_name: 'Competition Story',
     achievement: '2nd Place',
     testimonial: 'Proses mentoring membuat strategi kami lebih jelas.',
-    image_path: 'testimonials/current.webp',
+    image_path: 'testimonials/gallery/current.webp',
+    original_image_path: 'testimonials/original/current.jpg',
     is_published: true,
   })
 })
@@ -120,4 +125,11 @@ test('testimonial image standard is 4:5 at 1200 by 1500 and crops landscape/port
   assert.ok(Math.abs(portrait.width / portrait.height - .8) < 0.0001)
   assert.equal(portrait.x, 0)
   assert.ok(portrait.y > 0)
+})
+
+
+test('testimonial original uploads preserve the source file extension from its MIME type', () => {
+  assert.equal(testimonialOriginalExtension('image/jpeg'), 'jpg')
+  assert.equal(testimonialOriginalExtension('image/png'), 'png')
+  assert.equal(testimonialOriginalExtension('image/webp'), 'webp')
 })

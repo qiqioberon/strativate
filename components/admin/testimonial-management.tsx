@@ -22,6 +22,7 @@ import {
   isTestimonialSetupRequired,
   normalizeTestimonialSlug,
   reorderTestimonialIds,
+  testimonialOriginalExtension,
   validateTestimonialDraft,
   type TestimonialDraftErrors,
 } from '@/lib/marketing/testimonial-admin'
@@ -204,11 +205,24 @@ export function TestimonialManagement() {
 
     setBusyAction('save')
     let uploadedPath: string | null = null
+    let uploadedOriginalPath: string | null = null
 
     try {
       if (selectedFile) {
+        const uploadId = crypto.randomUUID()
+        const extension = testimonialOriginalExtension(selectedFile.type)
+        uploadedOriginalPath = `testimonials/original/${uploadId}-${draft.slug || 'testimonial'}.${extension}`
+        const { error: originalUploadError } = await supabase.storage
+          .from(TESTIMONIAL_IMAGE_BUCKET)
+          .upload(uploadedOriginalPath, selectedFile, {
+            cacheControl: '3600',
+            contentType: selectedFile.type,
+            upsert: false,
+          })
+        if (originalUploadError) throw originalUploadError
+
         const croppedImage = await cropTestimonialImage(selectedFile, crop)
-        uploadedPath = `testimonials/${crypto.randomUUID()}-${draft.slug || 'testimonial'}.webp`
+        uploadedPath = `testimonials/gallery/${uploadId}-${draft.slug || 'testimonial'}.webp`
         const { error: uploadError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
           .upload(uploadedPath, croppedImage, {
@@ -226,6 +240,8 @@ export function TestimonialManagement() {
         testimonial: draft.testimonial,
         imagePath: uploadedPath,
         storedImagePath: selected?.image_path ?? null,
+        originalImagePath: uploadedOriginalPath,
+        storedOriginalImagePath: selected?.original_image_path ?? null,
         isPublished: draft.isPublished,
       })
 
@@ -238,11 +254,17 @@ export function TestimonialManagement() {
       if (result.error) throw result.error
 
       let cleanupWarning = ''
-      if (selected?.image_path && uploadedPath && selected.image_path !== uploadedPath) {
-        const { error: cleanupError } = await supabase.storage
-          .from(TESTIMONIAL_IMAGE_BUCKET)
-          .remove([selected.image_path])
-        if (cleanupError) cleanupWarning = ' Gambar lama masih perlu ditinjau manual di Storage.'
+      if (selectedFile) {
+        const oldPaths = [...new Set([
+          selected?.image_path,
+          selected?.original_image_path,
+        ].filter((path): path is string => Boolean(path)))]
+        if (oldPaths.length) {
+          const { error: cleanupError } = await supabase.storage
+            .from(TESTIMONIAL_IMAGE_BUCKET)
+            .remove(oldPaths)
+          if (cleanupError) cleanupWarning = ' Gambar lama masih perlu ditinjau manual di Storage.'
+        }
       }
 
       const wasEditing = Boolean(selected)
@@ -250,13 +272,10 @@ export function TestimonialManagement() {
       setNotice(`${wasEditing ? 'Testimoni berhasil diperbarui.' : 'Testimoni berhasil ditambahkan.'}${cleanupWarning}`)
       await load()
     } catch (caught) {
-      if (uploadedPath) {
-        const { data: persisted } = await supabase
-          .from('marketing_testimonials')
-          .select('id')
-          .eq('image_path', uploadedPath)
-          .maybeSingle()
-        if (!persisted) await supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).remove([uploadedPath])
+      const failedUploadPaths = [uploadedPath, uploadedOriginalPath]
+        .filter((path): path is string => Boolean(path))
+      if (failedUploadPaths.length) {
+        await supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).remove(failedUploadPaths)
       }
       setError(formError(caught, 'Testimoni belum dapat disimpan.'))
     } finally {
@@ -313,10 +332,14 @@ export function TestimonialManagement() {
       if (rowError) throw rowError
 
       let warning = ''
-      if (item.image_path) {
+      const storagePaths = [...new Set([
+        item.image_path,
+        item.original_image_path,
+      ].filter((path): path is string => Boolean(path)))]
+      if (storagePaths.length) {
         const { error: storageError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
-          .remove([item.image_path])
+          .remove(storagePaths)
         if (storageError) warning = ' Gambar Storage perlu ditinjau manual.'
       }
 

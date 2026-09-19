@@ -8,7 +8,7 @@ export async function listPublishedTestimonials(): Promise<MarketingTestimonialV
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('marketing_testimonials')
-    .select('id,slug,competition_name,achievement,testimonial,image_path,sort_order')
+    .select('id,slug,competition_name,achievement,testimonial,image_path,original_image_path,sort_order')
     .eq('is_published', true)
     .not('image_path', 'is', null)
     .order('sort_order')
@@ -30,5 +30,9 @@ export async function listPublishedTestimonials(): Promise<MarketingTestimonialV
       sort_order: item.sort_order,
       altText: `Peserta ${item.competition_name} setelah kompetisi.`,
       imageUrl: supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).getPublicUrl(item.image_path).data.publicUrl,
+      originalImageUrl: supabase.storage
+        .from(TESTIMONIAL_IMAGE_BUCKET)
+        .getPublicUrl(item.original_image_path ?? item.image_path)
+        .data.publicUrl,
     }))
 }

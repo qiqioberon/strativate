@@ -32,12 +32,14 @@ update public.profiles set role = 'admin' where id = '94000000-0000-0000-0000-00
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '94000000-0000-0000-0000-000000000001', true);
 insert into public.marketing_testimonials
-  (slug, competition_name, achievement, testimonial, image_path, sort_order, is_published)
+  (slug, competition_name, achievement, testimonial, image_path, original_image_path, sort_order, is_published)
 values
-  ('visible-story', 'Visible Competition', '1st Place', 'Visible testimonial', 'testimonials/visible.webp', 10, true),
-  ('draft-story', 'Draft Competition', 'Finalist', 'Draft testimonial', null, 20, true);
+  ('visible-story', 'Visible Competition', '1st Place', 'Visible testimonial', 'testimonials/gallery/visible.webp', 'testimonials/original/visible.jpg', 10, true),
+  ('draft-story', 'Draft Competition', 'Finalist', 'Draft testimonial', null, null, 20, true);
 insert into storage.objects (bucket_id, name, owner_id)
-values ('marketing-testimonials', 'testimonials/visible.webp', '94000000-0000-0000-0000-000000000001');
+values
+  ('marketing-testimonials', 'testimonials/gallery/visible.webp', '94000000-0000-0000-0000-000000000001'),
+  ('marketing-testimonials', 'testimonials/original/visible.jpg', '94000000-0000-0000-0000-000000000001');
 select public.reorder_marketing_testimonials(array(select id from public.marketing_testimonials order by sort_order desc));
 select test_testimonials.assert((select sort_order = 1 from public.marketing_testimonials where slug = 'draft-story'), 'admin can reorder testimonials');
 select test_testimonials.assert(
@@ -50,11 +52,21 @@ select test_testimonials.assert(
   ),
   'removed testimonial metadata columns stay absent'
 );
+select test_testimonials.assert(
+  exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'marketing_testimonials'
+      and column_name = 'original_image_path'
+  ),
+  'testimonial original image path exists'
+);
 reset role;
 
 set local role anon;
 select test_testimonials.assert((select count(*) = 1 from public.marketing_testimonials), 'anonymous users only see published testimonials with images');
-select test_testimonials.assert((select count(*) = 1 from storage.objects where bucket_id = 'marketing-testimonials'), 'testimonial image is publicly readable');
+select test_testimonials.assert((select count(*) = 2 from storage.objects where bucket_id = 'marketing-testimonials'), 'testimonial gallery and original images are publicly readable');
 select test_testimonials.denied($q$insert into public.marketing_testimonials (slug, competition_name, achievement, testimonial) values ('attack', 'Attack', 'Attack', 'Attack')$q$, 'anonymous testimonial insert');
 reset role;
 

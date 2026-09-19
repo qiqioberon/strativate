@@ -6,5 +6,6 @@ export type MarketingTestimonialView = {
   testimonial: string
   sort_order: number
   imageUrl: string
+  originalImageUrl: string
   altText: string
 }
