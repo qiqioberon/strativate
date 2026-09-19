@@ -1,9 +1,11 @@
 'use client'
 
-import { Pencil, X } from 'lucide-react'
+import { Camera, Pencil, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { ProfileAvatar } from './profile-avatar'
+import { ProfileAvatarEditor } from './profile-avatar-editor'
 import { formError } from '@/lib/auth/errors'
 import { usernameError } from '@/lib/auth/rules'
 import { normalizeWhatsAppNumber, whatsAppNumberError } from '@/lib/profile/whatsapp'
@@ -30,6 +32,8 @@ export function ProfileForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [avatarOpen,setAvatarOpen]=useState(false)
+  const [avatarOverride,setAvatarOverride]=useState<string|null>(null)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -53,7 +57,6 @@ export function ProfileForm() {
         last_name: String(form.get('last_name')).trim(),
         username,
         whatsapp_number: normalizeWhatsAppNumber(whatsappInput),
-        avatar_url: String(form.get('avatar_url') || '').trim() || null,
       }).eq('id', account.id)
       if (updateError) throw updateError
       setSaved(true)
@@ -70,6 +73,8 @@ export function ProfileForm() {
   const whatsapp = account.whatsapp_number ?? null
 
   return <section className="workspace-card account-profile">
+    <div className="profile-avatar-edit-row"><button type="button" className="profile-avatar-edit-trigger" onClick={()=>setAvatarOpen(true)} aria-label="Ubah foto profil"><ProfileAvatar account={account} srcOverride={avatarOverride}/><span><Camera aria-hidden="true"/></span></button><div><strong>Foto profil</strong><p>Foto tampil konsisten di dashboard dan menu akun.</p></div></div>
+    <ProfileAvatarEditor open={avatarOpen} onClose={()=>setAvatarOpen(false)} onSaved={url=>{setAvatarOverride(url);setSaved(true);router.refresh()}}/>
     <div className="account-profile__header">
       <div><p className="kicker">Akun</p><h2>Profil akun</h2><p>Informasi profil ditampilkan read-only sampai Anda memilih mode edit.</p></div>
       {!editing ? <button type="button" className="profile-edit-button" onClick={() => { setEditing(true); setError(''); setSaved(false) }} aria-label="Edit profil" title="Edit profil"><Pencil aria-hidden="true" /></button> : <button type="button" className="profile-edit-button" onClick={() => { if (!busy) setEditing(false) }} aria-label="Batal edit profil" title="Batal edit"><X aria-hidden="true" /></button>}
@@ -83,7 +88,6 @@ export function ProfileForm() {
       <label>Nama pengguna<input name="username" defaultValue={account.username || ''} required maxLength={30} /></label>
       <label>Email<input value={account.email || ''} readOnly aria-readonly="true" /></label>
       <label>Nomor WhatsApp <span className="profile-field-optional">Opsional</span><input name="whatsapp_number" type="tel" inputMode="tel" defaultValue={whatsapp || ''} maxLength={24} placeholder="08123456789" /></label>
-      <label>URL Foto Profil<input name="avatar_url" type="url" defaultValue={account.avatar_url || ''} maxLength={2048} placeholder="https://…" /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="button-row"><button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan profil'}</button><button className="button button-outline" type="button" disabled={busy} onClick={() => setEditing(false)}>Batal</button></div>
     </form> : <dl className="account-profile__details">
@@ -91,7 +95,6 @@ export function ProfileForm() {
       <div><dt>Nama pengguna</dt><dd>{account.username ? `@${account.username}` : 'Belum diisi'}</dd></div>
       <div><dt>Email</dt><dd>{displayValue(account.email)}</dd></div>
       <div><dt>WhatsApp</dt><dd>{displayValue(whatsapp)}</dd></div>
-      <div className="account-profile__details-wide"><dt>URL Foto Profil</dt><dd>{displayValue(account.avatar_url)}</dd></div>
     </dl>}
     {saved && !editing ? <p className="account-profile__saved" role="status">Profil tersimpan.</p> : null}
   </section>

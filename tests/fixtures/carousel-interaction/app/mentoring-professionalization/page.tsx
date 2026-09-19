@@ -1,7 +1,8 @@
 'use client'
 
-import { PrivateMentoringSessions } from '@/components/dashboard/private-mentoring-sessions'
+import { MentoringWorkspace } from '@/components/dashboard/mentoring-workspace'
 import type { PrivateMentoringSessionFocusView, PrivateMentoringSessionView } from '@/lib/private-mentoring/types'
+import type { IntensiveEngagementView } from '@/lib/intensive-mentoring/types'
 
 const focuses: PrivateMentoringSessionFocusView[] = [
   {
@@ -101,6 +102,40 @@ const sessions: PrivateMentoringSessionView[] = [
   },
 ]
 
+
+sessions.push({
+  ...sessions[2],
+  sessionId:'82000000-0000-0000-0000-000000000004',
+  enrollmentId:'83000000-0000-0000-0000-000000000002',
+  sessionNumber:1,
+  purchasedSessions:1,
+  mentorTierCode:'SEMI_PRO',
+  mentorTierName:'Semi Pro',
+})
+
+const intensiveEngagements: IntensiveEngagementView[] = [{
+  engagementId:'93000000-0000-0000-0000-000000000001',
+  baseEntitlementId:'93000000-0000-0000-0000-000000000002',
+  baseKind:'bundle',
+  programName:'Bundel Competition Ready',
+  status:'active',
+  baselineSessionsPerMonth:8,
+  primaryMentorId:'84000000-0000-0000-0000-000000000001',
+  primaryMentorName:'Mentor Fixture',
+  competitionName:'National Business Case Competition',
+  programStage:'review_refinement',
+  progressSummary:'Fokus minggu ini adalah penyempurnaan storyline dan kesiapan Q&A.',
+  startedAt:'2026-09-01T00:00:00.000Z',
+  addOns:[
+    {entitlementId:null,name:'Laporan Performa Terperinci',code:'DETAILED_PERFORMANCE_REPORT',status:'included',source:'bundle'},
+    {entitlementId:null,name:'Simulasi Penjurian',code:'JUDGING_SIMULATION',status:'included',source:'bundle'},
+  ],
+  sessions:[{
+    sessionId:'94000000-0000-0000-0000-000000000001',sessionNumber:1,durationMinutes:60,status:'scheduled',
+    focusId:focuses[0].id,focusName:focuses[0].name,menteeTopicRequest:'Review final storyline dan anticipated Q&A.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId:'84000000-0000-0000-0000-000000000001',mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-fixture',googleSyncStatus:'synced',recordingStatus:'expected',creationSource:'admin_added'
+  }]
+}]
+
 export default function MentoringProfessionalizationFixture() {
-  return <main style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}><PrivateMentoringSessions sessions={sessions} sessionFocuses={focuses}/></main>
+  return <main style={{ padding: 24, maxWidth: 1180, margin: '0 auto' }}><MentoringWorkspace privateSessions={sessions} intensiveEngagements={intensiveEngagements} sessionFocuses={focuses}/></main>
 }

@@ -139,7 +139,7 @@
 
 .notificationItem {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
   gap: 0.7rem;
   border-radius: 0.8rem;
   padding: 0.75rem 0.8rem;
@@ -149,9 +149,10 @@
 .notificationIcon {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.65rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  border-radius: 0.8rem;
   background: #ffe79d;
   color: #b3151c;
 }
@@ -161,9 +162,11 @@
   height: 1rem;
 }
 
+.notificationItem > div{min-width:0}
 .notificationItem strong,
 .notificationItem span {
   display: block;
+  overflow-wrap:anywhere;
 }
 
 .notificationItem strong {

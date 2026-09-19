@@ -31,8 +31,9 @@ import { MentorManagement } from '@/components/admin/mentor-management'
 import { MenteeManagement } from '@/components/admin/people'
 import { TestimonialManagement } from '@/components/admin/testimonial-management'
 import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
-import { PrivateMentoringSessionManagement } from '@/components/admin/private-mentoring-enrollment-management'
+import { AdminMentoringSessionWorkspace } from '@/components/admin/admin-mentoring-session-workspace'
 import { useAccount } from '@/components/auth/account-provider'
+import { ProfileAvatar } from '@/components/auth/profile-avatar'
 import { ProfileForm } from '@/components/auth/profile-form'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { RoleCalendar } from '@/components/calendar/role-calendar'
@@ -128,7 +129,7 @@ export default function AdminDashboard() {
   const openNotification = (item: Notification) => {
     setRelatedTarget({ entity: item.related_entity, id: item.related_entity_id })
     if (item.related_entity === 'order') navigate('Orders')
-    else if (item.related_entity === 'session' || item.related_entity === 'enrollment') navigate('Mentoring Sessions')
+    else if (item.related_entity === 'session' || item.related_entity === 'enrollment' || item.related_entity === 'intensive_mentoring_session' || item.related_entity === 'intensive_mentoring_engagement') navigate('Mentoring Sessions')
     else navigate('Overview')
   }
   const currentLabel = groups.flatMap(group => group.items).find(item => item.id === section)?.label ?? (section === 'Profile' ? 'Profil' : section)
@@ -137,7 +138,7 @@ export default function AdminDashboard() {
     <div className="role-shell admin-shell">
       <aside id="admin-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
         <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Tutup menu admin"><X aria-hidden="true"/></button></div>
-        <div className="role-person"><span className="role-avatar red">OP</span><div><strong>{displayName(account)}</strong><small>Kantor pusat Strativate</small></div></div>
+        <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{displayName(account)}</strong><small>Kantor pusat Strativate</small></div></div>
         <nav aria-label="Navigasi admin">
           {groups.map(group => <div className="nav-group" key={group.label}><small>{group.label}</small>{group.items.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => navigate(id)}><Icon aria-hidden="true"/>{label}</button>)}</div>)}
         </nav>
@@ -149,7 +150,7 @@ export default function AdminDashboard() {
         <div className="role-content">
           {section === 'Overview' ? <AdminCommerceOperations mode="overview" onNavigate={navigateOperational}/> : null}
           {section === 'Orders' ? <AdminCommerceOperations mode="orders" focusOrderId={relatedTarget?.entity === 'order' ? relatedTarget.id : null}/> : null}
-          {section === 'Mentoring Sessions' ? <PrivateMentoringSessionManagement focusSessionId={relatedTarget?.entity === 'session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null}/> : null}
+          {section === 'Mentoring Sessions' ? <AdminMentoringSessionWorkspace focusSessionId={relatedTarget?.entity === 'session' || relatedTarget?.entity === 'intensive_mentoring_session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null} focusEntity={relatedTarget?.entity}/> : null}
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}
           {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={openNotification}/></> : null}
