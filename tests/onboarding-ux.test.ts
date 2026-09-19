@@ -117,7 +117,7 @@ test('missing institution alternative is a real secondary action while domain be
   assert.match(picker, /className="institution-create__action"/)
   assert.match(picker, /Ajukan “/)
   assert.match(picker, /<Plus aria-hidden="true"/)
-  assert.doesNotMatch(picker, /className="onboarding-error"[^>]*>.*Ajukan/s)
+  assert.doesNotMatch(picker, /className="onboarding-error"[^>]*>[\s\S]*?Ajukan/)
 })
 
 test('option-card layout fixes the letter-by-letter wrapping root cause', () => {
