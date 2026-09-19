@@ -428,6 +428,11 @@
 .onboarding-shell textarea:disabled,
 .onboarding-shell select:disabled { opacity: .58; cursor: not-allowed; }
 
+.onboarding-shell :is(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid rgb(255 122 0 / .72);
+  outline-offset: 3px;
+}
+
 .onboarding-input-with-action { position: relative; }
 .onboarding-input-with-action input { padding-right: 54px; }
 .onboarding-input-with-action button {
@@ -755,16 +760,16 @@
 .onboarding-review__actions { display: grid; justify-items: center; gap: 9px; text-align: center; }
 .onboarding-review__actions p { max-width: 440px; margin: 0; color: #8a7c73; font-size: 9px; line-height: 1.5; }
 
-.onboarding-review__symbol { animation: onboarding-review-item 280ms 20ms both; }
-.onboarding-review__intro .onboarding-eyebrow { animation: onboarding-review-item 280ms 55ms both; }
-.onboarding-review__intro h1 { animation: onboarding-review-item 300ms 90ms both; }
-.onboarding-review__intro > p:last-child { animation: onboarding-review-item 300ms 125ms both; }
-.onboarding-review__item:nth-child(1) { animation: onboarding-review-item 300ms 160ms both; }
-.onboarding-review__item:nth-child(2) { animation: onboarding-review-item 300ms 190ms both; }
-.onboarding-review__item:nth-child(3) { animation: onboarding-review-item 300ms 220ms both; }
-.onboarding-review__item:nth-child(4) { animation: onboarding-review-item 300ms 250ms both; }
-.onboarding-review__item:nth-child(5) { animation: onboarding-review-item 300ms 280ms both; }
-.onboarding-review__actions { animation: onboarding-review-item 300ms 315ms both; }
+.onboarding-review__symbol { animation: onboarding-review-item 230ms 15ms both; }
+.onboarding-review__intro .onboarding-eyebrow { animation: onboarding-review-item 230ms 42ms both; }
+.onboarding-review__intro h1 { animation: onboarding-review-item 240ms 70ms both; }
+.onboarding-review__intro > p:last-child { animation: onboarding-review-item 240ms 98ms both; }
+.onboarding-review__item:nth-child(1) { animation: onboarding-review-item 240ms 125ms both; }
+.onboarding-review__item:nth-child(2) { animation: onboarding-review-item 240ms 150ms both; }
+.onboarding-review__item:nth-child(3) { animation: onboarding-review-item 240ms 175ms both; }
+.onboarding-review__item:nth-child(4) { animation: onboarding-review-item 240ms 200ms both; }
+.onboarding-review__item:nth-child(5) { animation: onboarding-review-item 240ms 225ms both; }
+.onboarding-review__actions { animation: onboarding-review-item 240ms 250ms both; }
 
 .onboarding-final-handoff {
   position: fixed;
