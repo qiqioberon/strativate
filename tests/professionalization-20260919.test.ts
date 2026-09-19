@@ -84,6 +84,21 @@ test('mentoring modal has one scroll flow and persisted mentee competition has v
   assert.match(mentee, /<Pencil/)
 })
 
+test('admin mentor and mentoring session modals keep centered close controls, destructive color, and section spacing', () => {
+  const mentorCss = readFileSync('components/admin/mentor-management.module.css', 'utf8')
+  const sessions = readFileSync('components/admin/private-mentoring-enrollment-management.tsx', 'utf8')
+  const schedulingCss = readFileSync('app/admin-mentoring-scheduling.css', 'utf8')
+
+  assert.match(mentorCss, /\.closeButton \{[\s\S]*?display: inline-grid;[\s\S]*?place-items: center;[\s\S]*?border: 1px solid #dfe4e8;[\s\S]*?border-radius: 12px;/)
+  assert.match(mentorCss, /\.closeButton svg \{[\s\S]*?width: 20px;[\s\S]*?height: 20px;/)
+  assert.match(sessions, /mentoring-session-cancel-trigger/)
+  assert.match(sessions, /mentoring-session-cancel-confirm/)
+  assert.match(schedulingCss, /article\.schedule-day > \.button-row\{[\s\S]*?margin-bottom:18px;/)
+  assert.match(schedulingCss, /article\.schedule-day > \.meeting-override\{[\s\S]*?padding-top:18px;[\s\S]*?border-top:1px solid #eee6df;/)
+  assert.match(schedulingCss, /\.mentoring-session-cancel-trigger\{[\s\S]*?color:#b42318;/)
+  assert.match(schedulingCss, /\.mentoring-session-cancel-confirm\{[\s\S]*?background:#b42318;[\s\S]*?color:#fff;/)
+})
+
 test('shared calendar legend is compact, searchable, dismissible and keeps stable event colors', () => {
   const calendar = readFileSync('components/calendar/role-calendar.tsx', 'utf8')
   assert.match(calendar, /calendar-legend-menu/)
