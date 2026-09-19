@@ -2,14 +2,23 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  buildTestimonialAltText,
   buildTestimonialPayload,
   getNextTestimonialSortOrder,
   isTestimonialSetupRequired,
   normalizeTestimonialSlug,
   reorderTestimonialIds,
-  safeTestimonialFileName,
   validateTestimonialDraft,
 } from '../lib/marketing/testimonial-admin'
+import {
+  TESTIMONIAL_IMAGE_ASPECT_RATIO,
+  TESTIMONIAL_IMAGE_HEIGHT,
+  TESTIMONIAL_IMAGE_WIDTH,
+} from '../lib/marketing/testimonial-config'
+import {
+  calculateTestimonialSourceCrop,
+  DEFAULT_TESTIMONIAL_CROP,
+} from '../lib/marketing/testimonial-image'
 import type { MarketingTestimonial } from '../lib/supabase/database.types'
 
 function item(id: string, sortOrder: number): MarketingTestimonial {
@@ -19,9 +28,7 @@ function item(id: string, sortOrder: number): MarketingTestimonial {
     competition_name: `Competition ${id}`,
     achievement: '1st Place',
     testimonial: 'Testimoni peserta.',
-    participant_label: null,
     image_path: null,
-    alt_text: 'Foto peserta.',
     sort_order: sortOrder,
     is_published: true,
     created_at: '2026-09-20T00:00:00.000Z',
@@ -35,7 +42,6 @@ test('testimonial drafts validate copy while allowing seeded rows to exist witho
     competitionName: 'Business Plan Competition',
     achievement: '1st Place',
     testimonial: 'Bimbingannya membantu kami menyusun strategi.',
-    altText: 'Tim setelah kompetisi.',
     file: null,
   }), {})
 
@@ -44,7 +50,6 @@ test('testimonial drafts validate copy while allowing seeded rows to exist witho
     competitionName: '',
     achievement: '',
     testimonial: '',
-    altText: '',
     file: null,
   }).competitionName, 'Nama kompetisi wajib diisi.')
 
@@ -53,15 +58,13 @@ test('testimonial drafts validate copy while allowing seeded rows to exist witho
     competitionName: 'Competition',
     achievement: 'Winner',
     testimonial: 'Copy',
-    altText: 'Alt',
     file: { type: 'image/gif', size: 100 },
   }).file, 'Gunakan gambar JPG, PNG, atau WebP.')
 })
 
-test('testimonial slugs and filenames are normalized for storage and database constraints', () => {
+test('testimonial slugs are normalized for database constraints', () => {
   assert.equal(normalizeTestimonialSlug('Business Plan Competition Prasmul ECC'), 'business-plan-competition-prasmul-ecc')
   assert.equal(normalizeTestimonialSlug('  IMPACT UBM 2026! '), 'impact-ubm-2026')
-  assert.equal(safeTestimonialFileName('Team Final (2).WEBP'), 'team-final-2-.webp')
 })
 
 test('testimonial payload preserves stored image when admin only edits copy', () => {
@@ -70,8 +73,6 @@ test('testimonial payload preserves stored image when admin only edits copy', ()
     competitionName: 'Competition Story',
     achievement: '2nd Place',
     testimonial: '  Proses mentoring membuat strategi kami lebih jelas.  ',
-    participantLabel: '',
-    altText: '  Tim kompetisi.  ',
     imagePath: null,
     storedImagePath: 'testimonials/current.webp',
     isPublished: true,
@@ -80,8 +81,6 @@ test('testimonial payload preserves stored image when admin only edits copy', ()
     competition_name: 'Competition Story',
     achievement: '2nd Place',
     testimonial: 'Proses mentoring membuat strategi kami lebih jelas.',
-    participant_label: null,
-    alt_text: 'Tim kompetisi.',
     image_path: 'testimonials/current.webp',
     is_published: true,
   })
@@ -99,4 +98,26 @@ test('testimonial setup detection only treats missing schema as setup required',
   assert.equal(isTestimonialSetupRequired({ code: 'PGRST205', message: 'missing table' }), true)
   assert.equal(isTestimonialSetupRequired({ code: '42P01', message: 'relation marketing_testimonials does not exist' }), true)
   assert.equal(isTestimonialSetupRequired({ code: '42501', message: 'permission denied' }), false)
+})
+
+
+test('testimonial alt text is generated from the competition name instead of an admin field', () => {
+  assert.equal(buildTestimonialAltText('UNDIP Business Plan Competition'), 'Peserta UNDIP Business Plan Competition setelah kompetisi.')
+  assert.equal(buildTestimonialAltText(''), 'Peserta Strativate setelah kompetisi.')
+})
+
+test('testimonial image standard is 4:5 at 1200 by 1500 and crops landscape/portrait sources predictably', () => {
+  assert.equal(TESTIMONIAL_IMAGE_WIDTH, 1200)
+  assert.equal(TESTIMONIAL_IMAGE_HEIGHT, 1500)
+  assert.equal(TESTIMONIAL_IMAGE_ASPECT_RATIO, 0.8)
+
+  const landscape = calculateTestimonialSourceCrop(454, 410, DEFAULT_TESTIMONIAL_CROP)
+  assert.ok(Math.abs(landscape.width / landscape.height - .8) < 0.0001)
+  assert.ok(landscape.x > 0)
+  assert.equal(landscape.y, 0)
+
+  const portrait = calculateTestimonialSourceCrop(454, 605, DEFAULT_TESTIMONIAL_CROP)
+  assert.ok(Math.abs(portrait.width / portrait.height - .8) < 0.0001)
+  assert.equal(portrait.x, 0)
+  assert.ok(portrait.y > 0)
 })

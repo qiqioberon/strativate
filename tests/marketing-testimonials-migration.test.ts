@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const migration = readFileSync(new URL('../supabase/migrations/202609200002_marketing_testimonials.sql', import.meta.url), 'utf8')
+const cleanupMigration = readFileSync(new URL('../supabase/migrations/202609200003_drop_testimonial_metadata.sql', import.meta.url), 'utf8')
 const seed = readFileSync(new URL('../supabase/seed/marketing_testimonials.sql', import.meta.url), 'utf8')
 
 test('testimonial migration creates public imagery plus admin-only content mutation', () => {
@@ -14,11 +15,18 @@ test('testimonial migration creates public imagery plus admin-only content mutat
   assert.match(migration, /reorder_marketing_testimonials/i)
 })
 
+test('testimonial cleanup migration drops removed metadata columns without rewriting migration history', () => {
+  assert.match(cleanupMigration, /drop column if exists participant_label/i)
+  assert.match(cleanupMigration, /drop column if exists alt_text/i)
+  assert.doesNotMatch(cleanupMigration, /drop table/i)
+})
+
 test('testimonial seed is idempotent, ships eight stories, and waits for admin images', () => {
   const slugs = [...seed.matchAll(/\n    '([a-z0-9-]+)',\n    '[^']+',\n    '[^']+',/g)].map(match => match[1])
   assert.equal(slugs.length, 8)
   assert.match(seed, /on conflict \(slug\) do nothing/i)
-  assert.equal((seed.match(/\n    null,\n    'Tim/g) ?? []).length, 8)
+  assert.equal((seed.match(/\n    null,\n    \d+,\n    true/g) ?? []).length, 8)
+  assert.doesNotMatch(seed, /participant_label|alt_text/i)
 })
 
 test('testimonial seed keeps competition names but localizes testimonial narratives to Indonesian', () => {

@@ -4,8 +4,7 @@ export type MarketingTestimonialView = {
   competition_name: string
   achievement: string
   testimonial: string
-  participant_label: string | null
-  alt_text: string
   sort_order: number
   imageUrl: string
+  altText: string
 }

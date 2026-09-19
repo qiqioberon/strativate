@@ -181,14 +181,20 @@ export function HomePage({
           data-reveal
           data-testid="homepage-testimonials-section"
         >
-          <div className="marketing-container marketing-testimonials__heading">
-            <p className="marketing-kicker">Cerita dari peserta</p>
-            <h2 id="testimonial-heading">
-              Dari proses yang lebih terarah,
-              <br />
-              <em>lahir hasil yang mereka banggakan.</em>
-            </h2>
-            <p>Jelajahi perjalanan peserta Strativate dan lihat bagaimana proses mentoring membantu mereka mempertajam strategi sebelum kompetisi.</p>
+          <div className="marketing-container">
+            <div className="marketing-section-head marketing-testimonials__heading">
+              <div>
+                <p className="marketing-kicker">Cerita dari peserta</p>
+                <h2 id="testimonial-heading">
+                  Dari proses yang lebih terarah,
+                  <br />
+                  <em>lahir hasil yang mereka banggakan.</em>
+                </h2>
+              </div>
+              <div className="marketing-section-head__note">
+                <p>Jelajahi perjalanan peserta Strativate dan lihat bagaimana proses mentoring membantu mereka mempertajam strategi sebelum kompetisi.</p>
+              </div>
+            </div>
           </div>
           <TestimonialCircularGallery items={testimonials} />
         </section>

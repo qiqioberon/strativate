@@ -16,16 +16,27 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 
 import { formError } from '@/lib/auth/errors'
 import {
+  buildTestimonialAltText,
   buildTestimonialPayload,
   getNextTestimonialSortOrder,
   isTestimonialSetupRequired,
   normalizeTestimonialSlug,
   reorderTestimonialIds,
-  safeTestimonialFileName,
   validateTestimonialDraft,
   type TestimonialDraftErrors,
 } from '@/lib/marketing/testimonial-admin'
-import { TESTIMONIAL_IMAGE_BUCKET } from '@/lib/marketing/testimonial-config'
+import {
+  TESTIMONIAL_CROP_MAX_ZOOM,
+  TESTIMONIAL_CROP_MIN_ZOOM,
+  TESTIMONIAL_IMAGE_BUCKET,
+  TESTIMONIAL_IMAGE_HEIGHT,
+  TESTIMONIAL_IMAGE_WIDTH,
+} from '@/lib/marketing/testimonial-config'
+import {
+  cropTestimonialImage,
+  DEFAULT_TESTIMONIAL_CROP,
+  type TestimonialCrop,
+} from '@/lib/marketing/testimonial-image'
 import { createClient } from '@/lib/supabase/client'
 import type { MarketingTestimonial } from '@/lib/supabase/database.types'
 
@@ -40,8 +51,6 @@ type Draft = {
   competitionName: string
   achievement: string
   testimonial: string
-  participantLabel: string
-  altText: string
   isPublished: boolean
 }
 
@@ -50,8 +59,6 @@ const emptyDraft: Draft = {
   competitionName: '',
   achievement: '',
   testimonial: '',
-  participantLabel: '',
-  altText: '',
   isPublished: true,
 }
 
@@ -61,8 +68,6 @@ function draftFromItem(item: MarketingTestimonial): Draft {
     competitionName: item.competition_name,
     achievement: item.achievement,
     testimonial: item.testimonial,
-    participantLabel: item.participant_label ?? '',
-    altText: item.alt_text,
     isPublished: item.is_published,
   }
 }
@@ -76,6 +81,7 @@ export function TestimonialManagement() {
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [crop, setCrop] = useState<TestimonialCrop>({ ...DEFAULT_TESTIMONIAL_CROP })
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -143,6 +149,7 @@ export function TestimonialManagement() {
     setDraft(emptyDraft)
     setSlugManuallyEdited(false)
     setSelectedFile(null)
+    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
     setFieldErrors({})
   }
 
@@ -152,6 +159,7 @@ export function TestimonialManagement() {
     setDraft(emptyDraft)
     setSlugManuallyEdited(false)
     setSelectedFile(null)
+    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -163,6 +171,7 @@ export function TestimonialManagement() {
     setDraft(draftFromItem(item))
     setSlugManuallyEdited(true)
     setSelectedFile(null)
+    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -173,7 +182,6 @@ export function TestimonialManagement() {
       ...current,
       competitionName: value,
       slug: slugManuallyEdited ? current.slug : normalizeTestimonialSlug(value),
-      altText: current.altText || (value ? `Peserta ${value} setelah kompetisi.` : ''),
     }))
     setFieldErrors(current => ({ ...current, competitionName: undefined, slug: undefined }))
   }
@@ -187,7 +195,6 @@ export function TestimonialManagement() {
       competitionName: draft.competitionName,
       achievement: draft.achievement,
       testimonial: draft.testimonial,
-      altText: draft.altText,
       file: selectedFile,
     })
     setFieldErrors(validation)
@@ -200,10 +207,15 @@ export function TestimonialManagement() {
 
     try {
       if (selectedFile) {
-        uploadedPath = `testimonials/${crypto.randomUUID()}-${safeTestimonialFileName(selectedFile.name)}`
+        const croppedImage = await cropTestimonialImage(selectedFile, crop)
+        uploadedPath = `testimonials/${crypto.randomUUID()}-${draft.slug || 'testimonial'}.webp`
         const { error: uploadError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
-          .upload(uploadedPath, selectedFile, { cacheControl: '3600', upsert: false })
+          .upload(uploadedPath, croppedImage, {
+            cacheControl: '3600',
+            contentType: 'image/webp',
+            upsert: false,
+          })
         if (uploadError) throw uploadError
       }
 
@@ -212,8 +224,6 @@ export function TestimonialManagement() {
         competitionName: draft.competitionName,
         achievement: draft.achievement,
         testimonial: draft.testimonial,
-        participantLabel: draft.participantLabel,
-        altText: draft.altText,
         imagePath: uploadedPath,
         storedImagePath: selected?.image_path ?? null,
         isPublished: draft.isPublished,
@@ -330,7 +340,7 @@ export function TestimonialManagement() {
     const term = query.trim().toLocaleLowerCase('id-ID')
     if (!term) return items
     return items.filter(item => (
-      `${item.competition_name} ${item.achievement} ${item.participant_label ?? ''} ${item.testimonial}`
+      `${item.competition_name} ${item.achievement} ${item.testimonial}`
         .toLocaleLowerCase('id-ID')
         .includes(term)
     ))
@@ -457,20 +467,61 @@ export function TestimonialManagement() {
                 <label>Nama kompetisi<input value={draft.competitionName} maxLength={180} onChange={event => updateCompetitionName(event.target.value)} aria-invalid={Boolean(fieldErrors.competitionName)} />{fieldErrors.competitionName ? <small className="form-error">{fieldErrors.competitionName}</small> : null}</label>
                 <label>Pencapaian<input value={draft.achievement} maxLength={160} onChange={event => { setDraft(current => ({ ...current, achievement: event.target.value })); setFieldErrors(current => ({ ...current, achievement: undefined })) }} aria-invalid={Boolean(fieldErrors.achievement)} />{fieldErrors.achievement ? <small className="form-error">{fieldErrors.achievement}</small> : null}</label>
                 <label>Slug<input value={draft.slug} maxLength={120} onChange={event => { setSlugManuallyEdited(true); setDraft(current => ({ ...current, slug: normalizeTestimonialSlug(event.target.value) })); setFieldErrors(current => ({ ...current, slug: undefined })) }} aria-invalid={Boolean(fieldErrors.slug)} />{fieldErrors.slug ? <small className="form-error">{fieldErrors.slug}</small> : null}</label>
-                <label>Label peserta / tim <span>Opsional</span><input value={draft.participantLabel} maxLength={160} onChange={event => setDraft(current => ({ ...current, participantLabel: event.target.value }))} /></label>
                 <label className={styles.wideField}>Isi testimoni<textarea rows={8} maxLength={5000} value={draft.testimonial} onChange={event => { setDraft(current => ({ ...current, testimonial: event.target.value })); setFieldErrors(current => ({ ...current, testimonial: undefined })) }} aria-invalid={Boolean(fieldErrors.testimonial)} />{fieldErrors.testimonial ? <small className="form-error">{fieldErrors.testimonial}</small> : null}</label>
-                <label className={styles.wideField}>Alt text gambar<input value={draft.altText} maxLength={240} onChange={event => { setDraft(current => ({ ...current, altText: event.target.value })); setFieldErrors(current => ({ ...current, altText: undefined })) }} aria-invalid={Boolean(fieldErrors.altText)} />{fieldErrors.altText ? <small className="form-error">{fieldErrors.altText}</small> : null}</label>
               </div>
 
               <section className={styles.mediaSection}>
                 <div>
-                  <label>Gambar testimonial<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file: undefined })) }} /></label>
-                  <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB.</small>
+                  <label>Gambar testimonial<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => {
+                    const file = event.target.files?.[0] ?? null
+                    setSelectedFile(file)
+                    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
+                    setFieldErrors(current => ({ ...current, file: undefined }))
+                  }} /></label>
+                  <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB. File baru otomatis disimpan dalam format 4:5.</small>
                   {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
+                  {selectedFile ? (
+                    <div className={styles.cropControls} data-testid="testimonial-crop-controls">
+                      <div className={styles.cropMeta}>
+                        <span>Crop standar</span>
+                        <strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 4:5</strong>
+                      </div>
+                      <label>
+                        Posisi horizontal
+                        <input type="range" min="0" max="100" value={crop.x} onChange={event => setCrop(current => ({ ...current, x: Number(event.target.value) }))} />
+                      </label>
+                      <label>
+                        Posisi vertikal
+                        <input type="range" min="0" max="100" value={crop.y} onChange={event => setCrop(current => ({ ...current, y: Number(event.target.value) }))} />
+                      </label>
+                      <label>
+                        Zoom
+                        <input
+                          type="range"
+                          min={TESTIMONIAL_CROP_MIN_ZOOM}
+                          max={TESTIMONIAL_CROP_MAX_ZOOM}
+                          step=".05"
+                          value={crop.zoom}
+                          onChange={event => setCrop(current => ({ ...current, zoom: Number(event.target.value) }))}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
                 </div>
                 <div className={styles.preview}>
                   {editorPreviewUrl
-                    ? <Image src={editorPreviewUrl} alt={draft.altText || 'Preview testimonial'} fill sizes="280px" unoptimized />
+                    ? <Image
+                        src={editorPreviewUrl}
+                        alt={buildTestimonialAltText(draft.competitionName)}
+                        fill
+                        sizes="280px"
+                        unoptimized
+                        style={selectedFile ? {
+                          objectPosition: `${crop.x}% ${crop.y}%`,
+                          transform: `scale(${crop.zoom})`,
+                          transformOrigin: `${crop.x}% ${crop.y}%`,
+                        } : undefined}
+                      />
                     : <div><ImagePlus aria-hidden="true" /><span>Seed belum memiliki gambar. Upload foto kompetisi di sini.</span></div>}
                 </div>
               </section>

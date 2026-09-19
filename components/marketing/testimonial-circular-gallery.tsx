@@ -11,10 +11,15 @@ import { ArrowRight, Quote, X } from 'lucide-react'
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import {
+  getTestimonialHorizontalWheelDelta,
+  resolveTestimonialDragIntent,
+  type TestimonialDragIntent,
+} from '@/lib/marketing/testimonial-gallery-input'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 
 type GL = Renderer['gl']
-type HoverRect = { left: number; top: number; width: number; height: number }
+type HoverRect = { left: number; top: number; width: number; height: number; rotation: number }
 type GalleryHover = { index: number; rect: HoverRect } | null
 
 function lerp(from: number, to: number, ease: number) {
@@ -36,8 +41,6 @@ class TestimonialMedia {
   bend: number
   program!: Program
   plane!: Mesh
-  scale = 1
-  padding = 1.7
   width = 0
   widthTotal = 0
   x = 0
@@ -195,11 +198,13 @@ class TestimonialMedia {
   } = {}) {
     if (screen) this.screen = screen
     if (viewport) this.viewport = viewport
-    this.scale = Math.max(0.72, Math.min(1.05, this.screen.height / 720))
-    this.plane.scale.y = (this.viewport.height * (620 * this.scale)) / this.screen.height
-    this.plane.scale.x = (this.viewport.width * (455 * this.scale)) / this.screen.width
+    const cardWidth = Math.max(220, Math.min(300, this.screen.width * .2))
+    const cardHeight = cardWidth * 1.25
+    const gap = Math.max(18, Math.min(28, this.screen.width * .018))
+    this.plane.scale.y = (this.viewport.height * cardHeight) / this.screen.height
+    this.plane.scale.x = (this.viewport.width * cardWidth) / this.screen.width
     this.program.uniforms.uPlaneSizes.value = [this.plane.scale.x, this.plane.scale.y]
-    this.width = this.plane.scale.x + this.padding
+    this.width = this.plane.scale.x + (this.viewport.width * gap) / this.screen.width
     this.widthTotal = this.width * this.length
     this.x = this.width * this.index
   }
@@ -214,6 +219,7 @@ class TestimonialMedia {
       top: centerY - height / 2,
       width,
       height,
+      rotation: -this.plane.rotation.z,
     }
   }
 }
@@ -236,6 +242,8 @@ class TestimonialGalleryApp {
   isDown = false
   moved = false
   startX = 0
+  startY = 0
+  dragIntent: TestimonialDragIntent | null = null
   paused = false
   hoveredIndex: number | null = null
   onHover: (value: GalleryHover) => void
@@ -333,7 +341,17 @@ class TestimonialGalleryApp {
     const y = clientY - root.top
     const hits = this.medias
       .map(media => ({ media, rect: media.getScreenRect() }))
-      .filter(({ rect }) => x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height)
+      .filter(({ rect }) => {
+        const centerX = rect.left + rect.width / 2
+        const centerY = rect.top + rect.height / 2
+        const deltaX = x - centerX
+        const deltaY = y - centerY
+        const cosine = Math.cos(rect.rotation)
+        const sine = Math.sin(rect.rotation)
+        const localX = deltaX * cosine + deltaY * sine
+        const localY = -deltaX * sine + deltaY * cosine
+        return Math.abs(localX) <= rect.width / 2 && Math.abs(localY) <= rect.height / 2
+      })
       .sort((a, b) => {
         const centerA = Math.abs((a.rect.left + a.rect.width / 2) - x)
         const centerB = Math.abs((b.rect.left + b.rect.width / 2) - x)
@@ -360,20 +378,34 @@ class TestimonialGalleryApp {
     this.isDown = true
     this.moved = false
     this.startX = event.clientX
+    this.startY = event.clientY
+    this.dragIntent = 'pending'
     this.scroll.position = this.scroll.current
-    this.paused = true
-    this.hoveredIndex = null
-    this.onHover(null)
-    this.container.setPointerCapture?.(event.pointerId)
   }
 
   onPointerMove = (event: PointerEvent) => {
     if (this.isDown) {
-      const distance = (this.startX - event.clientX) * 0.018
-      if (Math.abs(this.startX - event.clientX) > 5) this.moved = true
-      this.scroll.target = this.scroll.position + distance
+      const deltaX = this.startX - event.clientX
+      const deltaY = this.startY - event.clientY
+
+      if (this.dragIntent === 'pending') {
+        this.dragIntent = resolveTestimonialDragIntent(deltaX, deltaY)
+        if (this.dragIntent === 'vertical') return
+        if (this.dragIntent === 'horizontal') {
+          this.paused = true
+          this.hoveredIndex = null
+          this.onHover(null)
+          this.container.setPointerCapture?.(event.pointerId)
+        }
+      }
+
+      if (this.dragIntent === 'horizontal') {
+        this.moved = true
+        this.scroll.target = this.scroll.position + deltaX * 0.018
+      }
       return
     }
+
     if (event.pointerType === 'touch') return
     const hit = this.hitTest(event.clientX, event.clientY)
     if (hit) {
@@ -385,8 +417,13 @@ class TestimonialGalleryApp {
 
   onPointerUp = (event: PointerEvent) => {
     if (!this.isDown) return
+    const intent = this.dragIntent
     this.isDown = false
-    if (!this.moved) {
+    this.dragIntent = null
+
+    if (intent === 'vertical') return
+
+    if (intent === 'pending' && !this.moved) {
       const hit = this.hitTest(event.clientX, event.clientY)
       if (hit) {
         this.showHover(hit)
@@ -402,7 +439,9 @@ class TestimonialGalleryApp {
 
   onWheel = (event: WheelEvent) => {
     if (this.hoveredIndex !== null) return
-    this.scroll.target += Math.sign(event.deltaY || event.deltaX) * 0.8
+    const horizontalDelta = getTestimonialHorizontalWheelDelta(event.deltaX, event.deltaY)
+    if (horizontalDelta === 0) return
+    this.scroll.target += horizontalDelta * 0.012
   }
 
   centeredMedia() {
@@ -491,6 +530,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
       top: `${hover.rect.top}px`,
       width: `${hover.rect.width}px`,
       height: `${hover.rect.height}px`,
+      transform: `rotate(${hover.rect.rotation}rad)`,
     }
   }, [hover])
 
@@ -546,9 +586,6 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
             </div>
           </div>
         ) : null}
-        <span className="marketing-testimonial-gallery__hint" aria-hidden="true">
-          Geser untuk menjelajah · arahkan atau sentuh kartu untuk melihat pencapaian
-        </span>
       </div>
 
       <dialog
@@ -568,7 +605,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         {selected ? (
           <div className="marketing-testimonial-dialog__panel">
             <div className="marketing-testimonial-dialog__media">
-              <Image src={selected.imageUrl} alt={selected.alt_text} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
+              <Image src={selected.imageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
             </div>
             <div className="marketing-testimonial-dialog__content">
               <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Tutup testimoni">
@@ -579,7 +616,6 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
               <strong className="marketing-testimonial-dialog__achievement">{selected.achievement}</strong>
               <Quote aria-hidden="true" size={25} />
               <blockquote>{selected.testimonial}</blockquote>
-              {selected.participant_label ? <p className="marketing-testimonial-dialog__participant">{selected.participant_label}</p> : null}
             </div>
           </div>
         ) : null}
