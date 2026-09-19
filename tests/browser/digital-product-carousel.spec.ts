@@ -14,21 +14,29 @@ test('mobile marketing burger stays at the far right of the top navigation', asy
   expect(pageWidth).toBeLessThanOrEqual(360)
 })
 
-test('Digital Product carousel is portrait, auto-advances after five seconds, and opens product detail', async ({ page }) => {
+test('Digital Product Card Swap rotates the front product and opens product detail', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('http://localhost:3001/produk-carousel')
 
-  const viewport = page.locator('.digital-product-carousel__viewport')
-  const box = await viewport.boundingBox()
-  expect(box).not.toBeNull()
-  expect(box!.height).toBeGreaterThan(box!.width)
-  expect(box!.height / box!.width).toBeGreaterThan(1.2)
-  expect(box!.height / box!.width).toBeLessThan(1.3)
+  const swap = page.getByTestId('react-bits-card-swap')
+  const cards = page.locator('.digital-product-swap-card')
+  await expect(swap).toBeVisible()
+  await expect(cards).toHaveCount(2)
+  await expect(page.getByTestId('digital-product-card-swap')).toBeVisible()
+
   const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth)
   expect(pageWidth).toBeLessThanOrEqual(390)
 
-  await expect(page.locator('.digital-product-carousel__slide[aria-hidden="false"] h3')).toHaveText('Produk Portrait Satu')
-  await expect(page.locator('.digital-product-carousel__slide[aria-hidden="false"] h3')).toHaveText('Produk Portrait Dua', { timeout: 6500 })
+  const frontTitle = async () => cards.evaluateAll(nodes => {
+    const ordered = nodes.map(node => ({
+      title: node.querySelector('h3')?.textContent ?? '',
+      z: Number.parseInt(getComputedStyle(node).zIndex || '0', 10),
+    })).sort((a, b) => b.z - a.z)
+    return ordered[0]?.title ?? ''
+  })
+
+  await expect.poll(frontTitle).toBe('Produk Portrait Satu')
+  await expect.poll(frontTitle, { timeout: 8000 }).toBe('Produk Portrait Dua')
 
   await page.getByTestId('digital-product-detail-link-produk-portrait-dua').click()
   await expect(page).toHaveURL(/\/produk-digital\/produk-portrait-dua$/)
