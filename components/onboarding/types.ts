@@ -16,6 +16,7 @@ export type VisualStage =
 export type TransitionPhase = 'idle' | 'exit' | 'enter'
 export type RevisionTarget = 'identity' | 'institution' | 'referral' | 'interests'
 export type OnboardingAtmosphere = 'welcome' | 'identity' | 'institution' | 'referral' | 'interests'
+export type OnboardingScene = VisualStage | 'calendar' | 'review'
 
 export type OnboardingExperienceProps = {
   profile: Profile

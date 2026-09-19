@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { OnboardingWizard } from '@/components/onboarding/wizard'
-import { OnboardingShell } from '@/components/onboarding/shell'
 import type { RevisionTarget } from '@/components/onboarding/types'
 import { getAccount } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
@@ -36,8 +35,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     throw new Error('Data pendaftaran belum dapat dimuat.')
   }
 
-  return <OnboardingShell>
-    <OnboardingWizard
+  return <OnboardingWizard
       profile={account.profile}
       mentee={account.mentee}
       names={onboardingNameDefaults(account.profile, account.user.user_metadata)}
@@ -48,5 +46,4 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       revisionTarget={revisionTarget}
       reviewReturnPath={revisionTarget ? '/onboarding/review' : null}
     />
-  </OnboardingShell>
 }

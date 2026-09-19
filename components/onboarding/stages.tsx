@@ -1,6 +1,7 @@
 import { ArrowRight, Check, CheckCircle2 } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { displayLabel } from '@/lib/labels'
+import { BrandLogo } from '@/components/brand/brand-logo'
 import type { Institution, MasterOption, RegistrationMethod } from '@/lib/supabase/database.types'
 import { PasswordInput } from '@/components/auth/password-input'
 import { InstitutionPicker } from './institution-picker'
@@ -8,7 +9,7 @@ import { InlineError, PrimaryAction, QuestionStage } from './stage-frame'
 
 export function WelcomeStage({ firstName, onStart }: { firstName: string; onStart: () => void }) {
   return <section className="onboarding-welcome">
-    <div className="onboarding-welcome__mark" aria-hidden="true"><span /></div>
+    <div className="onboarding-welcome__mark" aria-hidden="true"><BrandLogo variant="mark" priority /></div>
     <p className="onboarding-eyebrow">Strativate</p>
     <h1>Selamat datang di Strativate{firstName ? ', ' + firstName : ''}.</h1>
     <p>Sebelum mulai, kami ingin mengenalmu sedikit lebih baik.</p>
@@ -268,7 +269,7 @@ export function ReferralStage({
   onSubmitOther: (event: FormEvent<HTMLFormElement>) => void
 }) {
   return <QuestionStage eyebrow="Satu hal lagi" title={<>Kamu pertama kali menemukan<br className="onboarding-desktop-break" /> Strativate dari mana?</>} description="Pilih jawaban yang paling sesuai.">
-    {referrals.length === 0 ? <InlineError message="Pilihan sumber informasi belum tersedia. Muat ulang halaman untuk mencoba lagi." /> : <div className="onboarding-answer-list">
+    {referrals.length === 0 ? <InlineError message="Pilihan sumber informasi belum tersedia. Muat ulang halaman untuk mencoba lagi." /> : <div className="onboarding-answer-list" data-has-selection={selected && selected !== 'other' ? true : undefined}>
       {referrals.map(option => {
         const active = selected === option.id
         return <button type="button" className="onboarding-answer-card" data-selected={active || undefined} aria-pressed={active} disabled={busy} key={option.id} onClick={() => onChoose(option.id)}>
