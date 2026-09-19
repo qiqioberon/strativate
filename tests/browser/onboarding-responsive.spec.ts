@@ -259,7 +259,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
 
     const interestCards = page.locator('.onboarding-answer-card--check')
     expect(await interestCards.count()).toBeGreaterThanOrEqual(12)
-    const businessCard = interestCards.filter({ hasText: 'Business Case' })
+    const businessCard = interestCards.filter({ hasText: 'Kasus Bisnis' })
     const uiuxCard = interestCards.filter({ hasText: 'UI/UX' })
     await businessCard.click()
     await expect(businessCard.getByRole('checkbox')).toBeChecked()
@@ -314,7 +314,7 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await expect(page.getByText('Pengecekan akhir', { exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Sebelum masuk, periksa sebentar.' })).toBeVisible()
     await expect(page.getByText('Institut Teknologi Sepuluh Nopember', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Business Case · UI\/UX/)).toBeVisible()
+    await expect(page.getByText(/Kasus Bisnis · UI\/UX/)).toBeVisible()
     await expect(page.getByText('Tidak dihubungkan', { exact: true })).toBeVisible()
     await expect(page.getByText('Revisi data', { exact: true })).toBeVisible()
 
