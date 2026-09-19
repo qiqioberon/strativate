@@ -14,10 +14,14 @@ test('hard load warms navigation behind a progress intro before normal interacti
 
   const intro = page.getByTestId('initial-brand-intro')
   const progress = page.getByTestId('initial-load-progress')
+  const hero = page.locator('.marketing-hero')
+  const typedText = page.getByTestId('hero-text-type').locator('.rb-text-type__content')
   await expect(intro).toBeVisible()
   await expect(intro).toHaveAttribute('data-phase', 'visible')
   await expect(progress).toBeVisible()
   await expect(progress).toHaveAttribute('aria-valuenow', '1')
+  await expect(hero).not.toHaveClass(/is-visible/)
+  await expect(typedText).toHaveText('')
 
   await page.clock.fastForward(2400)
   await expect(progress).toHaveAttribute('aria-valuenow', '100')
@@ -25,6 +29,10 @@ test('hard load warms navigation behind a progress intro before normal interacti
   await expect(intro).toHaveAttribute('data-phase', 'leaving')
   await page.clock.fastForward(250)
   await expect(intro).toHaveCount(0)
+  await page.clock.fastForward(32)
+  await expect(hero).toHaveClass(/is-visible/)
+  await page.clock.fastForward(560)
+  await expect(typedText).not.toHaveText('')
 })
 
 test('a cache miss gets immediate branded feedback instead of a silent navigation delay', async ({ page }) => {

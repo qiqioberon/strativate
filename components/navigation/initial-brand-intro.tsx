@@ -77,6 +77,7 @@ export function InitialBrandIntro() {
     <div
       className={`${styles.overlay} ${phase === 'leaving' ? styles.leaving : ''}`}
       data-testid="initial-brand-intro"
+      data-page-motion-blocker="true"
       data-phase={phase}
       role="status"
       aria-live="polite"

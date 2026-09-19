@@ -5,6 +5,8 @@ import test from 'node:test'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
+const motionGate = read('components/navigation/use-page-motion-ready.ts')
+const marketingMotion = read('components/marketing/marketing-motion.tsx')
 
 test('hard-load brand intro owns the one-time bootstrap progress experience', () => {
   assert.equal(existsSync(join(root, 'components/navigation/initial-brand-intro.tsx')), true)
@@ -13,6 +15,7 @@ test('hard-load brand intro owns the one-time bootstrap progress experience', ()
   const layout = read('app/layout.tsx')
   assert.match(intro, /variant="wordmark"/)
   assert.match(intro, /data-testid="initial-brand-intro"/)
+  assert.match(intro, /data-page-motion-blocker="true"/)
   assert.match(intro, /data-testid="initial-load-progress"/)
   assert.match(layout, /InitialBrandIntro/)
   assert.doesNotMatch(layout, /RouteLoadingMode/)
@@ -39,8 +42,18 @@ test('root loading fallback exists for cache misses without restoring the old cl
 
   assert.match(loading, /BrandedRouteLoading/)
   assert.match(loader, /data-testid="route-loading-overlay"/)
+  assert.match(loader, /data-page-motion-blocker="true"/)
   assert.match(loader, /data-testid="route-loading-progress"/)
   assert.match(loader, /role="status"/)
   assert.match(css, /prefers-reduced-motion:\s*reduce/)
   assert.equal(existsSync(join(root, 'components/navigation/route-loading-mode.tsx')), false)
+})
+
+test('page motion waits for loading overlays to leave the DOM before revealing content', () => {
+  assert.match(motionGate, /PAGE_MOTION_BLOCKER_SELECTOR/)
+  assert.match(motionGate, /data-page-motion-blocker/)
+  assert.match(motionGate, /MutationObserver/)
+  assert.match(motionGate, /requestAnimationFrame/)
+  assert.match(marketingMotion, /usePageMotionReady/)
+  assert.match(marketingMotion, /if \(!motionReady\) return/)
 })
