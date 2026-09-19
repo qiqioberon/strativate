@@ -7,6 +7,10 @@ const gallery = readFileSync(new URL('../components/marketing/testimonial-circul
 const admin = readFileSync(new URL('../components/admin/testimonial-management.tsx', import.meta.url), 'utf8')
 const page = readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../app/marketing.css', import.meta.url), 'utf8')
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+  dependencies?: Record<string, string>
+  packageManager?: string
+}
 
 test('homepage places testimonial stories between mentors and digital products with approved headline', () => {
   const mentorIndex = home.indexOf('homepage-mentors-section')
@@ -35,4 +39,12 @@ test('admin testimonial manager uploads to Supabase Storage and controls publish
   assert.match(admin, /reorder_marketing_testimonials/)
   assert.match(admin, /is_published/)
   assert.match(admin, /Menunggu gambar/)
+})
+
+
+test('testimonial gallery keeps OGL as a runtime dependency with the CI pnpm version pinned', () => {
+  assert.equal(packageJson.dependencies?.ogl, '^1.0.11')
+  assert.equal(packageJson.packageManager, 'pnpm@10.17.1')
+  assert.match(gallery, /const hoveredIndex = hover\?\.index \?\? null/)
+  assert.match(gallery, /hoveredIndex !== null/)
 })
