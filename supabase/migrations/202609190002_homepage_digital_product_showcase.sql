@@ -11,7 +11,7 @@ create index digital_products_homepage_showcase_order
   where homepage_featured and is_published;
 
 with initial_showcase as (
-  select id, row_number() over (order by created_at desc, id) - 1 as showcase_order
+  select id, (row_number() over (order by created_at desc, id) - 1)::integer as showcase_order
   from public.digital_products
   where is_published
   order by created_at desc, id
