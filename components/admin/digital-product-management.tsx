@@ -92,7 +92,7 @@ export function DigitalProductManagement() {
 
   const load = useCallback(async () => {
     setLoading(true); setError(''); setSetupRequired(false); setLoadFailed(false)
-    const { data, error: loadError } = await supabase.from('digital_products').select('*,homepage_featured,homepage_featured_order').order('name', { ascending: true }).order('id', { ascending: true })
+    const { data, error: loadError } = await supabase.from('digital_products').select('id,name,slug,description,image_path,price_amount,content_type,content_path,content_mime_type,content_file_name,content_size_bytes,page_count,duration_seconds,is_published,homepage_featured,homepage_featured_order,created_at,updated_at').order('name', { ascending: true }).order('id', { ascending: true })
     if (loadError) {
       setProducts([])
       if (isDigitalProductSetupRequired(loadError)) setSetupRequired(true)
