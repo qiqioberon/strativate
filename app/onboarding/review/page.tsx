@@ -54,11 +54,13 @@ export default async function OnboardingReviewPage() {
       <div className="onboarding-review__intro">
         <div className="onboarding-review__symbol" aria-hidden="true"><CheckCircle2 size={28} /></div>
         <p className="onboarding-eyebrow">Pengecekan akhir</p>
-        <SplitText text="Sebelum masuk, periksa sebentar." className="onboarding-review__animated-title" />
+        <SplitText text="Sebelum masuk, periksa sebentar." className="onboarding-review__animated-title" startDelay={.12} />
         <BlurText
           text="Pastikan semuanya sudah sesuai. Kalau ada yang ingin diubah, kamu masih bisa merevisinya tanpa mengulang dari awal."
           className="onboarding-review__animated-description"
-          delay={26}
+          delay={38}
+          duration={.76}
+          startDelay={.38}
         />
       </div>
 

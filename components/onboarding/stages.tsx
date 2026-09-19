@@ -15,12 +15,16 @@ export function WelcomeStage({ firstName, onStart }: { firstName: string; onStar
     <SplitText
       text={`Selamat datang di Strativate${firstName ? ', ' + firstName : ''}.`}
       className="onboarding-welcome__animated-title"
-      delay={34}
+      delay={58}
+      duration={.96}
+      startDelay={.22}
     />
     <BlurText
       text="Sebelum mulai, kami ingin mengenalmu sedikit lebih baik."
       className="onboarding-welcome__animated-description"
-      delay={30}
+      delay={42}
+      duration={.78}
+      startDelay={.48}
     />
     <PrimaryAction onClick={onStart}>Mulai <ArrowRight aria-hidden="true" size={17} /></PrimaryAction>
   </section>

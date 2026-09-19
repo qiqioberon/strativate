@@ -42,7 +42,7 @@ export function QuestionStage({
         ? <SplitText text={title} className="onboarding-question__animated-title" />
         : <h1>{title}</h1>}
       {description && (typeof description === 'string'
-        ? <BlurText text={description} className="onboarding-question__description onboarding-question__animated-description" />
+        ? <BlurText text={description} className="onboarding-question__description onboarding-question__animated-description" startDelay={.16} />
         : <p className="onboarding-question__description">{description}</p>)}
     </header>
     <div className="onboarding-question__interaction" data-motion={interactionMotion}>{children}</div>

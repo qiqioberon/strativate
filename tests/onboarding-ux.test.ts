@@ -134,7 +134,7 @@ test('list stages avoid parent-child double translate while answer cards own cap
   assert.match(stages, /interactionMotion="list"/)
   assert.match(css, /onboarding-question__interaction\[data-motion='wrapper'\]/)
   assert.match(css, /onboarding-question__interaction\[data-motion='list'\] \{ animation: none; \}/)
-  assert.match(css, /nth-child\(n\+6\)[^\n]*245ms/)
+  assert.match(css, /nth-child\(n\+6\)[^\n]*420ms/)
 })
 
 test('referral choice interaction remains direct save with tactile selection state', () => {
@@ -203,10 +203,10 @@ test('review uses direct section edits, removes duplicate revision menu, and doe
   assert.match(review, /Bisa dihubungkan nanti dari dashboard/)
 })
 
-test('review entrance is staged and capped to a fast payoff', () => {
-  assert.match(css, /onboarding-review__symbol \{ animation: onboarding-review-item 230ms 15ms both; \}/)
-  assert.match(css, /onboarding-review__item:nth-child\(5\) \{ animation: onboarding-review-item 240ms 225ms both; \}/)
-  assert.match(css, /onboarding-review__actions \{ animation: onboarding-review-item 240ms 250ms both; \}/)
+test('review entrance stays staged at a readable pace', () => {
+  assert.match(css, /onboarding-review__symbol \{ animation: onboarding-review-item 380ms 50ms both; \}/)
+  assert.match(css, /onboarding-review__item:nth-child\(5\) \{ animation: onboarding-review-item 380ms 560ms both; \}/)
+  assert.match(css, /onboarding-review__actions \{ animation: onboarding-review-item 400ms 640ms both; \}/)
 })
 
 test('final CTA has guarded final handoff and still relies on canonical auth continue destination', () => {

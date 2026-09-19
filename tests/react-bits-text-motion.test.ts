@@ -9,6 +9,8 @@ const stages = readFileSync('components/onboarding/stages.tsx', 'utf8')
 const calendar = readFileSync('app/onboarding/calendar/page.tsx', 'utf8')
 const review = readFileSync('app/onboarding/review/page.tsx', 'utf8')
 const commerceCss = readFileSync('app/digital-product-commerce.css', 'utf8')
+const heroCss = readFileSync('app/hero-kinetic.css', 'utf8')
+const onboardingCss = readFileSync('app/onboarding.css', 'utf8')
 
 test('homepage headline keeps a static setup and cycles equal-level conclusions with Text Type', () => {
   assert.match(home, /Strategi yang kuat dimulai dari/)
@@ -19,6 +21,8 @@ test('homepage headline keeps a static setup and cycles equal-level conclusions 
   assert.match(home, /<TextType/)
   assert.match(motion, /data-react-bits-text="type"/)
   assert.match(motion, /prefers-reduced-motion: reduce/)
+  assert.match(heroCss, /\.rb-text-type \{\s*display: inline;\s*\}/)
+  assert.doesNotMatch(heroCss, /\.rb-text-type \{[^}]*display: inline-flex;/)
 })
 
 test('onboarding headlines use Split Text while supporting copy uses Blur Text', () => {
@@ -32,6 +36,12 @@ test('onboarding headlines use Split Text while supporting copy uses Blur Text',
   assert.match(review, /onboarding-review__animated-description/)
   assert.match(motion, /data-react-bits-text="split"/)
   assert.match(motion, /data-react-bits-text="blur"/)
+  assert.match(motion, /delay = 56/)
+  assert.match(motion, /duration = \.9/)
+  assert.match(motion, /startDelay = 0/)
+  assert.match(stages, /startDelay=\{\.22\}/)
+  assert.match(stages, /startDelay=\{\.48\}/)
+  assert.match(onboardingCss, /onboarding-stage-enter 420ms/)
 })
 
 test('mobile Card Swap leaves deliberate breathing room below the card for navigation dots', () => {
