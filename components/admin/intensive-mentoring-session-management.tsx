@@ -1,7 +1,7 @@
 'use client'
 
 import {CalendarDays,Eye,Plus,RefreshCw,Save,ShieldAlert,UserRound,X} from 'lucide-react'
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
+import {useCallback,useEffect,useRef,useState} from 'react'
 import {CopyTextButton} from '@/components/dashboard/copy-text-button'
 import {createClient} from '@/lib/supabase/client'
 import {intensiveStageLabels,type IntensiveProgramStage,type IntensiveSessionView} from '@/lib/intensive-mentoring/types'
@@ -17,7 +17,8 @@ type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise
 const STAGES=Object.entries(intensiveStageLabels) as [IntensiveProgramStage,string][]
 
 export function IntensiveMentoringSessionManagement(){
- const supabase=useMemo(()=>createClient(),[]),rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
+ const[supabase]=useState(()=>createClient())
+ const rpc=supabase as unknown as RpcClient
  const[rows,setRows]=useState<Engagement[]>([]),[mentors,setMentors]=useState<Mentor[]>([]),[focuses,setFocuses]=useState<Focus[]>([])
  const[selectedId,setSelectedId]=useState(''),[session,setSession]=useState<AdminSession|null>(null),[scheduleId,setScheduleId]=useState<string|null>(null)
  const[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState('')
@@ -43,8 +44,8 @@ export function IntensiveMentoringSessionManagement(){
  },[rpc,supabase])
 
  useEffect(()=>{void load()},[load])
- useEffect(()=>{if(!selected)return;setPrimaryMentor(selected.primary_mentor_id??'');setStage(selected.program_stage);setProgress(selected.progress_summary??'')},[selected?.engagement_id])
- useEffect(()=>{const d=dialogRef.current;if(!d)return;if(session&&!d.open)d.showModal();if(!session&&d.open)d.close();if(session){setTopicFocus(session.focusId??'');setResolvedTopic(session.resolvedTopic??session.menteeTopicRequest??'');setSessionMentor(session.mentorId??selected?.primary_mentor_id??'');setSessionMentorReason('')}},[selected?.primary_mentor_id,session])
+ useEffect(()=>{if(!selected)return;setPrimaryMentor(selected.primary_mentor_id??'');setStage(selected.program_stage);setProgress(selected.progress_summary??'')},[selected])
+ useEffect(()=>{const d=dialogRef.current;if(!d)return;if(session&&!d.open)d.showModal();if(!session&&d.open)d.close();if(session){setTopicFocus(session.focusId??'');setResolvedTopic(session.resolvedTopic??session.menteeTopicRequest??'');setSessionMentor(session.mentorId??selected?.primary_mentor_id??'');setSessionMentorReason('')}},[selected,session])
  useEffect(()=>{const refresh=()=>void load();window.addEventListener('strativate:operational-refresh',refresh);return()=>window.removeEventListener('strativate:operational-refresh',refresh)},[load])
 
  async function run(key:string,name:string,args:Record<string,unknown>,success:string){setBusy(key);setError('');setMessage('');const result=await rpc.rpc(name,args);setBusy('');if(result.error){setError(result.error.message);return false}setMessage(success);await load();return true}
