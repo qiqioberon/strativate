@@ -27,8 +27,11 @@ test('password is mandatory for email and optional but validated for Google', ()
   assert.ok(passwordError('', '', true))
   assert.equal(passwordError('', '', false), null)
   assert.ok(passwordError('short', 'short', false))
+  assert.match(passwordError('lowercase-2026!', 'lowercase-2026!', true) || '', /kapital/)
+  assert.match(passwordError('No-number!', 'No-number!', true) || '', /angka/)
+  assert.match(passwordError('NoSymbol2026', 'NoSymbol2026', true) || '', /simbol/)
   assert.ok(passwordError('Long-password-2026', 'different', false))
-  assert.equal(passwordError('Long-password-2026', 'Long-password-2026', true), null)
+  assert.equal(passwordError('Long-password-2026!', 'Long-password-2026!', true), null)
 })
 
 test('username validates allowed format without changing case-sensitive display', () => {
