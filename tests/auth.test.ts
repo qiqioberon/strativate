@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { destinationFor, passwordError, usernameError } from '../lib/auth/rules'
 import { isProtectedApplicationPath } from '../lib/auth/routes'
@@ -32,6 +33,12 @@ test('password is mandatory for email and optional but validated for Google', ()
   assert.match(passwordError('NoSymbol2026', 'NoSymbol2026', true) || '', /simbol/)
   assert.ok(passwordError('Long-password-2026', 'different', false))
   assert.equal(passwordError('Long-password-2026!', 'Long-password-2026!', true), null)
+})
+
+test('strong password rules apply to password creation without blocking existing-password login', () => {
+  const authForm = readFileSync(new URL('../components/auth/auth-form.tsx', import.meta.url), 'utf8')
+  assert.match(authForm, /signInWithPassword/)
+  assert.doesNotMatch(authForm, /passwordError/)
 })
 
 test('username validates allowed format without changing case-sensitive display', () => {
