@@ -1,7 +1,7 @@
 'use client'
 
 import {CalendarDays,Eye,Plus,RefreshCw,Save,ShieldAlert,UserRound,X} from 'lucide-react'
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
+import {useCallback,useEffect,useRef,useState} from 'react'
 import {CopyTextButton} from '@/components/dashboard/copy-text-button'
 import {createClient} from '@/lib/supabase/client'
 import {intensiveStageLabels,type IntensiveProgramStage,type IntensiveSessionView} from '@/lib/intensive-mentoring/types'
@@ -17,7 +17,8 @@ type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise
 const STAGES=Object.entries(intensiveStageLabels) as [IntensiveProgramStage,string][]
 
 export function IntensiveMentoringSessionManagement(){
- const supabase=useMemo(()=>createClient(),[]),rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
+ const[supabase]=useState(()=>createClient())
+ const rpc=supabase as unknown as RpcClient
  const[rows,setRows]=useState<Engagement[]>([]),[mentors,setMentors]=useState<Mentor[]>([]),[focuses,setFocuses]=useState<Focus[]>([])
  const[selectedId,setSelectedId]=useState(''),[session,setSession]=useState<AdminSession|null>(null),[scheduleId,setScheduleId]=useState<string|null>(null)
  const[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState('')
