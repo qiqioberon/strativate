@@ -254,7 +254,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Minatmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Sumber informasimu sudah diperbarui.')
       else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Pilihanmu belum tersimpan. Coba lagi.'))
@@ -276,7 +276,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     setPending(true)
     try {
       await runCanonicalSave(3, result.data as Json)
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawabanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Jawaban sumbermu sudah diperbarui.')
       else transitionTo({ stage: 'interests' })
     } catch (submitError) {
       setError(formError(submitError, 'Jawabanmu belum tersimpan. Coba lagi.'))
@@ -306,7 +306,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
     try {
       const data = await runCanonicalSave(4, result.data as Json)
       if (!data.onboarding_completed_at) throw new Error('Completion missing')
-      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Pilihanmu sudah diperbarui.')
+      if (revisionMode && reviewReturnPath) transitionTo({ route: reviewReturnPath }, 'Minatmu sudah diperbarui.')
       else transitionTo({ route: '/onboarding/calendar' }, 'Sip, pilihanmu sudah tersimpan.')
     } catch (submitError) {
       setError(formError(submitError, 'Minatmu belum tersimpan. Coba lagi.'))

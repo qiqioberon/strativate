@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const read = (path: string) => readFileSync(new URL('../' + path, import.meta.url), 'utf8')
-const wizard = read('components/onboarding/wizard.tsx')
 const experience = read('components/onboarding/experience.tsx')
 const stages = read('components/onboarding/stages.tsx')
 const frame = read('components/onboarding/stage-frame.tsx')
