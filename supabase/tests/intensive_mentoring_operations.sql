@@ -37,6 +37,16 @@ insert into auth.users(id,email,encrypted_password) values
 update public.profiles set role='admin' where id='99500000-0000-0000-0000-000000000001';
 update public.mentee_profiles set onboarding_completed_at=now() where user_id in('99500000-0000-0000-0000-000000000002','99500000-0000-0000-0000-000000000003');
 
+do $commerce_resolution$
+declare v_win uuid;v_assurance uuid;
+begin
+ select id into v_win from public.intensive_mentoring_add_ons where code='WIN_GUARANTEE_PROTECTION';
+ select id into v_assurance from public.intensive_mentoring_bundles where code='COMPETITION_ASSURANCE';
+ if not exists(select 1 from public.resolve_commerce_item(v_win) where is_available and price_amount=500000) then raise exception 'Win Guarantee commerce item unavailable';end if;
+ if not exists(select 1 from public.resolve_commerce_item(v_assurance) where is_available and price_amount=3000000) then raise exception 'Competition Assurance commerce item unavailable';end if;
+end
+$commerce_resolution$;
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub','99500000-0000-0000-0000-000000000001',true);
 
@@ -46,8 +56,6 @@ declare
 begin
  select id into v_win from public.intensive_mentoring_add_ons where code='WIN_GUARANTEE_PROTECTION';
  select id into v_assurance from public.intensive_mentoring_bundles where code='COMPETITION_ASSURANCE';
- if not exists(select 1 from public.resolve_commerce_item(v_win) where is_available and price_amount=500000) then raise exception 'Win Guarantee commerce item unavailable';end if;
- if not exists(select 1 from public.resolve_commerce_item(v_assurance) where is_available and price_amount=3000000) then raise exception 'Competition Assurance commerce item unavailable';end if;
  if not exists(select 1 from public.list_admin_cart_link_items('99500000-0000-0000-0000-000000000002','Win Guarantee') where commerce_item_id=v_win) then raise exception 'Win Guarantee missing from Cart Link discovery';end if;
  if not exists(select 1 from public.list_admin_cart_link_items('99500000-0000-0000-0000-000000000002','Competition Assurance') where commerce_item_id=v_assurance) then raise exception 'Competition Assurance missing from Cart Link discovery';end if;
 
@@ -55,7 +63,6 @@ begin
    null,'99500000-0000-0000-0000-000000000002',null,'Harvard Global Case Competition',
    6,4750000,null,array[v_win],array['International pitch deck review','Additional mock Q&A']
  );
- if not exists(select 1 from public.resolve_commerce_item(v_offer) where item_kind='intensive_mentoring_custom_offer' and price_amount=4750000 and is_available) then raise exception 'Custom offer resolver drifted';end if;
  if not exists(select 1 from public.list_admin_cart_link_items('99500000-0000-0000-0000-000000000002','Harvard') where commerce_item_id=v_offer) then raise exception 'Intended mentee cannot discover custom offer';end if;
  if exists(select 1 from public.list_admin_cart_link_items('99500000-0000-0000-0000-000000000003','Harvard') where commerce_item_id=v_offer) then raise exception 'Wrong mentee can discover custom offer';end if;
  v_link:=public.create_commerce_cart_link_with_context('99500000-0000-0000-0000-000000000002',repeat('a',64),array[v_offer],null,null);
@@ -63,6 +70,14 @@ begin
 end
 $commerce$;
 reset role;
+
+do $custom_offer_resolution$
+declare v_offer uuid;
+begin
+ select id into v_offer from public.intensive_mentoring_custom_offers where competition_name='Harvard Global Case Competition';
+ if not exists(select 1 from public.resolve_commerce_item(v_offer) where item_kind='intensive_mentoring_custom_offer' and price_amount=4750000 and is_available) then raise exception 'Custom offer resolver drifted';end if;
+end
+$custom_offer_resolution$;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','99500000-0000-0000-0000-000000000003',true);
