@@ -260,6 +260,11 @@ async function stubAdminIntensive(page:Page){
   await page.route('**/api/admin/intensive-mentoring/sessions/*/meeting',route=>json(route,{sessionId:'96000000-0000-0000-0000-000000000001',status:'scheduled',meetingProvider:'zoom',providerMeetingId:'123456789',providerMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',manualMeetingUrl:null,effectiveMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',providerSyncError:null,calendarSyncStatus:'synced',calendarSyncError:null,recordingStatus:'expected',recordingError:null}))
 }
 
+async function waitForBrandIntro(page: Page) {
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+}
+
 async function expectNoDocumentOverflow(page: Page) {
   const viewport = await page.evaluate(() => ({
     width: window.innerWidth,
@@ -474,7 +479,8 @@ test('admin Intensive engagement table, Program Configuration states, and comple
   }
 
   await page.setViewportSize({width:1024,height:900})
-  await page.getByRole('button',{name:'Kelola',exact:true}).last().click()
+  const firstSessionRow=page.locator('.mentee-session-table tbody tr').filter({hasText:'Sesi 1'}).first()
+  await firstSessionRow.getByRole('button',{name:'Kelola',exact:true}).click()
   const detail=page.locator('dialog[aria-labelledby="intensive-admin-session-title"]')
   await expect(detail).toBeVisible()
   await expect(detail.locator('textarea').first()).toHaveValue('Final storyline & Q&A')
@@ -627,6 +633,7 @@ test('Cart Link failure states are centered, responsive, and authorization-safe'
     for(const size of [{width:1440,height:900},{width:390,height:844}]){
       await page.setViewportSize(size)
       await page.goto(`http://localhost:3001/cart-link/error?reason=${fixture.reason}`)
+      await waitForBrandIntro(page)
       const card=page.locator('.cart-link-error-card')
       await expect(page.getByRole('heading',{name:'Cart Link tidak dapat digunakan.'})).toBeVisible()
       await expect(card).toContainText(fixture.copy)
