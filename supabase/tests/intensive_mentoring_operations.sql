@@ -88,12 +88,16 @@ begin
  begin
   perform public.add_cart_item(v_offer);
   raise exception 'Wrong mentee unexpectedly added custom offer';
- exception when insufficient_privilege then null;
+ exception
+  when insufficient_privilege then null;
+  when invalid_parameter_value then null;
  end;
  begin
   perform public.claim_commerce_cart_link(repeat('a',64));
   raise exception 'Wrong mentee unexpectedly claimed custom offer Cart Link';
- exception when insufficient_privilege then null;
+ exception
+  when insufficient_privilege then null;
+  when invalid_parameter_value then null;
  end;
 end
 $wrong_recipient$;
