@@ -4,6 +4,7 @@ import { Check, ChevronDown, Eye, Loader2, Search, ShieldAlert, X } from 'lucide
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
 import { TablePagination } from '@/components/admin/table-pagination'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { formatRupiah } from '@/lib/commerce/money'
 import { createClient } from '@/lib/supabase/client'
@@ -38,6 +39,7 @@ export function CommerceCartLinkManagement(){
  useEffect(()=>{const timer=setTimeout(()=>void loadMentees(),220);return()=>clearTimeout(timer)},[loadMentees])
  useEffect(()=>{const timer=setTimeout(()=>void loadItems(),220);return()=>clearTimeout(timer)},[loadItems])
  useEffect(()=>{const timer=setTimeout(()=>void loadHistory(),220);return()=>clearTimeout(timer)},[loadHistory])
+ useOperationalInvalidation(['cart-links'],()=>{void loadHistory()})
  useEffect(()=>{void loadCompetitionCategories()},[loadCompetitionCategories])
  useEffect(()=>{const close=(event:PointerEvent)=>{if(comboRef.current&&!comboRef.current.contains(event.target as Node))setComboOpen(false)};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[])
  useEffect(()=>{const dialog=dialogRef.current;if(!dialog)return;if(detail&&!dialog.open)dialog.showModal();if(!detail&&dialog.open)dialog.close()},[detail])

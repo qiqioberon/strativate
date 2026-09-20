@@ -11,6 +11,7 @@ import {
   type AdminCommerceReport,
   type CommerceCsvField,
 } from '@/lib/admin/commerce-reporting'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { createClient } from '@/lib/supabase/client'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
 import { TablePagination } from './table-pagination'
@@ -63,6 +64,7 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(mode === 'overview' ? 5 : 10)
   const [totalOrders, setTotalOrders] = useState(0)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [selected, setSelected] = useState<AdminCommerceOrder | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -85,10 +87,27 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
       setError(ordersResult.error?.message || reportResult.error?.message || 'Data operasional belum dapat dimuat.'); setLoading(false); return
     }
     const rows = ordersResult.data ?? []
-    setOrders(rows); setTotalOrders(Number(rows[0]?.total_count ?? 0)); setReport(reportResult.data?.[0] ?? EMPTY_REPORT); setLoading(false)
-  }, [client, endDate, mode, page, pageSize, query, startDate, status])
+    setOrders(rows); setTotalOrders(Number(rows[0]?.total_count ?? 0)); setReport(reportResult.data?.[0] ?? EMPTY_REPORT)
+    if (selectedOrderId) {
+      const visibleMatch = rows.find(order => order.order_id === selectedOrderId) ?? null
+      if (visibleMatch) {
+        setSelected(visibleMatch)
+      } else {
+        const detailResult = await client.rpc<AdminCommerceOrder[]>('list_admin_commerce_orders', {
+          p_query: selectedOrderId, p_status: '', p_from: null, p_to: null, p_limit: 1, p_offset: 0,
+        })
+        if (!detailResult.error) {
+          const canonical = detailResult.data?.find(order => order.order_id === selectedOrderId) ?? null
+          setSelected(canonical)
+          if (!canonical) setSelectedOrderId(null)
+        }
+      }
+    }
+    setLoading(false)
+  }, [client, endDate, mode, page, pageSize, query, selectedOrderId, startDate, status])
 
   useEffect(() => { const timer = setTimeout(() => { void load() }, 200); return () => clearTimeout(timer) }, [load])
+  useOperationalInvalidation(['commerce', 'admin-overview'], () => { void load() })
   useEffect(() => {
     if (!focusOrderId || mode !== 'orders') return
     setQuery(focusOrderId)
@@ -97,9 +116,11 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
   useEffect(() => {
     if (!focusOrderId || mode !== 'orders') return
     const match = orders.find(order => order.order_id === focusOrderId)
-    if (match) setSelected(match)
+    if (match) { setSelectedOrderId(match.order_id); setSelected(match) }
   }, [focusOrderId, mode, orders])
   useEffect(() => { const dialog = dialogRef.current; if (!dialog) return; if (selected && !dialog.open) dialog.showModal(); if (!selected && dialog.open) dialog.close() }, [selected])
+  function openOrder(order: AdminCommerceOrder) { setSelectedOrderId(order.order_id); setSelected(order) }
+  function closeOrder() { setSelectedOrderId(null); setSelected(null) }
   function changePageSize(value: number) { setPageSize(value); setPage(0) }
   function toggleCsvField(field: CommerceCsvField) { setCsvFields(current => current.includes(field) ? current.filter(item => item !== field) : [...current, field]) }
 
@@ -137,8 +158,8 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
     {error ? <p className="form-error" role="alert">{error}</p> : null}
     <div className="ops-metrics"><Metric label="Revenue" value={formatRupiah(report.total_revenue)} detail={`${report.paid_orders} order lunas`} /><Metric label="Total orders" value={String(report.total_transactions)} detail={`${report.pending_orders} pending`} /><Metric label="Mentee" value={String(report.total_users)} detail={`${report.customer_count} customer pada range`} /><Metric label="Mentor aktif" value={String(report.total_mentors)} detail="Domain mentor" /><Metric label="Mentoring sessions" value={String(report.total_sessions)} detail={`${report.sessions_today} sesi hari ini`} /><Metric label="Butuh tindak lanjut" value={String(report.pending_sessions)} detail="Fokus / penjadwalan" /></div>
     <div className="ops-overview-grid"><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Trend</p><h3>Revenue & order</h3></div><TrendingUp aria-hidden="true" /></div><TrendChart points={report.trend} max={maxRevenue} /></section><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Quick actions</p><h3>Buka area operasional</h3></div></div><div className="ops-quick-actions"><button type="button" onClick={() => onNavigate?.('orders')}><ShoppingCart /><span><strong>Pesanan</strong><small>Order & payment history</small></span></button><button type="button" onClick={() => onNavigate?.('sessions')}><UsersRound /><span><strong>Mentoring Sessions</strong><small>{report.pending_sessions} membutuhkan tindak lanjut</small></span></button><button type="button" onClick={() => onNavigate?.('reports')}><TrendingUp /><span><strong>Laporan</strong><small>Analisis dan export CSV</small></span></button></div></section></div>
-    <OrdersTable orders={orders} loading={loading} onDetail={setSelected} compact />
-    <OrderDialog dialogRef={dialogRef} order={selected} onClose={() => setSelected(null)} />
+    <OrdersTable orders={orders} loading={loading} onDetail={openOrder} compact />
+    <OrderDialog dialogRef={dialogRef} order={selected} onClose={closeOrder} />
   </div>
 
   return <div className="ops-page">
@@ -146,8 +167,8 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
     <div className="ops-filter-bar"><label className="ops-field ops-field--wide"><span>Cari</span><input value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Order, email, atau produk" /></label><label className="ops-field"><span>Status</span><select value={status} onChange={event => { setStatus(event.target.value); setPage(0) }}><option value="">Semua status</option><option value="pending_payment">Menunggu pembayaran</option><option value="paid">Lunas</option><option value="payment_failed">Pembayaran gagal</option><option value="expired">Kedaluwarsa</option><option value="cancelled">Dibatalkan</option></select></label><label className="ops-field"><span>Dari</span><input type="date" value={startDate} onChange={event => { setStartDate(event.target.value); setPage(0) }} /></label><label className="ops-field"><span>Sampai</span><input type="date" value={endDate} min={startDate || undefined} onChange={event => { setEndDate(event.target.value); setPage(0) }} /></label><label className="ops-field"><span>Per halaman</span><select value={pageSize} onChange={event => changePageSize(Number(event.target.value))}>{[5, 10, 20].map(size => <option key={size} value={size}>{size}</option>)}</select></label><button type="button" className="button button-outline ops-refresh" onClick={() => void load()} disabled={loading}><RefreshCw aria-hidden="true" size={15} />Muat ulang</button></div>
     {error ? <p className="form-error" role="alert">{error}</p> : null}
     {mode === 'reports' ? <><div className="ops-metrics"><Metric label="Total revenue" value={formatRupiah(report.total_revenue)} detail="Order lunas" /><Metric label="Transaksi" value={String(report.total_transactions)} detail={`${report.paid_orders} lunas`} /><Metric label="Pending" value={String(report.pending_orders)} detail="Menunggu pembayaran" /><Metric label="Customer" value={String(report.customer_count)} detail="Customer unik" /><Metric label="Rata-rata order" value={formatRupiah(Math.round(report.average_order_value || 0))} detail="Order lunas" /></div><div className="ops-report-grid"><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Trend</p><h3>Revenue & transaksi</h3></div></div><TrendChart points={report.trend} max={maxRevenue} /></section><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Distribusi</p><h3>Jenis produk</h3></div></div><div className="ops-bars">{report.product_distribution.length ? report.product_distribution.map(row => <div key={row.kind}><span>{itemKindLabel(row.kind)}</span><i><b style={{ width: `${Math.max(4, Number(row.quantity) / maxDistribution * 100)}%` }} /></i><strong>{row.quantity}</strong></div>) : <p className="muted">Belum ada transaksi pada range ini.</p>}</div></section><section className="role-card ops-best-sellers"><div className="ops-section-heading"><div><p className="kicker">Best seller</p><h3>Produk terlaris</h3></div></div>{report.best_sellers.length ? report.best_sellers.map((row, index) => <div key={`${row.name}-${row.kind}`}><span>{index + 1}</span><p><strong>{row.name}</strong><small>{itemKindLabel(row.kind)} · {row.quantity} terjual</small></p><b>{formatRupiah(row.revenue)}</b></div>) : <p className="muted">Belum ada order lunas pada range ini.</p>}</section></div><section className="role-card ops-export"><div className="ops-section-heading"><div><p className="kicker">Export</p><h3>Export CSV</h3><p>Pilih kolom; date range mengikuti filter laporan di atas.</p></div><button type="button" className="button button-primary" disabled={exporting || csvFields.length === 0} onClick={() => void exportCsv()}><Download aria-hidden="true" size={16} />{exporting ? 'Menyiapkan…' : 'Export CSV'}</button></div><div className="ops-field-picker">{commerceCsvFields.map(([key, label]) => <label key={key}><input type="checkbox" checked={csvFields.includes(key)} onChange={() => toggleCsvField(key)} />{label}</label>)}</div></section></> : null}
-    <section className="role-card ops-table-section"><div className="ops-section-heading"><div><p className="kicker">{mode === 'reports' ? 'Transaksi terkini' : 'Order & payment history'}</p><h3>{mode === 'reports' ? 'Transaksi' : 'Pesanan'}</h3></div><span>{totalOrders} data</span></div><OrdersTable orders={orders} loading={loading} onDetail={setSelected} /><TablePagination page={page} pageSize={pageSize} totalItems={totalOrders} onPageChange={setPage} disabled={loading} label="Pagination pesanan" /></section>
-    <OrderDialog dialogRef={dialogRef} order={selected} onClose={() => setSelected(null)} />
+    <section className="role-card ops-table-section"><div className="ops-section-heading"><div><p className="kicker">{mode === 'reports' ? 'Transaksi terkini' : 'Order & payment history'}</p><h3>{mode === 'reports' ? 'Transaksi' : 'Pesanan'}</h3></div><span>{totalOrders} data</span></div><OrdersTable orders={orders} loading={loading} onDetail={openOrder} /><TablePagination page={page} pageSize={pageSize} totalItems={totalOrders} onPageChange={setPage} disabled={loading} label="Pagination pesanan" /></section>
+    <OrderDialog dialogRef={dialogRef} order={selected} onClose={closeOrder} />
   </div>
 }
 

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, CheckCheck, ChevronDown, Loader2, PencilLine } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useAccount } from '@/components/auth/account-provider'
 import { ProfileAvatar } from '@/components/auth/profile-avatar'
 import { SignOut } from '@/components/auth/sign-out'
@@ -25,7 +24,6 @@ export function DashboardTopbarActions({
   onOpenNotification?: (item: Notification) => void
 }) {
   const account=useAccount()
-  const router=useRouter()
   const client=useMemo(()=>createClient(),[])
   const [openPanel,setOpenPanel]=useState<Panel>(null)
   const [notifications,setNotifications]=useState<Notification[]>([])
@@ -58,19 +56,6 @@ export function DashboardTopbarActions({
     window.addEventListener('strativate:notifications-changed',refresh)
     return()=>window.removeEventListener('strativate:notifications-changed',refresh)
   },[loadNotifications])
-  useEffect(()=>{
-    const channel=client.channel('dashboard-notifications-'+account.id)
-      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},payload=>{
-        void loadNotifications()
-        const row=(payload.new??{}) as Partial<Notification>
-        if(row.type==='meeting_url_changed'||row.type==='session_scheduled'||row.type==='session_cancelled'||row.type==='mentor_assigned'){
-          window.dispatchEvent(new CustomEvent('strativate:operational-refresh'))
-          router.refresh()
-        }
-      }).subscribe()
-    return()=>{void client.removeChannel(channel)}
-  },[account.id,client,loadNotifications,router])
-
   useEffect(()=>{
     const closeOutside=(event:PointerEvent)=>{if(rootRef.current&&!rootRef.current.contains(event.target as Node))setOpenPanel(null)}
     const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')setOpenPanel(null)}

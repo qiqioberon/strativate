@@ -18,6 +18,14 @@
 .account-profile__form { max-width:none; }
 .profile-field-optional { margin-left:4px; color:#8a949d; font-size:9px; font-weight:500; }
 .account-profile__saved { margin:0; color:#28714a; font-size:11px; font-weight:650; }
+.admin-account-security { margin-top:16px; }
+.admin-account-security > .account-profile__header > svg { width:24px; height:24px; color:#d5660a; }
+.account-security__form { padding-top:14px; border-top:1px solid #edf0f2; }
+.account-security__heading { display:flex; align-items:flex-start; gap:10px; }
+.account-security__heading > svg { width:18px; height:18px; flex:0 0 18px; color:#66727c; }
+.account-security__heading > div { display:grid; gap:3px; }
+.account-security__heading strong { color:#26313a; font-size:12px; }
+.account-security__heading small { color:#7b858e; font-size:10px; line-height:1.5; }
 @media (max-width:620px) { .account-profile__details { grid-template-columns:1fr; } .account-profile__details-wide { grid-column:auto; } .profile-whatsapp-reminder { flex-direction:column; gap:4px; } }
 .mentee-detail-dialog { width:min(94vw, 900px); }
 .master-option-table { min-width:620px; }

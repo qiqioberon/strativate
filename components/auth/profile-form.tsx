@@ -11,6 +11,7 @@ import { usernameError } from '@/lib/auth/rules'
 import { normalizeWhatsAppNumber, whatsAppNumberError } from '@/lib/profile/whatsapp'
 import { createClient } from '@/lib/supabase/client'
 import { useAccount } from './account-provider'
+import { AdminAccountSecurity } from './admin-account-security'
 
 type ProfileWithContact = ReturnType<typeof useAccount> & { whatsapp_number?: string | null }
 type ProfileUpdateClient = {
@@ -72,7 +73,7 @@ export function ProfileForm() {
   const fullName = [account.first_name, account.last_name].filter(Boolean).join(' ')
   const whatsapp = account.whatsapp_number ?? null
 
-  return <section className="workspace-card account-profile">
+  return <><section className="workspace-card account-profile">
     <div className="profile-avatar-edit-row"><button type="button" className="profile-avatar-edit-trigger" onClick={()=>setAvatarOpen(true)} aria-label="Ubah foto profil"><ProfileAvatar account={account} srcOverride={avatarOverride}/><span><Camera aria-hidden="true"/></span></button><div><strong>Foto profil</strong><p>Foto tampil konsisten di dashboard dan menu akun.</p></div></div>
     <ProfileAvatarEditor open={avatarOpen} onClose={()=>setAvatarOpen(false)} onSaved={url=>{setAvatarOverride(url);setSaved(true);router.refresh()}}/>
     <div className="account-profile__header">
@@ -97,5 +98,5 @@ export function ProfileForm() {
       <div><dt>WhatsApp</dt><dd>{displayValue(whatsapp)}</dd></div>
     </dl>}
     {saved && !editing ? <p className="account-profile__saved" role="status">Profil tersimpan.</p> : null}
-  </section>
+  </section>{account.role === 'admin' ? <AdminAccountSecurity/> : null}</>
 }

@@ -3,6 +3,7 @@
 import {CalendarDays,Eye,Plus,RefreshCw,Save,ShieldAlert,UserRound,X} from 'lucide-react'
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {CopyTextButton} from '@/components/dashboard/copy-text-button'
+import {useOperationalInvalidation} from '@/components/realtime/operational-realtime-provider'
 import {createClient} from '@/lib/supabase/client'
 import {intensiveStageLabels,type IntensiveProgramStage,type IntensiveSessionView} from '@/lib/intensive-mentoring/types'
 import {AdminScheduleDialog} from './admin-schedule-dialog'
@@ -37,7 +38,7 @@ export function IntensiveMentoringSessionManagement(){
    supabase.from('private_mentoring_session_focuses').select('id,name').eq('is_active',true).order('sort_order'),
   ])
   if(engagements.error){setError(engagements.error.message);setRows([])}
-  else{const next=engagements.data??[];setRows(next);setSelectedId(current=>current&&next.some(row=>row.engagement_id===current)?current:next[0]?.engagement_id??'')}
+  else{const next=engagements.data??[];setRows(next);setSelectedId(current=>current&&next.some(row=>row.engagement_id===current)?current:next[0]?.engagement_id??'');setSession(current=>current?next.flatMap(row=>row.sessions).find(item=>item.sessionId===current.sessionId)??null:null)}
   if(!mentorRows.error&&mentorRows.data?.length){const ids=mentorRows.data.map(row=>row.user_id),profiles=await supabase.from('profiles').select('id,first_name,last_name,username').in('id',ids);if(!profiles.error)setMentors((profiles.data??[]).map(row=>({id:row.id,name:[row.first_name,row.last_name].filter(Boolean).join(' ')||row.username||'Mentor Strativate'})).sort((a,b)=>a.name.localeCompare(b.name,'id-ID')))}
   if(!focusRows.error)setFocuses((focusRows.data??[]) as Focus[])
   setLoading(false)
@@ -46,7 +47,7 @@ export function IntensiveMentoringSessionManagement(){
  useEffect(()=>{void load()},[load])
  useEffect(()=>{if(!selected)return;setPrimaryMentor(selected.primary_mentor_id??'');setStage(selected.program_stage);setProgress(selected.progress_summary??'')},[selected])
  useEffect(()=>{const d=dialogRef.current;if(!d)return;if(session&&!d.open)d.showModal();if(!session&&d.open)d.close();if(session){setTopicFocus(session.focusId??'');setResolvedTopic(session.resolvedTopic??session.menteeTopicRequest??'');setSessionMentor(session.mentorId??selected?.primary_mentor_id??'');setSessionMentorReason('')}},[selected,session])
- useEffect(()=>{const refresh=()=>void load();window.addEventListener('strativate:operational-refresh',refresh);return()=>window.removeEventListener('strativate:operational-refresh',refresh)},[load])
+ useOperationalInvalidation(['mentoring', 'provider'],()=>{void load()})
 
  async function run(key:string,name:string,args:Record<string,unknown>,success:string){setBusy(key);setError('');setMessage('');const result=await rpc.rpc(name,args);setBusy('');if(result.error){setError(result.error.message);return false}setMessage(success);await load();return true}
  async function savePrimary(){if(!selected||!primaryMentor)return;await run('primary','admin_set_intensive_primary_mentor',{p_engagement_id:selected.engagement_id,p_mentor_id:primaryMentor,p_reason:mentorReason.trim()||null},'Primary mentor Intensive Mentoring diperbarui.')}

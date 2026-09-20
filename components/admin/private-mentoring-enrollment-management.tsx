@@ -4,6 +4,7 @@ import { CalendarDays, Eye, Pencil, RefreshCw, RotateCcw, Search, X } from 'luci
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { humanizeProviderError } from '@/lib/operations/provider-errors'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier, PrivateMentoringPackage } from '@/lib/supabase/database.types'
@@ -115,7 +116,9 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     if(e){setError('Daftar pesanan Private Mentoring belum dapat dimuat.');setLoading(false);return}
     const next=data??[]
     if(next.length===0&&page>0){setPage(value=>Math.max(0,value-1));setLoading(false);return}
-    setRows(next);setTotal(Number(next[0]?.total_count??0));setLoading(false)
+    setRows(next)
+    setSelected(current=>current?next.find(row=>row.enrollment_id===current.enrollment_id)??null:null)
+    setTotal(Number(next[0]?.total_count??0));setLoading(false)
   },[fromDate,packageId,page,pageSize,progress,query,rpc,tierId,toDate])
 
   const loadSessions=useCallback(async(enrollmentId:string)=>{
@@ -184,6 +187,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     if(selected)await Promise.all([loadSessions(selected.enrollment_id),loadEligibleMentors(selected.enrollment_id,selected.purchased_sessions)])
     await load()
   }
+
+  useOperationalInvalidation(['mentoring', 'provider'],()=>{void refresh()})
 
   async function setPrimaryMentor(){
     if(!selected||selected.purchased_sessions<5||!primaryMentorId)return
