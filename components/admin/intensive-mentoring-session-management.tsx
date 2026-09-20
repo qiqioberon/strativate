@@ -33,7 +33,7 @@ export function IntensiveMentoringSessionManagement(){
  const selected=rows.find(row=>row.engagement_id===selectedId)??rows[0]??null
 
  const load=useCallback(async()=>{
-  setLoading(true);setError('')
+  setError('')
   const [engagements,mentorRows,focusRows]=await Promise.all([
    rpc.rpc<Engagement[]>('list_admin_intensive_mentoring_engagements'),
    supabase.from('mentor_profiles').select('user_id,is_active').eq('is_active',true),
