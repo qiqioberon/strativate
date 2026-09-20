@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- New Intensive custom-offer tables are intentionally accessed through the existing ungenerated Supabase boundary. */
 'use client'
 
 import {Check,Loader2,Pencil,Plus,Search,ShoppingCart,X} from 'lucide-react'
@@ -13,13 +14,13 @@ type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise
 type Mode='create'|'view'|'edit'
 
 export function IntensiveInternationalOfferManagement(){
- const[supabase]=useState(()=>createClient());const rpc=supabase as unknown as RpcClient
+ const[supabase]=useState(()=>createClient());const db=supabase as any;const rpc=supabase as unknown as RpcClient
  const[offers,setOffers]=useState<Offer[]>([]),[addOns,setAddOns]=useState<AddOn[]>([]),[categories,setCategories]=useState<Category[]>([])
  const[mode,setMode]=useState<Mode>('view'),[activeOffer,setActiveOffer]=useState<Offer|null>(null),[open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[generatedUrl,setGeneratedUrl]=useState('')
  const[menteeQuery,setMenteeQuery]=useState(''),[mentees,setMentees]=useState<Mentee[]>([]),[menteeId,setMenteeId]=useState(''),[selectedMentee,setSelectedMentee]=useState<Mentee|null>(null),[menteeLoading,setMenteeLoading]=useState(false)
  const[competitionName,setCompetitionName]=useState(''),[categoryId,setCategoryId]=useState(''),[baseline,setBaseline]=useState(''),[price,setPrice]=useState(''),[expiresAt,setExpiresAt]=useState(''),[selectedAddOns,setSelectedAddOns]=useState<string[]>([]),[benefits,setBenefits]=useState<string[]>([''])
  const dialogRef=useRef<HTMLDialogElement>(null)
- const load=useCallback(async()=>{const [offerResult,addOnResult,categoryResult]=await Promise.all([rpc.rpc<Offer[]>('list_admin_intensive_custom_offers'),supabase.from('intensive_mentoring_add_ons').select('id,name,code').eq('is_active',true).order('sort_order'),supabase.from('competition_categories').select('id,name').eq('is_active',true).order('sort_order')]);if(offerResult.error)setError(offerResult.error.message);else setOffers(offerResult.data??[]);if(!addOnResult.error)setAddOns((addOnResult.data??[]) as AddOn[]);if(!categoryResult.error)setCategories((categoryResult.data??[]) as Category[])},[rpc,supabase])
+ const load=useCallback(async()=>{const [offerResult,addOnResult,categoryResult]=await Promise.all([rpc.rpc<Offer[]>('list_admin_intensive_custom_offers'),db.from('intensive_mentoring_add_ons').select('id,name,code').eq('is_active',true).order('sort_order'),db.from('competition_categories').select('id,name').eq('is_active',true).order('sort_order')]);if(offerResult.error)setError(offerResult.error.message);else setOffers(offerResult.data??[]);if(!addOnResult.error)setAddOns((addOnResult.data??[]) as AddOn[]);if(!categoryResult.error)setCategories((categoryResult.data??[]) as Category[])},[rpc,supabase])
  useEffect(()=>{void load()},[load])
  useEffect(()=>{const dialog=dialogRef.current;if(!dialog)return;if(open&&!dialog.open)dialog.showModal();if(!open&&dialog.open)dialog.close()},[open])
  useEffect(()=>{if(!open||mode==='view')return;const timer=setTimeout(async()=>{setMenteeLoading(true);const result=await rpc.rpc<Mentee[]>('list_cart_link_mentees',{p_query:menteeQuery.trim()});setMenteeLoading(false);if(!result.error)setMentees(result.data??[])},220);return()=>clearTimeout(timer)},[menteeQuery,mode,open,rpc])
