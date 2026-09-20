@@ -24,7 +24,8 @@ function statusTone(status: OrderWithItems['status']) {
 function kindLabel(kind: string) {
   if (kind === 'digital_product') return 'Produk Digital'
   if (kind === 'private_mentoring') return 'Private Mentoring'
-  if (kind === 'intensive_mentoring_custom_offer') return 'Penawaran Intensive Internasional'\n  if (kind.startsWith('intensive_mentoring_') || kind === 'intensive_mentoring') return 'Intensive Mentoring'
+  if (kind === 'intensive_mentoring_custom_offer') return 'Penawaran Intensive Internasional'
+  if (kind.startsWith('intensive_mentoring_') || kind === 'intensive_mentoring') return 'Intensive Mentoring'
   return kind.replaceAll('_',' ')
 }
 function orderReference(order:OrderWithItems){return `#STR-${order.id.slice(0,8).toUpperCase()}`}
