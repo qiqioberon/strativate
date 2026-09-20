@@ -453,6 +453,20 @@ test('role profile avatar dialog supports drag drop crop save and responsive wid
   const dialog=page.locator('dialog.avatar-editor-dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText('Klik atau tarik foto ke sini')).toBeVisible()
+  const expectAvatarDialogCentered=async(width:number,height:number)=>{
+    await page.setViewportSize({width,height})
+    const geometry=await dialog.evaluate(element=>{
+      const rect=element.getBoundingClientRect()
+      return {left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,centerX:rect.left+rect.width/2,centerY:rect.top+rect.height/2,viewportWidth:window.innerWidth,viewportHeight:window.innerHeight}
+    })
+    expect(Math.abs(geometry.centerX-geometry.viewportWidth/2), `avatar dialog horizontal center at ${width}x${height}`).toBeLessThanOrEqual(2)
+    expect(Math.abs(geometry.centerY-geometry.viewportHeight/2), `avatar dialog vertical center at ${width}x${height}`).toBeLessThanOrEqual(2)
+    expect(geometry.left).toBeGreaterThanOrEqual(0)
+    expect(geometry.top).toBeGreaterThanOrEqual(0)
+    expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth)
+    expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight)
+  }
+  await expectAvatarDialogCentered(1280,900)
 
   await page.evaluate(async()=>{
     const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256
@@ -468,8 +482,8 @@ test('role profile avatar dialog supports drag drop crop save and responsive wid
   await expect(dialog.getByText('Zoom',{exact:true})).toBeVisible()
   await expect(dialog.locator('input[type="range"]')).toHaveCount(3)
 
-  for(const width of [360,390,768,1024,1280,1440,1920]){
-    await page.setViewportSize({width,height:900})
+  for(const width of [375,390,430,768,820,1024,1280,1440,1920]){
+    await expectAvatarDialogCentered(width,900)
     await expectNoDocumentOverflow(page)
     await expect(dialog.getByRole('button',{name:'Simpan foto'})).toBeVisible()
   }
@@ -477,6 +491,32 @@ test('role profile avatar dialog supports drag drop crop save and responsive wid
   await dialog.getByRole('button',{name:'Simpan foto'}).click()
   await expect(dialog).not.toBeVisible()
   await expect(page.locator('.profile-avatar-edit-trigger img.profile-avatar-image')).toBeVisible()
+})
+
+
+test('Cart Link failure states are centered, responsive, and authorization-safe',async({page})=>{
+  for(const fixture of [
+    {reason:'not-authorized',copy:'Cart Link ini hanya dapat digunakan oleh akun mentee yang dituju.'},
+    {reason:'invalid',copy:'Tautan ini sudah tidak aktif, kedaluwarsa, atau tidak lagi tersedia.'},
+  ]){
+    for(const size of [{width:1440,height:900},{width:390,height:844}]){
+      await page.setViewportSize(size)
+      await page.goto(`http://localhost:3001/cart-link/error?reason=${fixture.reason}`)
+      const card=page.locator('.cart-link-error-card')
+      await expect(page.getByRole('heading',{name:'Cart Link tidak dapat digunakan.'})).toBeVisible()
+      await expect(card).toContainText(fixture.copy)
+      await expect(page.getByRole('link',{name:'Kembali ke Beranda'})).toHaveAttribute('href','/')
+      await expect(page.getByText('Cart Link ini dibuat untuk akun mentee yang berbeda.')).toHaveCount(0)
+      const geometry=await card.evaluate(element=>{
+        const rect=element.getBoundingClientRect()
+        return {left:rect.left,right:rect.right,centerX:rect.left+rect.width/2,viewportWidth:window.innerWidth}
+      })
+      expect(Math.abs(geometry.centerX-geometry.viewportWidth/2)).toBeLessThanOrEqual(2)
+      expect(geometry.left).toBeGreaterThanOrEqual(0)
+      expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth)
+      await expectNoDocumentOverflow(page)
+    }
+  }
 })
 
 

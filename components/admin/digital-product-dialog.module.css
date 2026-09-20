@@ -1,4 +1,7 @@
 .dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
   width: min(940px, calc(100vw - 32px));
   max-width: 940px;
   max-height: calc(100dvh - 32px);

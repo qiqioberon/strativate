@@ -80,3 +80,20 @@ test('admin operations UI contains wide cards, stable table/dialog containment, 
   assert.match(privateMentoring, /className=\{styles\.page\}/)
   assert.match(privateMentoring, /className=\{styles\.dialog\}/)
 })
+
+test('dashboard native modals use explicit viewport centering and Cart Link failure UI stays authorization-safe', () => {
+  const avatarCss = read('app/profile-avatar.css')
+  const mentorModalCss = read('components/admin/mentor-management.module.css')
+  const digitalModalCss = read('components/admin/digital-product-dialog.module.css')
+  const cartLinkPage = read('app/cart-link/error/page.tsx')
+  const cartCss = read('app/cart/cart.css')
+
+  assert.match(avatarCss, /\.avatar-editor-dialog\{position:fixed;inset:0;[\s\S]*?max-height:calc\(100dvh - 32px\);margin:auto/)
+  assert.match(mentorModalCss, /\.dialog\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?inset:\s*0;[\s\S]*?margin:\s*auto/)
+  assert.match(digitalModalCss, /\.dialog\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?inset:\s*0;[\s\S]*?margin:\s*auto/)
+  assert.match(cartLinkPage, /Cart Link ini hanya dapat digunakan oleh akun mentee yang dituju/)
+  assert.doesNotMatch(cartLinkPage, /dibuat untuk akun mentee yang berbeda/)
+  assert.match(cartLinkPage, /href="\/"/)
+  assert.match(cartCss, /\.cart-link-error-state\s*\{[\s\S]*?width:\s*min\(100%,\s*680px\)/)
+  assert.match(cartCss, /\.cart-link-error-card\s*\{[\s\S]*?border-radius:\s*24px/)
+})

@@ -187,15 +187,32 @@ test('mentor dashboard uses operational real-data tables and removes the redunda
   expect(runtime.httpErrors).toEqual([])
 })
 
-test('mentor operational tables stay contained at tablet and mobile widths', async ({ page }) => {
-  for (const size of [{ width: 1536, height: 960 }, { width: 768, height: 900 }, { width: 390, height: 844 }]) {
+test('mentor assignment table keeps intrinsic Zoom and Detail controls without page overflow', async ({ page }) => {
+  for (const size of [{ width: 1536, height: 960 }, { width: 1280, height: 900 }, { width: 820, height: 900 }, { width: 768, height: 900 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(size)
     await page.goto('http://localhost:3001/mentor')
     if (size.width <= 800) await page.getByRole('button', { name: 'Buka menu mentor' }).click()
     await page.getByRole('button', { name: /^Penugasan/ }).click()
-    await expect(page.getByTestId('mentor-assignment-table')).toBeVisible()
+    const table=page.getByTestId('mentor-assignment-table')
+    await expect(table).toBeVisible()
+    await expect(table.getByRole('link',{name:'Zoom'})).toBeVisible()
+    const detail=table.getByRole('button',{name:/Lihat detail sesi 2 Alya Pratama/})
+    await expect(detail).toBeVisible()
     const widths = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }))
     expect(widths.scrollWidth, `mentor assignments overflow at ${size.width}px`).toBeLessThanOrEqual(widths.innerWidth)
+    if(size.width>820){
+      const geometry=await table.evaluate(element=>{
+        const zoom=element.querySelector<HTMLAnchorElement>('td[data-label="Zoom"] a')!
+        const detailButton=element.querySelector<HTMLButtonElement>('td[data-label="Aksi"] button')!
+        const zoomRect=zoom.getBoundingClientRect()
+        const detailRect=detailButton.getBoundingClientRect()
+        return {zoomWidth:zoomRect.width,detailWidth:detailRect.width,zoomWhiteSpace:getComputedStyle(zoom).whiteSpace,detailWhiteSpace:getComputedStyle(detailButton).whiteSpace}
+      })
+      expect(geometry.zoomWidth).toBeGreaterThan(60)
+      expect(geometry.detailWidth).toBeGreaterThan(60)
+      expect(geometry.zoomWhiteSpace).toBe('nowrap')
+      expect(geometry.detailWhiteSpace).toBe('nowrap')
+    }
   }
 })
 

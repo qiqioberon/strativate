@@ -1,17 +1,25 @@
 /* Mentoring session tables must fit dashboard content on desktop and become labeled cards on narrow screens. */
-.mentee-session-table,
-.mentor-ops-table {
+.mentee-session-table {
   width: 100%;
   min-width: 0 !important;
   table-layout: fixed;
 }
 
+.mentor-ops-table {
+  width: 100%;
+  min-width: 0 !important;
+}
+
 .mentee-session-table th,
-.mentee-session-table td,
+.mentee-session-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .mentor-ops-table th,
 .mentor-ops-table td {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .mentee-session-table th:nth-child(1) { width: 10%; }
@@ -22,23 +30,49 @@
 .mentee-session-table th:nth-child(6) { width: 10%; }
 .mentee-session-table th:nth-child(7) { width: 10%; }
 
-.mentor-ops-table th:nth-child(1) { width: 18%; }
-.mentor-ops-table th:nth-child(2) { width: 16%; }
-.mentor-ops-table th:nth-child(3) { width: 22%; }
-.mentor-ops-table th:nth-child(4) { width: 18%; }
-.mentor-ops-table th:nth-child(5) { width: 10%; }
-.mentor-ops-table th:nth-child(6) { width: 8%; }
-.mentor-ops-table th:nth-child(7) { width: 8%; }
-
-.mentee-session-table td:nth-child(5),
-.mentor-ops-table td:nth-child(5) {
+.mentee-session-table td:nth-child(5) {
   white-space: normal;
 }
 
-.mentee-session-table .button,
-.mentor-ops-table .button {
+.mentee-session-table .button {
   max-width: 100%;
   white-space: normal;
+}
+
+/* Penugasan mentor needs intrinsic control columns instead of fixed 8% action columns. */
+.mentor-assignment-table {
+  table-layout: auto;
+}
+
+@media (min-width: 821px) {
+  .mentor-assignment-table th,
+  .mentor-assignment-table td {
+    padding-inline: 10px;
+  }
+
+  .mentor-assignment-table th:nth-child(1) { width: 22%; }
+  .mentor-assignment-table th:nth-child(2) { width: 18%; }
+  .mentor-assignment-table th:nth-child(3) { width: auto; }
+  .mentor-assignment-table th:nth-child(4),
+  .mentor-assignment-table th:nth-child(5),
+  .mentor-assignment-table th:nth-child(6),
+  .mentor-assignment-table th:nth-child(7) { width: 1%; }
+
+  .mentor-assignment-table__mentee { min-width: 168px; }
+  .mentor-assignment-table .mentor-assignment-identity { min-width: 0; }
+  .mentor-assignment-table__summary { min-width: 132px; }
+  .mentor-assignment-table__focus { min-width: 140px; }
+  .mentor-assignment-table__schedule { min-width: 128px; white-space: nowrap; }
+  .mentor-assignment-table__status,
+  .mentor-assignment-table__control { white-space: nowrap; }
+  .mentor-assignment-table__control { width: 1%; }
+  .mentor-assignment-table__control .button {
+    min-width: max-content;
+    max-width: none;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .mentor-assignment-table__control .button svg { flex: 0 0 auto; }
 }
 
 @media (max-width: 820px) {
@@ -91,6 +125,7 @@
     grid-template-columns: minmax(108px, .42fr) minmax(0, 1fr);
     gap: 12px;
     width: auto !important;
+    min-width: 0 !important;
     padding: 9px 0 !important;
     border: 0 !important;
     border-bottom: 1px solid #f0e8e3 !important;
@@ -99,9 +134,7 @@
   }
 
   .mentee-session-table td:last-child,
-  .mentor-ops-table td:last-child {
-    border-bottom: 0 !important;
-  }
+  .mentor-ops-table td:last-child { border-bottom: 0 !important; }
 
   .mentee-session-table td::before,
   .mentor-ops-table td::before {
@@ -119,14 +152,15 @@
     max-width: 100%;
   }
 
-  .mentor-ops-table td > div {
-    min-width: 0;
+  .mentor-ops-table td > div { min-width: 0; }
+  .mentor-assignment-table__control .button {
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
   }
 
   .mentee-session-table .responsive-table-empty,
-  .mentor-ops-table .responsive-table-empty {
-    padding: 0;
-  }
+  .mentor-ops-table .responsive-table-empty { padding: 0; }
 
   .mentee-session-table .responsive-table-empty td,
   .mentor-ops-table .responsive-table-empty td {
@@ -138,16 +172,12 @@
   }
 
   .mentee-session-table .responsive-table-empty td::before,
-  .mentor-ops-table .responsive-table-empty td::before {
-    content: none;
-  }
+  .mentor-ops-table .responsive-table-empty td::before { content: none; }
 }
 
 @media (max-width: 480px) {
   .mentee-session-table tr,
-  .mentor-ops-table tr {
-    padding: 12px;
-  }
+  .mentor-ops-table tr { padding: 12px; }
 
   .mentee-session-table td,
   .mentor-ops-table td {
@@ -156,7 +186,5 @@
   }
 
   .mentee-session-table td::before,
-  .mentor-ops-table td::before {
-    margin-bottom: 1px;
-  }
+  .mentor-ops-table td::before { margin-bottom: 1px; }
 }

@@ -139,4 +139,12 @@ test('mentor projection remains server-side isolated and availability layout is 
   assert.match(css, /\.mentor-availability-editor\.mentor \.availability-week\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
   assert.match(css, /@media \(max-width: 1180px\)[\s\S]*?\.mentor-availability-editor\.mentor \.availability-week[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
   assert.match(css, /\.mentor-ops-table\s*\{[\s\S]*?min-width:/)
+
+  const responsive = read('app/mentoring-responsive.css')
+  const assignments = read('components/mentor/dashboard/mentor-assignments.tsx')
+  assert.match(assignments, /mentor-ops-table mentor-assignment-table/)
+  assert.match(assignments, /data-label="Aksi"/)
+  assert.match(responsive, /\.mentor-assignment-table\s*\{[\s\S]*?table-layout:\s*auto/)
+  assert.match(responsive, /\.mentor-assignment-table__control \.button\s*\{[\s\S]*?white-space:\s*nowrap/)
+  assert.doesNotMatch(responsive, /\.mentor-ops-table th:nth-child\(6\)\s*\{\s*width:\s*8%/)
 })
