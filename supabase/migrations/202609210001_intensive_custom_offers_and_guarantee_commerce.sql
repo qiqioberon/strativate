@@ -611,7 +611,7 @@ begin
  update public.intensive_mentoring_engagements set program_stage=p_stage,current_activity=nullif(btrim(coalesce(p_current_activity,'')),''),progress_summary=nullif(btrim(coalesce(p_progress_summary,'')),'') where id=p_engagement_id;
  if not found then raise exception 'Intensive engagement not found' using errcode='22023';end if;
  insert into public.intensive_mentoring_engagement_events(engagement_id,event_type,actor_user_id,metadata)
- values(p_engagement_id,'program_progress_updated',auth.uid(),jsonb_build_object('programStage',p_stage,'currentActivity',nullif(btrim(coalesce(p_current_activity,'')),''),'progressSummary',nullif(btrim(coalesce(p_progress_summary,'')),''));
+ values(p_engagement_id,'program_progress_updated',auth.uid(),jsonb_build_object('programStage',p_stage,'currentActivity',nullif(btrim(coalesce(p_current_activity,'')),''),'progressSummary',nullif(btrim(coalesce(p_progress_summary,'')),'')));
 end; $$;
 
 drop function if exists public.list_my_intensive_mentoring_engagements();
