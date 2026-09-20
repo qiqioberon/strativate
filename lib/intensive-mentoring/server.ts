@@ -92,9 +92,9 @@ export async function getPublicIntensiveMentoringCatalog(): Promise<IntensiveMen
 
 
 type EngagementRow={
- engagement_id:string;base_entitlement_id:string;base_kind:'package'|'bundle';program_name:string;status:'active'|'completed'|'cancelled';
+ engagement_id:string;base_entitlement_id:string;base_kind:'package'|'bundle'|'custom_offer';program_name:string;status:'active'|'completed'|'cancelled';
  baseline_sessions_per_month:number|null;primary_mentor_id:string|null;primary_mentor_name:string|null;competition_name:string|null;
- program_stage:IntensiveEngagementView['programStage'];progress_summary:string|null;started_at:string;add_ons:IntensiveEngagementView['addOns'];sessions:IntensiveEngagementView['sessions']
+ program_stage:IntensiveEngagementView['programStage'];current_activity:string|null;progress_summary:string|null;started_at:string;add_ons:IntensiveEngagementView['addOns'];sessions:IntensiveEngagementView['sessions']
 }
 
 export async function listMyIntensiveMentoringEngagements():Promise<IntensiveEngagementView[]>{
@@ -112,6 +112,7 @@ export async function listMyIntensiveMentoringEngagements():Promise<IntensiveEng
   primaryMentorName:row.primary_mentor_name,
   competitionName:row.competition_name,
   programStage:row.program_stage,
+  currentActivity:row.current_activity,
   progressSummary:row.progress_summary,
   startedAt:row.started_at,
   addOns:Array.isArray(row.add_ons)?row.add_ons:[],

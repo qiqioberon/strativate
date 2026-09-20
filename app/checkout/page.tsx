@@ -54,7 +54,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             <section className="checkout-order" aria-labelledby="order-heading">
               <div className="checkout-section-heading"><span>Pesanan</span><h2 id="order-heading">Ringkasan item</h2></div>
               <div className="checkout-order__items">
-                {order.items.map(item => <article key={item.id}><div><span>{item.item_kind_snapshot === 'digital_product' ? 'Produk Digital' : item.item_kind_snapshot === 'private_mentoring' ? 'Private Mentoring' : 'Item'}</span><h3>{item.name_snapshot}</h3></div><strong>{formatRupiah(item.unit_price_amount)}</strong></article>)}
+                {order.items.map(item => <article key={item.id}><div><span>{item.item_kind_snapshot === 'digital_product' ? 'Produk Digital' : item.item_kind_snapshot === 'private_mentoring' ? 'Private Mentoring' : item.item_kind_snapshot === 'intensive_mentoring_custom_offer' ? 'Penawaran Intensive Internasional' : item.item_kind_snapshot.startsWith('intensive_mentoring_') ? 'Intensive Mentoring' : 'Item'}</span><h3>{item.name_snapshot}</h3></div><strong>{formatRupiah(item.unit_price_amount)}</strong></article>)}
               </div>
               <div className="checkout-order__total"><span>Total</span><strong>{formatRupiah(order.total_amount)}</strong></div>
             </section>

@@ -1,5 +1,18 @@
 # Strativate source conflict register
 
+## 21 September 2026 — Intensive commerce stakeholder decision
+
+The latest stakeholder decision supersedes the earlier inactive/legal-blocked guardrail for **Win Guarantee Protection** and **Competition Assurance**. The approved runtime state is now:
+
+- Win Guarantee Protection: active and sellable at **Rp500.000** through Shared Commerce and Admin Cart Links.
+- Competition Assurance: active and sellable at the canonical bundle price **Rp3.000.000**, retaining its existing package/add-on composition including Win Guarantee Protection.
+- The public **Kompetisi Internasional** master remains consultation/custom pricing and must not expose a fabricated fixed public price.
+- International sales use an intended-mentee custom offer whose negotiated price is authoritative in the Intensive domain, then reuse Cart Link, Shared Commerce checkout, payment, immutable order snapshots, entitlement reconciliation, and Intensive Engagement operations.
+- Guidebook-backed qualification wording may be shown (for example, “Syarat, ketentuan, dan asesmen kelayakan berlaku.”), but this decision does **not** define or authorize an automatic refund engine, refund percentage, claim deadline, automatic eligibility, automatic win detection, or automatic program credit. Those mechanics remain undefined until separately approved.
+
+Any older entry in this register that says Win Guarantee Protection or Competition Assurance must remain inactive is historical context and is superseded by this 21 September 2026 decision.
+
+
 ## 17 September 2026 Private Mentoring operating-model and commerce resolution
 
 The current stakeholder update supersedes the operational parts of the 14 September Phase 3 Private Mentoring resolution while preserving that section below as historical provenance.

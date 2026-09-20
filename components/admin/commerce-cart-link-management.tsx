@@ -1,8 +1,9 @@
 'use client'
 
-import { Check, ChevronDown, Eye, Loader2, Search, ShieldAlert, X } from 'lucide-react'
+import { Check, ChevronDown, Eye, Loader2, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
+import { IntensiveInternationalOfferManagement } from '@/components/admin/intensive-international-offer-management'
 import { TablePagination } from '@/components/admin/table-pagination'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
@@ -18,7 +19,7 @@ type RpcResult<T>=PromiseLike<{data:T|null;error:{message:string}|null}>
 type UntypedClient={rpc:<T>(name:string,args?:Record<string,unknown>)=>RpcResult<T>}
 type LinkSortKey='mentee'|'status'|'items'|'created_at'|'creator'|'claimed_at'
 type CatalogTab='digital'|'private'|'intensive'
-function kindLabel(kind:string){if(kind==='digital_product')return'Produk Digital';if(kind==='private_mentoring')return'Private Mentoring';if(kind==='intensive_mentoring_package')return'Program / package';if(kind==='intensive_mentoring_bundle')return'Bundle';if(kind==='intensive_mentoring_add_on')return'Add-on';return kind.replaceAll('_',' ')}
+function kindLabel(kind:string){if(kind==='digital_product')return'Produk Digital';if(kind==='private_mentoring')return'Private Mentoring';if(kind==='intensive_mentoring_package')return'Program / package';if(kind==='intensive_mentoring_bundle')return'Bundle';if(kind==='intensive_mentoring_add_on')return'Add-on';if(kind==='intensive_mentoring_custom_offer')return'Penawaran Internasional';return kind.replaceAll('_',' ')}
 function linkStatusLabel(status:string){if(status==='active')return'Aktif';if(status==='claimed')return'Diklaim';if(status==='revoked')return'Dicabut';return status}
 function tabFor(item:CommerceOption):CatalogTab{return item.item_kind==='digital_product'?'digital':item.item_kind==='private_mentoring'?'private':'intensive'}
 
@@ -46,7 +47,7 @@ export function CommerceCartLinkManagement(){
 
  const visibleItems=items.filter(item=>tabFor(item)===catalogTab)
  const privateFamilies=useMemo(()=>{const map=new Map<string,CommerceOption[]>();for(const item of visibleItems){const key=item.family_label||'Private Mentoring';map.set(key,[...(map.get(key)||[]),item])}return [...map.entries()]},[visibleItems])
- const intensiveGroups=useMemo(()=>{const order=['intensive_mentoring_package','intensive_mentoring_bundle','intensive_mentoring_add_on'];return order.map(kind=>[kind,visibleItems.filter(item=>item.item_kind===kind)] as const).filter(([,rows])=>rows.length)},[visibleItems])
+ const intensiveGroups=useMemo(()=>{const order=['intensive_mentoring_package','intensive_mentoring_bundle','intensive_mentoring_add_on','intensive_mentoring_custom_offer'];return order.map(kind=>[kind,visibleItems.filter(item=>item.item_kind===kind)] as const).filter(([,rows])=>rows.length)},[visibleItems])
  const hasSelectedPrivate=selectedPrivateIds.length>0
  const visibleLinks=useMemo(()=>{if(!sortKey||!sortDirection)return links;const sign=sortDirection==='asc'?1:-1;return[...links].sort((a,b)=>{if(sortKey==='items')return(a.item_count-b.item_count)*sign;if(sortKey==='created_at')return(new Date(a.created_at).getTime()-new Date(b.created_at).getTime())*sign;if(sortKey==='claimed_at')return((a.claimed_at?new Date(a.claimed_at).getTime():0)-(b.claimed_at?new Date(b.claimed_at).getTime():0))*sign;const left=sortKey==='mentee'?a.mentee_email:sortKey==='status'?linkStatusLabel(a.status):a.creator_email;const right=sortKey==='mentee'?b.mentee_email:sortKey==='status'?linkStatusLabel(b.status):b.creator_email;return left.localeCompare(right,'id-ID')*sign})},[links,sortDirection,sortKey])
 
@@ -68,6 +69,7 @@ export function CommerceCartLinkManagement(){
 
  return <div className="ops-page">
   <div className="role-page-title"><p className="kicker">Operasional · Shared Commerce</p><h2>Cart Links</h2><p>Pilih mentee, lalu susun item dari katalog commerce authoritative.</p></div>
+  <IntensiveInternationalOfferManagement/>
   <section className="role-card cart-link-create">
    <div className="ops-section-heading"><div><p className="kicker">Langkah 1</p><h3>Pilih Mentee</h3><p>Cart Link hanya dapat diklaim akun tujuan.</p></div></div>
    <div ref={comboRef} className="ops-field ops-field--wide"><span>Cari mentee</span><div className="ops-input-with-icon"><Search aria-hidden="true" size={15}/><input role="combobox" aria-autocomplete="list" aria-expanded={comboOpen} aria-controls="cart-link-mentee-options" value={menteeQuery} onFocus={()=>setComboOpen(true)} onChange={event=>{setMenteeQuery(event.target.value);setSelectedMentee(null);setMenteeId('');setComboOpen(true)}} onKeyDown={onComboKeyDown} placeholder="Ketik nama atau email"/>{menteeLoading?<Loader2 className="spin" aria-hidden="true" size={15}/>:<ChevronDown aria-hidden="true" size={15}/>}</div>{comboOpen?<div id="cart-link-mentee-options" role="listbox" className="ops-combobox-options">{menteeLoading?<p>Memuat…</p>:mentees.length?mentees.map((mentee,index)=><button type="button" role="option" aria-selected={mentee.user_id===menteeId} className={index===activeIndex?'is-active':''} key={mentee.user_id} onMouseEnter={()=>setActiveIndex(index)} onClick={()=>selectMentee(mentee)}><strong>{mentee.display_name||'Mentee Strativate'}</strong><span>{mentee.email}</span></button>):<p>Tidak ada mentee yang cocok.</p>}</div>:null}</div>
@@ -79,7 +81,7 @@ export function CommerceCartLinkManagement(){
     {menteeId?<><label className="ops-field ops-field--wide"><span>Cari produk</span><input value={productQuery} onChange={event=>setProductQuery(event.target.value)} placeholder="Nama produk"/></label><div className="calendar-view-switch" role="tablist" aria-label="Kategori produk"><button type="button" role="tab" aria-selected={catalogTab==='digital'} className={catalogTab==='digital'?'active':''} onClick={()=>setCatalogTab('digital')}>Produk Digital</button><button type="button" role="tab" aria-selected={catalogTab==='private'} className={catalogTab==='private'?'active':''} onClick={()=>setCatalogTab('private')}>Private Mentoring</button><button type="button" role="tab" aria-selected={catalogTab==='intensive'} className={catalogTab==='intensive'?'active':''} onClick={()=>setCatalogTab('intensive')}>Intensive Mentoring</button></div>
      {catalogTab==='digital'?<div className="cart-link-product-grid">{visibleItems.map(productCard)}</div>:null}
      {catalogTab==='private'?<div>{privateFamilies.map(([family,rows])=><section className="schedule-day" key={family}><div className="ops-section-heading"><div><p className="kicker">Mentor tier</p><h4>{family}</h4><p>Pilih package / jumlah sesi.</p></div></div><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
-     {catalogTab==='intensive'?<div><div className="intensive-cart-legal-note"><ShieldAlert aria-hidden="true"/><div><strong>Item legal-blocked sengaja tidak dapat dipilih</strong><span>Win Guarantee Protection dan Competition Assurance tetap tercatat di katalog admin, tetapi tidak muncul sebagai item checkout sampai persetujuan legal/business selesai.</span></div></div>{intensiveGroups.map(([kind,rows])=><section className="schedule-day" key={kind}><h4>{kindLabel(kind)}</h4><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
+     {catalogTab==='intensive'?<div>{intensiveGroups.map(([kind,rows])=><section className="schedule-day" key={kind}><h4>{kindLabel(kind)}</h4><div className="cart-link-product-grid">{rows.map(productCard)}</div></section>)}</div>:null}
      {visibleItems.length===0?<p className="muted">Tidak ada produk yang cocok di kategori ini.</p>:null}
     </>:<div className="cart-link-products__locked">Pilih mentee di atas sebelum memilih produk.</div>}
    </div>

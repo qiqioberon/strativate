@@ -1,7 +1,7 @@
 -- Intensive Mentoring operational domain, engagement grouping, flexible sessions, and catalog guardrails.
 -- Forward-only: immutable order/order-item snapshots are never updated.
 
--- Keep source-backed national catalog values explicit while preserving legal blocks and consultation-only international.
+-- Keep source-backed national catalog values explicit while preserving consultation-only international and the latest approved guarantee availability.
 update public.intensive_mentoring_packages
 set sessions_per_month=4, price_amount=1150000, reference_price_amount=1400000, pricing_mode='fixed', is_active=true
 where code='INTENSIVE';
@@ -14,11 +14,11 @@ where code='INTERNATIONAL_COMPETITION';
 
 update public.intensive_mentoring_add_ons set price_amount=150000,is_active=true where code='DETAILED_PERFORMANCE_REPORT';
 update public.intensive_mentoring_add_ons set price_amount=300000,is_active=true where code='JUDGING_SIMULATION';
-update public.intensive_mentoring_add_ons set price_amount=500000,is_active=false where code='WIN_GUARANTEE_PROTECTION';
+update public.intensive_mentoring_add_ons set price_amount=500000,is_active=true where code='WIN_GUARANTEE_PROTECTION';
 
 update public.intensive_mentoring_bundles set price_amount=1250000,is_active=true where code='SKILL_BUILDER';
 update public.intensive_mentoring_bundles set price_amount=2500000,is_active=true where code='COMPETITION_READY';
-update public.intensive_mentoring_bundles set price_amount=3000000,is_active=false where code='COMPETITION_ASSURANCE';
+update public.intensive_mentoring_bundles set price_amount=3000000,is_active=true where code='COMPETITION_ASSURANCE';
 
 create table if not exists public.intensive_mentoring_engagements(
   id uuid primary key default gen_random_uuid(),
@@ -514,14 +514,23 @@ alter table public.intensive_mentoring_sessions enable row level security;
 alter table public.intensive_mentoring_session_events enable row level security;
 alter table public.intensive_mentoring_session_calendar_integrations enable row level security;
 
+drop policy if exists intensive_engagement_owner_read on public.intensive_mentoring_engagements;
 create policy intensive_engagement_owner_read on public.intensive_mentoring_engagements for select to authenticated using(mentee_id=auth.uid());
+drop policy if exists intensive_engagement_admin_read on public.intensive_mentoring_engagements;
 create policy intensive_engagement_admin_read on public.intensive_mentoring_engagements for select to authenticated using(public.is_admin());
+drop policy if exists intensive_engagement_mentor_read on public.intensive_mentoring_engagements;
 create policy intensive_engagement_mentor_read on public.intensive_mentoring_engagements for select to authenticated using(primary_mentor_id=auth.uid() or exists(select 1 from public.intensive_mentoring_sessions s where s.engagement_id=intensive_mentoring_engagements.id and s.mentor_id=auth.uid()));
+drop policy if exists intensive_sessions_owner_read on public.intensive_mentoring_sessions;
 create policy intensive_sessions_owner_read on public.intensive_mentoring_sessions for select to authenticated using(exists(select 1 from public.intensive_mentoring_engagements g where g.id=engagement_id and g.mentee_id=auth.uid()));
+drop policy if exists intensive_sessions_admin_read on public.intensive_mentoring_sessions;
 create policy intensive_sessions_admin_read on public.intensive_mentoring_sessions for select to authenticated using(public.is_admin());
+drop policy if exists intensive_sessions_mentor_read on public.intensive_mentoring_sessions;
 create policy intensive_sessions_mentor_read on public.intensive_mentoring_sessions for select to authenticated using(mentor_id=auth.uid());
+drop policy if exists intensive_session_events_owner_read on public.intensive_mentoring_session_events;
 create policy intensive_session_events_owner_read on public.intensive_mentoring_session_events for select to authenticated using(exists(select 1 from public.intensive_mentoring_sessions s join public.intensive_mentoring_engagements g on g.id=s.engagement_id where s.id=session_id and g.mentee_id=auth.uid()));
+drop policy if exists intensive_session_events_admin_read on public.intensive_mentoring_session_events;
 create policy intensive_session_events_admin_read on public.intensive_mentoring_session_events for select to authenticated using(public.is_admin());
+drop policy if exists intensive_session_events_mentor_read on public.intensive_mentoring_session_events;
 create policy intensive_session_events_mentor_read on public.intensive_mentoring_session_events for select to authenticated using(exists(select 1 from public.intensive_mentoring_sessions s where s.id=session_id and s.mentor_id=auth.uid()));
 
 revoke all on public.intensive_mentoring_engagements,public.intensive_mentoring_entitlement_attachment_events,public.intensive_mentoring_primary_mentor_changes,public.intensive_mentoring_sessions,public.intensive_mentoring_session_events,public.intensive_mentoring_session_calendar_integrations from public,anon,authenticated;
@@ -629,8 +638,11 @@ create table if not exists public.intensive_mentoring_engagement_events(
 );
 create index if not exists intensive_engagement_events_idx on public.intensive_mentoring_engagement_events(engagement_id,created_at,id);
 alter table public.intensive_mentoring_engagement_events enable row level security;
+drop policy if exists intensive_engagement_events_owner_read on public.intensive_mentoring_engagement_events;
 create policy intensive_engagement_events_owner_read on public.intensive_mentoring_engagement_events for select to authenticated using(exists(select 1 from public.intensive_mentoring_engagements g where g.id=engagement_id and g.mentee_id=auth.uid()));
+drop policy if exists intensive_engagement_events_admin_read on public.intensive_mentoring_engagement_events;
 create policy intensive_engagement_events_admin_read on public.intensive_mentoring_engagement_events for select to authenticated using(public.is_admin());
+drop policy if exists intensive_engagement_events_mentor_read on public.intensive_mentoring_engagement_events;
 create policy intensive_engagement_events_mentor_read on public.intensive_mentoring_engagement_events for select to authenticated using(exists(select 1 from public.intensive_mentoring_engagements g where g.id=engagement_id and (g.primary_mentor_id=auth.uid() or exists(select 1 from public.intensive_mentoring_sessions s where s.engagement_id=g.id and s.mentor_id=auth.uid()))));
 revoke all on public.intensive_mentoring_engagement_events from public,anon,authenticated;
 grant select on public.intensive_mentoring_engagement_events to authenticated;
@@ -722,34 +734,10 @@ revoke all on function public.list_admin_intensive_mentoring_calendar_sessions(t
 grant execute on function public.list_admin_intensive_mentoring_calendar_sessions(timestamptz,timestamptz),public.list_my_intensive_mentoring_calendar_sessions() to authenticated,service_role;
 
 
-create or replace function public.guard_intensive_legal_blocked_add_on()
-returns trigger language plpgsql security definer set search_path='' as $$
-begin
- if tg_op='DELETE' and old.code='WIN_GUARANTEE_PROTECTION' then
-  raise exception 'Win Guarantee Protection must remain recorded until legal approval is resolved' using errcode='23514';
- end if;
- if tg_op<>'DELETE' and new.code='WIN_GUARANTEE_PROTECTION' and new.is_active then
-  raise exception 'Win Guarantee Protection requires separate legal/business approval before activation' using errcode='23514';
- end if;
- if tg_op='DELETE' then return old;end if;
- return new;
-end; $$;
+-- Stakeholder approval on 2026-09-21 supersedes the former inactive guarantee guard.
+-- Keep reruns convergent by removing any guard objects left by a partial earlier execution.
 drop trigger if exists intensive_legal_blocked_add_on_guard on public.intensive_mentoring_add_ons;
-create trigger intensive_legal_blocked_add_on_guard before insert or update or delete on public.intensive_mentoring_add_ons
-for each row execute function public.guard_intensive_legal_blocked_add_on();
-
-create or replace function public.guard_intensive_legal_blocked_bundle()
-returns trigger language plpgsql security definer set search_path='' as $$
-begin
- if tg_op='DELETE' and old.code='COMPETITION_ASSURANCE' then
-  raise exception 'Competition Assurance must remain recorded until Win Guarantee legal approval is resolved' using errcode='23514';
- end if;
- if tg_op<>'DELETE' and new.code='COMPETITION_ASSURANCE' and new.is_active then
-  raise exception 'Competition Assurance requires Win Guarantee legal approval before activation' using errcode='23514';
- end if;
- if tg_op='DELETE' then return old;end if;
- return new;
-end; $$;
 drop trigger if exists intensive_legal_blocked_bundle_guard on public.intensive_mentoring_bundles;
-create trigger intensive_legal_blocked_bundle_guard before insert or update or delete on public.intensive_mentoring_bundles
-for each row execute function public.guard_intensive_legal_blocked_bundle();
+drop function if exists public.guard_intensive_legal_blocked_add_on();
+drop function if exists public.guard_intensive_legal_blocked_bundle();
+

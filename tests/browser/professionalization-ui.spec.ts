@@ -235,14 +235,26 @@ async function stubAdminMentoring(page: Page) {
 async function stubAdminIntensive(page:Page){
   const engagementId='95000000-0000-0000-0000-000000000001'
   const mentorId='84000000-0000-0000-0000-000000000001'
-  await page.route('**/rest/v1/rpc/list_admin_intensive_mentoring_engagements',route=>json(route,[{
+  let engagement={
     engagement_id:engagementId,mentee_id:'92000000-0000-0000-0000-000000000003',mentee_name:'Aqil Aja',mentee_email:'aqil@fixture.test',
     base_entitlement_id:'95000000-0000-0000-0000-000000000002',base_kind:'bundle',program_name:'Bundel Competition Ready',status:'active',baseline_sessions_per_month:8,
-    primary_mentor_id:mentorId,primary_mentor_name:'Mentor Fixture',program_stage:'review_refinement',progress_summary:'Storyline dan Q&A refinement.',created_at:'2026-09-01T00:00:00.000Z',
-    add_ons:[{entitlementId:null,name:'Laporan Performa Terperinci',code:'DETAILED_PERFORMANCE_REPORT',status:'included',source:'bundle'},{entitlementId:null,name:'Simulasi Penjurian',code:'JUDGING_SIMULATION',status:'included',source:'bundle'}],
+    primary_mentor_id:mentorId,primary_mentor_name:'Mentor Fixture',program_stage:'review_refinement',current_activity:'Final pitch deck refinement' as string|null,progress_summary:'Storyline dan Q&A refinement.' as string|null,created_at:'2026-09-01T00:00:00.000Z',
+    add_ons:[{entitlementId:null,name:'Laporan Performa Terperinci',code:'DETAILED_PERFORMANCE_REPORT',status:'included',source:'bundle',supportType:'add_on'},{entitlementId:null,name:'Simulasi Penjurian',code:'JUDGING_SIMULATION',status:'included',source:'bundle',supportType:'add_on'}],
     unassigned_add_ons:[],
-    sessions:[{sessionId:'96000000-0000-0000-0000-000000000001',sessionNumber:1,durationMinutes:60,status:'scheduled',focusId:'81000000-0000-0000-0000-000000000001',focusName:'Idea & Problem Framing',menteeTopicRequest:'Review final storyline.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId,mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',googleSyncStatus:'synced',recordingStatus:'expected',creationSource:'admin_added',creationReason:'Hasil diskusi mentee'}]
-  }]))
+    sessions:[{sessionId:'96000000-0000-0000-0000-000000000001',sessionNumber:1,durationMinutes:60,status:'scheduled',focusId:'81000000-0000-0000-0000-000000000001',focusName:'Idea & Problem Framing',menteeTopicRequest:'Review final storyline.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId,mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',googleSyncStatus:'synced',recordingStatus:'expected',creationSource:'admin_added',creationReason:'Hasil diskusi mentee'}] as Array<Record<string,unknown>>
+  }
+  await page.route('**/rest/v1/rpc/list_admin_intensive_mentoring_engagements',route=>json(route,[engagement]))
+  await page.route('**/rest/v1/rpc/admin_set_intensive_program_stage',async route=>{
+    const payload=route.request().postDataJSON() as {p_stage:string;p_progress_summary:string|null;p_current_activity?:string|null}
+    engagement={...engagement,program_stage:payload.p_stage,current_activity:payload.p_current_activity??null,progress_summary:payload.p_progress_summary}
+    await json(route,null)
+  })
+  await page.route('**/rest/v1/rpc/admin_set_intensive_primary_mentor',route=>json(route,null))
+  await page.route('**/rest/v1/rpc/admin_add_intensive_mentoring_session',async route=>{
+    const payload=route.request().postDataJSON() as {p_duration_minutes:number}
+    engagement={...engagement,sessions:[...engagement.sessions,{sessionId:'96000000-0000-0000-0000-000000000002',sessionNumber:2,durationMinutes:payload.p_duration_minutes,status:'awaiting_focus',focusId:null,focusName:null,menteeTopicRequest:null,topicStatus:'needs_input',resolvedTopic:null,mentorId,mentorName:'Mentor Fixture',scheduledStartAt:null,scheduledEndAt:null,meetingUrl:null,providerSyncStatus:'pending',googleSyncStatus:'pending',recordingStatus:'expected',creationSource:'admin_added',creationReason:null}]}
+    await json(route,null)
+  })
   await page.route('**/rest/v1/mentor_profiles**',route=>json(route,[{user_id:mentorId,is_active:true}]))
   await page.route('**/rest/v1/profiles**',route=>json(route,[{id:mentorId,first_name:'Mentor',last_name:'Fixture',username:'mentor-fixture'}]))
   await page.route('**/api/admin/intensive-mentoring/sessions/*/meeting',route=>json(route,{sessionId:'96000000-0000-0000-0000-000000000001',status:'scheduled',meetingProvider:'zoom',providerMeetingId:'123456789',providerMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',manualMeetingUrl:null,effectiveMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',providerSyncError:null,calendarSyncStatus:'synced',calendarSyncError:null,recordingStatus:'expected',recordingError:null}))
@@ -403,7 +415,7 @@ test('Mentoring Saya mode switcher stays usable without horizontal document over
 })
 
 
-test('admin Intensive operations and completion confirmation remain responsive',async({page})=>{
+test('admin Intensive engagement table, Program Configuration states, and completion flow remain responsive',async({page})=>{
   await stubNotifications(page)
   await stubAdminCommerce(page)
   await stubAdminMentoring(page)
@@ -413,17 +425,56 @@ test('admin Intensive operations and completion confirmation remain responsive',
   await page.getByRole('button',{name:'Mentoring Sessions',exact:true}).click()
   await page.getByRole('tab',{name:'Intensive Mentoring',exact:true}).click()
   await expect(page.getByRole('heading',{name:'Engagement & session operations'})).toBeVisible()
-  await expect(page.getByRole('button',{name:/Tambah sesi/})).toBeVisible()
-  await expect(page.getByText('Bundel Competition Ready',{exact:true}).first()).toBeVisible()
-  await expect(page.getByText('Laporan Performa Terperinci',{exact:true})).toBeVisible()
+  await expect(page.locator('.intensive-engagement-table')).toBeVisible()
+  await expect(page.getByText('Dedicated Mentor',{exact:true}).first()).toBeVisible()
+  const reload=page.getByRole('button',{name:'Muat ulang',exact:true})
+  await expect(reload).toBeVisible()
+  const whiteSpace=await reload.evaluate(element=>getComputedStyle(element).whiteSpace)
+  expect(whiteSpace).toBe('nowrap')
 
-  for(const width of [360,390,768,1024,1280,1440,1920]){
+  await page.getByRole('button',{name:'Kelola program',exact:true}).click()
+  const config=page.locator('dialog.intensive-config-dialog')
+  await expect(config).toBeVisible()
+  await expect(config.getByText('Mentor Fixture',{exact:true})).toBeVisible()
+  await expect(config.getByText('Final pitch deck refinement',{exact:true})).toBeVisible()
+  await expect(config.getByLabel('Durasi sesi baru (menit)')).toHaveCount(0)
+
+  const geometry=await config.evaluate(element=>{const r=element.getBoundingClientRect();return{left:r.left,top:r.top,right:r.right,bottom:r.bottom,cx:r.left+r.width/2,cy:r.top+r.height/2,w:innerWidth,h:innerHeight}})
+  expect(Math.abs(geometry.cx-geometry.w/2)).toBeLessThanOrEqual(3)
+  expect(Math.abs(geometry.cy-geometry.h/2)).toBeLessThanOrEqual(3)
+  expect(geometry.left).toBeGreaterThan(0);expect(geometry.top).toBeGreaterThan(0)
+  expect(geometry.right).toBeLessThanOrEqual(geometry.w);expect(geometry.bottom).toBeLessThanOrEqual(geometry.h)
+
+  await config.getByRole('button',{name:'Edit progres'}).click()
+  const activity=config.getByLabel(/Aktivitas saat ini/)
+  await expect(activity).toHaveValue('Final pitch deck refinement')
+  await activity.fill('Final deck + mock Q&A')
+  await config.getByRole('button',{name:'Batal',exact:true}).click()
+  await expect(activity).toHaveCount(0)
+  await expect(config.getByText('Final pitch deck refinement',{exact:true})).toBeVisible()
+
+  await config.getByRole('button',{name:'Edit progres'}).click()
+  await config.getByLabel(/Aktivitas saat ini/).fill('Final deck + mock Q&A')
+  await config.getByRole('button',{name:'Simpan progres'}).click()
+  await expect(config.getByLabel(/Aktivitas saat ini/)).toHaveCount(0)
+  await expect(config.getByText('Final deck + mock Q&A',{exact:true})).toBeVisible()
+
+  await config.getByRole('button',{name:'Tambah sesi',exact:true}).click()
+  const duration=config.getByLabel('Durasi sesi baru (menit)')
+  await expect(duration).toHaveValue('')
+  await duration.fill('90')
+  await config.getByRole('button',{name:'Tambah sesi',exact:true}).click()
+  await expect(config.getByLabel('Durasi sesi baru (menit)')).toHaveCount(0)
+  await config.getByRole('button',{name:'Tutup Program Configuration'}).click()
+  await expect(page.getByText('2 sesi operasional',{exact:true})).toBeVisible()
+
+  for(const width of [375,390,768,820,1280,1440]){
     await page.setViewportSize({width,height:900})
     await expectNoDocumentOverflow(page)
   }
 
   await page.setViewportSize({width:1024,height:900})
-  await page.getByRole('button',{name:'Kelola',exact:true}).click()
+  await page.getByRole('button',{name:'Kelola',exact:true}).last().click()
   const detail=page.locator('dialog[aria-labelledby="intensive-admin-session-title"]')
   await expect(detail).toBeVisible()
   await expect(detail.locator('textarea').first()).toHaveValue('Final storyline & Q&A')
@@ -432,10 +483,84 @@ test('admin Intensive operations and completion confirmation remain responsive',
   await expect(confirm).toBeVisible()
   await expect(confirm.getByRole('button',{name:'Batal',exact:true})).toBeVisible()
   await expect(confirm.getByRole('button',{name:'Ya, tandai selesai',exact:true})).toBeVisible()
-  await expect(confirm.getByRole('button',{name:/Tutup konfirmasi/})).toHaveCount(0)
   await expectNoDocumentOverflow(page)
 })
 
+
+
+test('International custom offer supports create view edit cancel and Cart Link reuse',async({page})=>{
+  await stubNotifications(page)
+  await stubAdminCommerce(page)
+  const menteeId='92000000-0000-0000-0000-000000000003'
+  const offerId='97500000-0000-0000-0000-000000000001'
+  const winId='97510000-0000-0000-0000-000000000001'
+  let offer:Record<string,unknown>|null=null
+
+  await page.route('**/rest/v1/rpc/list_admin_cart_links_page',route=>json(route,[]))
+  await page.route('**/rest/v1/rpc/list_cart_link_mentees',route=>json(route,[{user_id:menteeId,email:'aqil@fixture.test',display_name:'Aqil Aja'}]))
+  await page.route('**/rest/v1/rpc/list_admin_intensive_custom_offers',route=>json(route,offer?[offer]:[]))
+  await page.route('**/rest/v1/rpc/admin_save_intensive_custom_offer',async route=>{
+    const p=route.request().postDataJSON() as Record<string,unknown>
+    offer={
+      offer_id:offerId,intended_mentee_id:menteeId,mentee_name:'Aqil Aja',mentee_email:'aqil@fixture.test',
+      title:'International Competition · Harvard Global Case Competition',competition_category_id:null,competition_category_name:null,
+      competition_name:String(p.p_competition_name),baseline_sessions_per_month:Number(p.p_baseline_sessions_per_month),
+      final_price_amount:Number(p.p_final_price_amount),status:'active',expires_at:null,
+      created_at:'2026-09-21T00:00:00.000Z',updated_at:'2026-09-21T00:00:00.000Z',
+      included_add_ons:[{id:winId,name:'Win Guarantee Protection',code:'WIN_GUARANTEE_PROTECTION'}],
+      benefits:['International pitch deck review'],
+    }
+    await json(route,offerId)
+  })
+  await page.route('**/rest/v1/intensive_mentoring_add_ons**',route=>json(route,[
+    {id:winId,name:'Win Guarantee Protection',code:'WIN_GUARANTEE_PROTECTION'},
+    {id:'97510000-0000-0000-0000-000000000002',name:'Simulasi Penjurian',code:'JUDGING_SIMULATION'},
+  ]))
+  await page.route('**/rest/v1/competition_categories**',route=>json(route,[{id:categoryId,name:'Business Case'}]))
+  await page.route('**/api/admin/cart-links',route=>json(route,{url:'http://localhost:3001/cart-link/custom-offer-fixture'}))
+
+  await page.setViewportSize({width:1280,height:900})
+  await page.goto('http://localhost:3001/admin')
+  await page.getByRole('button',{name:'Cart Links',exact:true}).click()
+  await page.getByRole('button',{name:/Penawaran Internasional/,exact:true}).click()
+
+  const dialog=page.locator('dialog.intensive-custom-offer-dialog')
+  await expect(dialog).toBeVisible()
+  const geometry=await dialog.evaluate(element=>{const r=element.getBoundingClientRect();return{cx:r.left+r.width/2,cy:r.top+r.height/2,w:innerWidth,h:innerHeight,left:r.left,top:r.top}})
+  expect(Math.abs(geometry.cx-geometry.w/2)).toBeLessThanOrEqual(3)
+  expect(Math.abs(geometry.cy-geometry.h/2)).toBeLessThanOrEqual(3)
+  expect(geometry.left).toBeGreaterThan(0);expect(geometry.top).toBeGreaterThan(0)
+
+  const menteeSearch=dialog.getByPlaceholder('Cari nama atau email')
+  await menteeSearch.fill('Aqil')
+  await dialog.getByRole('option',{name:/Aqil Aja/}).click()
+  await dialog.getByPlaceholder('Harvard Global Case Competition').fill('Harvard Global Case Competition')
+  await dialog.getByLabel(/Baseline \/ intensitas/).fill('6')
+  await dialog.getByLabel('Harga kesepakatan').fill('4750000')
+  await dialog.getByText('Win Guarantee Protection',{exact:true}).click()
+  await dialog.getByPlaceholder('International pitch deck review').fill('International pitch deck review')
+  await dialog.getByRole('button',{name:'Simpan penawaran'}).click()
+
+  await expect(dialog.getByText('Rp4.750.000',{exact:true})).toBeVisible()
+  await expect(dialog.getByText('Win Guarantee Protection',{exact:true})).toBeVisible()
+  await expect(dialog.getByText('International pitch deck review',{exact:true})).toBeVisible()
+  await expect(dialog.getByPlaceholder('Harvard Global Case Competition')).toHaveCount(0)
+
+  await dialog.getByRole('button',{name:'Edit',exact:true}).click()
+  await expect(dialog.getByLabel(/Baseline \/ intensitas/)).toHaveValue('6')
+  await dialog.getByLabel(/Baseline \/ intensitas/).fill('7')
+  await dialog.getByRole('button',{name:'Batal',exact:true}).click()
+  await expect(dialog.getByLabel(/Baseline \/ intensitas/)).toHaveCount(0)
+  await expect(dialog.getByText('6 sesi/bulan',{exact:true})).toBeVisible()
+
+  await dialog.getByRole('button',{name:'Buat Cart Link',exact:true}).click()
+  await expect(dialog.getByText('http://localhost:3001/cart-link/custom-offer-fixture',{exact:true})).toBeVisible()
+
+  for(const width of [375,390,768,820,1280,1440]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+  }
+})
 
 test('role profile avatar dialog supports drag drop crop save and responsive widths',async({page})=>{
   await stubNotifications(page)

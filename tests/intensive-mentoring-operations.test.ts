@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs'
 import test from 'node:test'
 const read=(path:string)=>readFileSync(path,'utf8')
 const migration='supabase/migrations/202609200005_intensive_mentoring_operations.sql'
+const commerceMigration='supabase/migrations/202609210001_intensive_custom_offers_and_guarantee_commerce.sql'
 
 test('Intensive domain separates paid entitlement from flexible operational engagements and sessions',()=>{
  const sql=read(migration)
@@ -73,24 +74,21 @@ test('program progress uses the six source-backed stages and writes engagement a
  for(const label of ['Penetapan Tujuan','Asesmen Awal','Pengembangan Terarah','Praktik dan Penerapan','Review dan Penyempurnaan','Final Evaluation'])assert.ok(types.includes(label),label)
 })
 
-test('catalog values stay source-backed and legal-dependent records remain blocked',()=>{
+test('catalog values stay source-backed while approved guarantee products are active and sellable',()=>{
  const sql=read(migration)
+ const forward=read(commerceMigration)
  const seed=read('supabase/migrations/202609160005_intensive_catalog_seed.sql')
  assert.match(sql,/code='INTENSIVE'[\s\S]*?sessions_per_month=4|sessions_per_month=4[\s\S]*?code='INTENSIVE'/i)
- assert.match(sql,/1150000/)
- assert.match(sql,/1400000/)
- assert.match(sql,/2200000/)
- assert.match(sql,/2800000/)
- assert.match(sql,/INTERNATIONAL_COMPETITION/)
- assert.match(sql,/pricing_mode='consultation'/)
- assert.match(sql,/WIN_GUARANTEE_PROTECTION[\s\S]*?is_active=false|is_active=false[\s\S]*?WIN_GUARANTEE_PROTECTION/i)
- assert.match(sql,/COMPETITION_ASSURANCE[\s\S]*?is_active=false|is_active=false[\s\S]*?COMPETITION_ASSURANCE/i)
- assert.match(sql,/guard_intensive_legal_blocked_add_on/i)
- assert.match(sql,/guard_intensive_legal_blocked_bundle/i)
- assert.match(seed,/SKILL_BUILDER/)
- assert.match(seed,/COMPETITION_READY/)
- assert.match(seed,/COMPETITION_ASSURANCE/)
- assert.match(seed,/98100000-0000-0000-0000-000000000003/)
+ assert.match(sql,/1150000/);assert.match(sql,/1400000/);assert.match(sql,/2200000/);assert.match(sql,/2800000/)
+ assert.match(sql,/INTERNATIONAL_COMPETITION/);assert.match(sql,/pricing_mode='consultation'/)
+ assert.match(sql,/WIN_GUARANTEE_PROTECTION[\s\S]*?is_active=true|is_active=true[\s\S]*?WIN_GUARANTEE_PROTECTION/i)
+ assert.match(sql,/COMPETITION_ASSURANCE[\s\S]*?is_active=true|is_active=true[\s\S]*?COMPETITION_ASSURANCE/i)
+ assert.doesNotMatch(sql,/requires separate legal\/business approval before activation|must remain recorded until legal approval/i)
+ assert.match(forward,/WIN_GUARANTEE_PROTECTION[\s\S]*500000|500000[\s\S]*WIN_GUARANTEE_PROTECTION/)
+ assert.match(forward,/COMPETITION_ASSURANCE[\s\S]*3000000|3000000[\s\S]*COMPETITION_ASSURANCE/)
+ assert.match(forward,/drop trigger if exists intensive_legal_blocked_add_on_guard/)
+ assert.match(forward,/drop trigger if exists intensive_legal_blocked_bundle_guard/)
+ assert.match(seed,/SKILL_BUILDER/);assert.match(seed,/COMPETITION_READY/);assert.match(seed,/COMPETITION_ASSURANCE/)
 })
 
 test('user mentoring is mode-switched and Intensive is engagement-centric with nested add-ons',()=>{
@@ -153,11 +151,73 @@ test('calendar and Zoom webhook route Intensive sessions through their own persi
  assert.match(sql,/notify_intensive_mentoring_integration_changes/i)
 })
 
-test('catalog admin and cart link explain legal-blocked items instead of making them look missing',()=>{
+test('catalog admin and Cart Link no longer expose obsolete legal-blocked copy',()=>{
  const catalog=read('components/admin/intensive-mentoring-management.tsx')
  const cart=read('components/admin/commerce-cart-link-management.tsx')
- assert.match(catalog,/Inactive · requires legal approval/)
- assert.match(catalog,/Nonaktif · legal blocked/)
- assert.match(cart,/Item legal-blocked sengaja tidak dapat dipilih/)
- assert.match(cart,/Win Guarantee Protection dan Competition Assurance/)
+ assert.doesNotMatch(catalog,/legal blocked|requires legal approval|tetap nonaktif sampai/i)
+ assert.doesNotMatch(cart,/Item legal-blocked|tetap tercatat di katalog admin, tetapi tidak muncul/i)
+ assert.match(catalog,/Syarat, ketentuan, dan asesmen kelayakan berlaku/)
+ assert.match(cart,/Penawaran Internasional/)
+})
+
+test('all historical Intensive policies are rerun-safe and obsolete guarantee guards stay removed',()=>{
+ const sql=read(migration)
+ const policies=[
+  'intensive_engagement_owner_read','intensive_engagement_admin_read','intensive_engagement_mentor_read',
+  'intensive_sessions_owner_read','intensive_sessions_admin_read','intensive_sessions_mentor_read',
+  'intensive_session_events_owner_read','intensive_session_events_admin_read','intensive_session_events_mentor_read',
+  'intensive_engagement_events_owner_read','intensive_engagement_events_admin_read','intensive_engagement_events_mentor_read',
+ ]
+ for(const policy of policies){
+  assert.match(sql,new RegExp('drop policy if exists '+policy+' on public\\.','i'),policy)
+  assert.equal((sql.match(new RegExp('create policy '+policy+' on public\\.','gi'))??[]).length,1,policy)
+ }
+ assert.match(sql,/drop trigger if exists intensive_legal_blocked_add_on_guard/)
+ assert.match(sql,/drop trigger if exists intensive_legal_blocked_bundle_guard/)
+ assert.doesNotMatch(sql,/create trigger intensive_legal_blocked_(?:add_on|bundle)_guard/)
+})
+
+test('International custom offer is an authoritative recipient-bound Shared Commerce source',()=>{
+ const sql=read(commerceMigration)
+ assert.match(sql,/create table if not exists public\.intensive_mentoring_custom_offers/)
+ assert.match(sql,/final_price_amount bigint not null/)
+ assert.match(sql,/create table if not exists public\.intensive_mentoring_custom_offer_items/)
+ assert.match(sql,/item_type in \('add_on','benefit'\)/)
+ assert.match(sql,/intensive_mentoring_custom_offer/)
+ assert.match(sql,/resolve_commerce_item/)
+ assert.match(sql,/International custom offer belongs to another mentee/)
+ assert.match(sql,/create or replace function public\.create_order_from_cart/)
+ assert.match(sql,/status='converted'/)
+ assert.match(sql,/entitlement_kind in\('package','bundle','add_on','custom_offer'\)/)
+ assert.match(sql,/Paid International Intensive custom offer/)
+ assert.match(sql,/'custom_offer'::text/)
+ assert.match(sql,/supportType/)
+})
+
+test('admin Intensive UI uses engagement table, centered config dialog, explicit edit states and blank add-session duration',()=>{
+ const admin=read('components/admin/intensive-mentoring-session-management.tsx')
+ const css=read('app/operations-dashboard.css')
+ assert.match(admin,/intensive-engagement-table/)
+ assert.match(admin,/intensive-config-dialog/)
+ assert.match(admin,/editingDedicatedMentor/)
+ assert.match(admin,/editingProgramProgress/)
+ assert.match(admin,/addingSession/)
+ assert.match(admin,/Aktivitas saat ini/)
+ assert.match(admin,/value=\{duration\}/)
+ assert.doesNotMatch(admin,/setDuration\('75'\)|useState\('75'\)|placeholder="75"/)
+ assert.match(admin,/white-space:nowrap|intensive-reload-button/)
+ assert.match(css,/\.intensive-config-dialog\{position:fixed!important;inset:0!important;margin:auto!important/)
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
+})
+
+test('International offer admin workflow defaults to view mode and reuses Cart Link checkout',()=>{
+ const ui=read('components/admin/intensive-international-offer-management.tsx')
+ assert.match(ui,/type Mode='create'\|'view'\|'edit'/)
+ assert.match(ui,/mode==='view'/)
+ assert.match(ui,/Simpan penawaran/)
+ assert.match(ui,/Buat Cart Link/)
+ assert.match(ui,/commerceItemIds:\[activeOffer\.offer_id\]/)
+ assert.match(ui,/p_final_price_amount:amount/)
+ assert.match(ui,/p_add_on_ids:selectedAddOns/)
+ assert.match(ui,/p_benefits:benefits/)
 })

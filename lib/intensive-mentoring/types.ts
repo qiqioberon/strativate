@@ -15,7 +15,7 @@ export const intensiveStageLabels:Record<IntensiveProgramStage,string>={
  review_refinement:'Review dan Penyempurnaan',
  final_evaluation:'Final Evaluation',
 }
-export type IntensiveAddOnView={entitlementId:string|null;name:string;code:string;status:string;source?:'attached'|'bundle';createdAt?:string}
+export type IntensiveAddOnView={entitlementId:string|null;name:string;code:string;status:string;source?:'attached'|'bundle'|'custom_offer';supportType?:'add_on'|'benefit';createdAt?:string}
 export type IntensiveSessionView={
  sessionId:string;sessionNumber:number;durationMinutes:number;status:'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled';
  focusId:string|null;focusName:string|null;menteeTopicRequest:string|null;topicStatus:'needs_input'|'pending_review'|'confirmed';resolvedTopic:string|null;
@@ -23,7 +23,7 @@ export type IntensiveSessionView={
  providerSyncStatus?:string;googleSyncStatus:string;recordingStatus:string;creationSource:string;creationReason?:string|null
 }
 export type IntensiveEngagementView={
- engagementId:string;baseEntitlementId:string;baseKind:'package'|'bundle';programName:string;status:'active'|'completed'|'cancelled';
+ engagementId:string;baseEntitlementId:string;baseKind:'package'|'bundle'|'custom_offer';programName:string;status:'active'|'completed'|'cancelled';
  baselineSessionsPerMonth:number|null;primaryMentorId:string|null;primaryMentorName:string|null;competitionName:string|null;
- programStage:IntensiveProgramStage;progressSummary:string|null;startedAt:string;addOns:IntensiveAddOnView[];sessions:IntensiveSessionView[]
+ programStage:IntensiveProgramStage;currentActivity?:string|null;progressSummary:string|null;startedAt:string;addOns:IntensiveAddOnView[];sessions:IntensiveSessionView[]
 }

@@ -27,6 +27,8 @@ function CheckoutButton() {
 function itemKindLabel(kind: string) {
   if (kind === 'digital_product') return 'Produk Digital'
   if (kind === 'private_mentoring') return 'Private Mentoring'
+  if (kind === 'intensive_mentoring_custom_offer') return 'Penawaran Intensive Internasional'
+  if (kind.startsWith('intensive_mentoring_')) return 'Intensive Mentoring'
   return 'Item'
 }
 
