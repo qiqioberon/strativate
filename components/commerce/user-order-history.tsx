@@ -41,7 +41,7 @@ export function UserOrderHistory({
   orders: OrderWithItems[]
   focusOrderId?: string | null
 }) {
-  const [selected, setSelected] = useState<OrderWithItems | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [query,setQuery]=useState('')
   const [status,setStatus]=useState('all')
   const [kind,setKind]=useState('all')
@@ -73,11 +73,14 @@ export function UserOrderHistory({
 
   const safePage=Math.min(page,Math.max(0,Math.ceil(filtered.length/pageSize)-1))
   const visible=filtered.slice(safePage*pageSize,safePage*pageSize+pageSize)
+  const selected=useMemo(()=>selectedOrderId?orders.find(order=>order.id===selectedOrderId)??null:null,[orders,selectedOrderId])
+
+  useEffect(()=>{if(selectedOrderId&&!selected)setSelectedOrderId(null)},[selected,selectedOrderId])
 
   useEffect(()=>{
     if(!focusOrderId)return
     const match=orders.find(order=>order.id===focusOrderId)
-    if(match)setSelected(match)
+    if(match)setSelectedOrderId(match.id)
   },[focusOrderId,orders])
 
   useEffect(() => {
@@ -101,13 +104,13 @@ export function UserOrderHistory({
         <label className="ops-field"><span>Per halaman</span><select value={pageSize} onChange={event=>{setPageSize(Number(event.target.value));resetPage()}}>{[5,10,20,50].map(size=><option value={size} key={size}>{size}</option>)}</select></label>
       </div>
       <div className="data-management-summary"><strong>{filtered.length} pesanan</strong><span>Filter bekerja pada riwayat pesanan akun Anda.</span></div>
-      <div className="ops-table-wrap"><table className="ops-table user-order-table" data-testid="user-order-table"><thead><tr><th>Pesanan</th><th>Tanggal</th><th>Ringkasan item</th><th>Jenis</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{visible.length?visible.map(order=><tr key={order.id}><td><strong>{orderReference(order)}</strong></td><td>{new Intl.DateTimeFormat('id-ID',{dateStyle:'medium'}).format(new Date(order.created_at))}</td><td><strong>{titleFor(order)}</strong><small>{order.items.length} item</small></td><td>{[...new Set(order.items.map(item=>kindLabel(item.item_kind_snapshot)))].join(', ')}</td><td>{formatRupiah(order.total_amount)}</td><td><span className={`ops-status ops-status--${statusTone(order.status)}`}>{statusLabel(order.status)}</span></td><td><div className="table-action-group"><button type="button" className="button button-outline button-compact" onClick={()=>setSelected(order)}><Eye aria-hidden="true" size={15}/>Lihat Detail</button>{order.status==='pending_payment'?<a className="button button-primary button-compact" href={`/checkout?order=${encodeURIComponent(order.id)}`}>Bayar <ArrowRight aria-hidden="true" size={14}/></a>:null}</div></td></tr>):<tr><td colSpan={7}>Tidak ada pesanan yang cocok dengan filter.</td></tr>}</tbody></table></div>
+      <div className="ops-table-wrap"><table className="ops-table user-order-table" data-testid="user-order-table"><thead><tr><th>Pesanan</th><th>Tanggal</th><th>Ringkasan item</th><th>Jenis</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{visible.length?visible.map(order=><tr key={order.id}><td><strong>{orderReference(order)}</strong></td><td>{new Intl.DateTimeFormat('id-ID',{dateStyle:'medium'}).format(new Date(order.created_at))}</td><td><strong>{titleFor(order)}</strong><small>{order.items.length} item</small></td><td>{[...new Set(order.items.map(item=>kindLabel(item.item_kind_snapshot)))].join(', ')}</td><td>{formatRupiah(order.total_amount)}</td><td><span className={`ops-status ops-status--${statusTone(order.status)}`}>{statusLabel(order.status)}</span></td><td><div className="table-action-group"><button type="button" className="button button-outline button-compact" onClick={()=>setSelectedOrderId(order.id)}><Eye aria-hidden="true" size={15}/>Lihat Detail</button>{order.status==='pending_payment'?<a className="button button-primary button-compact" href={`/checkout?order=${encodeURIComponent(order.id)}`}>Bayar <ArrowRight aria-hidden="true" size={14}/></a>:null}</div></td></tr>):<tr><td colSpan={7}>Tidak ada pesanan yang cocok dengan filter.</td></tr>}</tbody></table></div>
       <TablePagination page={safePage} pageSize={pageSize} totalItems={filtered.length} onPageChange={setPage} label="Pagination riwayat pesanan"/>
     </section>
 
-    <dialog ref={dialogRef} className="ops-dialog" aria-labelledby="user-order-detail-title" onClose={() => setSelected(null)}>
+    <dialog ref={dialogRef} className="ops-dialog" aria-labelledby="user-order-detail-title" onClose={() => setSelectedOrderId(null)}>
       {selected ? <div className="ops-dialog__surface">
-        <header className="ops-dialog__header"><div><p className="kicker">Detail pesanan</p><h2 id="user-order-detail-title">{orderReference(selected)}</h2><p>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short' }).format(new Date(selected.created_at))}</p></div><button type="button" className="ops-icon-button" onClick={() => setSelected(null)} aria-label="Tutup detail pesanan"><X aria-hidden="true" /></button></header>
+        <header className="ops-dialog__header"><div><p className="kicker">Detail pesanan</p><h2 id="user-order-detail-title">{orderReference(selected)}</h2><p>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short' }).format(new Date(selected.created_at))}</p></div><button type="button" className="ops-icon-button" onClick={() => setSelectedOrderId(null)} aria-label="Tutup detail pesanan"><X aria-hidden="true" /></button></header>
         <div className="ops-detail-grid"><div><span>Status order</span><strong>{statusLabel(selected.status)}</strong></div><div><span>Status pembayaran</span><strong>{selected.status === 'paid' ? 'Terverifikasi' : statusLabel(selected.status)}</strong></div><div><span>Jumlah item</span><strong>{selected.items.length}</strong></div><div><span>Total</span><strong>{formatRupiah(selected.total_amount)}</strong></div></div>
         <section className="ops-dialog__section"><h3>Item pesanan</h3>{selected.items.map(item => <div className="ops-line-item" key={item.id}><div><strong>{item.name_snapshot}</strong><span>{kindLabel(item.item_kind_snapshot)} · Qty 1</span></div><div><span>{formatRupiah(item.unit_price_amount)} / item</span><strong>{formatRupiah(item.unit_price_amount)}</strong></div></div>)}</section>
         <div className="ops-total-row"><span>Total</span><strong>{formatRupiah(selected.total_amount)}</strong></div>

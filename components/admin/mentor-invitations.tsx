@@ -4,6 +4,7 @@ import { RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { formError } from '@/lib/auth/errors'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier } from '@/lib/supabase/database.types'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
@@ -70,6 +71,7 @@ export function MentorInvitations({ refreshKey, onDeleted }: { refreshKey: numbe
 
   useEffect(() => { void loadTiers() }, [loadTiers])
   useEffect(() => { const timer = setTimeout(() => { void load() }, 250); return () => clearTimeout(timer) }, [load, refreshKey])
+  useOperationalInvalidation(['mentor-invitations'], () => { void load() })
 
   const visibleInvitations = useMemo(() => {
     if (!sortKey || !sortDirection) return invitations

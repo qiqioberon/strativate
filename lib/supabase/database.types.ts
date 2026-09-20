@@ -55,6 +55,7 @@ export type PrivateMentoringSessionViewRow = { session_id:string; enrollment_id:
 export type AdminPrivateMentoringSessionRow = { session_id:string; enrollment_id:string; mentee_id:string; mentee_email:string; session_number:number; status:string; session_focus_id:string|null; focus_name:string|null; mentor_id:string|null; mentor_name:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; mentor_tier_id:string; mentor_tier_code:string; mentor_tier_name:string; purchased_sessions:number }
 export type EligiblePrivateMentoringMentor = { mentor_id:string; mentor_name:string; tier_id:string; tier_code:string; tier_name:string }
 export type Notification = { id:string; recipient_user_id:string|null; recipient_role:AppRole; type:string; title:string; message:string; related_entity:string|null; related_entity_id:string|null; idempotency_key:string; read_at:string|null; created_at:string }
+export type OperationalInvalidationVersion = { id:number; recipient_role:AppRole; recipient_user_id:string|null; domain:string; revision:number; updated_at:string }
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = { Row:Row; Insert:Insert; Update:Update; Relationships:[] }
 
@@ -94,6 +95,7 @@ export type Database = {
       private_mentoring_enrollments: Table<PrivateMentoringEnrollment, Partial<PrivateMentoringEnrollment> & Pick<PrivateMentoringEnrollment,'mentee_id'|'order_item_id'|'package_id'|'purchased_sessions'>>
       private_mentoring_sessions: Table<PrivateMentoringSession, Partial<PrivateMentoringSession> & Pick<PrivateMentoringSession,'enrollment_id'|'session_number'>>
       notifications: Table<Notification, Partial<Notification> & Pick<Notification,'recipient_role'|'type'|'title'|'message'|'idempotency_key'>>
+      operational_invalidation_versions: Table<OperationalInvalidationVersion>
     }
     Views: { [_ in never]: never }
     Functions: {

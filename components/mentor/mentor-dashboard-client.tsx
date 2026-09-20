@@ -21,6 +21,7 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 import { RoleCalendar } from '@/components/calendar/role-calendar'
 import { DashboardSidebarUtilities } from '@/components/dashboard/dashboard-sidebar-utilities'
 import { DashboardTopbarActions } from '@/components/dashboard/dashboard-topbar-actions'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { AssignmentPanel } from '@/components/mentor/dashboard/mentor-assignments'
 import { HistoryPanel } from '@/components/mentor/dashboard/mentor-history'
 import { MenteePanel } from '@/components/mentor/dashboard/mentor-mentees'
@@ -70,6 +71,7 @@ export function MentorDashboardClient({
   }
   const currentLabel = nav.find(item => item.id === section)?.label || 'Dashboard mentor'
   const retry = () => router.refresh()
+  useOperationalInvalidation(['mentor-dashboard', 'mentoring', 'provider'], () => router.refresh())
 
   return <div className="role-shell mentor-shell">
     <aside id="mentor-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>

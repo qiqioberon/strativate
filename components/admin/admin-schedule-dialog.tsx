@@ -1,7 +1,8 @@
 'use client'
 
 import { CalendarDays, Check, Clock3, Loader2, Search, TriangleAlert, UserRound, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import {
   buildBookableMentorDays,
   type BookableMentorDay,
@@ -34,6 +35,9 @@ function availabilityTime(start:string,end:string,timezone:string){const formatt
 function calendarStatusLabel(status:GoogleCalendarAvailabilityStatus){if(status==='verified')return'Google terverifikasi';if(status==='unavailable')return'Google belum terverifikasi';return'Google tidak terhubung'}
 function calendarStatusClass(status:GoogleCalendarAvailabilityStatus){if(status==='verified')return'is-verified';if(status==='unavailable')return'is-warning';return'is-neutral'}
 function daySelectionKey(day:{mentorId:string;dateKey:string}){return`${day.mentorId}:${day.dateKey}`}
+export function retainSelectedScheduleSlot<T extends {mentorId:string;start:string}>(current:T|null,slots:readonly {mentorId:string;start:string}[]){
+  return current&&slots.some(slot=>slot.mentorId===current.mentorId&&slot.start===current.start)?current:null
+}
 
 export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind='private'}:{sessionId:string|null;onClose:()=>void;onScheduled?:()=>void;mentoringKind?:'private'|'intensive'}){
   const ref=useRef<HTMLDialogElement>(null)
@@ -48,20 +52,32 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
   const [dateFilter,setDateFilter]=useState('')
   const [timeStart,setTimeStart]=useState('')
   const [timeEnd,setTimeEnd]=useState('')
+  const loadSequenceRef=useRef(0)
 
   useEffect(()=>{const dialog=ref.current;if(!dialog)return;if(sessionId&&!dialog.open)dialog.showModal();if(!sessionId&&dialog.open)dialog.close()},[sessionId])
-  useEffect(()=>{
-    if(!sessionId){setPayload(null);setSelectedDayKey(null);setSelected(null);return}
-    let active=true
-    setLoading(true);setError('');setNotice('');setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('');setSelectedDayKey(null);setSelected(null)
-    fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/slots`,{cache:'no-store'})
-      .then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'Slot belum dapat dimuat.');if(active)setPayload(data)})
-      .catch(err=>{if(active)setError(err.message)})
-      .finally(()=>{if(active)setLoading(false)})
-    return()=>{active=false}
+  const loadSlots=useCallback(async(resetForNewSession:boolean)=>{
+    if(!sessionId)return
+    const requestId=++loadSequenceRef.current
+    setLoading(true);setError('')
+    if(resetForNewSession){setNotice('');setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('');setSelectedDayKey(null);setSelected(null)}
+    try{
+      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/slots`,{cache:'no-store'})
+      const data=await response.json() as SlotPayload&{error?:string}
+      if(!response.ok)throw new Error(data.error||'Slot belum dapat dimuat.')
+      if(requestId!==loadSequenceRef.current)return
+      setPayload(data)
+      setSelected(current=>retainSelectedScheduleSlot(current,data.slots))
+    }catch(err){if(requestId===loadSequenceRef.current)setError(err instanceof Error?err.message:'Slot belum dapat dimuat.')}
+    finally{if(requestId===loadSequenceRef.current)setLoading(false)}
   },[mentoringKind,sessionId])
+  useEffect(()=>{
+    if(!sessionId){loadSequenceRef.current+=1;setPayload(null);setSelectedDayKey(null);setSelected(null);return}
+    void loadSlots(true)
+    return()=>{loadSequenceRef.current+=1}
+  },[loadSlots,sessionId])
+  useOperationalInvalidation(['calendar', 'availability', 'provider'],()=>{if(sessionId)void loadSlots(false)})
 
-  const eligibleMentors=payload?.context.mentors??[]
+  const eligibleMentors=useMemo(()=>payload?.context.mentors??[],[payload])
   const filters=useMemo(()=>({mentorQuery,date:dateFilter,timeStart,timeEnd}),[dateFilter,mentorQuery,timeEnd,timeStart])
   const bookableDays=useMemo(()=>buildBookableMentorDays({mentors:eligibleMentors,slots:payload?.slots??[],filters}),[eligibleMentors,filters,payload])
   const mentorGroups=useMemo(()=>{

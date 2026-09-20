@@ -2,6 +2,7 @@
 
 import { CalendarDays, ChevronRight, Clock3, Loader2, Search, UserRound, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 
 import {
   buildTwoWeekDateKeys,
@@ -58,6 +59,7 @@ export function MentorAvailabilityExplorer() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const detailRequestRef = useRef<string | null>(null)
 
   const load = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true)
@@ -111,7 +113,8 @@ export function MentorAvailabilityExplorer() {
 
   async function openFreshDay(mentor: MenteeAvailabilityMentor, dateKey: string) {
     const loadingKey = `${mentor.mentorId}:${dateKey}`
-    if (detailLoadingKey) return
+    if (detailRequestRef.current) return
+    detailRequestRef.current = loadingKey
     setDetailLoadingKey(loadingKey)
     setNotice('')
     try {
@@ -136,9 +139,18 @@ export function MentorAvailabilityExplorer() {
       setSelectedDetail(null)
       setNotice(detailError instanceof Error ? detailError.message : 'Ketersediaan terbaru belum dapat diverifikasi.')
     } finally {
+      detailRequestRef.current = null
       setDetailLoadingKey(null)
     }
   }
+
+  useOperationalInvalidation(['availability'], () => {
+    const detail = selectedDetail
+    void (async () => {
+      await load(false)
+      if (detail) await openFreshDay(detail.mentor, detail.day.dateKey)
+    })()
+  })
 
   if (loading) {
     return <section className="mentee-availability-shell" aria-busy="true" aria-label="Memuat ketersediaan mentor">

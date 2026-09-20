@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AdminScheduleDialog } from '@/components/admin/admin-schedule-dialog'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { publicContact } from '@/lib/content/brand'
 
 type Role = 'admin' | 'mentor' | 'mentee'
@@ -136,11 +137,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: Role; onOpenA
   }, [range.end, range.start])
 
   useEffect(() => { void load() }, [load])
-  useEffect(() => {
-    const refresh = () => { void load() }
-    window.addEventListener('strativate:operational-refresh', refresh)
-    return () => window.removeEventListener('strativate:operational-refresh', refresh)
-  }, [load])
+  useOperationalInvalidation(['calendar', 'provider'], () => { void load() })
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const calendarState = params.get('calendar')

@@ -5,17 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/lib/supabase/database.types'
+import { notificationCategoryTypes } from '@/lib/realtime/operational-invalidation'
 
 const PAGE_SIZE = 20
 
 type ReadFilter = 'all' | 'unread' | 'read'
 type Category = 'all' | 'commerce' | 'mentoring' | 'meeting'
-
-const CATEGORY_TYPES: Record<Exclude<Category,'all'>,string[]> = {
-  commerce:['order_pending','payment_paid'],
-  mentoring:['competition_updated','competition_reviewed','mentor_assigned','mentoring_attention','topic_reviewed','scope_updated','session_scheduled','session_cancelled'],
-  meeting:['meeting_url_changed','zoom_failed','calendar_failed','recording_failed'],
-}
 
 function categoryLabel(value:Category){
   if(value==='commerce')return'Pesanan & pembayaran'
@@ -25,9 +20,9 @@ function categoryLabel(value:Category){
 }
 
 function typeLabel(type:string){
-  if(CATEGORY_TYPES.commerce.includes(type))return'Pesanan & pembayaran'
-  if(CATEGORY_TYPES.meeting.includes(type))return'Zoom & kalender'
-  if(CATEGORY_TYPES.mentoring.includes(type))return'Mentoring'
+  if(notificationCategoryTypes('commerce').includes(type))return'Pesanan & pembayaran'
+  if(notificationCategoryTypes('meeting').includes(type))return'Zoom & kalender'
+  if(notificationCategoryTypes('mentoring').includes(type))return'Mentoring'
   return'Pembaruan akun'
 }
 
@@ -63,7 +58,7 @@ export function DashboardNotificationCenter({
 
     if(readFilter==='unread')historyQuery=historyQuery.is('read_at',null)
     if(readFilter==='read')historyQuery=historyQuery.not('read_at','is',null)
-    if(category!=='all')historyQuery=historyQuery.in('type',CATEGORY_TYPES[category])
+    if(category!=='all')historyQuery=historyQuery.in('type',notificationCategoryTypes(category))
 
     const [result,unreadResult]=await Promise.all([
       historyQuery.range(0, Math.max(0, limit - 1)),
@@ -85,17 +80,12 @@ export function DashboardNotificationCenter({
 
   useEffect(() => { void load() }, [load])
   useEffect(() => {
-    const channel = client
-      .channel('notification-history')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => void load(true))
-      .subscribe()
     const refresh=()=>void load(true)
     window.addEventListener('strativate:notifications-changed',refresh)
     return () => {
       window.removeEventListener('strativate:notifications-changed',refresh)
-      void client.removeChannel(channel)
     }
-  }, [client, load])
+  }, [load])
 
   function changeReadFilter(next:ReadFilter){setReadFilter(next);setLimit(PAGE_SIZE)}
   function changeCategory(next:Category){setCategory(next);setLimit(PAGE_SIZE)}

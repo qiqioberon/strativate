@@ -54,13 +54,17 @@ test('checkout pending UI and payment bounded reconciliation are implemented',()
  assert.match(payment,/reconciling\.current/)
 })
 
-test('notification UI is database-backed and subscribes to realtime changes',()=>{
+test('notification UI is database-backed while realtime transport is centralized',()=>{
  const source=read('components/dashboard/dashboard-topbar-actions.tsx')
+ const provider=read('components/realtime/operational-realtime-provider.tsx')
  assert.match(source,/from\('notifications'\)/)
- assert.match(source,/postgres_changes/)
+ assert.doesNotMatch(source,/postgres_changes|\.channel\(/)
  assert.match(source,/mark_notification_read/)
  assert.match(source,/mark_all_notifications_read/)
- assert.match(source,/strativate:operational-refresh/)
+ assert.match(source,/strativate:notifications-changed/)
+ assert.match(provider,/postgres_changes/)
+ assert.match(provider,/table:\s*["']notifications["']/)
+ assert.match(provider,/strativate:notifications-changed/)
  assert.doesNotMatch(source,/notificationTemplates/)
 })
 

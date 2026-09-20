@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { OperationalRealtimeProvider } from '@/components/realtime/operational-realtime-provider'
 import type { Profile } from '@/lib/supabase/database.types'
 import { createClient } from '@/lib/supabase/client'
 type AccountProfile = Profile & { email: string | null }
@@ -14,7 +15,7 @@ export function AccountProvider({ profile, email = null, children }: { profile: 
     })
     return () => subscription.unsubscribe()
   }, [router])
-  return <AccountContext.Provider value={{ ...profile, email }}>{children}</AccountContext.Provider>
+  return <AccountContext.Provider value={{ ...profile, email }}><OperationalRealtimeProvider>{children}</OperationalRealtimeProvider></AccountContext.Provider>
 }
 export function useAccount() {
   const profile = useContext(AccountContext)

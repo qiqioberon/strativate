@@ -2,6 +2,7 @@
 
 import { Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 
 import { formError } from '@/lib/auth/errors'
 import {
@@ -67,12 +68,15 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
   const [error, setError] = useState('')
   const [loadFailed, setLoadFailed] = useState(false)
   const [message, setMessage] = useState('')
+  const [dirty, setDirty] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true)
+      setMessage('')
+      setLoadFailed(false)
+    }
     setError('')
-    setMessage('')
-    setLoadFailed(false)
     try {
       const db = createClient()
       const profileResult = await db.from('mentor_profiles').select('*').eq('user_id', mentorId).single()
@@ -108,15 +112,19 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       setWeeks(resolvedWeeks)
       setSelectedWeekStart(current => weekStarts.includes(current) ? current : resolvedWeeks[0].weekStartDate)
       setRangesByWeek(nextRangesByWeek)
+      setDirty(false)
     } catch (error) {
-      setLoadFailed(true)
+      if (showLoading) setLoadFailed(true)
       setError(formError(error, 'Ketersediaan mentor belum dapat dimuat.'))
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }, [mentorId])
 
   useEffect(() => { void load() }, [load])
+  useOperationalInvalidation(['availability'], () => {
+    if (!dirty) void load(false)
+  })
 
   const selectedWeek = useMemo(
     () => weeks.find(week => week.weekStartDate === selectedWeekStart) || null,
@@ -134,6 +142,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       ...current,
       [selectedWeekStart]: update(current[selectedWeekStart] || []),
     }))
+    setDirty(true)
     setMessage('')
   }
 
@@ -175,6 +184,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       const persisted = availabilityRulesToDraft(data || [])
       const nextRangesByWeek = { ...rangesByWeek, [selectedWeekStart]: persisted }
       setRangesByWeek(nextRangesByWeek)
+      setDirty(false)
       setMessage(`Ketersediaan ${weekLabel(selectedWeek).toLowerCase()} telah disimpan.`)
       const currentWeek = weeks.find(week => week.kind === 'current')
       const nextWeek = weeks.find(week => week.kind === 'next')

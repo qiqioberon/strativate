@@ -73,7 +73,7 @@ export function PrivateMentoringSessions({
   const[competitions,setCompetitions]=useState<Record<string,Competition>>({})
   const[competitionDrafts,setCompetitionDrafts]=useState<Record<string,CompetitionDraft>>({})
   const[categories,setCategories]=useState<Category[]>([])
-  const[selected,setSelected]=useState<PrivateMentoringSessionView|null>(null)
+  const[selectedSessionId,setSelectedSessionId]=useState<string|null>(null)
   const[editingTopic,setEditingTopic]=useState(false)
   const[editingCompetitions,setEditingCompetitions]=useState<Set<string>>(()=>new Set())
   const[query,setQuery]=useState('')
@@ -86,6 +86,9 @@ export function PrivateMentoringSessions({
   const detailRef=useRef<HTMLDialogElement>(null)
   const enrollmentIds=[...new Set(sessions.map(session=>session.enrollmentId))]
   const[selectedEnrollmentId,setSelectedEnrollmentId]=useState(enrollmentIds[0]??'')
+  const selected=useMemo(()=>selectedSessionId?sessions.find(session=>session.sessionId===selectedSessionId)??null:null,[selectedSessionId,sessions])
+
+  useEffect(()=>{if(selectedSessionId&&!selected)setSelectedSessionId(null)},[selected,selectedSessionId])
 
   useEffect(()=>{
     let active=true
@@ -114,7 +117,7 @@ export function PrivateMentoringSessions({
   useEffect(()=>{
     if(!focusSessionId)return
     const match=sessions.find(session=>session.sessionId===focusSessionId)
-    if(match)setSelected(match)
+    if(match)setSelectedSessionId(match.sessionId)
   },[focusSessionId,sessions])
 
   useEffect(()=>{
@@ -226,15 +229,15 @@ export function PrivateMentoringSessions({
         <label className="ops-field"><span>Per halaman</span><select value={pageSize} onChange={event=>{setPageSize(Number(event.target.value));resetPage()}}>{[5,10,20,50].map(size=><option value={size} key={size}>{size}</option>)}</select></label>
       </div>
       <div className="data-management-summary"><strong>{filtered.length} sesi</strong><span>Gunakan Session ID saat menghubungi admin.</span></div>
-      <div className="ops-table-wrap"><table className="ops-table mentee-session-table" data-testid="mentee-mentoring-session-table"><thead><tr><th>Sesi</th><th>Topik / Fokus</th><th>Mentor</th><th>Jadwal</th><th>Status</th><th>Zoom</th><th>Detail</th></tr></thead><tbody>{visible.length?visible.map(session=>{const status=sessionStatus(session.status);return <tr key={session.sessionId}><td data-label="Sesi"><strong>Sesi {session.sessionNumber}/{session.purchasedSessions}</strong><small><code title={session.sessionId}>{shortId(session.sessionId)}</code></small></td><td data-label="Topik / Fokus"><strong>{session.resolvedTopic||session.focusName||'Belum dikonfirmasi'}</strong><small>{topicStatus(session.topicStatus)}</small></td><td data-label="Mentor">{session.mentorName||session.primaryMentorName||'Menunggu admin'}</td><td data-label="Jadwal">{scheduleText(session)}</td><td data-label="Status"><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></td><td data-label="Zoom">{session.status==='scheduled'&&session.meetingUrl?<a className="button button-primary button-compact" href={session.meetingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Buka Zoom sesi ${session.sessionNumber}`}><ExternalLink aria-hidden="true"/>Zoom</a>:<span className="muted">Belum tersedia</span>}</td><td data-label="Detail"><button className="button button-outline button-compact" type="button" onClick={()=>setSelected(session)}><Eye aria-hidden="true"/>Detail</button></td></tr>}):<tr className="responsive-table-empty"><td colSpan={7}>Tidak ada sesi yang cocok dengan filter.</td></tr>}</tbody></table></div>
+      <div className="ops-table-wrap"><table className="ops-table mentee-session-table" data-testid="mentee-mentoring-session-table"><thead><tr><th>Sesi</th><th>Topik / Fokus</th><th>Mentor</th><th>Jadwal</th><th>Status</th><th>Zoom</th><th>Detail</th></tr></thead><tbody>{visible.length?visible.map(session=>{const status=sessionStatus(session.status);return <tr key={session.sessionId}><td data-label="Sesi"><strong>Sesi {session.sessionNumber}/{session.purchasedSessions}</strong><small><code title={session.sessionId}>{shortId(session.sessionId)}</code></small></td><td data-label="Topik / Fokus"><strong>{session.resolvedTopic||session.focusName||'Belum dikonfirmasi'}</strong><small>{topicStatus(session.topicStatus)}</small></td><td data-label="Mentor">{session.mentorName||session.primaryMentorName||'Menunggu admin'}</td><td data-label="Jadwal">{scheduleText(session)}</td><td data-label="Status"><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></td><td data-label="Zoom">{session.status==='scheduled'&&session.meetingUrl?<a className="button button-primary button-compact" href={session.meetingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Buka Zoom sesi ${session.sessionNumber}`}><ExternalLink aria-hidden="true"/>Zoom</a>:<span className="muted">Belum tersedia</span>}</td><td data-label="Detail"><button className="button button-outline button-compact" type="button" onClick={()=>setSelectedSessionId(session.sessionId)}><Eye aria-hidden="true"/>Detail</button></td></tr>}):<tr className="responsive-table-empty"><td colSpan={7}>Tidak ada sesi yang cocok dengan filter.</td></tr>}</tbody></table></div>
       <TablePagination page={safePage} pageSize={pageSize} totalItems={filtered.length} onPageChange={setPage} label="Pagination sesi Private Mentoring"/>
     </section>
 
     {message?<p className="muted" role="status">{message}</p>:null}
 
-    <dialog ref={detailRef} className="ops-dialog mentoring-detail-dialog" aria-labelledby="mentee-session-detail-title" onCancel={event=>{event.preventDefault();setSelected(null)}} onClose={()=>setSelected(null)}>
+    <dialog ref={detailRef} className="ops-dialog mentoring-detail-dialog" aria-labelledby="mentee-session-detail-title" onCancel={event=>{event.preventDefault();setSelectedSessionId(null)}} onClose={()=>setSelectedSessionId(null)}>
       {selected?<div className="ops-dialog__surface">
-        <header className="ops-dialog__header"><div><p className="kicker">Mentoring Saya</p><h2 id="mentee-session-detail-title">Private Mentoring · Sesi {selected.sessionNumber}/{selected.purchasedSessions}</h2><p>Session ID <code>{selected.sessionId}</code></p></div><button type="button" className="ops-icon-button" onClick={()=>setSelected(null)} aria-label="Tutup detail"><X/></button></header>
+        <header className="ops-dialog__header"><div><p className="kicker">Mentoring Saya</p><h2 id="mentee-session-detail-title">Private Mentoring · Sesi {selected.sessionNumber}/{selected.purchasedSessions}</h2><p>Session ID <code>{selected.sessionId}</code></p></div><button type="button" className="ops-icon-button" onClick={()=>setSelectedSessionId(null)} aria-label="Tutup detail"><X/></button></header>
         <div className="session-reference-row"><div><span>Session ID</span><strong>{selected.sessionId}</strong></div><CopyTextButton value={selected.sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>
         <dl className="ops-detail-grid">
           <div><span>Package / tier</span><strong>{selected.mentorTierName} · {selected.purchasedSessions} sesi</strong></div>
