@@ -107,15 +107,25 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','99500000-0000-0000-0000-000000000002',true);
 select public.claim_commerce_cart_link(repeat('a',64));
 select public.create_order_from_cart((select id from public.carts where user_id=auth.uid() and status='active'));
+reset role;
+
 do $snapshot$
 declare v_offer uuid;
 begin
  select id into v_offer from public.intensive_mentoring_custom_offers where competition_name='Harvard Global Case Competition';
- if not exists(select 1 from public.order_items oi join public.orders o on o.id=oi.order_id where o.user_id=auth.uid() and oi.commerce_item_id=v_offer and oi.item_kind_snapshot='intensive_mentoring_custom_offer' and oi.unit_price_amount=4750000 and oi.name_snapshot like 'International Competition%') then raise exception 'Custom offer order snapshot incorrect';end if;
+ if not exists(
+   select 1
+   from public.order_items oi
+   join public.orders o on o.id=oi.order_id
+   where o.user_id='99500000-0000-0000-0000-000000000002'
+     and oi.commerce_item_id=v_offer
+     and oi.item_kind_snapshot='intensive_mentoring_custom_offer'
+     and oi.unit_price_amount=4750000
+     and oi.name_snapshot like 'International Competition%'
+ ) then raise exception 'Custom offer order snapshot incorrect';end if;
  if not exists(select 1 from public.intensive_mentoring_custom_offers where id=v_offer and status='converted') then raise exception 'Custom offer must lock after conversion';end if;
 end
 $snapshot$;
-reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','99500000-0000-0000-0000-000000000001',true);
