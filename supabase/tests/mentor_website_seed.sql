@@ -5,110 +5,64 @@ create schema test_mentor_website_seed;
 create function test_mentor_website_seed.assert(ok boolean,message text) returns void language plpgsql as $$
 begin if ok is distinct from true then raise exception 'ASSERTION FAILED: %',message;end if;end;
 $$;
-create function test_mentor_website_seed.row_data(
-  owner_id uuid, slug text, display_name text, tier_name text, headline text,
-  short_bio text, portrait_key text, publication_status text, sort_order integer,
-  achievements text[], expertise text[]
-) returns jsonb language sql immutable as $$
-  select jsonb_build_object(
-    'mentor_user_id',owner_id,'public_slug',slug,'display_name',display_name,'tier_name',tier_name,
-    'headline',headline,'linkedin_url',null,'short_bio',short_bio,'portrait_asset_key',portrait_key,
-    'photo_status',case when portrait_key is null then 'missing' else 'ready' end,
-    'publication_status',publication_status,'sort_order',sort_order,
-    'achievements',to_jsonb(achievements),'expertise_names',to_jsonb(expertise)
-  );
-$$;
-grant usage on schema test_mentor_website_seed to service_role;
-grant execute on function test_mentor_website_seed.row_data(uuid,text,text,text,text,text,text,text,integer,text[],text[]) to service_role;
+
+select test_mentor_website_seed.assert(to_regprocedure('public.service_seed_mentor_website_profiles(jsonb)') is null,'superseded profile-only importer was rolled back');
+select test_mentor_website_seed.assert(to_regclass('public.mentor_website_seed_achievements') is null,'superseded achievement provenance table was rolled back');
+select test_mentor_website_seed.assert(to_regclass('public.mentor_website_seed_expertise') is null,'superseded expertise provenance table was rolled back');
+select test_mentor_website_seed.assert(to_regprocedure('public.service_seed_dev_mentor_account(uuid,jsonb)') is not null,'development account configuration RPC exists');
+select test_mentor_website_seed.assert(not has_function_privilege('authenticated','public.service_seed_dev_mentor_account(uuid,jsonb)','execute'),'authenticated callers cannot execute the development seed RPC');
 
 insert into auth.users(id,email) values
   ('8a000000-0000-0000-0000-000000000001','seed-owner@test.invalid'),
   ('8a000000-0000-0000-0000-000000000002','unrelated-owner@test.invalid'),
-  ('8a000000-0000-0000-0000-000000000003','wrong-role@test.invalid');
-update public.profiles set role='mentor' where id in('8a000000-0000-0000-0000-000000000001','8a000000-0000-0000-0000-000000000002');
-delete from public.mentee_profiles where user_id in('8a000000-0000-0000-0000-000000000001','8a000000-0000-0000-0000-000000000002');
-insert into public.mentor_profiles(user_id,tier_id) values
-  ('8a000000-0000-0000-0000-000000000001','81000000-0000-0000-0000-000000000001'),
-  ('8a000000-0000-0000-0000-000000000002','81000000-0000-0000-0000-000000000001'),
-  ('8a000000-0000-0000-0000-000000000003','81000000-0000-0000-0000-000000000001')
-on conflict(user_id) do update set tier_id=excluded.tier_id;
-
-select test_mentor_website_seed.assert(
-  not has_function_privilege('authenticated','public.service_seed_mentor_website_profiles(jsonb)','execute'),
-  'authenticated callers cannot execute the seed importer'
-);
+  ('8a000000-0000-0000-0000-000000000003','admin-owner@test.invalid');
+update public.profiles set role='admin' where id='8a000000-0000-0000-0000-000000000003';
 
 set local role service_role;
-select public.service_seed_mentor_website_profiles(jsonb_build_array(
-  test_mentor_website_seed.row_data(
-    '8a000000-0000-0000-0000-000000000001','seed-owner','Seed Owner','Top Student','Seed Headline',null,
-    'mentors.seed-owner.portrait','published',10,array['First achievement','Second achievement','First achievement'],array['Business Case','Finance','Business Case']
-  ),
-  test_mentor_website_seed.row_data(
-    '8a000000-0000-0000-0000-000000000002','unrelated-owner','Unrelated Owner','Top Student',null,null,
-    null,'draft',20,array[]::text[],array[]::text[]
-  )
+select public.service_seed_dev_mentor_account('8a000000-0000-0000-0000-000000000001',jsonb_build_object(
+  'public_slug','seed-owner','display_name','Seed Owner','tier_name','Top Student','headline','Seed Headline',
+  'linkedin_url',null,'short_bio',null,'portrait_asset_key','mentors.seed-owner.portrait','photo_status','ready',
+  'publication_status','published','sort_order',10,'achievements',jsonb_build_array('First achievement','Second achievement','First achievement'),
+  'expertise_names',jsonb_build_array('Business Case','Finance','Business Case')
 ));
 reset role;
 
-select test_mentor_website_seed.assert((select count(*)=1 from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'first import creates one owned profile');
-select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_achievements a join public.mentor_public_profiles p on p.id=a.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'first import deduplicates achievements');
-select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_profile_expertise j join public.mentor_public_profiles p on p.id=j.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'first import deduplicates expertise links');
+select test_mentor_website_seed.assert((select role='mentor' and registration_method='email' from public.profiles where id='8a000000-0000-0000-0000-000000000001'),'seeded Auth owner is promoted to an email mentor account');
+select test_mentor_website_seed.assert(not exists(select 1 from public.mentee_profiles where user_id='8a000000-0000-0000-0000-000000000001'),'stale mentee extension is removed');
+select test_mentor_website_seed.assert((select t.name='Top Student' and mp.is_active from public.mentor_profiles mp join public.mentor_tiers t on t.id=mp.tier_id where mp.user_id='8a000000-0000-0000-0000-000000000001'),'mentor tier and active state are configured');
+select test_mentor_website_seed.assert((select count(*)=1 from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001' and publication_status='published'),'one published public profile is created');
+select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_achievements a join public.mentor_public_profiles p on p.id=a.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'achievement values are deduplicated');
+select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_profile_expertise j join public.mentor_public_profiles p on p.id=j.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'expertise links are deduplicated');
 
--- Add mentor-managed content that is deliberately outside the seed-owned set.
 set local role service_role;
 update public.mentor_public_profiles set short_bio='Mentor managed bio',portrait_url='https://example.test/mentor-managed.webp'
 where mentor_user_id='8a000000-0000-0000-0000-000000000001';
 insert into public.mentor_public_achievements(mentor_public_profile_id,achievement,sort_order)
 select id,'Mentor managed achievement',900 from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001';
-insert into public.mentor_public_profile_expertise(mentor_public_profile_id,expertise_id)
-select p.id,e.id from public.mentor_public_profiles p cross join public.mentor_expertise e
-where p.mentor_user_id='8a000000-0000-0000-0000-000000000001' and e.name='Accounting';
-
-select public.service_seed_mentor_website_profiles(jsonb_build_array(
-  test_mentor_website_seed.row_data(
-    '8a000000-0000-0000-0000-000000000001','changed-slug-must-not-win','Seed Owner Updated','Top Student','Updated Headline',null,
-    'mentors.seed-owner.portrait','published',10,array['Only current achievement'],array['Marketing']
-  )
+select public.service_seed_dev_mentor_account('8a000000-0000-0000-0000-000000000001',jsonb_build_object(
+  'public_slug','changed-slug-must-not-win','display_name','Seed Owner Updated','tier_name','Top Student','headline','Updated Headline',
+  'linkedin_url',null,'short_bio',null,'portrait_asset_key','mentors.seed-owner.portrait','photo_status','ready',
+  'publication_status','published','sort_order',10,'achievements',jsonb_build_array('Second achievement','New seed achievement'),
+  'expertise_names',jsonb_build_array('Marketing')
 ));
 reset role;
 
-select test_mentor_website_seed.assert((select count(*)=1 and min(public_slug)='seed-owner' and min(display_name)='Seed Owner Updated' from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun updates one profile while preserving its stable slug');
-select test_mentor_website_seed.assert((select min(short_bio)='Mentor managed bio' and min(portrait_url)='https://example.test/mentor-managed.webp' from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'absent spreadsheet scalars preserve mentor-managed values');
-select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_achievements a join public.mentor_public_profiles p on p.id=a.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun replaces only seed-owned achievements and preserves mentor-managed content');
-select test_mentor_website_seed.assert((select count(*)=2 from public.mentor_public_profile_expertise j join public.mentor_public_profiles p on p.id=j.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun replaces only seed-owned expertise and preserves mentor-managed content');
-select test_mentor_website_seed.assert((select count(*)=1 from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000002'),'profiles absent from a later import remain untouched');
-select test_mentor_website_seed.assert((select count(*)=1 from public.list_public_mentors() where public_slug='seed-owner'),'published matched profile crosses the public boundary');
-select test_mentor_website_seed.assert((select count(*)=0 from public.list_public_mentors() where public_slug='unrelated-owner'),'draft profile stays hidden from the public boundary');
-
--- One invalid row must roll back valid rows in the same bulk call.
-do $$begin
-  begin
-    perform public.service_seed_mentor_website_profiles(jsonb_build_array(
-      test_mentor_website_seed.row_data('8a000000-0000-0000-0000-000000000001','seed-owner','Must Roll Back','Top Student',null,null,null,'published',10,array[]::text[],array[]::text[]),
-      test_mentor_website_seed.row_data('8a000000-0000-0000-0000-000000000099','missing-owner','Missing Owner','Top Student',null,null,null,'published',30,array[]::text[],array[]::text[])
-    ));
-    raise exception 'missing mentor account was accepted';
-  exception when sqlstate '22023' then null;end;
-end$$;
-select test_mentor_website_seed.assert((select display_name='Seed Owner Updated' from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'invalid batch commits no partial profile changes');
+select test_mentor_website_seed.assert((select public_slug='seed-owner' and display_name='Seed Owner Updated' from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun preserves the stable slug and updates approved fields');
+select test_mentor_website_seed.assert((select short_bio='Mentor managed bio' and portrait_url='https://example.test/mentor-managed.webp' from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000001'),'absent spreadsheet values preserve mentor-managed scalars');
+select test_mentor_website_seed.assert((select count(*)=4 from public.mentor_public_achievements a join public.mentor_public_profiles p on p.id=a.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun is additive and duplicate-safe for achievements');
+select test_mentor_website_seed.assert((select count(*)=3 from public.mentor_public_profile_expertise j join public.mentor_public_profiles p on p.id=j.mentor_public_profile_id where p.mentor_user_id='8a000000-0000-0000-0000-000000000001'),'rerun is additive and duplicate-safe for expertise');
+select test_mentor_website_seed.assert((select count(*)=1 from public.list_public_mentors() where public_slug='seed-owner'),'published mentor remains visible through the safe public boundary');
+select test_mentor_website_seed.assert(not exists(select 1 from public.mentor_public_profiles where mentor_user_id='8a000000-0000-0000-0000-000000000002'),'accounts absent from the workbook remain untouched');
 
 do $$begin
   begin
-    perform public.service_seed_mentor_website_profiles(jsonb_build_array(
-      test_mentor_website_seed.row_data('8a000000-0000-0000-0000-000000000001','seed-owner','Seed Owner','Young Professional',null,null,null,'published',10,array[]::text[],array[]::text[])
+    perform public.service_seed_dev_mentor_account('8a000000-0000-0000-0000-000000000003',jsonb_build_object(
+      'public_slug','admin-owner','display_name','Admin Owner','tier_name','Top Student','photo_status','missing',
+      'publication_status','published','sort_order',20,'achievements','[]'::jsonb,'expertise_names','[]'::jsonb
     ));
-    raise exception 'tier mismatch was accepted';
+    raise exception 'admin account was overwritten';
   exception when sqlstate '22023' then null;end;
 end$$;
-
-do $$begin
-  begin
-    perform public.service_seed_mentor_website_profiles(jsonb_build_array(
-      test_mentor_website_seed.row_data('8a000000-0000-0000-0000-000000000003','wrong-role','Wrong Role','Top Student',null,null,null,'published',40,array[]::text[],array[]::text[])
-    ));
-    raise exception 'non-mentor profile role was accepted';
-  exception when sqlstate '22023' then null;end;
-end$$;
+select test_mentor_website_seed.assert((select role='admin' from public.profiles where id='8a000000-0000-0000-0000-000000000003'),'admin account remains protected');
 
 rollback;

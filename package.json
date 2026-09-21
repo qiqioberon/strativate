@@ -42,6 +42,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "exceljs": "^4.4.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.0",
     "postcss": "^8.5",

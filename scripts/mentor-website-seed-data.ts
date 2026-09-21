@@ -1,3 +1,6 @@
+import {createHash} from 'node:crypto'
+import ExcelJS from 'exceljs'
+
 export const APPROVED_MENTOR_EXPERTISE = [
   'Lintas kategori kompetisi',
   'Business Plan',
@@ -41,13 +44,140 @@ export type MentorWebsiteSeedRow={
   expertise:string[]
 }
 
-export type SeedAccount={userId:string;accountIdentityHash:string;isMentor:boolean;tierName:string|null}
-export type ExistingSeedProfile={id:string;mentorUserId:string;publicSlug:string}
-export type PlannedSeedRow={row:MentorWebsiteSeedRow;mentorUserId:string;existingProfileId:string|null}
+export type WorkbookMentorIdentity={displayName:string;email:string}
+export type MentorSeedWithEmail={row:MentorWebsiteSeedRow;email:string}
+export type DevMentorAccountPlan={
+  create:MentorSeedWithEmail[]
+  update:Array<MentorSeedWithEmail&{userId:string}>
+  conflicts:Array<{email:string;reason:string}>
+}
+export type DevMentorSeedAdmin={
+  createAuthUser(args:{email:string;password:string;email_confirm:boolean;user_metadata:Record<string,unknown>}):Promise<{id:string}>
+  updateAuthUser(id:string,args:{password:string;email_confirm:boolean}):Promise<unknown>
+  deleteAuthUser(id:string):Promise<void>
+  rpc(name:string,args:Record<string,unknown>):Promise<{created:boolean}>
+}
 
 const slugPattern=/^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const hashPattern=/^[a-f0-9]{64}$/
 const approvedExpertise=new Set<string>(APPROVED_MENTOR_EXPERTISE)
+
+export function normalizedEmailHash(email:string){
+  return createHash('sha256').update(email.trim().toLowerCase()).digest('hex')
+}
+
+export function validateDevMentorSeedEnvironment(env:Record<string,string|undefined>){
+  if(env.NODE_ENV==='production'||env.VERCEL_ENV==='production')throw new Error('Development mentor account seed is disabled in production.')
+  if(env.ALLOW_DEV_MENTOR_ACCOUNT_SEED!=='true')throw new Error('Set ALLOW_DEV_MENTOR_ACCOUNT_SEED=true to acknowledge the development-only account reset.')
+  const password=env.MENTOR_SEED_SHARED_PASSWORD??''
+  if(password.length<12)throw new Error('MENTOR_SEED_SHARED_PASSWORD must contain at least 12 characters.')
+  const targetUrl=(env.NEXT_PUBLIC_SUPABASE_URL??'').trim().replace(/\/$/,'')
+  const allowedUrl=(env.MENTOR_SEED_ALLOWED_SUPABASE_URL??'').trim().replace(/\/$/,'')
+  if(!targetUrl)throw new Error('NEXT_PUBLIC_SUPABASE_URL is required for the development mentor account seed.')
+  if(!allowedUrl)throw new Error('Set MENTOR_SEED_ALLOWED_SUPABASE_URL to the exact approved development project URL.')
+  if(targetUrl!==allowedUrl)throw new Error('NEXT_PUBLIC_SUPABASE_URL does not match MENTOR_SEED_ALLOWED_SUPABASE_URL; refusing to reset mentor accounts.')
+  return{password,workbookPath:env.MENTOR_SEED_WORKBOOK_PATH??'../Data Mentor for website.xlsx'}
+}
+
+export function redactDevMentorSeedLog(message:string,sensitiveValues:string[]=[]){
+  let redacted=message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[redacted-email]')
+  for(const value of [...sensitiveValues].filter(Boolean).sort((a,b)=>b.length-a.length))redacted=redacted.split(value).join('[redacted-secret]')
+  return redacted
+}
+
+export function parseMentorWorkbookIdentityRows(sourceRows:unknown[][]){
+  const rows:WorkbookMentorIdentity[]=[],invalid:{row:number;reason:string}[]=[]
+  const seen=new Set<string>()
+  sourceRows.forEach((source,index)=>{
+    if(!source.some(value=>value!==null&&value!==undefined&&String(value).trim()!==''))return
+    const displayName=typeof source[1]==='string'?source[1].replace(/\s+/g,' ').trim():''
+    const email=typeof source[2]==='string'?source[2].trim().toLowerCase():''
+    if(!displayName||!/^\S+@\S+\.\S+$/.test(email)){invalid.push({row:index+1,reason:'Name and valid email are required'});return}
+    if(seen.has(email)){invalid.push({row:index+1,reason:'Duplicate email'});return}
+    seen.add(email);rows.push({displayName,email})
+  })
+  return{rows,invalid}
+}
+
+export async function readMentorWorkbookIdentities(path:string){
+  const workbook=new ExcelJS.Workbook()
+  await workbook.xlsx.readFile(path)
+  const sheet=workbook.worksheets[0]
+  if(!sheet)throw new Error('Mentor workbook does not contain a worksheet.')
+  const sourceRows:unknown[][]=[]
+  sheet.eachRow({includeEmpty:true},row=>sourceRows.push((row.values as unknown[]).slice(1)))
+  return parseMentorWorkbookIdentityRows(sourceRows)
+}
+
+export function attachWorkbookEmails(seedRows:MentorWebsiteSeedRow[],identities:WorkbookMentorIdentity[]){
+  const identityByHash=new Map(identities.map(identity=>[normalizedEmailHash(identity.email),identity]))
+  const seedHashSet=new Set(seedRows.map(row=>row.accountIdentityHash))
+  return{
+    matched:seedRows.flatMap(row=>{const identity=identityByHash.get(row.accountIdentityHash);return identity?[{row,email:identity.email}]:[]}),
+    missingSeedRows:seedRows.filter(row=>!identityByHash.has(row.accountIdentityHash)),
+    unknownWorkbookRows:identities.filter(identity=>!seedHashSet.has(normalizedEmailHash(identity.email))),
+  }
+}
+
+export function planDevMentorAccounts<T extends{email:string}>(rows:T[],users:Array<{id:string;email?:string|null}>,roles:Array<{id:string;role:string}>){
+  const userByEmail=new Map(users.flatMap(user=>user.email?[[user.email.trim().toLowerCase(),user] as const]:[]))
+  const roleById=new Map(roles.map(profile=>[profile.id,profile.role]))
+  const create:T[]=[],update:Array<T&{userId:string}>=[],conflicts:Array<{email:string;reason:string}>=[]
+  for(const row of rows){
+    const email=row.email.trim().toLowerCase(),user=userByEmail.get(email)
+    if(!user){create.push({...row,email});continue}
+    const role=roleById.get(user.id)
+    if(role==='admin'){conflicts.push({email,reason:'Existing admin account cannot be overwritten'});continue}
+    if(role!=='mentor'&&role!=='mentee'){conflicts.push({email,reason:'Existing account profile is missing or unsupported'});continue}
+    update.push({...row,email,userId:user.id})
+  }
+  return{create,update,conflicts}
+}
+
+function rpcProfile(row:MentorWebsiteSeedRow){
+  return{
+    public_slug:row.publicSlug,
+    display_name:row.displayName,
+    tier_name:row.tierName,
+    headline:row.headline,
+    linkedin_url:row.linkedinUrl,
+    short_bio:row.shortBio,
+    portrait_asset_key:row.portraitAssetKey,
+    photo_status:row.photoStatus,
+    publication_status:row.publicationStatus,
+    sort_order:row.sortOrder,
+    achievements:row.achievements,
+    expertise_names:row.expertise,
+  }
+}
+
+export async function executeDevMentorAccountPlan(plan:DevMentorAccountPlan,admin:DevMentorSeedAdmin,password:string,dryRun:boolean){
+  if(plan.conflicts.length)throw new Error(`Mentor account plan contains ${plan.conflicts.length} protected or unsupported account conflict(s).`)
+  const result={accountsCreated:0,accountsUpdated:0,profilesCreated:0,profilesUpdated:0}
+  if(dryRun)return result
+  for(const item of plan.create){
+    const user=await admin.createAuthUser({email:item.email,password,email_confirm:true,user_metadata:{given_name:item.row.displayName}})
+    try{
+      const profile=await admin.rpc('service_seed_dev_mentor_account',{p_user_id:user.id,p_profile:rpcProfile(item.row)})
+      result.accountsCreated+=1
+      if(profile.created)result.profilesCreated+=1
+      else result.profilesUpdated+=1
+    }catch(error){
+      try{await admin.deleteAuthUser(user.id)}catch(cleanupError){
+        throw new Error(`${error instanceof Error?error.message:'Mentor profile configuration failed'}; cleanup of the newly created Auth user also failed: ${cleanupError instanceof Error?cleanupError.message:'unknown cleanup error'}`)
+      }
+      throw error
+    }
+  }
+  for(const item of plan.update){
+    const profile=await admin.rpc('service_seed_dev_mentor_account',{p_user_id:item.userId,p_profile:rpcProfile(item.row)})
+    await admin.updateAuthUser(item.userId,{password,email_confirm:true})
+    result.accountsUpdated+=1
+    if(profile.created)result.profilesCreated+=1
+    else result.profilesUpdated+=1
+  }
+  return result
+}
 
 function optionalText(value:unknown,max:number){
   if(value===null||value===undefined||value==='')return null
@@ -108,26 +238,4 @@ export function parseMentorWebsiteSeed(input:unknown){
     }catch(error){invalid.push({row,identity,reason:error instanceof Error?error.message:'Invalid seed row'})}
   })
   return{rows,invalid}
-}
-
-export function planMentorWebsiteSeed(rows:MentorWebsiteSeedRow[],accounts:SeedAccount[],existingProfiles:ExistingSeedProfile[]){
-  const accountByIdentity=new Map(accounts.map(account=>[account.accountIdentityHash,account]))
-  const existingByOwner=new Map(existingProfiles.map(profile=>[profile.mentorUserId,profile]))
-  const matched:PlannedSeedRow[]=[],unmatched:MentorWebsiteSeedRow[]=[],tierMismatches:{row:MentorWebsiteSeedRow;actualTier:string|null}[]=[]
-  for(const row of rows){
-    const account=accountByIdentity.get(row.accountIdentityHash)
-    if(!account?.isMentor){unmatched.push(row);continue}
-    if(row.tierName&&account.tierName!==row.tierName){tierMismatches.push({row,actualTier:account.tierName});continue}
-    const existing=existingByOwner.get(account.userId)
-    matched.push({row,mentorUserId:account.userId,existingProfileId:existing?.id??null})
-  }
-  const matchedOwners=new Set(matched.map(item=>item.mentorUserId))
-  return{
-    matched,
-    unmatched,
-    tierMismatches,
-    inserted:matched.filter(item=>!item.existingProfileId).length,
-    updated:matched.filter(item=>item.existingProfileId).length,
-    untouchedExistingProfileIds:existingProfiles.filter(profile=>!matchedOwners.has(profile.mentorUserId)).map(profile=>profile.id),
-  }
 }

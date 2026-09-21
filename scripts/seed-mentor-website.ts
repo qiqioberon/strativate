@@ -1,72 +1,76 @@
-import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {parseMentorWebsiteSeed,planMentorWebsiteSeed,type SeedAccount} from './mentor-website-seed-data'
+import {
+  attachWorkbookEmails,
+  executeDevMentorAccountPlan,
+  parseMentorWebsiteSeed,
+  planDevMentorAccounts,
+  readMentorWorkbookIdentities,
+  redactDevMentorSeedLog,
+  validateDevMentorSeedEnvironment,
+} from './mentor-website-seed-data'
 import {createSupabaseAdminHttp} from './supabase-admin-http'
 
 const dryRun=process.argv.includes('--dry-run')
 const seedPath=resolve('supabase/seed/mentor_website_profiles.json')
-const migration='supabase/migrations/202609210002_mentor_website_seed_import.sql'
-const url=process.env.NEXT_PUBLIC_SUPABASE_URL
-const secret=process.env.SUPABASE_SECRET_KEY
-
-function identityHash(email:string){return createHash('sha256').update(email.trim().toLowerCase()).digest('hex')}
+const migration='supabase/migrations/202609210004_dev_mentor_account_seed.sql'
+let temporaryPassword=''
 
 async function main(){
+  const config=validateDevMentorSeedEnvironment(process.env)
+  temporaryPassword=config.password
   const parsed=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8')))
   if(parsed.invalid.length){
-    console.log(JSON.stringify({mode:dryRun?'dry-run':'import',totalSpreadsheetMentors:parsed.rows.length+parsed.invalid.length,matchedExistingMentorAccounts:0,publicProfilesInserted:0,publicProfilesUpdated:0,unmatchedAccountsRequiringAction:0,invalidRows:parsed.invalid.length,invalid:parsed.invalid}))
-    throw new Error('Seed data is invalid; no database writes were attempted.')
+    console.log(JSON.stringify({mode:dryRun?'dry-run':'seed',invalidSeedRows:parsed.invalid.length,invalid:parsed.invalid}))
+    throw new Error('Committed mentor seed data is invalid; no writes were attempted.')
   }
+  const workbook=await readMentorWorkbookIdentities(resolve(config.workbookPath))
+  const attached=attachWorkbookEmails(parsed.rows,workbook.rows)
+  const missingTiers=attached.matched.filter(item=>!item.row.tierName)
+  if(workbook.invalid.length||attached.missingSeedRows.length||attached.unknownWorkbookRows.length||missingTiers.length){
+    console.log(JSON.stringify({
+      mode:dryRun?'dry-run':'seed',
+      workbookRows:workbook.rows.length,
+      invalidWorkbookRows:workbook.invalid.length,
+      invalidWorkbookRowNumbers:workbook.invalid.map(item=>item.row),
+      seedRowsMissingWorkbookIdentity:attached.missingSeedRows.map(row=>row.publicSlug),
+      unrecognizedWorkbookRows:attached.unknownWorkbookRows.length,
+      seedRowsMissingTier:missingTiers.map(item=>item.row.publicSlug),
+    }))
+    throw new Error('Workbook identities and committed mentor seed do not match exactly; no writes were attempted.')
+  }
+
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL
+  const secret=process.env.SUPABASE_SECRET_KEY
   if(!url||!secret)throw new Error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY are required.')
   const admin=createSupabaseAdminHttp({url,secret})
-  const [authUsers,mentorProfiles,profiles,tiers,existingProfiles]=await Promise.all([
+  const [authUsers,profiles]=await Promise.all([
     admin.listAuthUsers(),
-    admin.select<{user_id:string;tier_id:string|null}>('mentor_profiles','user_id,tier_id'),
     admin.select<{id:string;role:string}>('profiles','id,role'),
-    admin.select<{id:string;name:string}>('mentor_tiers','id,name'),
-    admin.select<{id:string;mentor_user_id:string;public_slug:string}>('mentor_public_profiles','id,mentor_user_id,public_slug'),
-  ]).catch(error=>{throw new Error(`Mentor public-profile domain is unavailable. Apply ${migration} and its prerequisite migrations first. ${error instanceof Error?error.message:''}`)})
-  const tierById=new Map(tiers.map(tier=>[tier.id,tier.name]))
-  const mentorById=new Map(mentorProfiles.map(profile=>[profile.user_id,profile]))
-  const profileById=new Map(profiles.map(profile=>[profile.id,profile]))
-  const accounts:SeedAccount[]=authUsers.flatMap(user=>user.email?[{
-    userId:user.id,accountIdentityHash:identityHash(user.email),isMentor:mentorById.has(user.id)&&profileById.get(user.id)?.role==='mentor',tierName:mentorById.get(user.id)?.tier_id?tierById.get(mentorById.get(user.id)!.tier_id!)??null:null,
-  }]:[])
-  const plan=planMentorWebsiteSeed(parsed.rows,accounts,existingProfiles.map(profile=>({id:profile.id,mentorUserId:profile.mentor_user_id,publicSlug:profile.public_slug})))
-
-  let inserted=plan.inserted,updated=plan.updated
-  if(!dryRun){
-    const p_rows=plan.matched.map(({row,mentorUserId})=>({
-      mentor_user_id:mentorUserId,public_slug:row.publicSlug,display_name:row.displayName,tier_name:row.tierName,
-      headline:row.headline,linkedin_url:row.linkedinUrl,short_bio:row.shortBio,
-      portrait_asset_key:row.portraitAssetKey,photo_status:row.photoStatus,
-      publication_status:row.publicationStatus,sort_order:row.sortOrder,
-      achievements:row.achievements,expertise_names:row.expertise,
-    }))
-    try{
-      const result=await admin.rpc<{inserted:number;updated:number}>('service_seed_mentor_website_profiles',{p_rows})
-      inserted=result.inserted;updated=result.updated
-    }catch(error){
-      console.log(JSON.stringify({mode:'import',totalSpreadsheetMentors:parsed.rows.length,matchedExistingMentorAccounts:plan.matched.length,publicProfilesInserted:0,publicProfilesUpdated:0,unmatchedAccountsRequiringAction:plan.unmatched.length,unmatched:plan.unmatched.map(row=>row.publicSlug),tierMismatchesRequiringAction:plan.tierMismatches.length,tierMismatches:plan.tierMismatches.map(item=>({mentor:item.row.publicSlug,expected:item.row.tierName,actual:item.actualTier})),invalidRows:0,importFailed:true}))
-      throw new Error(`Atomic mentor website import failed; no seed writes were committed. ${error instanceof Error?error.message:'Unknown error'}. Apply ${migration} first if the RPC is missing.`)
-    }
+  ]).catch(error=>{throw new Error(`Mentor account domain is unavailable. Apply ${migration} and its prerequisite migrations first. ${error instanceof Error?error.message:''}`)})
+  const plan=planDevMentorAccounts(attached.matched,authUsers,profiles)
+  const conflictedSlugs=plan.conflicts.flatMap(conflict=>{
+    const match=attached.matched.find(item=>item.email===conflict.email)
+    return match?[match.row.publicSlug]:[]
+  })
+  if(plan.conflicts.length){
+    console.log(JSON.stringify({mode:dryRun?'dry-run':'seed',protectedOrUnsupportedAccounts:plan.conflicts.length,mentors:conflictedSlugs}))
+    throw new Error('Protected or unsupported existing accounts prevent this seed; no writes were attempted.')
   }
 
-  const summary={
-    mode:dryRun?'dry-run':'import',
-    totalSpreadsheetMentors:parsed.rows.length,
-    matchedExistingMentorAccounts:plan.matched.length,
-    publicProfilesInserted:inserted,
-    publicProfilesUpdated:updated,
-    unmatchedAccountsRequiringAction:plan.unmatched.length,
-    unmatched:plan.unmatched.map(row=>row.publicSlug),
-    tierMismatchesRequiringAction:plan.tierMismatches.length,
-    tierMismatches:plan.tierMismatches.map(item=>({mentor:item.row.publicSlug,expected:item.row.tierName,actual:item.actualTier})),
-    invalidRows:parsed.invalid.length,
-  }
-  console.log(JSON.stringify(summary))
-  if(plan.unmatched.length||plan.tierMismatches.length)process.exitCode=2
+  const result=await executeDevMentorAccountPlan(plan,admin,config.password,dryRun)
+  console.log(JSON.stringify({
+    mode:dryRun?'dry-run':'seed',
+    totalMentors:attached.matched.length,
+    accountsPlannedForCreation:plan.create.length,
+    accountsPlannedForPasswordReset:plan.update.length,
+    ...result,
+    protectedOrUnsupportedAccounts:0,
+    invalidRows:0,
+  }))
 }
 
-main().catch(error=>{console.error(error instanceof Error?error.message:'Mentor website seed failed.');process.exitCode=1})
+main().catch(error=>{
+  console.error(redactDevMentorSeedLog(error instanceof Error?error.message:'Development mentor account seed failed.',[temporaryPassword]))
+  process.exitCode=1
+})

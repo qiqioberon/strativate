@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict'
+import {mkdtemp,rm} from 'node:fs/promises'
 import {readFileSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
 import test from 'node:test'
+import ExcelJS from 'exceljs'
 import {
+  executeDevMentorAccountPlan,
   parseMentorWebsiteSeed,
-  planMentorWebsiteSeed,
+  redactDevMentorSeedLog,
   type MentorWebsiteSeedInput,
 } from '../scripts/mentor-website-seed-data.ts'
 
@@ -40,62 +45,112 @@ test('unknown expertise is rejected deterministically before database writes',()
   assert.deepEqual(parsed.invalid,[{row:1,identity:'mentor-two',reason:'Unknown expertise: Invented Category'}])
 })
 
-test('seed plan reuses normalized account identity and reports accounts without real mentor ownership',()=>{
-  const parsed=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8')))
-  const [matched,unmatched]=parsed.rows
-  const plan=planMentorWebsiteSeed([matched,unmatched],[{userId:'mentor-user-1',accountIdentityHash:matched.accountIdentityHash,isMentor:true,tierName:matched.tierName},{userId:'plain-user',accountIdentityHash:unmatched.accountIdentityHash,isMentor:false,tierName:null}],[])
-  assert.equal(plan.matched.length,1)
-  assert.equal(plan.matched[0].mentorUserId,'mentor-user-1')
-  assert.deepEqual(plan.unmatched.map(row=>row.publicSlug),[unmatched.publicSlug])
+test('development account seed refuses production, missing opt-in, and weak shared passwords',async()=>{
+  const seedModule=await import('../scripts/mentor-website-seed-data.ts') as Record<string,unknown>
+  assert.equal(typeof seedModule.validateDevMentorSeedEnvironment,'function')
+  const validate=seedModule.validateDevMentorSeedEnvironment as (env:Record<string,string|undefined>)=>{password:string;workbookPath:string}
+  const target={NEXT_PUBLIC_SUPABASE_URL:'https://dev-project.supabase.co',MENTOR_SEED_ALLOWED_SUPABASE_URL:'https://dev-project.supabase.co'}
+  assert.throws(()=>validate({...target,ALLOW_DEV_MENTOR_ACCOUNT_SEED:'true',MENTOR_SEED_SHARED_PASSWORD:'long-enough-password',NODE_ENV:'production'}),/production/i)
+  assert.throws(()=>validate({MENTOR_SEED_SHARED_PASSWORD:'long-enough-password'}),/ALLOW_DEV_MENTOR_ACCOUNT_SEED/)
+  assert.throws(()=>validate({...target,ALLOW_DEV_MENTOR_ACCOUNT_SEED:'true',MENTOR_SEED_SHARED_PASSWORD:'short'}),/12/)
+  assert.throws(()=>validate({ALLOW_DEV_MENTOR_ACCOUNT_SEED:'true',MENTOR_SEED_SHARED_PASSWORD:'long-enough-password',NEXT_PUBLIC_SUPABASE_URL:'https://production.supabase.co'}),/MENTOR_SEED_ALLOWED_SUPABASE_URL/)
+  assert.throws(()=>validate({ALLOW_DEV_MENTOR_ACCOUNT_SEED:'true',MENTOR_SEED_SHARED_PASSWORD:'long-enough-password',NEXT_PUBLIC_SUPABASE_URL:'https://production.supabase.co',MENTOR_SEED_ALLOWED_SUPABASE_URL:'https://dev-project.supabase.co'}),/does not match/i)
+  const valid=validate({...target,ALLOW_DEV_MENTOR_ACCOUNT_SEED:'true',MENTOR_SEED_SHARED_PASSWORD:'long-enough-password',MENTOR_SEED_WORKBOOK_PATH:'D:/mentor.xlsx'})
+  assert.equal(valid.password,'long-enough-password')
+  assert.equal(valid.workbookPath,'D:/mentor.xlsx')
 })
 
-test('rerunning the seed updates the owned profile without duplicate profile identity',()=>{
-  const parsed=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8')))
-  const row=parsed.rows[0]
-  const accounts=[{userId:'mentor-user-1',accountIdentityHash:row.accountIdentityHash,isMentor:true,tierName:row.tierName}]
-  const first=planMentorWebsiteSeed([row],accounts,[])
-  assert.equal(first.inserted,1)
-  assert.equal(first.updated,0)
-  const second=planMentorWebsiteSeed([row],accounts,[{id:'profile-1',mentorUserId:'mentor-user-1',publicSlug:row.publicSlug}])
-  assert.equal(second.inserted,0)
-  assert.equal(second.updated,1)
-  assert.equal(second.matched.length,1)
-  assert.equal(new Set(second.matched[0].row.achievements).size,second.matched[0].row.achievements.length)
-  assert.equal(new Set(second.matched[0].row.expertise).size,second.matched[0].row.expertise.length)
+test('development seed log redaction removes email addresses and the temporary password',()=>{
+  assert.equal(
+    redactDevMentorSeedLog('Auth rejected mentor@example.test with shared-password-123',['shared-password-123']),
+    'Auth rejected [redacted-email] with [redacted-secret]',
+  )
 })
 
-test('profiles absent from the spreadsheet are explicitly left untouched',()=>{
-  const parsed=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8')))
-  const row=parsed.rows[0]
-  const plan=planMentorWebsiteSeed([row],[{userId:'mentor-user-1',accountIdentityHash:row.accountIdentityHash,isMentor:true,tierName:row.tierName}],[
-    {id:'profile-1',mentorUserId:'mentor-user-1',publicSlug:row.publicSlug},
-    {id:'profile-existing',mentorUserId:'mentor-existing',publicSlug:'existing-mentor'},
-  ])
-  assert.deepEqual(plan.untouchedExistingProfileIds,['profile-existing'])
+test('workbook identity parser normalizes email and joins it to the committed hash without persisting email',async()=>{
+  const seedModule=await import('../scripts/mentor-website-seed-data.ts') as Record<string,unknown>
+  assert.equal(typeof seedModule.parseMentorWorkbookIdentityRows,'function')
+  assert.equal(typeof seedModule.attachWorkbookEmails,'function')
+  const parseRows=seedModule.parseMentorWorkbookIdentityRows as (rows:unknown[][])=>{rows:Array<{displayName:string;email:string}>;invalid:unknown[]}
+  const attach=seedModule.attachWorkbookEmails as (rows:unknown[],identities:Array<{displayName:string;email:string}>)=>{matched:Array<{email:string}>;missingSeedRows:unknown[];unknownWorkbookRows:unknown[]}
+  const parsed=parseRows([[null,null,null],[1,' Mentor One ',' Mentor.One@Example.Test ']])
+  assert.deepEqual(parsed,{rows:[{displayName:'Mentor One',email:'mentor.one@example.test'}],invalid:[]})
+  const seed=parseMentorWebsiteSeed([{account_identity_hash:'43f58a93338fc4f8cba5138b2fb8f7544c7144b4a90ed151ed2b5dca64535ec6',public_slug:'mentor-one',display_name:'Mentor One',tier_name:'Top Student',headline:null,linkedin_url:null,short_bio:null,portrait_asset_key:null,photo_status:'missing',publication_status:'published',sort_order:10,achievements:[],expertise:[]}])
+  const attached=attach(seed.rows,parsed.rows)
+  assert.equal(attached.matched[0].email,'mentor.one@example.test')
+  assert.deepEqual(attached.missingSeedRows,[])
+  assert.deepEqual(attached.unknownWorkbookRows,[])
 })
 
-test('seeder source has no auth-account creation or invitation side effect',()=>{
-  const source=readFileSync('scripts/seed-mentor-website.ts','utf8')
-  assert.doesNotMatch(source,/createUser|inviteUserByEmail|auth\.users\s*\)|insert\([^)]*auth/i)
+test('development account plan creates missing users, updates mentor or mentee users, and protects admins',async()=>{
+  const seedModule=await import('../scripts/mentor-website-seed-data.ts') as Record<string,unknown>
+  assert.equal(typeof seedModule.planDevMentorAccounts,'function')
+  const planAccounts=seedModule.planDevMentorAccounts as (rows:Array<{email:string}>,users:Array<{id:string;email:string}>,roles:Array<{id:string;role:string}>)=>{create:Array<{email:string}>;update:Array<{userId:string}>;conflicts:Array<{email:string;reason:string}>}
+  const plan=planAccounts(
+    [{email:'new@example.test'},{email:'mentor@example.test'},{email:'mentee@example.test'},{email:'admin@example.test'}],
+    [{id:'mentor-id',email:'mentor@example.test'},{id:'mentee-id',email:'mentee@example.test'},{id:'admin-id',email:'admin@example.test'}],
+    [{id:'mentor-id',role:'mentor'},{id:'mentee-id',role:'mentee'},{id:'admin-id',role:'admin'}],
+  )
+  assert.deepEqual(plan.create.map(item=>item.email),['new@example.test'])
+  assert.deepEqual(plan.update.map(item=>item.userId),['mentor-id','mentee-id'])
+  assert.deepEqual(plan.conflicts,[{email:'admin@example.test',reason:'Existing admin account cannot be overwritten'}])
 })
 
-test('import uses one transactional bulk RPC and the exact operational mentor-role predicate',()=>{
-  const source=readFileSync('scripts/seed-mentor-website.ts','utf8')
-  const migration=readFileSync('supabase/migrations/202609210002_mentor_website_seed_import.sql','utf8')
-  assert.match(source,/select<\{id:string;role:string\}>\('profiles','id,role'\)/)
-  assert.match(source,/profileById\.get\(user\.id\)\?\.role==='mentor'/)
-  assert.match(source,/admin\.rpc(?:<[^>]+>)?\('service_seed_mentor_website_profiles',\{p_rows\}\)/)
-  assert.match(migration,/create or replace function public\.service_seed_mentor_website_profiles\(p_rows jsonb\)/)
-  assert.match(migration,/jsonb_typeof\(p_rows\) <> 'array'/)
+test('workbook loader reads the approved no-header name and email columns',async()=>{
+  const directory=await mkdtemp(join(tmpdir(),'strativate-mentor-workbook-'))
+  try{
+    const path=join(directory,'mentors.xlsx'),workbook=new ExcelJS.Workbook(),sheet=workbook.addWorksheet('Sheet1')
+    sheet.addRow([null,null,null,null])
+    sheet.addRow([1,'Mentor One','mentor.one@example.test','portrait.jpg'])
+    await workbook.xlsx.writeFile(path)
+    const seedModule=await import('../scripts/mentor-website-seed-data.ts') as Record<string,unknown>
+    assert.equal(typeof seedModule.readMentorWorkbookIdentities,'function')
+    const load=seedModule.readMentorWorkbookIdentities as (path:string)=>Promise<{rows:Array<{displayName:string;email:string}>;invalid:unknown[]}>
+    assert.deepEqual(await load(path),{rows:[{displayName:'Mentor One',email:'mentor.one@example.test'}],invalid:[]})
+  }finally{await rm(directory,{recursive:true,force:true})}
 })
 
-test('seed reconciliation tracks owned child rows and preserves absent mentor-managed scalar values',()=>{
-  const migration=readFileSync('supabase/migrations/202609210002_mentor_website_seed_import.sql','utf8')
-  assert.match(migration,/create table public\.mentor_website_seed_achievements/)
-  assert.match(migration,/create table public\.mentor_website_seed_expertise/)
-  assert.match(migration,/headline=coalesce\(/)
-  assert.match(migration,/short_bio=coalesce\(/)
-  assert.doesNotMatch(migration,/portrait_url\s*=\s*null/)
-  assert.match(migration,/delete from public\.mentor_public_achievements a\s+using public\.mentor_website_seed_achievements managed/)
-  assert.match(migration,/delete from public\.mentor_public_profile_expertise relation\s+using public\.mentor_website_seed_expertise managed/)
+test('account executor configures profiles and resets existing passwords without exposing credentials',async()=>{
+  const calls:string[]=[]
+  const admin={
+    async createAuthUser(){calls.push('create');return{id:'new-user'}},
+    async updateAuthUser(id:string){calls.push(`password:${id}`);return{id}},
+    async deleteAuthUser(id:string){calls.push(`delete:${id}`)},
+    async rpc(_name:string,args:Record<string,unknown>){
+      const id=String(args.p_user_id);calls.push(`profile:${id}`)
+      return{profile_id:`profile-${id}`,created:id==='new-user',public_slug:'mentor'}
+    },
+  }
+  const row=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8'))).rows[0]
+  const result=await executeDevMentorAccountPlan({create:[{row,email:'new@example.test'}],update:[{row,email:'existing@example.test',userId:'existing-user'}],conflicts:[]},admin,'shared-password-123',false)
+  assert.deepEqual(calls,['create','profile:new-user','profile:existing-user','password:existing-user'])
+  assert.deepEqual(result,{accountsCreated:1,accountsUpdated:1,profilesCreated:1,profilesUpdated:1})
+})
+
+test('account executor removes a newly created auth user when profile configuration fails',async()=>{
+  const calls:string[]=[]
+  const admin={
+    async createAuthUser(){calls.push('create');return{id:'new-user'}},
+    async updateAuthUser(id:string){return{id}},
+    async deleteAuthUser(id:string){calls.push(`delete:${id}`)},
+    async rpc(){calls.push('profile');throw new Error('profile failed')},
+  }
+  const row=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8'))).rows[0]
+  await assert.rejects(()=>executeDevMentorAccountPlan({create:[{row,email:'new@example.test'}],update:[],conflicts:[]},admin,'shared-password-123',false),/profile failed/)
+  assert.deepEqual(calls,['create','profile','delete:new-user'])
+})
+
+test('account executor performs no writes when the plan has a protected-account conflict or is a dry run',async()=>{
+  let writes=0
+  const admin={
+    async createAuthUser(){writes+=1;return{id:'new-user'}},
+    async updateAuthUser(id:string){writes+=1;return{id}},
+    async deleteAuthUser(){writes+=1},
+    async rpc(){writes+=1;return{created:true}},
+  }
+  const row=parseMentorWebsiteSeed(JSON.parse(readFileSync(seedPath,'utf8'))).rows[0]
+  await assert.rejects(()=>executeDevMentorAccountPlan({create:[],update:[],conflicts:[{email:'admin@example.test',reason:'protected'}]},admin,'shared-password-123',false),/conflict/i)
+  const result=await executeDevMentorAccountPlan({create:[{row,email:'new@example.test'}],update:[],conflicts:[]},admin,'shared-password-123',true)
+  assert.equal(writes,0)
+  assert.deepEqual(result,{accountsCreated:0,accountsUpdated:0,profilesCreated:0,profilesUpdated:0})
 })

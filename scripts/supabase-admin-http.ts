@@ -21,6 +21,13 @@ export function createSupabaseAdminHttp({url,secret,fetchImpl=fetch}:{url:string
       }
       return users
     },
+    createAuthUser(args:{email:string;password:string;email_confirm:boolean;user_metadata:Record<string,unknown>}){
+      return request<AuthUser>('/auth/v1/admin/users',{method:'POST',body:JSON.stringify(args)})
+    },
+    updateAuthUser(id:string,args:{password:string;email_confirm:boolean}){
+      return request<AuthUser>(`/auth/v1/admin/users/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify(args)})
+    },
+    async deleteAuthUser(id:string){await request<void>(`/auth/v1/admin/users/${encodeURIComponent(id)}`,{method:'DELETE'})},
     select<T>(table:string,columns:string){return request<T[]>(`/rest/v1/${encodeURIComponent(table)}?select=${encodeURIComponent(columns)}`,{method:'GET'})},
     rpc<T=unknown>(name:string,args:Record<string,unknown>){return request<T>(`/rest/v1/rpc/${encodeURIComponent(name)}`,{method:'POST',body:JSON.stringify(args)})},
   }
