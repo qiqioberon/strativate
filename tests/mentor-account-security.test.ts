@@ -30,7 +30,7 @@ test("Mentee receives no new password section and profile fields remain unchange
     profile,
     /account\.role\s*===\s*['"]mentor['"][\s\S]*?<AccountPasswordSecurity role=["']mentor["'][\s\S]*?: null/,
   )
-  assert.match(profile, /name=["']first_name[#']/)
+  assert.match(profile, /name=["']first_name["']/)
   assert.match(profile, /name=["']last_name["']/)
   assert.match(profile, /name=["']username["']/)
   assert.match(profile, /name=["']whatsapp_number["']/)
