@@ -235,6 +235,7 @@ async function stubAdminMentoring(page: Page) {
 async function stubAdminIntensive(page:Page){
   const engagementId='95000000-0000-0000-0000-000000000001'
   const mentorId='84000000-0000-0000-0000-000000000001'
+  const secondMentorId='84000000-0000-0000-0000-000000000002'
   let engagement={
     engagement_id:engagementId,mentee_id:'92000000-0000-0000-0000-000000000003',mentee_name:'Aqil Aja',mentee_email:'aqil@fixture.test',
     base_entitlement_id:'95000000-0000-0000-0000-000000000002',base_kind:'bundle',program_name:'Bundel Competition Ready',status:'active',baseline_sessions_per_month:8,
@@ -250,13 +251,23 @@ async function stubAdminIntensive(page:Page){
     await json(route,null)
   })
   await page.route('**/rest/v1/rpc/admin_set_intensive_primary_mentor',route=>json(route,null))
+  await page.route('**/rest/v1/rpc/admin_resolve_intensive_mentoring_topic',async route=>{
+    const payload=route.request().postDataJSON() as {p_focus_id:string;p_resolved_topic:string}
+    engagement={...engagement,sessions:engagement.sessions.map(item=>item.sessionId==='96000000-0000-0000-0000-000000000001'?{...item,focusId:payload.p_focus_id,focusName:'Idea & Problem Framing',resolvedTopic:payload.p_resolved_topic,topicStatus:'confirmed'}:item)}
+    await json(route,null)
+  })
+  await page.route('**/rest/v1/rpc/admin_assign_intensive_session_mentor',async route=>{
+    const payload=route.request().postDataJSON() as {p_mentor_id:string}
+    engagement={...engagement,sessions:engagement.sessions.map(item=>item.sessionId==='96000000-0000-0000-0000-000000000001'?{...item,mentorId:payload.p_mentor_id,mentorName:payload.p_mentor_id===secondMentorId?'Mentor Cadangan':'Mentor Fixture'}:item)}
+    await json(route,null)
+  })
   await page.route('**/rest/v1/rpc/admin_add_intensive_mentoring_session',async route=>{
     const payload=route.request().postDataJSON() as {p_duration_minutes:number}
     engagement={...engagement,sessions:[...engagement.sessions,{sessionId:'96000000-0000-0000-0000-000000000002',sessionNumber:2,durationMinutes:payload.p_duration_minutes,status:'awaiting_focus',focusId:null,focusName:null,menteeTopicRequest:null,topicStatus:'needs_input',resolvedTopic:null,mentorId,mentorName:'Mentor Fixture',scheduledStartAt:null,scheduledEndAt:null,meetingUrl:null,providerSyncStatus:'pending',googleSyncStatus:'pending',recordingStatus:'expected',creationSource:'admin_added',creationReason:null}]}
     await json(route,null)
   })
-  await page.route('**/rest/v1/mentor_profiles**',route=>json(route,[{user_id:mentorId,is_active:true}]))
-  await page.route('**/rest/v1/profiles**',route=>json(route,[{id:mentorId,first_name:'Mentor',last_name:'Fixture',username:'mentor-fixture'}]))
+  await page.route('**/rest/v1/mentor_profiles**',route=>json(route,[{user_id:mentorId,is_active:true},{user_id:secondMentorId,is_active:true}]))
+  await page.route('**/rest/v1/profiles**',route=>json(route,[{id:mentorId,first_name:'Mentor',last_name:'Fixture',username:'mentor-fixture'},{id:secondMentorId,first_name:'Mentor',last_name:'Cadangan',username:'mentor-cadangan'}]))
   await page.route('**/api/admin/intensive-mentoring/sessions/*/meeting',route=>json(route,{sessionId:'96000000-0000-0000-0000-000000000001',status:'scheduled',meetingProvider:'zoom',providerMeetingId:'123456789',providerMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',manualMeetingUrl:null,effectiveMeetingUrl:'https://zoom.us/j/intensive-admin-fixture',providerSyncStatus:'ready',providerSyncError:null,calendarSyncStatus:'synced',calendarSyncError:null,recordingStatus:'expected',recordingError:null}))
 }
 
@@ -450,6 +461,15 @@ test('admin Intensive engagement table, Program Configuration states, and comple
   expect(geometry.left).toBeGreaterThan(0);expect(geometry.top).toBeGreaterThan(0)
   expect(geometry.right).toBeLessThanOrEqual(geometry.w);expect(geometry.bottom).toBeLessThanOrEqual(geometry.h)
 
+  await config.getByRole('button',{name:'Edit mentor',exact:true}).click()
+  const dedicatedReason=config.getByLabel(/Alasan perubahan/)
+  const dedicatedActions=config.locator('.intensive-config-actions').first()
+  const dedicatedSpacing=await Promise.all([dedicatedReason.boundingBox(),dedicatedActions.boundingBox()])
+  expect(dedicatedSpacing[0]).not.toBeNull();expect(dedicatedSpacing[1]).not.toBeNull()
+  expect(dedicatedSpacing[1]!.y-(dedicatedSpacing[0]!.y+dedicatedSpacing[0]!.height)).toBeGreaterThanOrEqual(17)
+  for(const button of await dedicatedActions.getByRole('button').all())expect(await button.evaluate(element=>getComputedStyle(element).whiteSpace)).toBe('nowrap')
+  await dedicatedActions.getByRole('button',{name:'Batal',exact:true}).click()
+
   await config.getByRole('button',{name:'Edit progres'}).click()
   const activity=config.getByLabel(/Aktivitas saat ini/)
   await expect(activity).toHaveValue('Final pitch deck refinement')
@@ -467,23 +487,68 @@ test('admin Intensive engagement table, Program Configuration states, and comple
   await config.getByRole('button',{name:'Tambah sesi',exact:true}).click()
   const duration=config.getByLabel('Durasi sesi baru (menit)')
   await expect(duration).toHaveValue('')
+  const sessionActions=config.locator('.intensive-config-actions').last()
+  for(const button of await sessionActions.getByRole('button').all())expect(await button.evaluate(element=>getComputedStyle(element).whiteSpace)).toBe('nowrap')
   await duration.fill('90')
   await config.getByRole('button',{name:'Tambah sesi',exact:true}).click()
   await expect(config.getByLabel('Durasi sesi baru (menit)')).toHaveCount(0)
+  for(const width of [375,390,768,820,1280,1440]){
+    await page.setViewportSize({width,height:900})
+    await expectNoDocumentOverflow(page)
+    const responsiveBox=await config.boundingBox()
+    expect(responsiveBox).not.toBeNull()
+    expect(responsiveBox!.width).toBeLessThanOrEqual(width)
+  }
   await config.getByRole('button',{name:'Tutup Program Configuration'}).click()
   await expect(page.getByText('2 sesi operasional',{exact:true})).toBeVisible()
+
+  await page.setViewportSize({width:1024,height:900})
+  const firstSessionRow=page.locator('.mentee-session-table tbody tr').filter({has:page.getByText('Sesi 1',{exact:true})})
+  await firstSessionRow.getByRole('button',{name:'Kelola',exact:true}).click()
+  const detail=page.locator('dialog[aria-labelledby="intensive-admin-session-title"]')
+  await expect(detail).toBeVisible()
+  await expect(detail).toHaveClass(/intensive-session-detail-dialog/)
+  await expect(detail.getByText('Final storyline & Q&A',{exact:true})).toBeVisible()
+  await expect(detail.getByText('Idea & Problem Framing',{exact:true})).toBeVisible()
+  await expect(detail.getByText('Confirmed',{exact:true})).toBeVisible()
+  await expect(detail.getByLabel('Topik final')).toHaveCount(0)
+  await expect(detail.getByLabel('Fokus')).toHaveCount(0)
+  await expect(detail.getByRole('button',{name:'Ubah jadwal',exact:true})).toBeVisible()
+
+  await detail.getByRole('button',{name:'Edit topik',exact:true}).click()
+  await expect(detail.getByLabel('Topik final')).toHaveValue('Final storyline & Q&A')
+  await detail.getByLabel('Topik final').fill('Draft change to cancel')
+  await detail.getByRole('button',{name:'Batal',exact:true}).click()
+  await expect(detail.getByLabel('Topik final')).toHaveCount(0)
+  await expect(detail.getByText('Final storyline & Q&A',{exact:true})).toBeVisible()
+
+  await detail.getByRole('button',{name:'Edit topik',exact:true}).click()
+  await detail.getByLabel('Topik final').fill('Updated final storyline')
+  await detail.getByRole('button',{name:'Simpan topik',exact:true}).click()
+  await expect(detail.getByLabel('Topik final')).toHaveCount(0)
+  await expect(detail.getByText('Updated final storyline',{exact:true})).toBeVisible()
+
+  await expect(detail.getByText('Mentor Fixture',{exact:true})).toBeVisible()
+  await expect(detail.getByLabel('Mentor sesi')).toHaveCount(0)
+  await detail.getByRole('button',{name:'Edit mentor',exact:true}).click()
+  await detail.getByLabel('Mentor sesi').selectOption('84000000-0000-0000-0000-000000000002')
+  await detail.getByLabel(/Alasan override/).fill('Temporary draft')
+  await detail.getByRole('button',{name:'Batal',exact:true}).click()
+  await expect(detail.getByLabel('Mentor sesi')).toHaveCount(0)
+  await expect(detail.getByText('Mentor Fixture',{exact:true})).toBeVisible()
+
+  await detail.getByRole('button',{name:'Edit mentor',exact:true}).click()
+  await detail.getByLabel('Mentor sesi').selectOption('84000000-0000-0000-0000-000000000002')
+  await detail.getByLabel(/Alasan override/).fill('Approved override')
+  await detail.getByRole('button',{name:'Simpan mentor sesi',exact:true}).click()
+  await expect(detail.getByLabel('Mentor sesi')).toHaveCount(0)
+  await expect(detail.getByText('Mentor Cadangan',{exact:true})).toBeVisible()
 
   for(const width of [375,390,768,820,1280,1440]){
     await page.setViewportSize({width,height:900})
     await expectNoDocumentOverflow(page)
+    for(const button of await detail.locator('.intensive-session-action-row .button').all())expect(await button.evaluate(element=>getComputedStyle(element).whiteSpace)).toBe('nowrap')
   }
-
-  await page.setViewportSize({width:1024,height:900})
-  const firstSessionRow=page.locator('.mentee-session-table tbody tr').filter({hasText:'Sesi 1'}).first()
-  await firstSessionRow.getByRole('button',{name:'Kelola',exact:true}).click()
-  const detail=page.locator('dialog[aria-labelledby="intensive-admin-session-title"]')
-  await expect(detail).toBeVisible()
-  await expect(detail.locator('textarea').first()).toHaveValue('Final storyline & Q&A')
   await detail.getByRole('button',{name:/Tandai selesai/i}).click()
   const confirm=page.locator('dialog.compact-confirm-dialog')
   await expect(confirm).toBeVisible()

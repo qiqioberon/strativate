@@ -104,7 +104,7 @@ export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
 }
 
 export function AdminSessionOperations({
-  sessionId,status,menteeName,sessionNumber,mentorName,scheduledStartAt,onChanged,mentoringKind='private',
+  sessionId,status,menteeName,sessionNumber,mentorName,scheduledStartAt,onChanged,mentoringKind='private',showSessionReference=true,
 }:{
   sessionId:string
   status:string
@@ -114,6 +114,7 @@ export function AdminSessionOperations({
   scheduledStartAt:string|null
   onChanged:()=>void|Promise<void>
   mentoringKind?:'private'|'intensive'
+  showSessionReference?:boolean
 }){
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
@@ -185,7 +186,7 @@ export function AdminSessionOperations({
   return <section className="meeting-override admin-session-operations" data-testid="admin-session-operations">
     <div className="ops-section-heading"><div><p className="kicker">Operasi sesi</p><h4>Meeting, recording & completion</h4><p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p></div></div>
 
-    <div className="session-reference-row"><div><span>Session ID</span><strong>{sessionId}</strong></div><CopyTextButton value={sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>
+    {showSessionReference?<div className="session-reference-row"><div><span>Session ID</span><strong>{sessionId}</strong></div><CopyTextButton value={sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>:null}
 
     {state?<div className="provider-status-grid">
       <div><span>Meeting provider</span><strong>{providerLabel(state)}</strong></div>

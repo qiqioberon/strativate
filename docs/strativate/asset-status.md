@@ -1,6 +1,6 @@
 # Strativate asset and content status registry
 
-Current as of 17 September 2026. Runtime asset metadata lives in
+Current as of 21 September 2026. Runtime asset metadata lives in
 `lib/content/asset-registry.ts`; public mentor profile/content runtime data is
 owned by the database-backed mentor public-profile domain introduced by
 `202609170001_mentor_public_profiles_expertise.sql`. The full source receipt is in
@@ -15,7 +15,7 @@ owned by the database-backed mentor public-profile domain introduced by
 | Brand colors | Ready | Central CSS tokens from supplied palette | None |
 | Browser and Apple icons | Ready | `app/icon.png`, `app/apple-icon.png` | Derived from supplied logo 4 |
 | Default Open Graph image | Ready | `app/opengraph-image.png`, 1200×630 | Developer composition from supplied mark/palette |
-| Mentor roster and public profiles | Database-backed; migration required before deploy | `public.mentor_public_profiles`, `public.mentor_public_achievements`, `public.mentor_public_profile_expertise`, and `list_public_mentors()` own runtime public mentor data. The migration does not seed mentor people; each public profile belongs to an actual mentor account and starts as Draft. `lib/content/mentors.ts` is not a production runtime source. | Apply `202609170001_mentor_public_profiles_expertise.sql` before deploying the app revision; create/publish mentor profiles through the mentor/admin workflow |
+| Mentor roster and public profiles | Approved database seed; account matching required | `public.mentor_public_profiles`, `public.mentor_public_achievements`, `public.mentor_public_profile_expertise`, and `list_public_mentors()` own runtime public mentor data. The approved 26-row website workbook is normalized in `supabase/seed/mentor_website_profiles.json`; `scripts/seed-mentor-website.ts` imports only rows matched to real mentor accounts and reports every unmatched/tier-mismatched row. `lib/content/mentors.ts` is not a production runtime source. | Apply `202609170001_mentor_public_profiles_expertise.sql` and `202609210002_mentor_website_seed_import.sql`, then run `pnpm seed:mentor-website`; invite or correct reported accounts through the existing admin workflow and rerun |
 | Mentor expertise | Database-backed; admin-manageable | `public.mentor_expertise` is seeded with the eight approved expertise labels and managed through Admin → Mentor Expertise; mentor profiles use the many-to-many junction | Maintain names/status/order through the mentor expertise admin domain |
 | Mentor portraits | Partial | 19 optimized WebP files in `public/assets/mentors/`; 7 explicit brand-mark fallbacks remain media assets. New mentor public profiles may use `portrait_url`; the asset registry remains media metadata, not mentor profile truth | Supply missing originals when available; no upload subsystem exists in this phase |
 | Mentor credentials/links | Account-managed public profile data | Credentials/achievements and links are stored only when entered for a mentor-owned public profile; internal notes remain excluded | Maintain through approved mentor/admin profile updates |
@@ -46,6 +46,7 @@ owned by the database-backed mentor public-profile domain introduced by
 - `intentionally unavailable during rebuild` means previous runtime business data was retired and must not be copied into a temporary source of truth.
 - `admin-ready; public rollout feature-controlled` means the domain is real and admin-manageable while public exposure follows the existing feature flag.
 - The mentor public-profile feature is deployment-order sensitive: hosted Supabase must receive `202609170001_mentor_public_profiles_expertise.sql` before an app version that calls the new RPCs is deployed.
+- The approved mentor website seed requires `202609210002_mentor_website_seed_import.sql` after the public-profile domain, followed by `pnpm seed:mentor-website`. The command is atomic and idempotent, tracks only its own achievement/expertise rows, and deliberately exits non-zero while any spreadsheet mentor still requires a real account or tier correction.
 - The mentoring stakeholder update is also deployment-order sensitive: hosted Supabase must receive `202609170003_private_mentoring_stakeholder_rules.sql` before the matching Private/Intensive operational UI is deployed.
 - Embedded PDF imagery is reference-only and was not extracted into production.
 - Runtime demo records remain confined to authenticated operational prototypes and are not treated as public marketing facts.

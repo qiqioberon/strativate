@@ -11,7 +11,8 @@
     "test": "node scripts/run-unit-tests.mjs",
     "test:e2e": "playwright test",
     "test:db": "tsx scripts/test-database.ts",
-    "import:institutions": "tsx --env-file=.env scripts/import-institutions.ts"
+    "import:institutions": "tsx --env-file=.env scripts/import-institutions.ts",
+    "seed:mentor-website": "tsx --env-file=.env scripts/seed-mentor-website.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
