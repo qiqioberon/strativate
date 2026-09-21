@@ -368,7 +368,7 @@ test('admin commerce detail stays local while canonical refreshes still synchron
   expect({ listCalls, reportCalls }).toEqual(overviewBaseline)
 
   await page.getByRole('button', { name: 'Pesanan', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Pesanan', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Pesanan', exact: true, level: 2 })).toBeVisible()
   const orderDetail = page.getByRole('button', { name: `Lihat detail pesanan ${orderId}` })
   await expect(orderDetail).toBeVisible()
   await page.waitForTimeout(300)
