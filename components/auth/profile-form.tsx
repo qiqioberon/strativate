@@ -11,6 +11,7 @@ import { usernameError } from '@/lib/auth/rules'
 import { normalizeWhatsAppNumber, whatsAppNumberError } from '@/lib/profile/whatsapp'
 import { createClient } from '@/lib/supabase/client'
 import { useAccount } from './account-provider'
+import { AccountPasswordSecurity } from './account-password-security'
 import { AdminAccountSecurity } from './admin-account-security'
 
 type ProfileWithContact = ReturnType<typeof useAccount> & { whatsapp_number?: string | null }
@@ -98,5 +99,5 @@ export function ProfileForm() {
       <div><dt>WhatsApp</dt><dd>{displayValue(whatsapp)}</dd></div>
     </dl>}
     {saved && !editing ? <p className="account-profile__saved" role="status">Profil tersimpan.</p> : null}
-  </section>{account.role === 'admin' ? <AdminAccountSecurity/> : null}</>
+  </section>{account.role === 'admin' ? <AdminAccountSecurity/> : account.role === 'mentor' ? <AccountPasswordSecurity role="mentor" /> : null}</>
 }

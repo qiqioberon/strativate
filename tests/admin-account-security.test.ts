@@ -3,12 +3,12 @@ import { readFile } from "node:fs/promises"
 import test from "node:test"
 
 import {
-  clearedAdminPasswordSecrets,
-  confirmAdminPasswordChange,
-  requestAdminEmailChange,
-  requestAdminPasswordChange,
-  requestAdminReauthentication,
-} from "@/components/auth/admin-account-security"
+  clearedAccountPasswordSecrets,
+  confirmPasswordChange,
+  requestPasswordChange,
+  requestPasswordReauthentication,
+} from "@/components/auth/account-password-security"
+import { requestAdminEmailChange } from "@/components/auth/admin-account-security"
 
 type UpdateAttributes = { email?: string; password?: string; nonce?: string }
 type AuthError = { code?: string; message: string }
@@ -43,8 +43,8 @@ function authHarness(
   }
 }
 
-test("Admin security controls are mounted only in the Admin profile", async () => {
-  const [profile, security] = await Promise.all([
+test("Admin security remains Admin-only and composes the shared password controls", async () => {
+  const [profile, adminSecurity] = await Promise.all([
     readFile("components/auth/profile-form.tsx", "utf8"),
     readFile("components/auth/admin-account-security.tsx", "utf8"),
   ])
@@ -53,8 +53,10 @@ test("Admin security controls are mounted only in the Admin profile", async () =
     profile,
     /account\.role\s*===\s*['"]admin['"][\s\S]*?<AdminAccountSecurity/,
   )
-  assert.match(security, /account\.role\s*!==\s*['"]admin['"][\s\S]*?return null/)
-  assert.doesNotMatch(security, /\.storage\b|service[_-]?role|admin\.updateUserById/)
+  assert.match(adminSecurity, /account\.role\s*!==\s*['"]admin['"][\s\S]*?return null/)
+  assert.match(adminSecurity, /Email baru/)
+  assert.match(adminSecurity, /<AccountPasswordSecurity role=["']admin["']/)
+  assert.doesNotMatch(adminSecurity, /\.storage\b|service[_-]?role|admin\.updateUserById/)
 })
 
 test("unchanged and malformed email values never call Auth", async () => {
@@ -92,12 +94,31 @@ test("email update reports pending confirmation without replacing the canonical 
   assert.equal(result.displayEmail, "admin@example.com")
 })
 
+test("shared password validation rejects policy failures and mismatches before Auth", async () => {
+  const harness = authHarness([])
+
+  const weak = await requestPasswordChange(
+    harness.auth,
+    "lowercase-password!",
+    "lowercase-password!",
+  )
+  const mismatch = await requestPasswordChange(
+    harness.auth,
+    "Strong-password-2026!",
+    "Strong-password-2027!",
+  )
+
+  assert.equal(weak.status, "invalid")
+  assert.equal(mismatch.status, "invalid")
+  assert.deepEqual(harness.updates, [])
+})
+
 test("password updates directly when secure reauthentication is not required", async () => {
   const harness = authHarness([
     { data: { user: { email: "admin@example.com" } }, error: null },
   ])
 
-  const result = await requestAdminPasswordChange(
+  const result = await requestPasswordChange(
     harness.auth,
     "Strong-password-2026!",
     "Strong-password-2026!",
@@ -116,18 +137,18 @@ test("reauthentication-required password changes complete only with the nonce", 
     { data: { user: { email: "admin@example.com" } }, error: null },
   ])
 
-  const initial = await requestAdminPasswordChange(
+  const initial = await requestPasswordChange(
     harness.auth,
     "Strong-password-2026!",
     "Strong-password-2026!",
   )
   assert.equal(initial.status, "reauthentication-required")
 
-  const sent = await requestAdminReauthentication(harness.auth)
+  const sent = await requestPasswordReauthentication(harness.auth)
   assert.equal(sent.status, "sent")
   assert.equal(harness.reauthenticateCalls(), 1)
 
-  const completed = await confirmAdminPasswordChange(
+  const completed = await confirmPasswordChange(
     harness.auth,
     "Strong-password-2026!",
     "123456",
@@ -139,34 +160,37 @@ test("reauthentication-required password changes complete only with the nonce", 
   ])
 })
 
-test("terminal success, failure, and cancellation share an empty secret state", async () => {
+test("password secrets are cleared by the shared flow and are never persisted", async () => {
   const failedHarness = authHarness([
     {
       data: { user: null },
       error: { code: "weak_password", message: "Weak password" },
     },
   ])
-  const failed = await requestAdminPasswordChange(
+  const failed = await requestPasswordChange(
     failedHarness.auth,
     "Strong-password-2026!",
     "Strong-password-2026!",
   )
 
   assert.equal(failed.status, "failed")
-  assert.deepEqual(clearedAdminPasswordSecrets(), {
+  assert.deepEqual(clearedAccountPasswordSecrets(), {
     password: "",
     confirmation: "",
     nonce: "",
   })
 
   const security = await readFile(
-    "components/auth/admin-account-security.tsx",
+    "components/auth/account-password-security.tsx",
     "utf8",
   )
-  assert.match(security, /clearPasswordSecrets\(\)/)
+  assert.match(security, /passwordError\(password, confirmation, true\)/)
   assert.match(security, /cancelPasswordChange[\s\S]*?clearPasswordSecrets\(\)/)
+  assert.doesNotMatch(
+    security,
+    /localStorage|sessionStorage|service[_-]?role|auth\.admin|updateUserById|userId|mentorId|profileId/,
+  )
 })
-
 
 test("Admin email input follows a confirmed canonical account email change only", async () => {
   const security = await readFile(
