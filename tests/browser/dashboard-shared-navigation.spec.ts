@@ -280,3 +280,137 @@ test('all role popovers remain inside the viewport across target responsive widt
     }
   }
 })
+
+
+test('admin commerce detail stays local while canonical refreshes still synchronize the open order', async ({ page }) => {
+  const orderId = '95000000-0000-0000-0000-000000000001'
+  let listCalls = 0
+  let reportCalls = 0
+  let includeOrder = true
+  let currentOrder = {
+    total_count: 1,
+    order_id: orderId,
+    user_id: '95000000-0000-0000-0000-000000000002',
+    user_email: 'buyer@fixture.test',
+    created_at: '2026-09-20T10:00:00.000Z',
+    paid_at: null as string | null,
+    order_status: 'pending_payment',
+    total_amount: 150000,
+    item_count: 1,
+    item_summary: 'Tryout Nasional',
+    items: [{
+      id: '95000000-0000-0000-0000-000000000003',
+      commerceItemId: '95000000-0000-0000-0000-000000000004',
+      kind: 'digital_product',
+      name: 'Tryout Nasional',
+      quantity: 1,
+      unitPrice: 150000,
+      subtotal: 150000,
+      createdAt: '2026-09-20T10:00:00.000Z',
+    }],
+    payment: {
+      id: '95000000-0000-0000-0000-000000000005',
+      provider: 'midtrans',
+      providerOrderId: 'fixture-order-1',
+      providerTransactionId: null as string | null,
+      providerStatus: 'pending' as string | null,
+      fraudStatus: null as string | null,
+      paymentType: null as string | null,
+      grossAmount: 150000,
+      status: 'pending_payment',
+      createdAt: '2026-09-20T10:00:00.000Z',
+      updatedAt: '2026-09-20T10:00:00.000Z',
+    },
+  }
+
+  await page.route('**/rest/v1/operational_invalidation_versions**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: '[]',
+  }))
+  await page.route('**/rest/v1/rpc/list_admin_commerce_orders', async route => {
+    listCalls += 1
+    const args = route.request().postDataJSON() as { p_query?: string; p_limit?: number }
+    const isDetailLookup = args.p_query === orderId && args.p_limit === 1
+    const rows = includeOrder ? [{ ...currentOrder, total_count: 1 }] : []
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(isDetailLookup ? rows.slice(0, 1) : rows),
+    })
+  })
+  await page.route('**/rest/v1/rpc/get_admin_commerce_report', route => {
+    reportCalls += 1
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([emptyAdminCommerceReport]),
+    })
+  })
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('http://localhost:3001/admin')
+
+  const overviewDetail = page.getByRole('button', { name: `Lihat detail pesanan ${orderId}` })
+  await expect(overviewDetail).toBeVisible()
+  await page.waitForTimeout(300)
+  const overviewBaseline = { listCalls, reportCalls }
+
+  await overviewDetail.click()
+  const dialog = page.getByRole('dialog', { name: /#STR-95000000/ })
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(300)
+  expect({ listCalls, reportCalls }).toEqual(overviewBaseline)
+
+  await dialog.getByRole('button', { name: 'Tutup detail pesanan' }).click()
+  await expect(dialog).toBeHidden()
+  await page.waitForTimeout(300)
+  expect({ listCalls, reportCalls }).toEqual(overviewBaseline)
+
+  await page.getByRole('button', { name: 'Pesanan', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Pesanan', exact: true })).toBeVisible()
+  const orderDetail = page.getByRole('button', { name: `Lihat detail pesanan ${orderId}` })
+  await expect(orderDetail).toBeVisible()
+  await page.waitForTimeout(300)
+  const ordersBaseline = { listCalls, reportCalls }
+
+  await orderDetail.click()
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(300)
+  expect({ listCalls, reportCalls }).toEqual(ordersBaseline)
+
+  currentOrder = {
+    ...currentOrder,
+    order_status: 'paid',
+    paid_at: '2026-09-21T06:00:00.000Z',
+    payment: {
+      ...currentOrder.payment,
+      providerStatus: 'settlement',
+      status: 'paid',
+      updatedAt: '2026-09-21T06:00:00.000Z',
+    },
+  }
+
+  const beforeRefresh = { listCalls, reportCalls }
+  await page.getByRole('button', { name: 'Muat ulang' }).evaluate(element => (element as HTMLButtonElement).click())
+  await expect.poll(() => reportCalls).toBe(beforeRefresh.reportCalls + 1)
+  await expect.poll(() => listCalls).toBe(beforeRefresh.listCalls + 1)
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Lunas')
+
+  includeOrder = false
+  const beforeMissingRefresh = { listCalls, reportCalls }
+  await page.getByRole('button', { name: 'Muat ulang' }).evaluate(element => (element as HTMLButtonElement).click())
+  await expect.poll(() => reportCalls).toBe(beforeMissingRefresh.reportCalls + 1)
+  await expect.poll(() => listCalls).toBe(beforeMissingRefresh.listCalls + 2)
+  await expect(dialog).toBeHidden()
+
+  const beforeQuery = { listCalls, reportCalls }
+  await page.getByPlaceholder('Order, email, atau produk').fill('tidak-ada')
+  await expect.poll(() => reportCalls).toBe(beforeQuery.reportCalls + 1)
+  await expect.poll(() => listCalls).toBe(beforeQuery.listCalls + 1)
+
+  const stableCounts = { listCalls, reportCalls }
+  await page.waitForTimeout(500)
+  expect({ listCalls, reportCalls }).toEqual(stableCounts)
+})

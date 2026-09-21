@@ -72,7 +72,15 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
   const [exporting, setExporting] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  const load = useCallback(async () => {
+  const selectedOrderIdRef = useRef<string | null>(null)
+
+  const setOrderSelection = useCallback((order: AdminCommerceOrder | null) => {
+    selectedOrderIdRef.current = order?.order_id ?? null
+    setSelectedOrderId(order?.order_id ?? null)
+    setSelected(order)
+  }, [])
+
+  const loadOrdersAndReport = useCallback(async () => {
     setLoading(true); setError('')
     const range = toRange(startDate, endDate)
     const orderArgs = {
@@ -84,27 +92,40 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
       client.rpc<AdminCommerceReport[]>('get_admin_commerce_report', { p_from: range.from, p_to: range.to }),
     ])
     if (ordersResult.error || reportResult.error) {
-      setError(ordersResult.error?.message || reportResult.error?.message || 'Data operasional belum dapat dimuat.'); setLoading(false); return
+      setError(ordersResult.error?.message || reportResult.error?.message || 'Data operasional belum dapat dimuat.'); setLoading(false); return null
     }
     const rows = ordersResult.data ?? []
     setOrders(rows); setTotalOrders(Number(rows[0]?.total_count ?? 0)); setReport(reportResult.data?.[0] ?? EMPTY_REPORT)
-    if (selectedOrderId) {
-      const visibleMatch = rows.find(order => order.order_id === selectedOrderId) ?? null
-      if (visibleMatch) {
-        setSelected(visibleMatch)
-      } else {
-        const detailResult = await client.rpc<AdminCommerceOrder[]>('list_admin_commerce_orders', {
-          p_query: selectedOrderId, p_status: '', p_from: null, p_to: null, p_limit: 1, p_offset: 0,
-        })
-        if (!detailResult.error) {
-          const canonical = detailResult.data?.find(order => order.order_id === selectedOrderId) ?? null
-          setSelected(canonical)
-          if (!canonical) setSelectedOrderId(null)
-        }
-      }
-    }
     setLoading(false)
-  }, [client, endDate, mode, page, pageSize, query, selectedOrderId, startDate, status])
+    return rows
+  }, [client, endDate, mode, page, pageSize, query, startDate, status])
+
+  const refreshSelectedOrder = useCallback(async (selectedOrderId: string, freshRows: AdminCommerceOrder[]) => {
+    const visibleMatch = freshRows.find(order => order.order_id === selectedOrderId) ?? null
+    if (visibleMatch) {
+      if (selectedOrderIdRef.current === selectedOrderId) setSelected(visibleMatch)
+      return
+    }
+
+    const detailResult = await client.rpc<AdminCommerceOrder[]>('list_admin_commerce_orders', {
+      p_query: selectedOrderId, p_status: '', p_from: null, p_to: null, p_limit: 1, p_offset: 0,
+    })
+    if (detailResult.error || selectedOrderIdRef.current !== selectedOrderId) return
+
+    const canonical = detailResult.data?.find(order => order.order_id === selectedOrderId) ?? null
+    if (canonical) {
+      setSelected(canonical)
+      return
+    }
+    setOrderSelection(null)
+  }, [client, setOrderSelection])
+
+  const load = useCallback(async () => {
+    const rows = await loadOrdersAndReport()
+    if (!rows) return
+    const selectedOrderId = selectedOrderIdRef.current
+    if (selectedOrderId) await refreshSelectedOrder(selectedOrderId, rows)
+  }, [loadOrdersAndReport, refreshSelectedOrder])
 
   useEffect(() => { const timer = setTimeout(() => { void load() }, 200); return () => clearTimeout(timer) }, [load])
   useOperationalInvalidation(['commerce', 'admin-overview'], () => { void load() })
@@ -116,11 +137,11 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
   useEffect(() => {
     if (!focusOrderId || mode !== 'orders') return
     const match = orders.find(order => order.order_id === focusOrderId)
-    if (match) { setSelectedOrderId(match.order_id); setSelected(match) }
-  }, [focusOrderId, mode, orders])
+    if (match) setOrderSelection(match)
+  }, [focusOrderId, mode, orders, setOrderSelection])
   useEffect(() => { const dialog = dialogRef.current; if (!dialog) return; if (selected && !dialog.open) dialog.showModal(); if (!selected && dialog.open) dialog.close() }, [selected])
-  function openOrder(order: AdminCommerceOrder) { setSelectedOrderId(order.order_id); setSelected(order) }
-  function closeOrder() { setSelectedOrderId(null); setSelected(null) }
+  function openOrder(order: AdminCommerceOrder) { setOrderSelection(order) }
+  function closeOrder() { setOrderSelection(null) }
   function changePageSize(value: number) { setPageSize(value); setPage(0) }
   function toggleCsvField(field: CommerceCsvField) { setCsvFields(current => current.includes(field) ? current.filter(item => item !== field) : [...current, field]) }
 
@@ -159,7 +180,7 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
     <div className="ops-metrics"><Metric label="Revenue" value={formatRupiah(report.total_revenue)} detail={`${report.paid_orders} order lunas`} /><Metric label="Total orders" value={String(report.total_transactions)} detail={`${report.pending_orders} pending`} /><Metric label="Mentee" value={String(report.total_users)} detail={`${report.customer_count} customer pada range`} /><Metric label="Mentor aktif" value={String(report.total_mentors)} detail="Domain mentor" /><Metric label="Mentoring sessions" value={String(report.total_sessions)} detail={`${report.sessions_today} sesi hari ini`} /><Metric label="Butuh tindak lanjut" value={String(report.pending_sessions)} detail="Fokus / penjadwalan" /></div>
     <div className="ops-overview-grid"><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Trend</p><h3>Revenue & order</h3></div><TrendingUp aria-hidden="true" /></div><TrendChart points={report.trend} max={maxRevenue} /></section><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Quick actions</p><h3>Buka area operasional</h3></div></div><div className="ops-quick-actions"><button type="button" onClick={() => onNavigate?.('orders')}><ShoppingCart /><span><strong>Pesanan</strong><small>Order & payment history</small></span></button><button type="button" onClick={() => onNavigate?.('sessions')}><UsersRound /><span><strong>Mentoring Sessions</strong><small>{report.pending_sessions} membutuhkan tindak lanjut</small></span></button><button type="button" onClick={() => onNavigate?.('reports')}><TrendingUp /><span><strong>Laporan</strong><small>Analisis dan export CSV</small></span></button></div></section></div>
     <OrdersTable orders={orders} loading={loading} onDetail={openOrder} compact />
-    <OrderDialog dialogRef={dialogRef} order={selected} onClose={closeOrder} />
+    <OrderDialog dialogRef={dialogRef} order={selectedOrderId ? selected : null} onClose={closeOrder} />
   </div>
 
   return <div className="ops-page">
@@ -168,7 +189,7 @@ export function AdminCommerceOperations({ mode, onNavigate, focusOrderId }: { mo
     {error ? <p className="form-error" role="alert">{error}</p> : null}
     {mode === 'reports' ? <><div className="ops-metrics"><Metric label="Total revenue" value={formatRupiah(report.total_revenue)} detail="Order lunas" /><Metric label="Transaksi" value={String(report.total_transactions)} detail={`${report.paid_orders} lunas`} /><Metric label="Pending" value={String(report.pending_orders)} detail="Menunggu pembayaran" /><Metric label="Customer" value={String(report.customer_count)} detail="Customer unik" /><Metric label="Rata-rata order" value={formatRupiah(Math.round(report.average_order_value || 0))} detail="Order lunas" /></div><div className="ops-report-grid"><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Trend</p><h3>Revenue & transaksi</h3></div></div><TrendChart points={report.trend} max={maxRevenue} /></section><section className="role-card"><div className="ops-section-heading"><div><p className="kicker">Distribusi</p><h3>Jenis produk</h3></div></div><div className="ops-bars">{report.product_distribution.length ? report.product_distribution.map(row => <div key={row.kind}><span>{itemKindLabel(row.kind)}</span><i><b style={{ width: `${Math.max(4, Number(row.quantity) / maxDistribution * 100)}%` }} /></i><strong>{row.quantity}</strong></div>) : <p className="muted">Belum ada transaksi pada range ini.</p>}</div></section><section className="role-card ops-best-sellers"><div className="ops-section-heading"><div><p className="kicker">Best seller</p><h3>Produk terlaris</h3></div></div>{report.best_sellers.length ? report.best_sellers.map((row, index) => <div key={`${row.name}-${row.kind}`}><span>{index + 1}</span><p><strong>{row.name}</strong><small>{itemKindLabel(row.kind)} · {row.quantity} terjual</small></p><b>{formatRupiah(row.revenue)}</b></div>) : <p className="muted">Belum ada order lunas pada range ini.</p>}</section></div><section className="role-card ops-export"><div className="ops-section-heading"><div><p className="kicker">Export</p><h3>Export CSV</h3><p>Pilih kolom; date range mengikuti filter laporan di atas.</p></div><button type="button" className="button button-primary" disabled={exporting || csvFields.length === 0} onClick={() => void exportCsv()}><Download aria-hidden="true" size={16} />{exporting ? 'Menyiapkan…' : 'Export CSV'}</button></div><div className="ops-field-picker">{commerceCsvFields.map(([key, label]) => <label key={key}><input type="checkbox" checked={csvFields.includes(key)} onChange={() => toggleCsvField(key)} />{label}</label>)}</div></section></> : null}
     <section className="role-card ops-table-section"><div className="ops-section-heading"><div><p className="kicker">{mode === 'reports' ? 'Transaksi terkini' : 'Order & payment history'}</p><h3>{mode === 'reports' ? 'Transaksi' : 'Pesanan'}</h3></div><span>{totalOrders} data</span></div><OrdersTable orders={orders} loading={loading} onDetail={openOrder} /><TablePagination page={page} pageSize={pageSize} totalItems={totalOrders} onPageChange={setPage} disabled={loading} label="Pagination pesanan" /></section>
-    <OrderDialog dialogRef={dialogRef} order={selected} onClose={closeOrder} />
+    <OrderDialog dialogRef={dialogRef} order={selectedOrderId ? selected : null} onClose={closeOrder} />
   </div>
 }
 
