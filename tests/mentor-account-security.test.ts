@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import test from "node:test"
 
-test("Mentor Profile mounts shared password security without Admin email controls", async () => {
+test("Mentor and Mentee profiles mount shared password security without Admin email controls", async () => {
   const [profile, passwordSecurity, adminSecurity] = await Promise.all([
     readFile("components/auth/profile-form.tsx", "utf8"),
     readFile("components/auth/account-password-security.tsx", "utf8"),
@@ -11,10 +11,11 @@ test("Mentor Profile mounts shared password security without Admin email control
 
   assert.match(
     profile,
-    /account\.role\s*===\s*['"]admin['"][\s\S]*?<AdminAccountSecurity[\s\S]*?account\.role\s*===\s*['"]mentor['"][\s\S]*?<AccountPasswordSecurity role=["']mentor["'][\s\S]*?: null/,
+    /account\.role\s*===\s*['"]admin['"][\s\S]*?<AdminAccountSecurity[\s\S]*?account\.role\s*===\s*['"]mentor['"][\s\S]*?<AccountPasswordSecurity role=["']mentor["'][\s\S]*?account\.role\s*===\s*['"]mentee['"][\s\S]*?<AccountPasswordSecurity role=["']mentee["'][\s\S]*?: null/,
   )
+  assert.match(passwordSecurity, /role: ['"]admin['"] \| ['"]mentor['"] \| ['"]mentee['"]/)
   assert.match(passwordSecurity, /Keamanan akun/)
-  assert.match(passwordSecurity, /Perbarui kata sandi untuk akun Mentor yang sedang masuk\./)
+  assert.match(passwordSecurity, /roleLabel = role === ['"]mentor['"] \? ['"]Mentor['"] : ['"]Mentee['"]/)
   assert.match(passwordSecurity, /Kata sandi baru/)
   assert.match(passwordSecurity, /Konfirmasi kata sandi/)
   assert.match(passwordSecurity, /Perbarui kata sandi/)
@@ -23,12 +24,12 @@ test("Mentor Profile mounts shared password security without Admin email control
   assert.match(adminSecurity, /Perbarui email/)
 })
 
-test("Mentee receives no new password section and profile fields remain unchanged", async () => {
+test("Mentee keeps existing profile fields while gaining only shared password controls", async () => {
   const profile = await readFile("components/auth/profile-form.tsx", "utf8")
 
   assert.match(
     profile,
-    /account\.role\s*===\s*['"]mentor['"][\s\S]*?<AccountPasswordSecurity role=["']mentor["'][\s\S]*?: null/,
+    /account\.role\s*===\s*['"]mentee['"][\s\S]*?<AccountPasswordSecurity role=["']mentee["'][\s\S]*?: null/,
   )
   assert.match(profile, /name=["']first_name["']/)
   assert.match(profile, /name=["']last_name["']/)

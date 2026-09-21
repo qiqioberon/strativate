@@ -77,7 +77,7 @@ export async function confirmPasswordChange(
   return { status: 'updated' }
 }
 
-export function AccountPasswordSecurity({ role }: { role: 'admin' | 'mentor' }) {
+export function AccountPasswordSecurity({ role }: { role: 'admin' | 'mentor' | 'mentee' }) {
   const router = useRouter()
   const auth = useMemo(() => createClient().auth as unknown as AccountPasswordAuth, [])
   const [passwordBusy, setPasswordBusy] = useState(false)
@@ -118,7 +118,7 @@ export function AccountPasswordSecurity({ role }: { role: 'admin' | 'mentor' }) 
       setPasswordFormError(formError(result.error, 'Kode verifikasi belum dapat dikirim. Mulai kembali perubahan kata sandi.'))
       return
     }
-    setPasswordNotice(`Kode verifikasi telah dikirim ke email akun ${role === 'admin' ? 'Admin' : 'Mentor'}.`)
+    setPasswordNotice(`Kode verifikasi telah dikirim ke email akun ${role === 'admin' ? 'Admin' : role === 'mentor' ? 'Mentor' : 'Mentee'}.`)
   }
 
   async function confirmNonce(event: FormEvent<HTMLFormElement>) {
@@ -156,8 +156,10 @@ export function AccountPasswordSecurity({ role }: { role: 'admin' | 'mentor' }) 
 
   if (role === 'admin') return passwordForm
 
-  return <section className="workspace-card account-profile admin-account-security" aria-labelledby="mentor-account-security-title">
-    <div className="account-profile__header"><div><p className="kicker">Keamanan akun</p><h2 id="mentor-account-security-title">Kata sandi</h2><p>Perbarui kata sandi untuk akun Mentor yang sedang masuk.</p></div><ShieldCheck aria-hidden="true"/></div>
+  const roleLabel = role === 'mentor' ? 'Mentor' : 'Mentee'
+
+  return <section className="workspace-card account-profile admin-account-security" aria-labelledby="account-password-security-title">
+    <div className="account-profile__header"><div><p className="kicker">Keamanan akun</p><h2 id="account-password-security-title">Kata sandi</h2><p>Perbarui kata sandi untuk akun {roleLabel} yang sedang masuk.</p></div><ShieldCheck aria-hidden="true"/></div>
     {passwordForm}
   </section>
 }

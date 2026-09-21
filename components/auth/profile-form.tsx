@@ -99,5 +99,5 @@ export function ProfileForm() {
       <div><dt>WhatsApp</dt><dd>{displayValue(whatsapp)}</dd></div>
     </dl>}
     {saved && !editing ? <p className="account-profile__saved" role="status">Profil tersimpan.</p> : null}
-  </section>{account.role === 'admin' ? <AdminAccountSecurity/> : account.role === 'mentor' ? <AccountPasswordSecurity role="mentor" /> : null}</>
+  </section>{account.role === 'admin' ? <AdminAccountSecurity/> : account.role === 'mentor' ? <AccountPasswordSecurity role="mentor" /> : account.role === 'mentee' ? <AccountPasswordSecurity role="mentee" /> : null}</>
 }
