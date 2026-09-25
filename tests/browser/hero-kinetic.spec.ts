@@ -41,6 +41,7 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     const popout = gallery.getByTestId('testimonial-active-popout')
     await expect(popout).toBeVisible()
+    await expect(popout).toHaveAttribute('data-popout-state', 'raised')
     await expect(popout).toHaveCSS('z-index', '8')
     await expect(popout.locator('.marketing-testimonial-gallery__overlay-image')).toBeVisible()
 
