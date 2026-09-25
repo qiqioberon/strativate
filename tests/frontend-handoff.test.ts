@@ -22,8 +22,8 @@ test('the handoff exposes the approved brand, contact, and proof facts', async (
   assert.equal(brand.publicContact.phone, '+62 851-8775-4671')
   assert.equal(brand.publicContact.whatsapp, 'https://wa.me/6285187754671')
   assert.equal(brand.publicContact.email, 'strativateid@gmail.com')
-  assert.deepEqual(brand.socialProof.map(item => item.value), ['2500+', '15+', '20+'])
-  assert.equal(brand.socialProof[0].label, 'Siswa didukung')
+  assert.deepEqual(brand.socialProof.map(item => item.value), ['2,500+', '15+', '20+'])
+  assert.equal(brand.socialProof[0].label, 'Students supported')
 })
 
 test('the mentor directory represents all 26 rows without leaking internal fields', async () => {
@@ -80,8 +80,8 @@ test('the program overview contains exactly eight sourced services and only veri
   assert.deepEqual(
     content.services.filter(service => service.href).map(service => ({ id: service.id, href: service.href, detailLabel: service.detailLabel })),
     [
-      { id: 'private-mentoring', href: '/program/private-mentoring', detailLabel: 'Lihat Private Mentoring' },
-      { id: 'intensive-mentoring', href: '/program/intensive-mentoring', detailLabel: 'Lihat Intensive Mentoring' },
+      { id: 'private-mentoring', href: '/program/private-mentoring', detailLabel: 'View Private Mentoring' },
+      { id: 'intensive-mentoring', href: '/program/intensive-mentoring', detailLabel: 'View Intensive Mentoring' },
     ],
   )
 

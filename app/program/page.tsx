@@ -32,12 +32,12 @@ export default function ProgramPage() {
           motif="program"
           aside={(
             <div className="program-intro-panel">
-              <div className="program-intro-facts" aria-label="Ringkasan layanan Strativate">
+              <div className="program-intro-facts" aria-label="Strativate service summary">
                 <span><strong>08</strong> services</span>
                 <span><strong>02</strong> core programs</span>
                 <span><strong>01</strong> clearer path</span>
               </div>
-              <a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk memilih program Strativate yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-intro-whatsapp-link">
+              <a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I would like help choosing the right Strativate program.')} target="_blank" rel="noreferrer" data-testid="program-page-intro-whatsapp-link">
                 Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} />
               </a>
             </div>
@@ -47,7 +47,7 @@ export default function ProgramPage() {
         <ProgramKineticSurface>
           <section className="marketing-page-section program-directory" data-reveal data-testid="program-directory-section">
             <div className="marketing-container">
-              <div className="program-journey" aria-label="Alur memilih dukungan">
+              <div className="program-journey" aria-label="Support selection journey">
                 <div className="program-journey__heading">
                   <span>Find your format</span>
                   <strong>Three steps to choose the right support.</strong>
@@ -85,7 +85,7 @@ export default function ProgramPage() {
                 <h2>Tell us about your goal.</h2>
                 <p className="program-consultation__copy">We can help map your needs before you choose a learning format.</p>
               </div>
-              <a href={buildWhatsAppHref('Halo Strativate, saya ingin dibantu memilih program yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">
+              <a href={buildWhatsAppHref('Hello Strativate, I would like help choosing the right program.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">
                 Chat via WhatsApp <ArrowRight aria-hidden="true" size={17} />
               </a>
             </div>

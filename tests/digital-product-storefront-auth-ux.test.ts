@@ -7,6 +7,7 @@ import { resolveDigitalPurchaseMode } from '../lib/commerce/purchase-mode'
 const shell = readFileSync('components/marketing/marketing-shell.tsx', 'utf8')
 const header = readFileSync('components/marketing/site-header.tsx', 'utf8')
 const listPage = readFileSync('app/produk-digital/page.tsx', 'utf8')
+const directory = readFileSync('components/digital-products/digital-product-directory.tsx', 'utf8')
 const detailPage = readFileSync('app/produk-digital/[slug]/page.tsx', 'utf8')
 const addToCart = readFileSync('components/digital-products/add-to-cart-button.tsx', 'utf8')
 const dashboard = readFileSync('app/dashboard/dashboard-client.tsx', 'utf8')
@@ -41,9 +42,9 @@ test('anonymous and authenticated header actions are mutually exclusive and role
 
 test('public product list is purchase-aware and uses compact reusable add-to-cart UI', () => {
   assert.match(listPage, /resolveDigitalPurchaseMode\(account\)/)
-  assert.match(listPage, /<AddToCartButton/)
-  assert.match(listPage, /compact/)
-  assert.match(listPage, /digital-product-card__description/)
+  assert.match(directory, /<AddToCartButton/)
+  assert.match(directory, /compact/)
+  assert.match(directory, /digital-product-card__description/)
   assert.match(styles, /grid-template-columns: repeat\(auto-fill, minmax\(260px, 320px\)\)/)
   assert.match(styles, /object-fit: contain/)
 })

@@ -110,26 +110,31 @@ test('create Snap rejects provider 4xx, 5xx, malformed JSON, blank token, and ne
   configure()
 
   await t.test('4xx', async () => {
+    configure()
     globalThis.fetch = (async () => new Response(JSON.stringify({ error_messages: ['bad request'] }), { status: 400 })) as typeof fetch
     await assert.rejects(() => createMidtransSnapTransaction(snapInput()), /Midtrans request failed/)
   })
 
   await t.test('5xx', async () => {
+    configure()
     globalThis.fetch = (async () => new Response(JSON.stringify({}), { status: 503 })) as typeof fetch
     await assert.rejects(() => createMidtransSnapTransaction(snapInput()), /HTTP 503/)
   })
 
   await t.test('malformed JSON', async () => {
+    configure()
     globalThis.fetch = (async () => new Response('not-json', { status: 201 })) as typeof fetch
     await assert.rejects(() => createMidtransSnapTransaction(snapInput()), /non-JSON/)
   })
 
   await t.test('blank token', async () => {
+    configure()
     globalThis.fetch = (async () => new Response(JSON.stringify({ token: '   ' }), { status: 201 })) as typeof fetch
     await assert.rejects(() => createMidtransSnapTransaction(snapInput()), /missing token/)
   })
 
   await t.test('network failure', async () => {
+    configure()
     globalThis.fetch = (async () => { throw new Error('socket included server-secret') }) as typeof fetch
     await assert.rejects(
       () => createMidtransSnapTransaction(snapInput()),

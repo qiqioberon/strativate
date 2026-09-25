@@ -52,11 +52,14 @@ export function EditorialContentManagement() {
   }, [supabase])
 
   useEffect(() => { void load() }, [load])
-  useEffect(() => { if (dialogRef.current) editingId ? dialogRef.current.showModal() : dialogRef.current.close() }, [editingId])
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (editingId && !dialog.open) dialog.showModal()
+    if (!editingId && dialog.open) dialog.close()
+  }, [editingId])
 
   const rows = kind === 'publications' ? publications : competitions
-  const selected = rows.find(item => item.id === editingId)
-
   function beginCreate() {
     setDraft(emptyDraft)
     setError('')

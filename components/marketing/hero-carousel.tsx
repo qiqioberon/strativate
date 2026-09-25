@@ -84,7 +84,7 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
 
   if (!posters.length) {
     return (
-      <div className="marketing-hero__visual marketing-hero__fallback" aria-label="Identitas visual Strativate" data-testid="hero-poster-fallback">
+      <div className="marketing-hero__visual marketing-hero__fallback" aria-label="Strativate visual identity" data-testid="hero-poster-fallback">
         <div className="marketing-hero__visual-head" data-testid="hero-fallback-label">
           <span>STRATIVATE / 01</span>
           <Compass aria-hidden="true" size={22} />
@@ -116,7 +116,7 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
     <div
       className="marketing-hero__visual marketing-hero-carousel"
       aria-roledescription="carousel"
-      aria-label="Poster informasi Strativate"
+      aria-label="Strativate information posters"
       data-testid="hero-poster-carousel"
       tabIndex={0}
       onMouseEnter={() => setIsHovering(true)}
@@ -143,21 +143,21 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
     >
       {current.url ? <Link href={current.url} data-testid="hero-poster-link">{poster}</Link> : poster}
       {hasCarouselControls(posters.length) ? (
-        <div className="marketing-hero-carousel__controls" aria-label="Pilih poster">
-          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Poster sebelumnya" onClick={selectPreviousPoster} data-testid="hero-poster-previous-button">
+        <div className="marketing-hero-carousel__controls" aria-label="Choose a poster">
+          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Previous poster" onClick={selectPreviousPoster} data-testid="hero-poster-previous-button">
             <ArrowLeft aria-hidden="true" size={17} />
           </button>
           {posters.map((item, index) => (
             <button
               key={item.id}
               type="button"
-              aria-label={`Tampilkan poster ${index + 1}`}
+              aria-label={`Show poster ${index + 1}`}
               aria-current={index === active ? 'true' : undefined}
               data-testid={`hero-poster-indicator-${index + 1}`}
               onClick={() => selectPoster(index)}
             />
           ))}
-          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Poster berikutnya" onClick={selectNextPoster} data-testid="hero-poster-next-button">
+          <button type="button" className="marketing-hero-carousel__arrow" aria-label="Next poster" onClick={selectNextPoster} data-testid="hero-poster-next-button">
             <ArrowRight aria-hidden="true" size={17} />
           </button>
         </div>

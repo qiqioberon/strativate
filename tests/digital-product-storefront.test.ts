@@ -19,12 +19,13 @@ test('marketing navigation includes the storefront only when enabled by the serv
 
 test('public directory and detail consume real Digital Product records', () => {
   const directory = readFileSync('app/produk-digital/page.tsx', 'utf8')
+  const directoryComponent = readFileSync('components/digital-products/digital-product-directory.tsx', 'utf8')
   const detail = readFileSync('app/produk-digital/[slug]/page.tsx', 'utf8')
   const addToCart = readFileSync('components/digital-products/add-to-cart-button.tsx', 'utf8')
 
   assert.match(directory, /listPublicDigitalProducts/)
-  assert.match(directory, /formatRupiah\(product\.price_amount\)/)
-  assert.match(directory, /href=\{`\/produk-digital\/\$\{product\.slug\}`\}/)
+  assert.match(directoryComponent, /formatRupiah\(product\.price_amount\)/)
+  assert.match(directoryComponent, /href=\{`\/produk-digital\/\$\{product\.slug\}`\}/)
   assert.doesNotMatch(directory, /productPlaceholders/)
   assert.match(detail, /getPublicDigitalProduct/)
   assert.match(detail, /AddToCartButton/)

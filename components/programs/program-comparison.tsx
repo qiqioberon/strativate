@@ -9,7 +9,7 @@ export function ProgramComparison({ products = mentoringProgramEditorial }: { pr
     <div className="program-section-heading"><p className="kicker">Compare your options</p><h2 id="compare-programs">Focused sessions or ongoing support?</h2><p>Choose the rhythm that best fits your goal.</p></div>
     <div className="program-comparison-grid">{products.map((program) => (
       <article className="program-info-card" key={program.slug}>
-        <p className="kicker">{program.slug === 'private-mentoring' ? 'Fleksibel sesuai kebutuhan' : 'Pendampingan berkelanjutan'}</p>
+        <p className="kicker">{program.slug === 'private-mentoring' ? 'Flexible support' : 'Ongoing guidance'}</p>
         <h3>{program.title}</h3>
         <p>{program.shortDescription}</p>
         <ul>{program.highlights.map((item) => <li key={item}>{item}</li>)}</ul>

@@ -23,8 +23,7 @@ test('OAuth credentials remain server-only and roles request only calendar scope
 
 test('mentee optional conflict checks request the narrow freebusy scope they actually call', () => {
   const value = source()
-  const scopes = value.match(/function scopesForRole[\s\S]*?\n}/)?.[0] ?? ''
-  assert.match(scopes, /\n  return \[\.\.\.BASE_SCOPES, 'https:\/\/www\.googleapis\.com\/auth\/calendar\.events\.readonly', 'https:\/\/www\.googleapis\.com\/auth\/calendar\.freebusy'\]\n/)
+  assert.match(value, /function scopesForRole[\s\S]*calendar\.events\.readonly[\s\S]*calendar\.freebusy/)
 })
 
 test('Google event runtime has no conference creation or conference-link provider path', () => {

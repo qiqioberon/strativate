@@ -21,7 +21,7 @@ test('hero carousel renders honest zero, single, and multiple-poster control sta
   const multiple = renderToStaticMarkup(createElement(HeroCarousel, { posters: [poster('one'), poster('two')] }))
 
   assert.match(zero, /hero-poster-fallback/)
-  assert.match(zero, /Ruang untuk/)
+  assert.match(zero, /Space to/)
   assert.doesNotMatch(zero, /hero-poster-previous-button/)
   assert.doesNotMatch(single, /hero-poster-previous-button/)
   assert.match(single, /hero-poster-media/)

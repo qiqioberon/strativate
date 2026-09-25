@@ -10,9 +10,9 @@ const css = readFileSync(new URL('app/program/program-page.css', root), 'utf8')
 
 test('program page uses kinetic bento hierarchy and journey rail', () => {
   assert.match(page, /ProgramKineticSurface/)
-  assert.match(page, /01', title: 'Pilih kebutuhan/)
-  assert.match(page, /02', title: 'Kenali format/)
-  assert.match(page, /03', title: 'Mulai persiapan/)
+  assert.match(page, /01', title: 'Define your goal/)
+  assert.match(page, /02', title: 'Choose your format/)
+  assert.match(page, /03', title: 'Start preparing/)
   assert.match(page, /program-intro-facts/)
   assert.match(page, /data-program-band/)
 })

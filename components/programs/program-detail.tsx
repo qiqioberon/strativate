@@ -30,7 +30,7 @@ export function ProgramDetail({
 }) {
   const isPrivateMentoring = program.slug === 'private-mentoring'
   const isIntensiveMentoring = program.slug === 'intensive-mentoring'
-  const whatsappHref = buildWhatsAppHref(`Halo Strativate, saya ingin berkonsultasi tentang ${program.title}.`)
+  const whatsappHref = buildWhatsAppHref(`Hello Strativate, I would like to discuss ${program.title}.`)
   const privatePackages = isPrivateMentoring ? privateMentoringCatalog?.packages ?? [] : []
   const packageGroups = groupPackages(privatePackages)
   const minimumPrivatePackage = privatePackages.length
@@ -61,14 +61,14 @@ export function ProgramDetail({
         <p className="detail-lede">{program.detail}</p>
         <div className="detail-price">
           {isPrivateMentoring && minimumPrivatePackage ? <>
-            <strong>Mulai {formatRupiah(minimumPrivatePackage.priceAmount)}</strong>
+            <strong>From {formatRupiah(minimumPrivatePackage.priceAmount)}</strong>
             <span>{minimumPrivatePackage.durationMinutes} minutes per session · up to {minimumPrivatePackage.maxParticipants} participants</span>
           </> : isIntensiveMentoring && minimumIntensivePackage ? <>
-            <strong>Mulai {formatRupiah(Number(minimumIntensivePackage.priceAmount))}</strong>
+            <strong>From {formatRupiah(Number(minimumIntensivePackage.priceAmount))}</strong>
             <span>{minimumIntensivePackage.sessionsPerMonth} sessions per month · international competition options available by consultation</span>
           </> : <>
-            <strong>Informasi komersial belum tersedia</strong>
-            <span>Hubungi tim Strativate untuk informasi program terbaru.</span>
+            <strong>Commercial information is not available yet</strong>
+            <span>Contact the Strativate team for the latest program information.</span>
           </>}
         </div>
         <div className="program-hero-actions">
@@ -95,7 +95,7 @@ export function ProgramDetail({
         </div>
       </section>
       <section className="program-section program-section--surface" data-reveal data-testid="private-mentoring-session-focuses">
-        <div className="program-section-heading"><p className="kicker">Session Topics</p><h2>One focused topic for every session.</h2></div>
+        <div className="program-section-heading"><p className="kicker">Session topics</p><h2>One focused topic for every session.</h2></div>
         <div className="program-three-grid">
           {privateMentoringCatalog.sessionFocuses.map(focus => <article className="program-info-card" key={focus.id}><h3>{focus.name}</h3><p>{focus.description}</p></article>)}
         </div>
@@ -124,7 +124,7 @@ export function ProgramDetail({
               </div>
               <div className={styles.privatePriceScroll}>
                 <table>
-                  <thead><tr><th scope="col">Sesi</th><th scope="col">Total</th><th scope="col">Per sesi</th><th scope="col">Referensi</th></tr></thead>
+                  <thead><tr><th scope="col">Sessions</th><th scope="col">Total</th><th scope="col">Per session</th><th scope="col">Reference</th></tr></thead>
                   <tbody>{group.packages.map(item => <tr key={item.id} data-testid={`private-mentoring-package-${item.mentorTierCode.toLowerCase()}-${item.sessionCount}`}>
                     <th scope="row">{item.sessionCount}</th>
                     <td><strong>{formatRupiah(item.priceAmount)}</strong></td>
@@ -136,7 +136,7 @@ export function ProgramDetail({
             </article>
           })}
         </div>
-        <p className="program-pricing-note">Setelah konsultasi, tim Strativate mengirim Cart Link untuk mentee yang dituju. Cart dan checkout tetap menggunakan Shared Commerce dan harga paket aktif.</p>
+        <p className="program-pricing-note">After consultation, the Strativate team sends a Cart Link for the intended mentee. Cart and checkout continue to use Shared Commerce and the active package price.</p>
         <a href={whatsappHref} target="_blank" rel="noreferrer" className="primary-cta">Ask about packages on WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
       </> : isIntensiveMentoring && intensiveMentoringCatalog?.packages.length ? <>
         <div className="program-section-heading"><p className="kicker">Packages and pricing</p><h2>Choose support for your competition timeline.</h2><p>National competitions use fixed pricing. International competitions use a tailored plan after the initial consultation.</p></div>
@@ -148,7 +148,7 @@ export function ProgramDetail({
             {item.pricingMode === 'consultation' ? <a href={whatsappHref} target="_blank" rel="noreferrer" className={styles.consultation}>Discuss your needs <ArrowRight size={14} aria-hidden="true" /></a> : null}
           </article>)}
         </div>
-      </> : <div className={styles.fallback}><h3>Informasi paket sedang tidak dapat dimuat.</h3><p>Hubungi tim Strativate untuk informasi program terbaru dan bantuan memilih format mentoring.</p></div>}
+      </> : <div className={styles.fallback}><h3>Package information is not available right now.</h3><p>Contact the Strativate team for the latest program information and help choosing a mentoring format.</p></div>}
     </section>
 
     {isIntensiveMentoring && intensiveMentoringCatalog?.addOns.length ? <section className="program-section" data-reveal data-testid="intensive-mentoring-add-ons">
