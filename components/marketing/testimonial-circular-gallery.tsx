@@ -20,7 +20,7 @@ import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types
 
 type GL = Renderer['gl']
 type HoverRect = { left: number; top: number; width: number; height: number; rotation: number }
-type GalleryHover = { index: number; rect: HoverRect } | null
+type GalleryHover = { index: number; mediaIndex: number; rect: HoverRect } | null
 
 function lerp(from: number, to: number, ease: number) {
   return from + (to - from) * ease
@@ -407,11 +407,16 @@ class TestimonialGalleryApp {
     this.cancelMediaRestore()
     if (this.activeMedia && this.activeMedia !== hit.media) this.activeMedia.setMuted(false)
     this.activeMedia = hit.media
-    this.activeMedia.setMuted(true)
     this.scroll.target = this.scroll.current
     this.scroll.last = this.scroll.current
     this.hoveredIndex = hit.media.sourceIndex
-    this.onHover({ index: hit.media.sourceIndex, rect: hit.rect })
+    this.onHover({ index: hit.media.sourceIndex, mediaIndex: hit.media.index, rect: hit.rect })
+  }
+
+  muteActiveMedia(mediaIndex: number) {
+    if (!this.activeMedia || this.activeMedia.index !== mediaIndex) return false
+    this.activeMedia.setMuted(true)
+    return true
   }
 
   clearHover() {
@@ -590,6 +595,8 @@ class TestimonialGalleryApp {
 export function TestimonialCircularGallery({ items }: { items: MarketingTestimonialView[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const appRef = useRef<TestimonialGalleryApp | null>(null)
+  const activeHoverMediaRef = useRef<number | null>(null)
   const hoverExitTimerRef = useRef<number | null>(null)
   const raiseFrameRef = useRef<number | null>(null)
   const [hover, setHover] = useState<GalleryHover>(null)
@@ -622,22 +629,38 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
     }
 
     if (value) {
+      activeHoverMediaRef.current = value.mediaIndex
       setHover(value)
       setPopoutRaised(false)
-      raiseFrameRef.current = window.requestAnimationFrame(() => {
-        raiseFrameRef.current = window.requestAnimationFrame(() => {
-          setPopoutRaised(true)
-          raiseFrameRef.current = null
-        })
-      })
       return
     }
 
+    activeHoverMediaRef.current = null
     setPopoutRaised(false)
     hoverExitTimerRef.current = window.setTimeout(() => {
       setHover(null)
       hoverExitTimerRef.current = null
     }, 320)
+  }, [])
+
+  const handlePopoutImageReady = useCallback((mediaIndex: number) => {
+    if (activeHoverMediaRef.current !== mediaIndex) return
+    if (raiseFrameRef.current !== null) window.cancelAnimationFrame(raiseFrameRef.current)
+
+    raiseFrameRef.current = window.requestAnimationFrame(() => {
+      raiseFrameRef.current = window.requestAnimationFrame(() => {
+        if (activeHoverMediaRef.current !== mediaIndex) {
+          raiseFrameRef.current = null
+          return
+        }
+        if (!appRef.current?.muteActiveMedia(mediaIndex)) {
+          raiseFrameRef.current = null
+          return
+        }
+        setPopoutRaised(true)
+        raiseFrameRef.current = null
+      })
+    })
   }, [])
 
   const open = useCallback((index: number) => {
@@ -659,7 +682,9 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
       onHover: handleHover,
       onOpen: open,
     })
+    appRef.current = app
     return () => {
+      if (appRef.current === app) appRef.current = null
       app.destroy()
     }
   }, [handleHover, items, open])
@@ -697,6 +722,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
               fill
               sizes="300px"
               unoptimized
+              onLoad={() => handlePopoutImageReady(hover.mediaIndex)}
             />
             <div className="marketing-testimonial-gallery__overlay-content">
               <span>{hoveredItem.competition_name}</span>
