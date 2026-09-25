@@ -24,6 +24,7 @@ import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
 import { CompetitionCategoryManagement } from '@/components/admin/competition-category-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
+import { DiscountCodeManagement } from '@/components/admin/discount-code-management'
 import { EditorialContentManagement } from '@/components/admin/editorial-content-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { InstitutionManagement } from '@/components/admin/institutions'
@@ -59,6 +60,7 @@ type Section =
   | 'Intensive Mentoring'
   | 'Competition Categories'
   | 'Digital Products'
+  | 'Discount Codes'
   | 'Hero Posters'
   | 'Testimonials'
   | 'Publications'
@@ -98,6 +100,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Intensive Mentoring', label: 'Intensive Mentoring', icon: PackageOpen },
       { id: 'Competition Categories', label: 'Competition Categories', icon: PackageOpen },
       { id: 'Digital Products', label: 'Produk Digital', icon: PackageOpen },
+      { id: 'Discount Codes', label: 'Discount Codes', icon: Tags },
     ],
   },
   {
@@ -167,6 +170,7 @@ export default function AdminDashboard() {
           {section === 'Intensive Mentoring' ? <IntensiveMentoringManagement/> : null}
           {section === 'Competition Categories' ? <CompetitionCategoryManagement/> : null}
           {section === 'Digital Products' ? <DigitalProductManagement/> : null}
+          {section === 'Discount Codes' ? <DiscountCodeManagement/> : null}
           {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
           {section === 'Testimonials' ? <TestimonialManagement/> : null}
           {section === 'Publications' || section === 'Competitions' ? <EditorialContentManagement/> : null}

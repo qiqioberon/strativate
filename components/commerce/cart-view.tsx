@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, ArrowRight, Loader2, ShoppingBag, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Loader2, ShoppingBag, Tag, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -36,6 +36,29 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
   const router = useRouter()
   const { show } = useToast()
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [discountCode, setDiscountCode] = useState(cart.discountCode ?? '')
+  const [discountBusy, setDiscountBusy] = useState(false)
+  const [discountMessage, setDiscountMessage] = useState('')
+
+  async function applyDiscount() {
+    if (!discountCode.trim() || discountBusy) return
+    setDiscountBusy(true)
+    setDiscountMessage('')
+    const { error } = await createClient().rpc('apply_discount_code', { p_cart_id: cart.id, p_code: discountCode })
+    if (error) setDiscountMessage(error.message || 'This discount code is not available.')
+    else { setDiscountMessage('Discount applied.'); router.refresh() }
+    setDiscountBusy(false)
+  }
+
+  async function removeDiscount() {
+    if (discountBusy) return
+    setDiscountBusy(true)
+    await createClient().rpc('remove_discount_code', { p_cart_id: cart.id })
+    setDiscountCode('')
+    setDiscountMessage('Discount removed.')
+    router.refresh()
+    setDiscountBusy(false)
+  }
 
   async function removeItem(cartItemId: string) {
     if (removingId) return
@@ -101,8 +124,12 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
         </section>
         <aside className="commerce-cart-summary">
           <span>Ringkasan</span>
+          <div><p>Subtotal</p><strong>{formatRupiah(cart.subtotalAmount)}</strong></div>
+          {cart.discountAmount > 0 ? <div className="commerce-cart-summary__discount"><p>Discount {cart.discountCode ? `(${cart.discountCode})` : ''}</p><strong>-{formatRupiah(cart.discountAmount)}</strong></div> : null}
           <div><p>Total</p><strong>{formatRupiah(cart.totalAmount)}</strong></div>
-          <p>Harga checkout dihitung kembali oleh server dari Commerce Item yang masih tersedia.</p>
+          <div className="commerce-discount-form"><label htmlFor="discount-code"><Tag aria-hidden="true" size={16} /><span className="sr-only">Discount code</span></label><input id="discount-code" value={discountCode} onChange={event => setDiscountCode(event.target.value)} placeholder="Discount code" disabled={discountBusy} /><button className="button button-outline button-compact" type="button" onClick={() => void (cart.discountCode ? removeDiscount() : applyDiscount())} disabled={discountBusy || (!cart.discountCode && !discountCode.trim())}>{cart.discountCode ? 'Remove' : 'Apply'}</button></div>
+          {discountMessage ? <p className="commerce-discount-message" role="status">{discountMessage}</p> : null}
+          <p>Checkout is recalculated on the server from available Commerce Items and the applied discount.</p>
           {cart.hasUnavailableItems ? <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="button" disabled>Checkout tidak tersedia</button> : <form action={checkoutActiveCart}><CheckoutButton /></form>}
         </aside>
       </div>

@@ -46,7 +46,7 @@ function sanitize(order: OrderWithItems, attempt: PaymentAttempt | null): Saniti
       kind: item.item_kind_snapshot,
       name: item.name_snapshot,
       slug: item.slug_snapshot,
-      unitPriceAmount: item.unit_price_amount,
+      unitPriceAmount: item.discounted_unit_price_amount ?? item.unit_price_amount,
     })),
     payment: attempt ? {
       attemptId: attempt.id,
@@ -68,10 +68,11 @@ function assertOrderTotal(order: OrderWithItems) {
     throw new Error('Order total is not eligible for Midtrans checkout.')
   }
   const itemTotal = order.items.reduce((total, item) => {
-    if (!Number.isSafeInteger(item.unit_price_amount) || item.unit_price_amount < 0) {
+    const trustedPrice = item.discounted_unit_price_amount ?? item.unit_price_amount
+    if (!Number.isSafeInteger(trustedPrice) || trustedPrice < 0) {
       throw new Error('Order Item contains an invalid trusted price.')
     }
-    return total + item.unit_price_amount
+    return total + trustedPrice
   }, 0)
   if (!Number.isSafeInteger(itemTotal) || itemTotal !== order.total_amount) {
     throw new Error('Order Item total does not match Order total.')

@@ -5,6 +5,7 @@ export function summarizeCart(
   cartId: string,
   rows: CartItemView[],
   imageUrlForPath: (path: string) => string = path => path,
+  pricing?: { subtotalAmount: number; discountAmount: number; discountCode: string | null },
 ): ActiveCart {
   const items: ResolvedCartItem[] = rows.map(row => ({
     ...row,
@@ -16,7 +17,10 @@ export function summarizeCart(
   return {
     id: cartId,
     items,
-    totalAmount,
+    subtotalAmount: pricing?.subtotalAmount ?? totalAmount,
+    discountAmount: pricing?.discountAmount ?? 0,
+    discountCode: pricing?.discountCode ?? null,
+    totalAmount: pricing ? Math.max(0, pricing.subtotalAmount - pricing.discountAmount) : totalAmount,
     hasUnavailableItems,
     canCheckout: items.length > 0 && !hasUnavailableItems,
   }

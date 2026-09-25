@@ -14,7 +14,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
   const [requestedIndex, setRequestedIndex] = useState(0)
 
   if (products.length === 0) {
-    return <p className="marketing-products__empty">Belum ada Produk Digital pilihan untuk beranda.</p>
+    return <p className="marketing-products__empty">No featured digital products are available yet.</p>
   }
 
   return (
@@ -33,14 +33,14 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
           setActiveIndex(index)
           setRequestedIndex(index)
         }}
-        ariaLabel="Produk Digital pilihan di beranda"
+        ariaLabel="Featured digital products"
       >
         {products.map(product => (
           <Card key={product.id} customClass="digital-product-swap-card">
             <Link
               href={`/produk-digital/${product.slug}`}
               data-testid={`digital-product-detail-link-${product.slug}`}
-              aria-label={`Lihat detail ${product.name}`}
+              aria-label={`View details for ${product.name}`}
             >
               <div className="digital-product-swap-card__media">
                 <Image
@@ -51,10 +51,10 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
                 />
               </div>
               <div className="digital-product-swap-card__copy">
-                <span>Produk Digital · {formatRupiah(product.price_amount)}</span>
+                <span>Digital Product · {formatRupiah(product.price_amount)}</span>
                 <h3>{product.name}</h3>
                 <p>{product.description}</p>
-                <strong>Lihat detail <ArrowUpRight aria-hidden="true" size={17} /></strong>
+                <strong>View details <ArrowUpRight aria-hidden="true" size={17} /></strong>
               </div>
             </Link>
           </Card>
@@ -62,7 +62,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
       </CardSwap>
 
       {products.length > 1 ? (
-        <div className="digital-product-card-swap__dots" role="group" aria-label="Pilih Produk Digital">
+        <div className="digital-product-card-swap__dots" role="group" aria-label="Choose a featured digital product">
           {products.map((product, index) => (
             <button
               key={product.id}

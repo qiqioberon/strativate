@@ -13,17 +13,19 @@ export type MarketingHeroPoster = { id:string; image_path:string; alt_text:strin
 export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; image_path:string|null; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
 export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; cover_path:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
-export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; created_at:string; updated_at:string }
+export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; created_at:string; updated_at:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
 export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
 export type CommerceItem = { id:string; item_kind:string; is_available:boolean; created_at:string; updated_at:string }
 export type CartStatus = "active" | "converted"
-export type Cart = { id:string; user_id:string; status:CartStatus; created_at:string; updated_at:string }
+export type DiscountType = 'percentage'|'fixed'
+export type DiscountCode = { id:string; code:string; description:string|null; discount_type:DiscountType; discount_value:number; minimum_subtotal_amount:number; starts_at:string|null; ends_at:string|null; max_redemptions:number|null; redemption_count:number; is_active:boolean; created_at:string; updated_at:string }
+export type Cart = { id:string; user_id:string; status:CartStatus; discount_code_id:string|null; discount_code_snapshot:string|null; discount_amount:number; created_at:string; updated_at:string }
 export type CartItem = { id:string; cart_id:string; commerce_item_id:string; created_at:string }
 export type CartItemView = { cart_id:string; cart_item_id:string; commerce_item_id:string; item_kind:string; name:string|null; slug:string|null; image_path:string|null; price_amount:number|null; is_available:boolean; created_at:string }
 export type OrderStatus = "pending_payment" | "paid" | "payment_failed" | "expired" | "cancelled"
-export type Order = { id:string; user_id:string; cart_id:string; status:OrderStatus; currency_code:"IDR"; total_amount:number; invoice_number?:string|null; created_at:string; updated_at:string; paid_at:string|null }
-export type OrderItem = { id:string; order_id:string; commerce_item_id:string; item_kind_snapshot:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; created_at:string }
+export type Order = { id:string; user_id:string; cart_id:string; status:OrderStatus; currency_code:"IDR"; subtotal_amount:number; discount_amount:number; discount_code_snapshot:string|null; total_amount:number; invoice_number?:string|null; created_at:string; updated_at:string; paid_at:string|null }
+export type OrderItem = { id:string; order_id:string; commerce_item_id:string; item_kind_snapshot:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; discounted_unit_price_amount:number|null; created_at:string }
 export type PaymentAttemptStatus = "creating" | "pending" | "paid" | "failed" | "expired" | "cancelled"
 export type PaymentAttempt = { id:string; order_id:string; provider:"midtrans"; provider_order_id:string; snap_token:string|null; snap_token_created_at:string|null; snap_token_expires_at:string|null; snap_creation_claim_token:string|null; snap_creation_claimed_at:string|null; snap_creation_claim_expires_at:string|null; provider_transaction_id:string|null; provider_status:string|null; fraud_status:string|null; payment_type:string|null; gross_amount:number; status:PaymentAttemptStatus; created_at:string; updated_at:string }
 export type OwnedDigitalProduct = { order_item_id:string; order_id:string; commerce_item_id:string; name_snapshot:string; slug_snapshot:string; unit_price_amount:number; purchased_at:string; current_image_path:string|null; current_content_type:DigitalProductContentType|null; current_content_file_name:string|null; current_content_size_bytes:number|null; current_page_count:number|null; current_duration_seconds:number|null }
@@ -74,6 +76,8 @@ export type Database = {
       publications: Table<Publication, Partial<Publication> & Pick<Publication,"slug"|"title"|"excerpt"|"body">>
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
+      commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
+      commerce_discount_redemptions: Table<{id:string;discount_code_id:string;order_id:string;user_id:string;discount_amount:number;code_snapshot:string;created_at:string}>
       digital_product_access_sessions: Table<DigitalProductAccessSession, Partial<DigitalProductAccessSession> & Pick<DigitalProductAccessSession,"user_id"|"product_id">>
       commerce_items: Table<CommerceItem, Partial<CommerceItem> & Pick<CommerceItem,"id"|"item_kind">>
       carts: Table<Cart, Partial<Cart> & Pick<Cart,"user_id">>
@@ -132,7 +136,11 @@ export type Database = {
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }
       get_active_cart: { Args:Record<PropertyKey,never>; Returns:CartItemView[] }
+      get_active_cart_summary: { Args:Record<PropertyKey,never>; Returns:{cart_id:string;subtotal_amount:number;discount_amount:number;total_amount:number;discount_code:string|null}[] }
+      apply_discount_code: { Args:{p_cart_id:string;p_code:string}; Returns:{cart_id:string;subtotal_amount:number;discount_amount:number;total_amount:number;code:string}[] }
+      remove_discount_code: { Args:{p_cart_id:string}; Returns:undefined }
       create_order_from_cart: { Args:{p_cart_id:string}; Returns:Order }
+      list_public_digital_product_sales: { Args:Record<PropertyKey,never>; Returns:{product_id:string;sales_count:number}[] }
       list_owned_digital_products: { Args:Record<PropertyKey,never>; Returns:OwnedDigitalProduct[] }
       create_digital_product_access_session: { Args:{p_product_id:string}; Returns:DigitalProductAccessGrant[] }
       reserve_midtrans_payment_attempt: { Args:{p_order_id:string}; Returns:PaymentAttempt }

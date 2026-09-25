@@ -416,3 +416,8 @@
   .rb-card-swap__card { will-change: auto; }
   .digital-product-card-swap__dots button { transition: none; }
 }
+.commerce-discount-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 18px 0 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.commerce-discount-form input { min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; text-transform: uppercase; }
+.commerce-discount-form label { color: var(--marketing-orange-dark); }
+.commerce-discount-message { color: var(--muted-foreground); font-size: .76rem; }
+.commerce-cart-summary__discount strong { color: var(--marketing-orange-dark); }

@@ -24,7 +24,7 @@ export default function MenteeDashboardFixture() {
       <DashboardClient
         digitalProductsEnabled
         ownedDigitalProducts={[]}
-        cart={{ id: 'fixture-cart', items: [], totalAmount: 0, hasUnavailableItems: false, canCheckout: false }}
+        cart={{ id: 'fixture-cart', items: [], subtotalAmount: 0, discountAmount: 0, discountCode: null, totalAmount: 0, hasUnavailableItems: false, canCheckout: false }}
         commerceOrders={[]}
       />
     </AccountProvider>

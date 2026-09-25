@@ -12,6 +12,7 @@ export type CommerceItemKind = 'digital_product' | (string & {})
 
 export type PublicDigitalProduct = DigitalProduct & {
   imageUrl: string
+  salesCount: number | null
 }
 
 export type ResolvedCartItem = CartItemView & {
@@ -20,6 +21,9 @@ export type ResolvedCartItem = CartItemView & {
 
 export type ActiveCart = Pick<Cart, 'id'> & {
   items: ResolvedCartItem[]
+  subtotalAmount: number
+  discountAmount: number
+  discountCode: string | null
   totalAmount: number
   hasUnavailableItems: boolean
   canCheckout: boolean
