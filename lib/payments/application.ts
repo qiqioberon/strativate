@@ -15,6 +15,7 @@ import {
   type MidtransStatus,
 } from './midtrans'
 import { parseIdrGrossAmount } from './midtrans-model'
+import { buildTrustedMidtransItems } from './trusted-order'
 import type { SanitizedCheckout } from './types'
 
 export type CheckoutCustomer = {
@@ -63,21 +64,6 @@ function assertAmountMatches(expected: number, providerAmount: string) {
   }
 }
 
-function assertOrderTotal(order: OrderWithItems) {
-  if (!Number.isSafeInteger(order.total_amount) || order.total_amount <= 0) {
-    throw new Error('Order total is not eligible for Midtrans checkout.')
-  }
-  const itemTotal = order.items.reduce((total, item) => {
-    const trustedPrice = item.discounted_unit_price_amount ?? item.unit_price_amount
-    if (!Number.isSafeInteger(trustedPrice) || trustedPrice < 0) {
-      throw new Error('Order Item contains an invalid trusted price.')
-    }
-    return total + trustedPrice
-  }, 0)
-  if (!Number.isSafeInteger(itemTotal) || itemTotal !== order.total_amount) {
-    throw new Error('Order Item total does not match Order total.')
-  }
-}
 
 async function applyProviderStatus(attempt: PaymentAttempt, status: MidtransStatus) {
   if (status.orderId !== attempt.provider_order_id) throw new Error('Midtrans provider order ID does not match Payment Attempt.')
@@ -133,7 +119,7 @@ export async function startOwnedOrderPayment(orderId: string, customer: Checkout
   const order = await getOrderWithItems(orderId)
   if (order.status === 'paid') throw new Error('Order is already paid.')
   if (!order.items.length) throw new Error('Order has no items.')
-  assertOrderTotal(order)
+  const trustedItems = buildTrustedMidtransItems(order)
 
   const admin = createAdminClient()
   const { data: reserved, error: reserveError } = await admin.rpc('reserve_midtrans_payment_attempt', {
@@ -162,12 +148,7 @@ export async function startOwnedOrderPayment(orderId: string, customer: Checkout
     snap = await createMidtransSnapTransaction({
       providerOrderId: reserved.provider_order_id,
       grossAmount: order.total_amount,
-      items: order.items.map(item => ({
-        id: item.commerce_item_id,
-        price: item.unit_price_amount,
-        quantity: 1,
-        name: item.name_snapshot,
-      })),
+      items: trustedItems,
       customer,
     })
   } catch {
