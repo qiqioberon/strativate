@@ -1226,8 +1226,37 @@
 .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
   --testimonial-popout-lift: -52px;
   --testimonial-popout-scale: 1.055;
+  z-index: 3;
+  transform: translateY(0) scale(1) rotate(var(--testimonial-rotation, 0rad));
+  box-shadow: 0 10px 22px rgba(76, 24, 3, 0);
+  animation: none;
+  transition:
+    transform 300ms cubic-bezier(.22,.78,.22,1),
+    box-shadow 260ms ease,
+    z-index 0s linear 130ms;
+  will-change: transform;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay::before {
+  opacity: .16;
+  transition: opacity 220ms ease;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay-content {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 180ms ease, transform 240ms ease;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay.is-raised {
   z-index: 8;
+  transform: translateY(var(--testimonial-popout-lift)) scale(var(--testimonial-popout-scale)) rotate(var(--testimonial-rotation, 0rad));
   box-shadow: 0 30px 72px rgba(76, 24, 3, .34), 0 10px 24px rgba(76, 24, 3, .22);
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay.is-raised::before {
+  opacity: 1;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay.is-raised .marketing-testimonial-gallery__overlay-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 90ms;
 }
 .homepage-hero__gallery .marketing-testimonial-gallery::before,
 .homepage-hero__gallery .marketing-testimonial-gallery::after {

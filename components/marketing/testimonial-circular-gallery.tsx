@@ -9,7 +9,7 @@
 import Image from 'next/image'
 import { ArrowRight, Quote, X } from 'lucide-react'
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   getTestimonialHorizontalWheelDelta,
@@ -329,7 +329,8 @@ class TestimonialGalleryApp {
   centerInitialSequence() {
     const firstMedia = this.medias[0]
     if (!firstMedia) return
-    const offset = firstMedia.width * this.items.length
+    const centerIndex = Math.floor(this.medias.length / 2)
+    const offset = firstMedia.width * centerIndex
     this.scroll.current = offset
     this.scroll.target = offset
     this.scroll.last = offset
@@ -557,7 +558,10 @@ class TestimonialGalleryApp {
 export function TestimonialCircularGallery({ items }: { items: MarketingTestimonialView[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const hoverExitTimerRef = useRef<number | null>(null)
+  const raiseFrameRef = useRef<number | null>(null)
   const [hover, setHover] = useState<GalleryHover>(null)
+  const [popoutRaised, setPopoutRaised] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const selected = selectedIndex === null ? null : items[selectedIndex] ?? null
@@ -571,9 +575,38 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
       top: `${hover.rect.top + inset}px`,
       width: `${Math.max(0, hover.rect.width - inset * 2)}px`,
       height: `${Math.max(0, hover.rect.height - inset * 2)}px`,
-      transform: `translateY(var(--testimonial-popout-lift, 0px)) scale(var(--testimonial-popout-scale, 1)) rotate(${hover.rect.rotation}rad)`,
-    }
+      '--testimonial-rotation': `${hover.rect.rotation}rad`,
+    } as CSSProperties
   }, [hover])
+
+  const handleHover = useCallback((value: GalleryHover) => {
+    if (hoverExitTimerRef.current !== null) {
+      window.clearTimeout(hoverExitTimerRef.current)
+      hoverExitTimerRef.current = null
+    }
+    if (raiseFrameRef.current !== null) {
+      window.cancelAnimationFrame(raiseFrameRef.current)
+      raiseFrameRef.current = null
+    }
+
+    if (value) {
+      setHover(value)
+      setPopoutRaised(false)
+      raiseFrameRef.current = window.requestAnimationFrame(() => {
+        raiseFrameRef.current = window.requestAnimationFrame(() => {
+          setPopoutRaised(true)
+          raiseFrameRef.current = null
+        })
+      })
+      return
+    }
+
+    setPopoutRaised(false)
+    hoverExitTimerRef.current = window.setTimeout(() => {
+      setHover(null)
+      hoverExitTimerRef.current = null
+    }, 320)
+  }, [])
 
   const open = useCallback((index: number) => {
     setSelectedIndex(index)
@@ -591,13 +624,18 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const app = new TestimonialGalleryApp(container, items, {
       reducedMotion,
-      onHover: setHover,
+      onHover: handleHover,
       onOpen: open,
     })
     return () => {
       app.destroy()
     }
-  }, [items, open])
+  }, [handleHover, items, open])
+
+  useEffect(() => () => {
+    if (hoverExitTimerRef.current !== null) window.clearTimeout(hoverExitTimerRef.current)
+    if (raiseFrameRef.current !== null) window.cancelAnimationFrame(raiseFrameRef.current)
+  }, [])
 
   if (items.length === 0) return null
 
@@ -612,7 +650,14 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         data-testid="testimonial-circular-gallery"
       >
         {hoveredItem && overlayStyle && hoveredIndex !== null ? (
-          <div className="marketing-testimonial-gallery__overlay" style={overlayStyle} aria-hidden="false" data-testimonial-popout data-testid="testimonial-active-popout">
+          <div
+            className={`marketing-testimonial-gallery__overlay${popoutRaised ? ' is-raised' : ''}`}
+            style={overlayStyle}
+            aria-hidden="false"
+            data-testimonial-popout
+            data-popout-state={popoutRaised ? 'raised' : 'lifting'}
+            data-testid="testimonial-active-popout"
+          >
             <Image
               className="marketing-testimonial-gallery__overlay-image"
               src={hoveredItem.imageUrl}
