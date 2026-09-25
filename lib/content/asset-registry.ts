@@ -16,7 +16,7 @@ const ready = (src: string, alt: string, notes: string, priority: AssetPriority 
 
 const missingPortrait = (name: string): FrontendAsset => ({
   src: '/assets/brand/strativate-mark.png',
-  alt: `Foto ${name} belum tersedia`,
+  alt: `${name} portrait is not available`,
   notes: 'The mentor spreadsheet has no linked portrait; the approved brand mark is used as an explicit fallback.',
   priority: 'P0',
   placeholder: true,

@@ -29,9 +29,9 @@ export function AddToCartButton({
     return (
       <div className={cn('digital-product-purchase-action', compact && 'digital-product-purchase-action--compact')}>
         <Link className={buttonVariants({ variant: 'primary', size })} href="/auth">
-          Masuk untuk membeli
+          Sign in to purchase
         </Link>
-        <p>{compact ? 'Masuk sebagai Mentee untuk membeli.' : 'Masuk sebagai Mentee yang sudah menyelesaikan pendaftaran untuk menambahkan produk ke keranjang.'}</p>
+        <p>{compact ? 'Sign in as a Mentee to purchase.' : 'Sign in as a Mentee with completed registration to add this product to your cart.'}</p>
       </div>
     )
   }
@@ -40,9 +40,9 @@ export function AddToCartButton({
     return (
       <div className={cn('digital-product-purchase-action', compact && 'digital-product-purchase-action--compact')}>
         <button className={buttonVariants({ variant: 'outline', size })} type="button" disabled>
-          Pembelian hanya untuk Mentee
+          Purchases are available to Mentees only
         </button>
-        {compact ? <p>Akun ini tidak memenuhi syarat pembelian Produk Digital.</p> : null}
+        {compact ? <p>This account is not eligible to purchase Digital Products.</p> : null}
       </div>
     )
   }
@@ -56,16 +56,16 @@ export function AddToCartButton({
 
     if (error) {
       const raw = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase()
-      if (raw.includes('already in cart')) show({ variant: 'warning', message: 'Produk ini sudah ada di keranjang Anda.' })
-      else if (raw.includes('already owned')) show({ variant: 'warning', message: 'Anda sudah memiliki produk ini.' })
-      else if (raw.includes('unavailable')) show({ variant: 'error', message: 'Produk ini sedang tidak tersedia untuk dibeli.' })
-      else if (raw.includes('completed mentee')) show({ variant: 'error', message: 'Selesaikan pendaftaran Mentee sebelum melakukan pembelian.' })
-      else show({ variant: 'error', message: 'Produk belum dapat ditambahkan ke keranjang. Coba lagi.' })
+      if (raw.includes('already in cart')) show({ variant: 'warning', message: 'This product is already in your cart.' })
+      else if (raw.includes('already owned')) show({ variant: 'warning', message: 'You already own this product.' })
+      else if (raw.includes('unavailable')) show({ variant: 'error', message: 'This product is currently unavailable for purchase.' })
+      else if (raw.includes('completed mentee')) show({ variant: 'error', message: 'Complete your Mentee registration before purchasing.' })
+      else show({ variant: 'error', message: 'The product could not be added to your cart. Please try again.' })
       setPending(false)
       return
     }
 
-    show({ variant: 'success', message: 'Produk berhasil ditambahkan ke keranjang.' })
+    show({ variant: 'success', message: 'Product added to your cart.' })
     setPending(false)
     router.refresh()
   }
@@ -79,7 +79,7 @@ export function AddToCartButton({
         onClick={addToCart}
       >
         <ShoppingCart aria-hidden="true" size={17} />
-        {pending ? 'Menambahkan…' : 'Tambahkan ke Keranjang'}
+        {pending ? 'Adding…' : 'Add to cart'}
       </button>
     </div>
   )

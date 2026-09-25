@@ -43,7 +43,7 @@ export function FaqDirectory() {
             <span className="sr-only">Search questions</span>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search questions" data-testid="faq-search-input" />
           </label>
-          <div className="marketing-faq-filters" aria-label="Filter kategori pertanyaan">
+          <div className="marketing-faq-filters" aria-label="Filter question categories">
             {categories.map((option) => (
               <button
                 className={cn(category === option && 'is-active')}

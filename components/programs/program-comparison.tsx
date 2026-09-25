@@ -13,7 +13,7 @@ export function ProgramComparison({ products = mentoringProgramEditorial }: { pr
         <h3>{program.title}</h3>
         <p>{program.shortDescription}</p>
         <ul>{program.highlights.map((item) => <li key={item}>{item}</li>)}</ul>
-        <Link className="catalog-card-link" href={`/program/${program.slug}`} data-testid={`compare-${program.slug}-link`}>Jelajahi {program.title}</Link>
+        <Link className="catalog-card-link" href={`/program/${program.slug}`} data-testid={`compare-${program.slug}-link`}>Explore {program.title}</Link>
       </article>
     ))}</div>
   </section>

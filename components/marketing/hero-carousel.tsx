@@ -107,7 +107,7 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
       <div className="marketing-hero-carousel__caption" aria-live="polite">
         <span data-testid="hero-poster-counter">{String(active + 1).padStart(2, '0')} / {String(posters.length).padStart(2, '0')}</span>
         {current.title ? <strong data-testid="hero-poster-title">{current.title}</strong> : null}
-        {current.url ? <span className="marketing-hero-carousel__link">Buka informasi <ArrowUpRight aria-hidden="true" size={17} /></span> : null}
+        {current.url ? <span className="marketing-hero-carousel__link">Open information <ArrowUpRight aria-hidden="true" size={17} /></span> : null}
       </div>
     </div>
   )

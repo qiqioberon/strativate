@@ -14,9 +14,9 @@ export default async function MentorPage() {
     <MarketingShell>
       <main>
         <PageIntro
-          eyebrow="Meet Our Mentors"
-          title={<>Learn from mentors<br /><em>who have been there.</em></>}
-          description="Explore mentors by the expertise and public information available in Strativate's approved mentor directory. Profiles without photos use a clear neutral placeholder."
+          eyebrow="Strativate Mentors"
+          title={<>Meet Our<br /><em>Mentors.</em></>}
+          description="Learn from competition champions and industry professionals who have been where you want to go."
           motif="mentor"
           aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I would like help choosing a suitable mentor.')} target="_blank" rel="noreferrer" data-testid="mentor-page-intro-whatsapp-link">Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />

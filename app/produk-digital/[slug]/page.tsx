@@ -32,7 +32,7 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
               {product.imageUrl ? (
                 // Public product covers are marketing assets served by Supabase Storage.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={product.imageUrl} alt={`Sampul ${product.name}`} />
+                <img src={product.imageUrl} alt={`Cover of ${product.name}`} />
               ) : (
                 <div className="digital-product-cover__fallback" aria-hidden="true">Strativate</div>
               )}
@@ -41,22 +41,27 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
 
           <section className="digital-product-detail__content">
             <Link className="marketing-text-link digital-product-detail__back" href="/produk-digital">
-              <ArrowLeft aria-hidden="true" size={16} /> Kembali ke Produk Digital
+              <ArrowLeft aria-hidden="true" size={16} /> Back to Digital Products
             </Link>
             <div className="digital-product-detail__copy">
-              <p className="marketing-kicker">Produk Digital</p>
+              <p className="marketing-kicker">Digital Product</p>
               <h1>{product.name}</h1>
               <p className="digital-product-detail__description">{product.description}</p>
             </div>
             <div className="digital-product-detail__purchase">
               <div className="digital-product-detail__price">
-                <span>Harga</span>
+                <span>Price</span>
                 <strong>{formatRupiah(product.price_amount)}</strong>
               </div>
+              {product.salesCount !== null ? (
+                <p className="digital-product-detail__sales" data-testid="digital-product-detail-sales-count">
+                  {product.salesCount.toLocaleString('en-US')} sold
+                </p>
+              ) : null}
               <AddToCartButton commerceItemId={product.id} purchaseMode={purchaseMode} />
               {purchaseMode === 'mentee' ? (
                 <Link className={buttonVariants({ variant: 'outline', size: 'marketing' })} href="/cart">
-                  <ShoppingCart aria-hidden="true" size={16} /> Lihat keranjang
+                  <ShoppingCart aria-hidden="true" size={16} /> View cart
                 </Link>
               ) : null}
             </div>

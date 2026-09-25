@@ -36,10 +36,10 @@ export function MentorPortraitMedia({ mentor, className, sizes, priority = false
     <figure className={cn('asset-media', className)} data-asset-status="missing">
       <img
         src={fallback.src}
-        alt={`Foto ${mentor.name} belum tersedia`}
+        alt={`${mentor.name} portrait is not available`}
         style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '18%' }}
       />
-      <figcaption>Foto belum tersedia</figcaption>
+      <figcaption>Portrait not available</figcaption>
     </figure>
   )
 }

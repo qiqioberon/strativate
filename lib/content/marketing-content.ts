@@ -47,7 +47,7 @@ export const whyChooseStrativate = [
   'Expert coaches & mentors',
   'Proven curriculum',
   'Beginner-friendly',
-  'Strong partnerships',
+  'Practical skill development',
   'Personalized paths',
 ] as const
 
@@ -87,66 +87,24 @@ export type MarketingFaq = {
 }
 
 export const faqPreview = [
-  {
-    category: 'Programs',
-    question: 'Which programs are available?',
-    answer: 'Explore Private Mentoring, Intensive Mentoring, Big Class, and focused support services on the Programs page.',
-    source: 'services',
-  },
-  {
-    category: 'Programs',
-    question: 'Which mentoring format should I choose?',
-    answer: 'Choose flexible support for a specific goal or structured ongoing preparation for a competition.',
-    source: 'services',
-  },
-  {
-    category: 'Programs',
-    question: 'Can schools and organizations work with Strativate?',
-    answer: 'Yes. Workshops, competition mentoring and judging, and enrichment programs are available for organizations.',
-    source: 'services',
-  },
-  {
-    category: 'Mentors',
-    question: 'How do I choose a mentor?',
-    answer: 'Use the Mentor directory search and filters to explore the expertise and public information available for each mentor.',
-    source: 'mentor-directory',
-  },
-  {
-    category: 'Mentors',
-    question: 'What appears on a mentor profile?',
-    answer: 'Profiles show the public headline, expertise, available credentials, and LinkedIn link when provided.',
-    source: 'mentor-directory',
-  },
-  {
-    category: 'Account',
-    question: 'How do I create an account?',
-    answer: 'Choose Sign in, select the registration option, and follow the verification steps to complete your profile.',
-    source: 'auth',
-  },
-  {
-    category: 'Account',
-    question: 'How do I sign in?',
-    answer: 'Sign in with your email and password or continue with Google from the authentication page.',
-    source: 'auth',
-  },
-  {
-    category: 'Support',
-    question: 'How can I contact Strativate?',
-    answer: `Contact Strativate through WhatsApp at ${publicContact.phone} or email ${publicContact.email}.`,
-    source: 'public-contact',
-  },
-  {
-    category: 'Support',
-    question: 'What if I am not sure which service I need?',
-    answer: 'Share your goals through WhatsApp and the Strativate team can help you choose a suitable next step.',
-    source: 'public-contact',
-  },
+  { category: 'Programs', question: 'Who can join Strativate?', answer: 'Strativate supports students through mentoring and learning programs, and works with schools and organizations through workshops and competition-focused programs.', source: 'services' },
+  { category: 'Programs', question: 'Do students need prior business knowledge to start?', answer: 'Programs support different starting points. Share your current goal and preparation stage so you can choose an appropriate format.', source: 'services' },
+  { category: 'Programs', question: 'What types of competitions do you support?', answer: 'Strativate covers major business competition areas including business plans, business cases, essays, scientific papers, marketing, accounting and finance, pitching, and policy cases.', source: 'services' },
+  { category: 'Programs', question: 'What topics do you cover during mentoring?', answer: 'Support can cover business planning, accounting, research, analysis, proposal development, presentation, and competition preparation depending on the chosen program.', source: 'services' },
+  { category: 'Programs', question: 'Is Strativate for individuals or teams?', answer: 'Private Mentoring supports individuals and small teams. Other services may use different formats, so check the relevant program information before starting.', source: 'services' },
+  { category: 'Programs', question: 'How does private mentoring at Strativate work?', answer: 'Private Mentoring provides personalized guidance tailored to your goals, whether you are learning the basics or preparing for a competition.', source: 'services' },
+  { category: 'Programs', question: 'Can Strativate help with proposal or pitch deck review?', answer: 'Yes. Proposal Review & Feedback is designed to improve structure, logic, data, and presentation before submission.', source: 'services' },
+  { category: 'Programs', question: 'Do you provide mock presentations?', answer: 'Yes. Mock Competition provides presentation practice, judging, and feedback to strengthen readiness.', source: 'services' },
+  { category: 'Programs', question: 'How many sessions should a student take?', answer: 'Private Mentoring offers different package options. The right session count depends on your goal, timeline, and preparation needs.', source: 'services' },
+  { category: 'Mentors', question: 'How do I choose a mentor?', answer: 'Use the Mentor directory search and filters to explore the expertise and public information available for each mentor.', source: 'mentor-directory' },
+  { category: 'Account', question: 'How do I create an account?', answer: 'Choose Sign in, select the registration option, and follow the verification steps to complete your profile.', source: 'auth' },
+  { category: 'Support', question: 'How can I contact Strativate?', answer: `Contact Strativate through WhatsApp at ${publicContact.phone} or email ${publicContact.email}.`, source: 'public-contact' },
 ] as const satisfies ReadonlyArray<MarketingFaq>
 
 export const bigClassPlaceholder = {
   title: 'Big Class',
   kicker: 'Open classes',
-  description: 'Open classes covering business, accounting, research, and competition preparation.',
+  description: 'Learn business, accounting, and competition skills in engaging group sessions with Strativate mentors.',
   contentStatus: 'overview',
   cover: 'programs.bigClass.cover' as const,
 }

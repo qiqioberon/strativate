@@ -14,7 +14,7 @@ export const services: ServiceOverview[] = [
   {
     id: 'private-mentoring',
     name: 'Private Mentoring',
-    description: 'Flexible mentoring for individuals or small teams, tailored to your goals, needs, and timeline.',
+    description: 'Get personalized guidance tailored to your goals, whether you’re learning the basics or preparing for a competition.',
     icon: UsersRound,
     href: '/program/private-mentoring',
     detailLabel: 'View Private Mentoring',
@@ -22,7 +22,7 @@ export const services: ServiceOverview[] = [
   {
     id: 'intensive-mentoring',
     name: 'Intensive Mentoring',
-    description: 'Structured, ongoing guidance to prepare for business competitions from first draft to final presentation.',
+    description: 'Build your skills through structured, ongoing support and focused competition preparation.',
     icon: Trophy,
     href: '/program/intensive-mentoring',
     detailLabel: 'View Intensive Mentoring',
@@ -30,7 +30,7 @@ export const services: ServiceOverview[] = [
   {
     id: 'big-class',
     name: 'Big Class',
-    description: 'Open classes covering business, accounting, research, and competition preparation with Strativate mentors.',
+    description: 'Learn business, accounting, and competition skills in engaging group sessions with Strativate mentors.',
     icon: Presentation,
   },
   {

@@ -19,7 +19,7 @@ export const programEditorial: Record<MentoringSlug, ProgramEditorial> = {
   'private-mentoring': {
     slug: 'private-mentoring',
     title: 'Private Mentoring',
-    shortDescription: 'Flexible mentoring for individuals or small teams, tailored to your goals, needs, and timeline.',
+    shortDescription: 'Get personalized guidance tailored to your goals, whether you’re learning the basics or preparing for a competition.',
     kicker: 'Flexible, focused sessions',
     detail: 'Start with one focused session and continue as needed. Strengthen your foundations, sharpen a proposal, improve your analysis, or practice your presentation with practical feedback aligned to your goal.',
     audience: 'For beginners building from the basics, individuals or teams preparing for competitions, and participants who need focused review or practice.',
@@ -36,7 +36,7 @@ export const programEditorial: Record<MentoringSlug, ProgramEditorial> = {
   'intensive-mentoring': {
     slug: 'intensive-mentoring',
     title: 'Intensive Mentoring',
-    shortDescription: 'Structured, ongoing guidance to prepare for business competitions from first draft to final presentation.',
+    shortDescription: 'Build your skills through structured, ongoing support and focused competition preparation.',
     kicker: 'Structured, ongoing guidance',
     detail: 'Build competition readiness through a consistent learning process. Master core concepts, apply them through assignments, refine your work, and track your progress with the same mentor.',
     audience: 'For high-school and university students: beginners, active or experienced competitors, skill builders, and teams who need consistent support toward a shared goal.',

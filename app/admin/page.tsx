@@ -173,7 +173,8 @@ export default function AdminDashboard() {
           {section === 'Discount Codes' ? <DiscountCodeManagement/> : null}
           {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
           {section === 'Testimonials' ? <TestimonialManagement/> : null}
-          {section === 'Publications' || section === 'Competitions' ? <EditorialContentManagement/> : null}
+          {section === 'Publications' ? <EditorialContentManagement initialKind="publications"/> : null}
+          {section === 'Competitions' ? <EditorialContentManagement initialKind="competitions"/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}

@@ -30,7 +30,7 @@ test('public directory and detail consume real Digital Product records', () => {
   assert.match(detail, /getPublicDigitalProduct/)
   assert.match(detail, /AddToCartButton/)
   assert.doesNotMatch(detail, /PDF|video|download|file format/i)
-  assert.match(addToCart, /Tambahkan ke Keranjang/)
+  assert.match(addToCart, /Add to cart/)
   assert.match(addToCart, /rpc\('add_cart_item'/)
   assert.match(addToCart, /href="\/auth"/)
 })

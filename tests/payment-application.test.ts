@@ -5,6 +5,7 @@ import test from 'node:test'
 import { buildTrustedMidtransItems } from '../lib/payments/trusted-order'
 
 const application = readFileSync('lib/payments/application.ts', 'utf8')
+const trustedOrder = readFileSync('lib/payments/trusted-order.ts', 'utf8')
 const startRoute = readFileSync('app/api/checkout/start/route.ts', 'utf8')
 const statusRoute = readFileSync('app/api/checkout/status/route.ts', 'utf8')
 const webhookRoute = readFileSync('app/api/payments/midtrans/webhook/route.ts', 'utf8')
@@ -15,7 +16,7 @@ test('checkout start uses trusted Order snapshots and one-owner Snap creation cl
   assert.match(application, /createMidtransSnapTransaction/)
   assert.match(application, /order\.total_amount/)
   assert.match(application, /buildTrustedMidtransItems/)
-  assert.match(application, /itemTotal/)
+  assert.match(trustedOrder, /itemTotal/)
   assert.match(application, /store_midtrans_snap_token/)
   assert.match(application, /release_midtrans_snap_creation/)
   assert.match(application, /randomUUID/)

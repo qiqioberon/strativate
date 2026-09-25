@@ -33,7 +33,7 @@ export function MentorDetailModal({ mentor, onClose }: { mentor: PublicMentor | 
           <button className="marketing-mentor-dialog__close" type="button" onClick={() => dialogRef.current?.close()} aria-label="Close mentor details" data-testid="mentor-modal-close-button"><X aria-hidden="true" size={20} /></button>
           <div className="marketing-mentor-dialog__media"><MentorPortraitMedia mentor={mentor} sizes="(max-width: 620px) 90vw, 35vw" /></div>
           <div className="marketing-mentor-dialog__content">
-            <span data-testid="mentor-modal-tier">{mentor.tier ?? 'Mentor Strativate'}</span>
+            <span data-testid="mentor-modal-tier">{mentor.tier ?? 'Strativate Mentor'}</span>
             <h2 id="mentor-modal-heading" data-testid="mentor-modal-name">{mentor.name}</h2>
             {mentor.title ? <p data-testid="mentor-modal-title">{mentor.title}</p> : null}
             {mentor.shortBio ? <p data-testid="mentor-modal-bio">{mentor.shortBio}</p> : null}
@@ -45,7 +45,7 @@ export function MentorDetailModal({ mentor, onClose }: { mentor: PublicMentor | 
               <h3><Award aria-hidden="true" size={17} /> Experience and achievements</h3>
               <ul>{mentor.credentials.map((credential) => <li key={credential}>{credential}</li>)}</ul>
             </section>
-            {mentor.linkedIn ? <div className="marketing-mentor-dialog__actions"><a href={mentor.linkedIn} target="_blank" rel="noreferrer" aria-label={`Buka LinkedIn ${mentor.name}`} data-testid="mentor-modal-linkedin-link"><ExternalLink aria-hidden="true" size={16} /> LinkedIn</a></div> : null}
+            {mentor.linkedIn ? <div className="marketing-mentor-dialog__actions"><a href={mentor.linkedIn} target="_blank" rel="noreferrer" aria-label={`Open LinkedIn for ${mentor.name}`} data-testid="mentor-modal-linkedin-link"><ExternalLink aria-hidden="true" size={16} /> LinkedIn</a></div> : null}
           </div>
         </div>
       ) : null}

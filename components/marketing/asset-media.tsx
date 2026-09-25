@@ -23,7 +23,7 @@ export function AssetMedia({ assetKey, className, sizes = '100vw', priority = fa
         sizes={sizes}
         priority={priority}
       />
-      {asset.placeholder && !decorative && <figcaption>{asset.status === 'missing' ? 'Foto belum tersedia' : 'Aset belum tersedia'}</figcaption>}
+      {asset.placeholder && !decorative && <figcaption>{asset.status === 'missing' ? 'Image not available' : 'Asset not available'}</figcaption>}
     </figure>
   )
 }

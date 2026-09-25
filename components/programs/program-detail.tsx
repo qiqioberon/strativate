@@ -128,7 +128,7 @@ export function ProgramDetail({
                   <tbody>{group.packages.map(item => <tr key={item.id} data-testid={`private-mentoring-package-${item.mentorTierCode.toLowerCase()}-${item.sessionCount}`}>
                     <th scope="row">{item.sessionCount}</th>
                     <td><strong>{formatRupiah(item.priceAmount)}</strong></td>
-                    <td>{formatRupiah(item.pricePerSession)}/sesi</td>
+                    <td>{formatRupiah(item.pricePerSession)}/session</td>
                     <td>{item.referencePriceAmount ? <del>{formatRupiah(item.referencePriceAmount)}</del> : '—'}</td>
                   </tr>)}</tbody>
                 </table>
