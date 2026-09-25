@@ -83,8 +83,10 @@ export function SiteHeader({
     hrefs.forEach((href) => router.prefetch(href))
   }, [accountHref, navigation, router])
 
+  const isHomepage = pathname === '/'
+
   return (
-    <header className="marketing-header">
+    <header className={cn('marketing-header', isHomepage && 'marketing-header--home')}>
       <div className="marketing-header__inner">
         <Link
           className="marketing-brand"
