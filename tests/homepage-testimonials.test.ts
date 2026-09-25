@@ -53,11 +53,15 @@ test('testimonial gallery continuously moves, pauses on hover, and opens details
   assert.match(css, /marketing-testimonial-gallery__overlay[\s\S]*border-radius: 5\.5%/)
 })
 
-test('homepage cloud masks idle gallery cards while hover and keyboard focus lift the active story above it', () => {
-  assert.match(css, /\.homepage-hero__gallery\s*\{[\s\S]*?z-index:\s*auto/)
+test('homepage cloud only masks the lower edge while the gallery stays full-width and active stories lift above it', () => {
+  assert.match(css, /\.homepage-hero__gallery\s*\{[\s\S]*?z-index:\s*auto;[\s\S]*?width:\s*100%;[\s\S]*?max-width:\s*none/)
   assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery canvas\s*\{[\s\S]*?z-index:\s*1/)
   assert.match(css, /\.homepage-hero-cloud\s*\{[\s\S]*?z-index:\s*4/)
+  assert.match(css, /\.homepage-hero-cloud\.has-gallery\s*\{[\s\S]*?margin-top:\s*12px/)
+  assert.match(css, /\.homepage-hero-cloud__lobes\s*\{[\s\S]*?height:\s*clamp\(72px, 6vw, 96px\)/)
   assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery__overlay\s*\{[\s\S]*?--testimonial-popout-lift:\s*-52px;[\s\S]*?z-index:\s*8/)
+  assert.match(gallery, /const cardsForViewport = Math\.ceil\(this\.screen\.width \/ cardSpan\)/)
+  assert.match(gallery, /const repeatCount = Math\.max\(3, Math\.ceil\(\(cardsForViewport \+ 8\) \/ this\.items\.length\)\)/)
   assert.match(gallery, /onFocus = \(\) => \{[\s\S]*?this\.showHover\(\{ media, rect: media\.getScreenRect\(\) \}\)/)
   assert.match(gallery, /keyboardRevealRequested = true/)
   assert.match(gallery, /data-testid="testimonial-active-popout"/)

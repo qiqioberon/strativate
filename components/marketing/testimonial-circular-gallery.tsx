@@ -306,9 +306,12 @@ class TestimonialGalleryApp {
   }
 
   createMedias() {
-    const repeated = this.items.length === 1
-      ? [...this.items, ...this.items, ...this.items, ...this.items]
-      : [...this.items, ...this.items]
+    const cardWidth = Math.max(220, Math.min(300, this.screen.width * .2))
+    const gap = Math.max(18, Math.min(28, this.screen.width * .018))
+    const cardSpan = cardWidth + gap
+    const cardsForViewport = Math.ceil(this.screen.width / cardSpan)
+    const repeatCount = Math.max(3, Math.ceil((cardsForViewport + 8) / this.items.length))
+    const repeated = Array.from({ length: repeatCount }, () => this.items).flat()
     this.medias = repeated.map((item, index) => new TestimonialMedia({
       geometry: this.geometry,
       gl: this.gl,

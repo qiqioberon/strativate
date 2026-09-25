@@ -1209,7 +1209,8 @@
 .homepage-hero__gallery {
   position: relative;
   z-index: auto;
-  width: min(100%, 1500px);
+  width: 100%;
+  max-width: none;
   margin: clamp(36px, 4.6vw, 62px) auto 0;
 }
 .homepage-hero__gallery .marketing-testimonial-gallery {
@@ -1244,14 +1245,14 @@
   background: #fff;
 }
 .homepage-hero-cloud.has-gallery {
-  margin-top: clamp(-88px, -6vw, -64px);
+  margin-top: 12px;
 }
 .homepage-hero-cloud__lobes {
   position: absolute;
   right: 0;
   bottom: calc(100% - 1px);
   left: 0;
-  height: clamp(100px, 10vw, 150px);
+  height: clamp(72px, 6vw, 96px);
   pointer-events: none;
 }
 .homepage-hero-cloud__lobes span {
@@ -1339,9 +1340,9 @@
     --testimonial-popout-lift: -28px;
     --testimonial-popout-scale: 1.03;
   }
-  .homepage-hero-cloud.has-gallery { margin-top: -64px; }
+  .homepage-hero-cloud.has-gallery { margin-top: 10px; }
   .homepage-hero-cloud { padding: 56px 0 52px; }
-  .homepage-hero-cloud__lobes { height: 104px; }
+  .homepage-hero-cloud__lobes { height: 72px; }
   .homepage-hero-cloud__stats { grid-template-columns: 1fr; max-width: 520px; }
   .homepage-hero-cloud__stats article { padding: 18px 18px; }
   .homepage-hero-cloud__stats article + article { border-top: 1px solid #f0ddd0; border-left: 0; }
@@ -1352,8 +1353,8 @@
   .homepage-hero .marketing-hero__headline { font-size: clamp(2.35rem, 12.5vw, 3.4rem); }
   .homepage-hero .marketing-hero__lede { font-size: .9rem; }
   .homepage-hero__gallery .marketing-testimonial-gallery { height: 300px; }
-  .homepage-hero-cloud.has-gallery { margin-top: -58px; }
-  .homepage-hero-cloud__lobes { height: 92px; }
+  .homepage-hero-cloud.has-gallery { margin-top: 8px; }
+  .homepage-hero-cloud__lobes { height: 64px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .homepage-shape-grid__shape {

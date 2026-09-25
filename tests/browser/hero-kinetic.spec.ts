@@ -43,6 +43,11 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
     await expect(popout).toBeVisible()
     await expect(popout).toHaveCSS('z-index', '8')
     await expect(popout.locator('.marketing-testimonial-gallery__overlay-image')).toBeVisible()
+
+    await page.setViewportSize({ width: 2560, height: 1200 })
+    const wideBox = await galleryRegion.boundingBox()
+    if (!wideBox) throw new Error('Expected wide testimonial gallery bounds')
+    expect(wideBox.width).toBeGreaterThan(2500)
   }
 
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
