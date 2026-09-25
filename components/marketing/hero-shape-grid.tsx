@@ -2,7 +2,7 @@ const shapes = ['circle', 'square', 'diamond', 'triangle'] as const
 
 export function HeroShapeGrid() {
   return (
-    <div className="homepage-shape-grid" aria-hidden="true">
+    <div className="homepage-shape-grid" aria-hidden="true" data-testid="hero-shape-grid">
       {Array.from({ length: 35 }, (_, index) => (
         <span
           key={index}

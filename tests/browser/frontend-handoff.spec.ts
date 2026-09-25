@@ -11,7 +11,7 @@ const responsiveMatrix = [
 ] as const
 
 const publicRoutes = [
-  ['/', 'homepage-hero-section', 'hero-program-link'],
+  ['/', 'homepage-hero-section', 'hero-whatsapp-link'],
   ['/program', 'marketing-page-title', 'program-page-intro-whatsapp-link'],
   ['/mentor', 'marketing-page-title', 'mentor-page-intro-whatsapp-link'],
   ['/tentang-kami', 'marketing-page-title', 'about-page-intro-whatsapp-link'],
@@ -32,7 +32,7 @@ for (const viewport of [
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
-    await expect(page.getByText('2500+', { exact: true })).toBeVisible()
+    await expect(page.getByText('2,500+', { exact: true })).toBeVisible()
     await page.screenshot({ path: `output/playwright/handoff-home-${viewport.label}.png`, fullPage: true })
 
     await page.goto('/auth')
@@ -76,7 +76,7 @@ test('public marketing and auth routes remain actionable and overflow-safe throu
         const menuToggle = page.getByTestId('mobile-menu-toggle-button')
         await menuToggle.click()
         await expect(menuToggle).toHaveAttribute('aria-expanded', 'true')
-        await expect(page.getByRole('navigation', { name: 'Navigasi seluler' })).toBeVisible()
+        await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible()
         await menuToggle.press('Escape')
         await expect(menuToggle).toHaveAttribute('aria-expanded', 'false')
       }

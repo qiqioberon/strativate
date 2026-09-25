@@ -8,34 +8,29 @@ const navigation = [
   ['Tanya Jawab', '/tanya-jawab'],
 ] as const
 
-test('homepage uses real dedicated marketing links and safe editorial previews', async ({ page }) => {
+test('homepage uses the approved centered mentoring opening and cloud proof', async ({ page }) => {
   await page.goto('/')
-  const nav = page.getByRole('navigation', { name: 'Navigasi utama' })
 
-  for (const [label, href] of navigation) {
-    await expect(nav.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href)
-  }
+  await expect(page.getByRole('heading', { level: 1, name: 'Win Business Competitions with Expert Mentoring' })).toBeVisible()
+  await expect(page.getByText('Transform your ideas into winning strategies. Get personalized guidance from experienced mentors and achieve podium finishes.', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-whatsapp-link')).toHaveText(/Consultation/)
+  await expect(page.getByTestId('hero-poster-carousel')).toHaveCount(0)
+  await expect(page.getByTestId('hero-poster-fallback')).toHaveCount(0)
+  await expect(page.getByTestId('hero-shape-grid')).toBeVisible()
 
-  await expect(nav.getByRole('link', { name: 'Beranda', exact: true })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('heading', { name: 'Pilih cara belajarmu.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Belajar dari pengalaman, bertumbuh dengan arahan.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Materi yang siap mengikuti ritmemu.' })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Lihat Private Mentoring' })).toHaveAttribute('href', '/program/private-mentoring')
-  const privateCard = page.locator('.marketing-program-card').filter({ hasText: 'Private Mentoring' })
-  await expect(privateCard).toContainText('Informasi program')
-  await expect(privateCard).not.toContainText(/Rp\s?[\d.]+/)
-  await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
-  await expect(page.getByTestId('hero-poster-carousel').or(page.getByTestId('hero-poster-fallback'))).toHaveCount(1)
-  await expect(page.getByRole('img', { name: 'Strativate' }).first()).toBeVisible()
-  await expect(page.getByText('2500+', { exact: true })).toBeVisible()
   const socialProof = page.getByTestId('homepage-social-proof')
-  await expect(socialProof.getByText('Siswa kami berasal dari', { exact: true })).toBeVisible()
-  await expect(socialProof.locator('.marketing-hero__principles article')).toHaveCount(3)
-  const heroWhatsapp = new URL(await page.getByTestId('hero-whatsapp-link').getAttribute('href') ?? '')
-  expect(heroWhatsapp.searchParams.get('text')).toBe('Halo Strativate, saya ingin konsultasi untuk menentukan program yang paling sesuai dengan kebutuhan saya.')
-  await expect(page.getByTestId('hero-poster-fallback')).toBeVisible()
-  await expect(page.getByTestId('hero-poster-fallback').getByRole('button')).toHaveCount(0)
+  await expect(socialProof.locator('article')).toHaveCount(3)
+  await expect(socialProof.getByText('2,500+', { exact: true })).toBeVisible()
+  await expect(socialProof.getByText('Students supported', { exact: true })).toBeVisible()
+  await expect(socialProof.getByText('15+', { exact: true })).toBeVisible()
+  await expect(socialProof.getByText('Universities', { exact: true })).toBeVisible()
+  await expect(socialProof.getByText('20+', { exact: true })).toBeVisible()
+  await expect(socialProof.getByText('High schools', { exact: true })).toBeVisible()
+
+  await expect(page.getByTestId('homepage-hero-cloud').locator('.homepage-hero-cloud__lobes span')).toHaveCount(7)
+  await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
   await expect(page.getByText(/Alvin Haryanto|Universitas mitra|15\+ kemenangan|di 4 negara/)).toHaveCount(0)
+  await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 
 test('homepage mentor marquee provides one accessible directory sequence and motion-safe fallback', async ({ page }) => {
