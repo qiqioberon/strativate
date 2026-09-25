@@ -109,6 +109,7 @@ class TestimonialMedia {
         uniform vec2 uImageSizes;
         uniform vec2 uPlaneSizes;
         uniform sampler2D tMap;
+        uniform float uOpacity;
         varying vec2 vUv;
 
         float roundedBoxSDF(vec2 p, vec2 b, float r) {
@@ -128,13 +129,14 @@ class TestimonialMedia {
           vec4 color = texture2D(tMap, uv);
           float distance = roundedBoxSDF(vUv - 0.5, vec2(0.445), 0.055);
           float alpha = 1.0 - smoothstep(-0.002, 0.002, distance);
-          gl_FragColor = vec4(color.rgb, color.a * alpha);
+          gl_FragColor = vec4(color.rgb, color.a * alpha * uOpacity);
         }
       `,
       uniforms: {
         tMap: { value: texture },
         uPlaneSizes: { value: [0, 0] },
         uImageSizes: { value: [1, 1] },
+        uOpacity: { value: 1 },
         uSpeed: { value: 0 },
         uTime: { value: 100 * Math.random() },
       },
@@ -153,6 +155,10 @@ class TestimonialMedia {
   createMesh() {
     this.plane = new Mesh(this.gl, { geometry: this.geometry, program: this.program })
     this.plane.setParent(this.scene)
+  }
+
+  setMuted(muted: boolean) {
+    this.program.uniforms.uOpacity.value = muted ? 0 : 1
   }
 
   update(scroll: { current: number; last: number }, direction: 'right' | 'left') {
@@ -246,6 +252,8 @@ class TestimonialGalleryApp {
   dragIntent: TestimonialDragIntent | null = null
   paused = false
   hoveredIndex: number | null = null
+  activeMedia: TestimonialMedia | null = null
+  mediaRestoreTimer: number | null = null
   keyboardRevealRequested = false
   onHover: (value: GalleryHover) => void
   onOpen: (index: number) => void
@@ -376,9 +384,30 @@ class TestimonialGalleryApp {
     return hits[0] ?? null
   }
 
+  cancelMediaRestore() {
+    if (this.mediaRestoreTimer === null) return
+    window.clearTimeout(this.mediaRestoreTimer)
+    this.mediaRestoreTimer = null
+  }
+
+  restoreActiveMedia(delay = 320) {
+    this.cancelMediaRestore()
+    const media = this.activeMedia
+    if (!media) return
+    this.mediaRestoreTimer = window.setTimeout(() => {
+      media.setMuted(false)
+      if (this.activeMedia === media) this.activeMedia = null
+      this.mediaRestoreTimer = null
+    }, delay)
+  }
+
   showHover(hit: { media: TestimonialMedia; rect: HoverRect }) {
     this.paused = true
     this.keyboardRevealRequested = false
+    this.cancelMediaRestore()
+    if (this.activeMedia && this.activeMedia !== hit.media) this.activeMedia.setMuted(false)
+    this.activeMedia = hit.media
+    this.activeMedia.setMuted(true)
     this.scroll.target = this.scroll.current
     this.scroll.last = this.scroll.current
     this.hoveredIndex = hit.media.sourceIndex
@@ -389,6 +418,7 @@ class TestimonialGalleryApp {
     this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
+    this.restoreActiveMedia()
     this.paused = false
   }
 
@@ -414,6 +444,7 @@ class TestimonialGalleryApp {
           this.paused = true
           this.hoveredIndex = null
           this.onHover(null)
+          this.restoreActiveMedia()
           this.container.setPointerCapture?.(event.pointerId)
         }
       }
@@ -429,7 +460,7 @@ class TestimonialGalleryApp {
     if (event.pointerType === 'touch') return
     const hit = this.hitTest(event.clientX, event.clientY)
     if (hit) {
-      if (this.hoveredIndex !== hit.media.sourceIndex) this.showHover(hit)
+      if (this.activeMedia !== hit.media) this.showHover(hit)
       return
     }
     if (this.hoveredIndex !== null) this.clearHover()
@@ -475,6 +506,7 @@ class TestimonialGalleryApp {
       this.keyboardRevealRequested = true
       this.hoveredIndex = null
       this.onHover(null)
+      this.restoreActiveMedia()
       const width = this.medias[0]?.width ?? 1
       this.scroll.target += event.key === 'ArrowRight' ? width : -width
       return
@@ -501,6 +533,7 @@ class TestimonialGalleryApp {
     this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
+    this.restoreActiveMedia()
     this.paused = false
   }
 
@@ -526,11 +559,7 @@ class TestimonialGalleryApp {
       const width = this.medias[0]?.width ?? 1
       if (Math.abs(this.scroll.target - this.scroll.current) <= width * 0.06) {
         const media = this.centeredMedia()
-        if (media) {
-          this.keyboardRevealRequested = false
-          this.hoveredIndex = media.sourceIndex
-          this.onHover({ index: media.sourceIndex, rect: media.getScreenRect() })
-        }
+        if (media) this.showHover({ media, rect: media.getScreenRect() })
       }
     }
     this.renderer.render({ scene: this.scene, camera: this.camera })
@@ -540,6 +569,9 @@ class TestimonialGalleryApp {
 
   destroy() {
     window.cancelAnimationFrame(this.raf)
+    this.cancelMediaRestore()
+    this.activeMedia?.setMuted(false)
+    this.activeMedia = null
     window.removeEventListener('resize', this.onResize)
     this.container.removeEventListener('pointerdown', this.onPointerDown)
     this.container.removeEventListener('pointermove', this.onPointerMove)
