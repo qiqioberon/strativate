@@ -34,7 +34,15 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
 
   const galleryRegion = page.getByTestId('homepage-success-proof-section')
   if (await galleryRegion.count()) {
-    await expect(galleryRegion.getByTestId('testimonial-circular-gallery')).toBeVisible()
+    const gallery = galleryRegion.getByTestId('testimonial-circular-gallery')
+    await expect(gallery).toBeVisible()
+    const box = await gallery.boundingBox()
+    if (!box) throw new Error('Expected testimonial gallery bounds')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    const popout = gallery.getByTestId('testimonial-active-popout')
+    await expect(popout).toBeVisible()
+    await expect(popout).toHaveCSS('z-index', '8')
+    await expect(popout.locator('.marketing-testimonial-gallery__overlay-image')).toBeVisible()
   }
 
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)

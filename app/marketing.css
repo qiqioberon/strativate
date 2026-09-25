@@ -604,18 +604,28 @@
   overflow: hidden;
   border-radius: 5.5%;
   transform-origin: center;
-  pointer-events: none;
+  pointer-events: auto;
   animation: testimonial-overlay-in 180ms ease-out both;
+}
+.marketing-testimonial-gallery__overlay-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 .marketing-testimonial-gallery__overlay::before {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(18,13,12,.02) 32%, rgba(18,13,12,.84) 100%);
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(18,13,12,.04) 18%, rgba(18,13,12,.24) 48%, rgba(18,13,12,.92) 100%);
   content: '';
 }
 .marketing-testimonial-gallery__overlay-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   width: 100%;
   gap: 5px;
@@ -1198,13 +1208,25 @@
 
 .homepage-hero__gallery {
   position: relative;
-  z-index: 3;
+  z-index: auto;
   width: min(100%, 1500px);
   margin: clamp(36px, 4.6vw, 62px) auto 0;
 }
 .homepage-hero__gallery .marketing-testimonial-gallery {
   height: clamp(330px, 31vw, 430px);
   margin-top: 0;
+  overflow: visible;
+  isolation: auto;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery canvas {
+  position: relative;
+  z-index: 1;
+}
+.homepage-hero__gallery .marketing-testimonial-gallery__overlay {
+  --testimonial-popout-lift: -52px;
+  --testimonial-popout-scale: 1.055;
+  z-index: 8;
+  box-shadow: 0 30px 72px rgba(76, 24, 3, .34), 0 10px 24px rgba(76, 24, 3, .22);
 }
 .homepage-hero__gallery .marketing-testimonial-gallery::before,
 .homepage-hero__gallery .marketing-testimonial-gallery::after {
@@ -1215,7 +1237,7 @@
 }
 .homepage-hero-cloud {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   margin-top: clamp(72px, 8vw, 116px);
   padding: clamp(58px, 6vw, 84px) 0 clamp(58px, 6vw, 78px);
   color: var(--marketing-ink);
@@ -1313,6 +1335,10 @@
   }
   .homepage-hero__gallery { margin-top: 30px; }
   .homepage-hero__gallery .marketing-testimonial-gallery { height: 320px; }
+  .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
+    --testimonial-popout-lift: -28px;
+    --testimonial-popout-scale: 1.03;
+  }
   .homepage-hero-cloud.has-gallery { margin-top: -64px; }
   .homepage-hero-cloud { padding: 56px 0 52px; }
   .homepage-hero-cloud__lobes { height: 104px; }
@@ -1337,4 +1363,7 @@
     will-change: auto;
   }
   .homepage-hero .homepage-hero__consultation:hover { transform: none; }
+  .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
+    transition: none;
+  }
 }
