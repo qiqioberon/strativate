@@ -17,16 +17,17 @@ const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.me
   packageManager?: string
 }
 
-test('homepage places success proof before the approved content sequence', () => {
+test('homepage places the success-story gallery inside the hero before the approved content sequence', () => {
+  const heroIndex = home.indexOf('homepage-hero-section')
   const proofIndex = home.indexOf('homepage-success-proof-section')
   const whoIndex = home.indexOf('homepage-who-we-are-section')
   const programIndex = home.indexOf('homepage-programs-section')
   const productIndex = home.indexOf('homepage-products-section')
   const expertiseIndex = home.indexOf('homepage-expertise-section')
   const mentorIndex = home.indexOf('homepage-mentors-section')
-  assert.ok(proofIndex >= 0 && whoIndex > proofIndex && programIndex > whoIndex && productIndex > programIndex && expertiseIndex > productIndex && mentorIndex > expertiseIndex)
-  assert.match(home, /A clearer process\./)
-  assert.match(home, /Stronger competition outcomes\./)
+  assert.ok(heroIndex >= 0 && proofIndex > heroIndex && whoIndex > proofIndex && programIndex > whoIndex && productIndex > programIndex && expertiseIndex > productIndex && mentorIndex > expertiseIndex)
+  assert.match(home, /TestimonialCircularGallery/)
+  assert.doesNotMatch(home, /A clearer process\.|Stronger competition outcomes\.|homepage-testimonials-section/)
   assert.match(page, /listPublishedTestimonials/)
 })
 

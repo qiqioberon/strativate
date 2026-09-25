@@ -6,11 +6,13 @@ const home = readFileSync(new URL('../components/marketing/home-page.tsx', impor
 const kinetic = readFileSync(new URL('../components/marketing/hero-kinetic.tsx', import.meta.url), 'utf8')
 const layout = readFileSync(new URL('../app/layout.tsx', import.meta.url), 'utf8')
 
-test('homepage hero uses the approved static stakeholder composition', () => {
+test('homepage hero uses the approved centered success-story composition', () => {
   assert.match(home, /Win Business Competitions with Expert Mentoring/)
   assert.match(home, /Transform your ideas into winning strategies\./)
-  assert.match(home, /HeroCarousel/)
-  assert.doesNotMatch(home, /TextType|HeroKineticSurface|MagneticAction/)
+  assert.match(home, /HeroShapeGrid/)
+  assert.match(home, /TestimonialCircularGallery/)
+  assert.match(home, />Consultation <MessageCircle/)
+  assert.doesNotMatch(home, /HeroCarousel|hero-program-link|Chat on WhatsApp|TextType|HeroKineticSurface|MagneticAction/)
 })
 
 test('kinetic hero styles are isolated, pointer-reactive, and motion safe', () => {

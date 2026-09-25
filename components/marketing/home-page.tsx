@@ -1,11 +1,10 @@
-import { ArrowDownRight, ArrowRight, CheckCircle2, CircleHelp, MessageCircle, Quote, Sparkles } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, CheckCircle2, CircleHelp, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { socialProof } from '@/lib/content/brand'
 import { bigClassPlaceholder, faqPreview, homepageExpertise, whyChooseStrativate } from '@/lib/content/marketing-content'
-import type { MarketingHeroPosterView } from '@/lib/marketing/hero-posters'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import type { PublicMentor } from '@/lib/mentor/public-profile-types'
@@ -13,19 +12,17 @@ import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
 import { DigitalProductCardSwap } from './digital-product-card-swap'
-import { HeroCarousel } from './hero-carousel'
+import { HeroShapeGrid } from './hero-shape-grid'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
 
 export function HomePage({
-  heroPosters,
   mentors,
   testimonials,
   digitalProducts,
   digitalProductsEnabled,
 }: {
-  heroPosters: MarketingHeroPosterView[]
   mentors: PublicMentor[]
   testimonials: MarketingTestimonialView[]
   digitalProducts: PublicDigitalProduct[]
@@ -58,28 +55,31 @@ export function HomePage({
 
   return (
     <main className="stakeholder-homepage">
-      <section className="marketing-hero marketing-hero--revised" data-reveal data-testid="homepage-hero-section">
-        <div className="marketing-container marketing-hero__grid">
-          <div className="marketing-hero__copy">
-            <p className="marketing-hero__eyebrow"><Sparkles aria-hidden="true" size={15} /> Expert mentoring for business competitions</p>
+      <section className="marketing-hero marketing-hero--revised homepage-hero" data-reveal data-testid="homepage-hero-section">
+        <HeroShapeGrid />
+        <div className="marketing-container homepage-hero__content">
+          <div className="marketing-hero__copy homepage-hero__copy">
             <h1 className="marketing-hero__headline">Win Business Competitions with Expert Mentoring</h1>
             <p className="marketing-hero__lede">Transform your ideas into winning strategies. Get personalized guidance from experienced mentors and achieve podium finishes.</p>
             <div className="marketing-hero__actions">
-              <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program" data-testid="hero-program-link">Explore Programs <ArrowRight aria-hidden="true" size={17} /></Link>
-              <a className={cn(buttonVariants({ variant: 'whatsapp', size: 'marketing' }), 'marketing-hero__whatsapp-action')} href={whatsappHref} target="_blank" rel="noreferrer" data-testid="hero-whatsapp-link">Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>
+              <a className={cn(buttonVariants({ variant: 'outline', size: 'marketing' }), 'homepage-hero__consultation')} href={whatsappHref} target="_blank" rel="noreferrer" data-testid="hero-whatsapp-link">Consultation <MessageCircle aria-hidden="true" size={17} /></a>
             </div>
           </div>
-          <div className="marketing-hero--revised__visual"><HeroCarousel posters={heroPosters} /></div>
         </div>
-        <div className="marketing-container marketing-social-proof" aria-label="Strativate reach" data-testid="homepage-social-proof">
-          <div className="marketing-hero__principles">{socialProof.map((proof) => <article key={proof.label}><span>{proof.value}</span><div><strong>{proof.label}</strong></div></article>)}</div>
-        </div>
-      </section>
 
-      <section className="marketing-section stakeholder-section stakeholder-section--proof" aria-labelledby="success-proof-heading" data-reveal data-testid="homepage-success-proof-section">
-        <div className="marketing-container">
-          <div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Success stories</p><h2 id="success-proof-heading">A clearer process.<br /><em>Stronger competition outcomes.</em></h2></div><p className="marketing-section-head__copy">See how focused preparation, feedback, and practical mentoring help participants move forward with confidence.</p></div>
-          {testimonials.length ? <div className="stakeholder-proof-card"><Quote aria-hidden="true" size={28} /><div><p>{testimonials[0].testimonial}</p><strong>{testimonials[0].competition_name}</strong><span>{testimonials[0].achievement}</span></div></div> : <div className="stakeholder-empty-state"><strong>Participant stories are being prepared.</strong><span>Approved stories will appear here when their publication details are ready.</span></div>}
+        {testimonials.length ? (
+          <div className="homepage-hero__gallery" data-testid="homepage-success-proof-section">
+            <TestimonialCircularGallery items={testimonials} />
+          </div>
+        ) : null}
+
+        <div className={cn('homepage-hero-cloud', testimonials.length > 0 && 'has-gallery')} data-testid="homepage-hero-cloud">
+          <div className="homepage-hero-cloud__lobes" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => <span key={index} />)}
+          </div>
+          <div className="marketing-container homepage-hero-cloud__stats" aria-label="Strativate reach" data-testid="homepage-social-proof">
+            {socialProof.map((proof) => <article key={proof.label}><strong>{proof.value}</strong><span>{proof.label}</span></article>)}
+          </div>
         </div>
       </section>
 
@@ -110,8 +110,6 @@ export function HomePage({
       <section className="marketing-section stakeholder-section stakeholder-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
         <div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">Why Choose Strativate</p><h2 id="why-choose-heading">A path that fits<br /><em>your ambition.</em></h2></div><p className="marketing-section-head__copy">A structured learning ecosystem designed to make high-level preparation feel accessible, practical, and personal.</p></div><div className="stakeholder-why-grid">{whyChooseStrativate.map((item) => <div key={item}><CheckCircle2 aria-hidden="true" size={20} /><span>{item}</span></div>)}</div></div>
       </section>
-
-      {testimonials.length > 0 ? <section className="marketing-section marketing-testimonials stakeholder-section" aria-labelledby="testimonial-heading" data-reveal data-testid="homepage-testimonials-section"><div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">More success stories</p><h2 id="testimonial-heading">Real preparation.<br /><em>Real progress.</em></h2></div></div></div><TestimonialCircularGallery items={testimonials} /></section> : null}
 
       <section className="marketing-section marketing-faq-preview stakeholder-section" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section"><div className="marketing-container marketing-faq-preview__grid"><div><CircleHelp aria-hidden="true" size={26} /><p className="marketing-kicker">FAQ</p><h2 id="faq-heading">Start with the<br /><em>right questions.</em></h2><Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/tanya-jawab">Read all FAQs <ArrowRight aria-hidden="true" size={16} /></Link></div><div className="marketing-faq-list">{faqPreview.slice(0, 3).map((item, index) => <details key={item.question} open={index === 0}><summary><span>0{index + 1}</span>{item.question}<ArrowDownRight aria-hidden="true" size={18} /></summary><p>{item.answer}</p></details>)}</div></div></section>
     </main>

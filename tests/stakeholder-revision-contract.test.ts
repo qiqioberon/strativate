@@ -22,7 +22,8 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
   assert.match(source, /Win Business Competitions with Expert Mentoring/)
   assert.match(source, /Where Future-Ready Skills Meet Competition Success/)
   assert.match(source, /What We Specialize In/)
-  assert.match(source, /Partnered with Leading Organizations/)
+  assert.match(source, /TestimonialCircularGallery/)
+  assert.doesNotMatch(source, /Partnered with Leading Organizations/)
   assert.doesNotMatch(source, /TextType|hero-text-type/)
 
   const sections = [
