@@ -36,8 +36,10 @@ test('testimonial gallery continuously moves, pauses on hover, and opens details
   assert.match(gallery, /this\.paused = true/)
   assert.match(gallery, /this\.paused = false/)
   assert.match(gallery, /marketing-testimonial-gallery__overlay/)
+  assert.match(gallery, /marketing-testimonial-gallery__overlay-image/)
+  assert.match(gallery, /data-testimonial-popout/)
   assert.match(gallery, /rotation: -this\.plane\.rotation\.z/)
-  assert.match(gallery, /rotate\(\$\{hover\.rect\.rotation\}rad\)/)
+  assert.match(gallery, /translateY\(var\(--testimonial-popout-lift, 0px\)\) scale\(var\(--testimonial-popout-scale, 1\)\) rotate\(\$\{hover\.rect\.rotation\}rad\)/)
   assert.doesNotMatch(gallery, /marketing-testimonial-gallery__hint/)
   assert.match(gallery, /Lihat testimoni/)
   assert.match(gallery, /showModal\(\)/)
@@ -49,6 +51,16 @@ test('testimonial gallery continuously moves, pauses on hover, and opens details
   assert.match(css, /marketing-testimonial-dialog__media[\s\S]*aspect-ratio: 5 \/ 4/)
   assert.match(css, /marketing-testimonial-dialog__media img[\s\S]*object-fit: contain/)
   assert.match(css, /marketing-testimonial-gallery__overlay[\s\S]*border-radius: 5\.5%/)
+})
+
+test('homepage cloud masks idle gallery cards while hover and keyboard focus lift the active story above it', () => {
+  assert.match(css, /\.homepage-hero__gallery\s*\{[\s\S]*?z-index:\s*auto/)
+  assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery canvas\s*\{[\s\S]*?z-index:\s*1/)
+  assert.match(css, /\.homepage-hero-cloud\s*\{[\s\S]*?z-index:\s*4/)
+  assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery__overlay\s*\{[\s\S]*?--testimonial-popout-lift:\s*-52px;[\s\S]*?z-index:\s*8/)
+  assert.match(gallery, /onFocus = \(\) => \{[\s\S]*?this\.showHover\(\{ media, rect: media\.getScreenRect\(\) \}\)/)
+  assert.match(gallery, /keyboardRevealRequested = true/)
+  assert.match(gallery, /data-testid="testimonial-active-popout"/)
 })
 
 test('admin testimonial manager uploads to Supabase Storage and controls publish/order state', () => {

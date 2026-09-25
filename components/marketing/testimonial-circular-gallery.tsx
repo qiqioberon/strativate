@@ -246,6 +246,7 @@ class TestimonialGalleryApp {
   dragIntent: TestimonialDragIntent | null = null
   paused = false
   hoveredIndex: number | null = null
+  keyboardRevealRequested = false
   onHover: (value: GalleryHover) => void
   onOpen: (index: number) => void
 
@@ -373,6 +374,7 @@ class TestimonialGalleryApp {
 
   showHover(hit: { media: TestimonialMedia; rect: HoverRect }) {
     this.paused = true
+    this.keyboardRevealRequested = false
     this.scroll.target = this.scroll.current
     this.scroll.last = this.scroll.current
     this.hoveredIndex = hit.media.sourceIndex
@@ -380,13 +382,14 @@ class TestimonialGalleryApp {
   }
 
   clearHover() {
+    this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
     this.paused = false
   }
 
   onPointerDown = (event: PointerEvent) => {
-    if ((event.target as HTMLElement | null)?.closest('[data-testimonial-overlay-action]')) return
+    if ((event.target as HTMLElement | null)?.closest('[data-testimonial-popout]')) return
     this.isDown = true
     this.moved = false
     this.startX = event.clientX
@@ -418,6 +421,7 @@ class TestimonialGalleryApp {
       return
     }
 
+    if ((event.target as HTMLElement | null)?.closest('[data-testimonial-popout]')) return
     if (event.pointerType === 'touch') return
     const hit = this.hitTest(event.clientX, event.clientY)
     if (hit) {
@@ -464,6 +468,8 @@ class TestimonialGalleryApp {
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       event.preventDefault()
       this.paused = true
+      this.keyboardRevealRequested = true
+      this.hoveredIndex = null
       this.onHover(null)
       const width = this.medias[0]?.width ?? 1
       this.scroll.target += event.key === 'ArrowRight' ? width : -width
@@ -478,12 +484,20 @@ class TestimonialGalleryApp {
   }
 
   onFocus = () => {
+    const media = this.centeredMedia()
+    if (media) {
+      this.showHover({ media, rect: media.getScreenRect() })
+      return
+    }
     this.paused = true
   }
 
   onBlur = (event: FocusEvent) => {
     if (this.container.contains(event.relatedTarget as Node | null)) return
-    if (this.hoveredIndex === null) this.paused = false
+    this.keyboardRevealRequested = false
+    this.hoveredIndex = null
+    this.onHover(null)
+    this.paused = false
   }
 
   addEventListeners() {
@@ -504,6 +518,17 @@ class TestimonialGalleryApp {
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease)
     const direction = this.scroll.current >= this.scroll.last ? 'right' : 'left'
     this.medias.forEach(media => media.update(this.scroll, direction))
+    if (this.keyboardRevealRequested) {
+      const width = this.medias[0]?.width ?? 1
+      if (Math.abs(this.scroll.target - this.scroll.current) <= width * 0.06) {
+        const media = this.centeredMedia()
+        if (media) {
+          this.keyboardRevealRequested = false
+          this.hoveredIndex = media.sourceIndex
+          this.onHover({ index: media.sourceIndex, rect: media.getScreenRect() })
+        }
+      }
+    }
     this.renderer.render({ scene: this.scene, camera: this.camera })
     this.scroll.last = this.scroll.current
     this.raf = window.requestAnimationFrame(this.update)
@@ -543,7 +568,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
       top: `${hover.rect.top + inset}px`,
       width: `${Math.max(0, hover.rect.width - inset * 2)}px`,
       height: `${Math.max(0, hover.rect.height - inset * 2)}px`,
-      transform: `rotate(${hover.rect.rotation}rad)`,
+      transform: `translateY(var(--testimonial-popout-lift, 0px)) scale(var(--testimonial-popout-scale, 1)) rotate(${hover.rect.rotation}rad)`,
     }
   }, [hover])
 
@@ -584,7 +609,15 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         data-testid="testimonial-circular-gallery"
       >
         {hoveredItem && overlayStyle && hoveredIndex !== null ? (
-          <div className="marketing-testimonial-gallery__overlay" style={overlayStyle} aria-hidden="false">
+          <div className="marketing-testimonial-gallery__overlay" style={overlayStyle} aria-hidden="false" data-testimonial-popout data-testid="testimonial-active-popout">
+            <Image
+              className="marketing-testimonial-gallery__overlay-image"
+              src={hoveredItem.imageUrl}
+              alt=""
+              fill
+              sizes="300px"
+              unoptimized
+            />
             <div className="marketing-testimonial-gallery__overlay-content">
               <span>{hoveredItem.competition_name}</span>
               <strong>{hoveredItem.achievement}</strong>
