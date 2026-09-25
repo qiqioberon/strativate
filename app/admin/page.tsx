@@ -9,10 +9,12 @@ import {
   LayoutDashboard,
   MessageSquareQuote,
   Menu,
+  Newspaper,
   PackageOpen,
   ReceiptText,
   ShoppingCart,
   Tags,
+  Trophy,
   UsersRound,
   X,
 } from 'lucide-react'
@@ -22,6 +24,7 @@ import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
 import { CompetitionCategoryManagement } from '@/components/admin/competition-category-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
+import { EditorialContentManagement } from '@/components/admin/editorial-content-management'
 import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { InstitutionManagement } from '@/components/admin/institutions'
 import { IntensiveMentoringManagement } from '@/components/admin/intensive-mentoring-management'
@@ -58,6 +61,8 @@ type Section =
   | 'Digital Products'
   | 'Hero Posters'
   | 'Testimonials'
+  | 'Publications'
+  | 'Competitions'
   | 'Reports'
   | 'Mentor Expertise'
   | 'Institutions'
@@ -100,6 +105,8 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { id: 'Hero Posters', label: 'Hero Posters', icon: Images },
       { id: 'Testimonials', label: 'Testimonials', icon: MessageSquareQuote },
+      { id: 'Publications', label: 'Publications', icon: Newspaper },
+      { id: 'Competitions', label: 'Competitions', icon: Trophy },
     ],
   },
   { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
@@ -162,6 +169,7 @@ export default function AdminDashboard() {
           {section === 'Digital Products' ? <DigitalProductManagement/> : null}
           {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
           {section === 'Testimonials' ? <TestimonialManagement/> : null}
+          {section === 'Publications' || section === 'Competitions' ? <EditorialContentManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}

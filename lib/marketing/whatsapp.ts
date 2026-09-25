@@ -1,13 +1,13 @@
 import { publicContact } from '@/lib/content/brand'
 
 const messages = {
-  home: 'Halo Strativate, saya ingin berkonsultasi untuk memilih program yang sesuai.',
-  program: 'Halo Strativate, saya ingin berkonsultasi tentang program Strativate.',
-  private: 'Halo Strativate, saya ingin berkonsultasi tentang Private Mentoring.',
-  intensive: 'Halo Strativate, saya ingin berkonsultasi tentang Intensive Mentoring.',
-  mentor: 'Halo Strativate, saya ingin berkonsultasi untuk memilih mentor yang sesuai.',
-  about: 'Halo Strativate, saya ingin mengetahui lebih lanjut tentang layanan Strativate.',
-  faq: 'Halo Strativate, saya masih memiliki pertanyaan dan ingin berkonsultasi.',
+  home: 'Hello Strativate, I would like help choosing the right program.',
+  program: 'Hello Strativate, I would like to learn more about your programs.',
+  private: 'Hello Strativate, I would like to learn more about Private Mentoring.',
+  intensive: 'Hello Strativate, I would like to learn more about Intensive Mentoring.',
+  mentor: 'Hello Strativate, I would like help choosing a suitable mentor.',
+  about: 'Hello Strativate, I would like to learn more about Strativate.',
+  faq: 'Hello Strativate, I have a question about Strativate and would like some help.',
 } as const
 
 export function whatsappMessageForPath(pathname: string) {

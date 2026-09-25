@@ -15,12 +15,12 @@ export function WhatsAppCta() {
       href={href}
       target="_blank"
       rel="noreferrer"
-      aria-label="Konsultasi melalui WhatsApp"
+      aria-label="Chat with Strativate on WhatsApp"
       data-testid="global-whatsapp-cta"
     >
       <span className="marketing-whatsapp__pulse" aria-hidden="true" />
       <MessageCircle aria-hidden="true" size={21} />
-      <span>Konsultasi WhatsApp</span>
+      <span>Chat on WhatsApp</span>
     </a>
   )
 }

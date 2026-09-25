@@ -25,11 +25,11 @@ export function ServiceCard({ service, index, variant }: { service: ServiceOverv
       </div>
       {service.href ? (
         <Link className="marketing-service-card__action" href={service.href} data-testid={`service-${service.id}-link`}>
-          <span>{service.detailLabel ?? 'Lihat detail'}</span>
+          <span>{service.detailLabel ?? 'View details'}</span>
           <span className="marketing-service-card__action-icon" aria-hidden="true"><ArrowRight size={15} /></span>
         </Link>
       ) : (
-        <span className="marketing-service-card__overview"><span>Gambaran layanan</span><i aria-hidden="true" /></span>
+        <span className="marketing-service-card__overview"><span>Service overview</span><i aria-hidden="true" /></span>
       )}
     </article>
   )

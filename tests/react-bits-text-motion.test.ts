@@ -12,13 +12,9 @@ const commerceCss = readFileSync('app/digital-product-commerce.css', 'utf8')
 const heroCss = readFileSync('app/hero-kinetic.css', 'utf8')
 const onboardingCss = readFileSync('app/onboarding.css', 'utf8')
 
-test('homepage headline keeps a static setup and cycles equal-level conclusions with Text Type', () => {
-  assert.match(home, /Strategi yang kuat dimulai dari/)
-  assert.match(home, /cara berpikir yang tajam\./)
-  assert.match(home, /analisis yang terarah\./)
-  assert.match(home, /keputusan yang matang\./)
-  assert.match(home, /ide yang meyakinkan\./)
-  assert.match(home, /<TextType/)
+test('homepage uses the approved static stakeholder headline without typing animation', () => {
+  assert.match(home, /Win Business Competitions with Expert Mentoring/)
+  assert.doesNotMatch(home, /<TextType|hero-text-type/)
   assert.match(motion, /data-react-bits-text="type"/)
   assert.match(motion, /usePageMotionReady/)
   assert.match(motion, /if \(!motionReady \|\| reducedMotion/)

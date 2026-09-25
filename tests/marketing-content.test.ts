@@ -47,11 +47,13 @@ test('marketing navigation exposes the approved dedicated routes', async () => {
   assert.deepEqual(
     content.marketingNavigation.map(({ label, href }) => ({ label, href })),
     [
-      { label: 'Beranda', href: '/' },
-      { label: 'Program', href: '/program' },
-      { label: 'Mentor', href: '/mentor' },
-      { label: 'Tentang Kami', href: '/tentang-kami' },
-      { label: 'Tanya Jawab', href: '/tanya-jawab' },
+      { label: 'Home', href: '/' },
+      { label: 'Programs', href: '/program' },
+      { label: 'Mentors', href: '/mentor' },
+      { label: 'Publications', href: '/publications' },
+      { label: 'Competitions', href: '/competitions' },
+      { label: 'About Us', href: '/tentang-kami' },
+      { label: 'FAQ', href: '/tanya-jawab' },
     ],
   )
   assert.equal(content.marketingNavigation.some(item => item.href === '/produk-digital'), false)
@@ -90,9 +92,9 @@ test('placeholder marketing content excludes unresolved production claims', asyn
   assert.equal(content.productPlaceholders.every(item => item.contentStatus === 'placeholder'), true)
 })
 
-test('FAQ directory has source-backed Program, Mentor, Akun, and Dukungan answers only', async () => {
+test('FAQ directory has source-backed Programs, Mentors, Account, and Support answers only', async () => {
   const content = await import('../lib/content/marketing-content')
-  const allowedCategories = new Set(['Program', 'Mentor', 'Akun', 'Dukungan'])
+  const allowedCategories = new Set(['Programs', 'Mentors', 'Account', 'Support'])
 
   assert.ok(content.faqPreview.length >= 8 && content.faqPreview.length <= 12)
   assert.equal(new Set(content.faqPreview.map(item => item.question)).size, content.faqPreview.length)
@@ -115,10 +117,10 @@ test('FAQ contact answer reuses the approved public contact record', async () =>
     import('../lib/content/marketing-content'),
     readProjectFile('lib/content/marketing-content.ts'),
   ])
-  const contactAnswer = content.faqPreview.find(item => item.question === 'Bagaimana menghubungi Strativate?')
+  const contactAnswer = content.faqPreview.find(item => item.question === 'How can I contact Strativate?')
 
   assert.ok(contactAnswer)
-  assert.equal(contactAnswer.answer, `Hubungi Strativate melalui WhatsApp di ${brand.publicContact.phone} atau email ${brand.publicContact.email}.`)
+  assert.equal(contactAnswer.answer, `Contact Strativate through WhatsApp at ${brand.publicContact.phone} or email ${brand.publicContact.email}.`)
   assert.equal(contentSource.includes('+62 851-8775-4671'), false)
   assert.equal(contentSource.includes('strativateid@gmail.com'), false)
   assert.match(contentSource, /import\s*{\s*publicContact\s*}\s*from\s*['"]\.\/brand['"]/)

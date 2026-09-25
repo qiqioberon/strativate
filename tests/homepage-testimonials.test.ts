@@ -17,14 +17,16 @@ const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.me
   packageManager?: string
 }
 
-test('homepage places testimonial stories between mentors and digital products with approved headline', () => {
-  const mentorIndex = home.indexOf('homepage-mentors-section')
-  const testimonialIndex = home.indexOf('homepage-testimonials-section')
+test('homepage places success proof before the approved content sequence', () => {
+  const proofIndex = home.indexOf('homepage-success-proof-section')
+  const whoIndex = home.indexOf('homepage-who-we-are-section')
+  const programIndex = home.indexOf('homepage-programs-section')
   const productIndex = home.indexOf('homepage-products-section')
-  assert.ok(mentorIndex >= 0 && testimonialIndex > mentorIndex && productIndex > testimonialIndex)
-  assert.match(home, /Dari proses yang lebih terarah,/)
-  assert.match(home, /lahir hasil yang mereka banggakan\./)
-  assert.match(home, /marketing-section-head marketing-testimonials__heading/)
+  const expertiseIndex = home.indexOf('homepage-expertise-section')
+  const mentorIndex = home.indexOf('homepage-mentors-section')
+  assert.ok(proofIndex >= 0 && whoIndex > proofIndex && programIndex > whoIndex && productIndex > programIndex && expertiseIndex > productIndex && mentorIndex > expertiseIndex)
+  assert.match(home, /A clearer process\./)
+  assert.match(home, /Stronger competition outcomes\./)
   assert.match(page, /listPublishedTestimonials/)
 })
 

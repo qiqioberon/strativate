@@ -36,7 +36,7 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
       <div className="marketing-program-card__body">
         <div className="marketing-program-card__top">
           <span className="marketing-program-card__icon"><Icon size={20} strokeWidth={1.8} /></span>
-          <span className="marketing-program-card__tag">{isPlaceholder ? 'Informasi menyusul' : program.kicker}</span>
+          <span className="marketing-program-card__tag">{isPlaceholder ? 'Details coming soon' : program.kicker}</span>
         </div>
 
         <h3>{program.title}</h3>
@@ -52,15 +52,15 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
 
         <div className="marketing-program-card__bottom">
           <div>
-            <strong>{isPlaceholder ? 'Gambaran layanan' : 'Informasi program'}</strong>
-            <small>{isPlaceholder ? 'Detail komersial belum tersedia' : 'Rincian komersial sedang diperbarui'}</small>
+            <strong>{isPlaceholder ? 'Service overview' : 'Program information'}</strong>
+            <small>{isPlaceholder ? 'Commercial details are not available yet' : 'Commercial details are being updated'}</small>
           </div>
           {program.href ? (
             <span className={cn(buttonVariants({ variant: 'dark', size: 'icon' }), 'marketing-program-card__action')} aria-hidden="true">
               <ArrowRight data-icon="arrow" aria-hidden="true" size={18} />
             </span>
           ) : (
-            <span className="marketing-program-card__pending" aria-label="Program belum tersedia">
+            <span className="marketing-program-card__pending" aria-label="Program not available yet">
               <Clock3 aria-hidden="true" size={17} />
             </span>
           )}
@@ -71,7 +71,7 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
 
   const className = cn('marketing-program-card', `is-${program.tone}`, isPlaceholder && 'is-placeholder')
   return program.href ? (
-    <Link href={program.href} className={className} aria-label={`Lihat ${program.title}`} data-testid={`program-card-${program.id}-link`}>{content}</Link>
+    <Link href={program.href} className={className} aria-label={`View ${program.title}`} data-testid={`program-card-${program.id}-link`}>{content}</Link>
   ) : (
     <article className={className} data-testid={`program-card-${program.id}`}>{content}</article>
   )

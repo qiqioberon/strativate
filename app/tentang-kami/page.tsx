@@ -13,16 +13,16 @@ export default function AboutPage() {
     <MarketingShell>
       <main>
         <PageIntro
-          eyebrow="Tentang Strativate"
-          title={<>Ambisi bertemu<br /><em>persiapan yang terarah.</em></>}
-          description="Strativate adalah platform akselerasi untuk mengembangkan keterampilan masa depan melalui pelatihan bisnis, akuntansi, dan persiapan kompetisi dengan pendekatan praktis."
+          eyebrow="Who We Are"
+          title={<>Future-ready skills meet<br /><em>competition success.</em></>}
+          description="Strativate helps students build practical business skills, sharpen analytical thinking, and prepare for competitions with expert guidance."
           motif="about"
-          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin mengetahui lebih lanjut tentang layanan dan pendekatan Strativate.')} target="_blank" rel="noreferrer" data-testid="about-page-intro-whatsapp-link">Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
+          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I would like to learn more about your approach and services.')} target="_blank" rel="noreferrer" data-testid="about-page-intro-whatsapp-link">Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />
         <section className="marketing-page-section marketing-about-page" data-reveal data-testid="about-story-section">
           <div className="marketing-container marketing-about-page__statement">
             <span>STRATIVATE / APPROACH</span>
-            <h2>Pelatihan dirancang untuk membantu peserta membangun keterampilan praktis dan <em>bergerak lebih siap menghadapi kompetisi.</em></h2>
+            <h2>Our training helps participants build practical skills and <em>move toward competition success with confidence.</em></h2>
           </div>
           <div className="marketing-container marketing-about-page__principles">
             {preparationPrinciples.map((principle, index) => {
@@ -31,7 +31,7 @@ export default function AboutPage() {
             })}
           </div>
         </section>
-        <section className="marketing-consultation-band marketing-consultation-band--dark" data-reveal data-testid="about-consultation-section"><div className="marketing-container"><div><p className="marketing-kicker">Mulai percakapan</p><h2>Persiapan yang tepat dimulai dari kebutuhanmu.</h2></div><a href={buildWhatsAppHref('Halo Strativate, saya ingin mengetahui pendekatan dan layanan Strativate lebih lanjut.')} target="_blank" rel="noreferrer" data-testid="about-whatsapp-link">Hubungi Strativate <ArrowRight aria-hidden="true" size={17} /></a></div></section>
+        <section className="marketing-consultation-band marketing-consultation-band--dark" data-reveal data-testid="about-consultation-section"><div className="marketing-container"><div><p className="marketing-kicker">Start a conversation</p><h2>The right preparation starts with your goal.</h2></div><a href={buildWhatsAppHref('Hello Strativate, I would like to learn more about your approach and services.')} target="_blank" rel="noreferrer" data-testid="about-whatsapp-link">Contact Strativate <ArrowRight aria-hidden="true" size={17} /></a></div></section>
       </main>
     </MarketingShell>
   )

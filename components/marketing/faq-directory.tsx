@@ -8,22 +8,22 @@ import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import { cn } from '@/lib/utils'
 
 type FaqCategory = (typeof faqPreview)[number]['category']
-type FaqFilter = 'Semua' | FaqCategory
+type FaqFilter = 'All' | FaqCategory
 
-const categories: FaqFilter[] = ['Semua', ...Array.from(new Set(faqPreview.map((item) => item.category)))]
+const categories: FaqFilter[] = ['All', ...Array.from(new Set(faqPreview.map((item) => item.category)))]
 
 function testId(value: string) {
-  return value.toLocaleLowerCase('id').replaceAll(' ', '-')
+  return value.toLocaleLowerCase('en').replaceAll(' ', '-')
 }
 
 export function FaqDirectory() {
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<FaqFilter>('Semua')
+  const [category, setCategory] = useState<FaqFilter>('All')
   const filtered = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase('id')
+    const normalized = query.trim().toLocaleLowerCase('en')
     return faqPreview.filter((item) => {
-      const matchesCategory = category === 'Semua' || item.category === category
-      const searchable = `${item.question} ${item.answer}`.toLocaleLowerCase('id')
+      const matchesCategory = category === 'All' || item.category === category
+      const searchable = `${item.question} ${item.answer}`.toLocaleLowerCase('en')
       return matchesCategory && (!normalized || searchable.includes(normalized))
     })
   }, [category, query])
@@ -32,16 +32,16 @@ export function FaqDirectory() {
     <div className="marketing-container marketing-faq-directory">
       <aside className="marketing-faq-directory__aside" data-testid="faq-support-panel">
         <CircleHelp aria-hidden="true" size={30} />
-        <strong data-testid="faq-support-title">Masih punya pertanyaan? Sampaikan kebutuhanmu langsung kepada tim Strativate.</strong>
-        <a href={buildWhatsAppHref('Halo Strativate, saya masih memiliki pertanyaan dan ingin berkonsultasi.')} target="_blank" rel="noreferrer" data-testid="faq-whatsapp-link">Tanya via WhatsApp <ArrowRight aria-hidden="true" size={16} /></a>
+        <strong data-testid="faq-support-title">Still have a question? Share it directly with the Strativate team.</strong>
+        <a href={buildWhatsAppHref('Hello Strativate, I have a question and would like some help.')} target="_blank" rel="noreferrer" data-testid="faq-whatsapp-link">Ask on WhatsApp <ArrowRight aria-hidden="true" size={16} /></a>
       </aside>
 
       <div>
         <div className="marketing-faq-toolbar" data-testid="faq-filter-toolbar">
           <label className="marketing-faq-search">
             <Search aria-hidden="true" size={17} />
-            <span className="sr-only">Cari pertanyaan</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari pertanyaan" data-testid="faq-search-input" />
+            <span className="sr-only">Search questions</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search questions" data-testid="faq-search-input" />
           </label>
           <div className="marketing-faq-filters" aria-label="Filter kategori pertanyaan">
             {categories.map((option) => (
@@ -59,7 +59,7 @@ export function FaqDirectory() {
           </div>
         </div>
 
-        <p className="marketing-faq-result" aria-live="polite" data-testid="faq-result-count">Menampilkan {filtered.length} jawaban</p>
+        <p className="marketing-faq-result" aria-live="polite" data-testid="faq-result-count">Showing {filtered.length} answers</p>
         {filtered.length ? (
           <div className="marketing-faq-list" data-testid="faq-list">
             {filtered.map((item, index) => (
@@ -75,8 +75,8 @@ export function FaqDirectory() {
           </div>
         ) : (
           <div className="marketing-faq-empty" data-testid="faq-empty-state">
-            <strong>Tidak ada jawaban yang cocok.</strong>
-            <p>Coba kata kunci lain atau tanyakan langsung melalui WhatsApp.</p>
+            <strong>No answers match your search.</strong>
+            <p>Try another keyword or ask the Strativate team on WhatsApp.</p>
           </div>
         )}
       </div>

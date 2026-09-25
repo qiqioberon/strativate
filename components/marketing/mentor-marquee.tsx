@@ -50,7 +50,7 @@ function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors:
 export function MentorMarquee({ mentors }: { mentors: PublicMentor[] }) {
   const [selected, setSelected] = useState<PublicMentor | null>(null)
 
-  if (!mentors.length) return <p className="marketing-mentor-empty" data-testid="mentor-marquee-empty-state">Belum ada mentor publik yang tersedia.</p>
+  if (!mentors.length) return <p className="marketing-mentor-empty" data-testid="mentor-marquee-empty-state">Public mentor profiles are being prepared.</p>
 
   return (
     <>

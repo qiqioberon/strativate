@@ -35,12 +35,12 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://strativate.id'),
   title: { default: 'Strativate', template: '%s | Strativate' },
   description: brandDescription,
-  openGraph: { title: 'Strativate', description: brandDescription, locale: 'id_ID', type: 'website' },
+  openGraph: { title: 'Strativate', description: brandDescription, locale: 'en_US', type: 'website' },
 }
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400','500','600','700','800','900'], variable: '--font-poppins' })
 export const viewport: Viewport = { colorScheme:'light', themeColor:'#FF7A00' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="id" className="bg-background" data-scroll-behavior="smooth"><body className={poppins.variable + ' ' + poppins.className + ' antialiased'}><InitialBrandIntro /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
+  return <html lang="en" className="bg-background" data-scroll-behavior="smooth"><body className={poppins.variable + ' ' + poppins.className + ' antialiased'}><InitialBrandIntro /><ToastProvider>{children}{process.env.VERCEL && <Analytics />}</ToastProvider></body></html>
 }

@@ -12,7 +12,7 @@ export function MentorCard({ mentor, index, onSelect }: { mentor: PublicMentor; 
         <span className="marketing-mentor-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
       </div>
       <div className="marketing-mentor-card__content">
-        <span className="marketing-mentor-card__status">{mentor.tier ?? 'Mentor Strativate'}</span>
+        <span className="marketing-mentor-card__status">{mentor.tier ?? 'Strativate Mentor'}</span>
         <h3>{mentor.name}</h3>
         {mentor.title && <p>{mentor.title}</p>}
         <div className="marketing-mentor-card__meta">
@@ -20,7 +20,7 @@ export function MentorCard({ mentor, index, onSelect }: { mentor: PublicMentor; 
         </div>
         <div className="marketing-mentor-card__expertise">{mentor.expertise.map(item => <span key={item}>{item}</span>)}</div>
         <div className="marketing-mentor-card__actions">
-          {onSelect ? <button type="button" onClick={() => onSelect(mentor)} aria-label={`Lihat profil lengkap ${mentor.name}`} data-testid={`mentor-${mentor.slug}-detail-button`}>Lihat profil lengkap</button> : null}
+          {onSelect ? <button type="button" onClick={() => onSelect(mentor)} aria-label={`View full profile for ${mentor.name}`} data-testid={`mentor-${mentor.slug}-detail-button`}>View full profile</button> : null}
           {mentor.linkedIn && <a className="marketing-mentor-card__linkedin" href={mentor.linkedIn} target="_blank" rel="noreferrer" aria-label={`LinkedIn ${mentor.name}`} data-testid={`mentor-${mentor.slug}-linkedin-link`}><ExternalLink aria-hidden="true" size={14} /> LinkedIn</a>}
         </div>
       </div>

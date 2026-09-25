@@ -9,8 +9,10 @@ import {
   Library,
   LogIn,
   Menu,
+  Newspaper,
   ShoppingCart,
   Sparkles,
+  Trophy,
   Users,
   X,
 } from 'lucide-react'
@@ -34,6 +36,8 @@ const icons = {
   library: Library,
   sparkles: Sparkles,
   help: CircleHelp,
+  newspaper: Newspaper,
+  trophy: Trophy,
 } satisfies Record<NavigationIcon, typeof House>
 
 function isActiveRoute(pathname: string, href: string) {
@@ -86,12 +90,12 @@ export function SiteHeader({
           className="marketing-brand"
           href="/"
           prefetch={true}
-          aria-label="Beranda Strativate"
+          aria-label="Strativate home"
         >
           <BrandLogo priority />
         </Link>
 
-        <nav className="marketing-nav" aria-label="Navigasi utama">
+        <nav className="marketing-nav" aria-label="Main navigation">
           {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
@@ -139,7 +143,7 @@ export function SiteHeader({
                 data-testid="desktop-login-link"
               >
                 <LogIn aria-hidden="true" size={16} />
-                <span>Masuk</span>
+                <span>Sign in</span>
               </Link>
               <Link
                 className={cn(
@@ -150,7 +154,7 @@ export function SiteHeader({
                 prefetch={true}
                 data-testid="desktop-start-learning-link"
               >
-                Mulai belajar
+                Start learning
                 <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
               </Link>
             </>
@@ -159,7 +163,7 @@ export function SiteHeader({
             type="button"
             className="marketing-menu-button"
             aria-label={
-              mobileOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'
+              mobileOpen ? 'Close navigation menu' : 'Open navigation menu'
             }
             aria-expanded={mobileOpen}
             aria-controls="marketing-mobile-navigation"
@@ -179,7 +183,7 @@ export function SiteHeader({
         className={cn('marketing-mobile-panel', mobileOpen && 'is-open')}
         id="marketing-mobile-navigation"
       >
-        <nav aria-label="Navigasi seluler">
+        <nav aria-label="Mobile navigation">
           {navigation.map((item) => {
             const Icon = icons[item.icon]
             const active = isActiveRoute(pathname, item.href)
@@ -215,7 +219,7 @@ export function SiteHeader({
               <span className="marketing-mobile-link__icon">
                 <ShoppingCart aria-hidden="true" size={17} />
               </span>
-              <span>Keranjang</span>
+              <span>Cart</span>
               <ArrowRight
                 className="marketing-mobile-link__arrow"
                 aria-hidden="true"
@@ -247,7 +251,7 @@ export function SiteHeader({
                   prefetch={true}
                   data-testid="mobile-login-link"
                 >
-                  <LogIn aria-hidden="true" size={16} /> Masuk
+                  <LogIn aria-hidden="true" size={16} /> Sign in
                 </Link>
                 <Link
                   className={buttonVariants({
@@ -258,7 +262,7 @@ export function SiteHeader({
                   prefetch={true}
                   data-testid="mobile-start-learning-link"
                 >
-                  Mulai belajar{' '}
+                  Start learning{' '}
                   <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
                 </Link>
               </>

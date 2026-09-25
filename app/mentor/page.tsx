@@ -14,11 +14,11 @@ export default async function MentorPage() {
     <MarketingShell>
       <main>
         <PageIntro
-          eyebrow="Direktori mentor"
-          title={<>Belajar bersama mentor<br /><em>yang berpengalaman.</em></>}
-          description="Temukan mentor berdasarkan kategori dan keahlian yang tercantum dalam data mentor Strativate. Profil tanpa foto menggunakan penanda yang jelas."
+          eyebrow="Meet Our Mentors"
+          title={<>Learn from mentors<br /><em>who have been there.</em></>}
+          description="Explore mentors by the expertise and public information available in Strativate's approved mentor directory. Profiles without photos use a clear neutral placeholder."
           motif="mentor"
-          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk memilih mentor yang sesuai dengan kebutuhan saya.')} target="_blank" rel="noreferrer" data-testid="mentor-page-intro-whatsapp-link">Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
+          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I would like help choosing a suitable mentor.')} target="_blank" rel="noreferrer" data-testid="mentor-page-intro-whatsapp-link">Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />
         <section className="marketing-page-section" data-reveal data-testid="mentor-directory-section">
           <div className="marketing-container">

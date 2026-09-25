@@ -1,15 +1,17 @@
 import type { AssetKey } from './asset-registry'
 import { publicContact } from './brand'
 
-export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help'
+export type NavigationIcon = 'house' | 'compass' | 'users' | 'library' | 'sparkles' | 'help' | 'newspaper' | 'trophy'
 
 export const marketingNavigationItems = [
-  { label: 'Beranda', href: '/', icon: 'house' },
-  { label: 'Program', href: '/program', icon: 'compass' },
-  { label: 'Mentor', href: '/mentor', icon: 'users' },
-  { label: 'Produk Digital', href: '/produk-digital', icon: 'library' },
-  { label: 'Tentang Kami', href: '/tentang-kami', icon: 'sparkles' },
-  { label: 'Tanya Jawab', href: '/tanya-jawab', icon: 'help' },
+  { label: 'Home', href: '/', icon: 'house' },
+  { label: 'Programs', href: '/program', icon: 'compass' },
+  { label: 'Mentors', href: '/mentor', icon: 'users' },
+  { label: 'Digital Products', href: '/produk-digital', icon: 'library' },
+  { label: 'Publications', href: '/publications', icon: 'newspaper' },
+  { label: 'Competitions', href: '/competitions', icon: 'trophy' },
+  { label: 'About Us', href: '/tentang-kami', icon: 'sparkles' },
+  { label: 'FAQ', href: '/tanya-jawab', icon: 'help' },
 ] as const satisfies ReadonlyArray<{ label: string; href: string; icon: NavigationIcon }>
 
 export type MarketingNavigationItem =
@@ -24,9 +26,29 @@ export function getMarketingNavigation(digitalProductsEnabled: boolean) {
 export const marketingNavigation = getMarketingNavigation(false)
 
 export const preparationPrinciples = [
-  { number: '01', title: 'Mulai dari kebutuhanmu', description: 'Pilih dukungan berdasarkan tahap persiapan dan fokus yang sedang kamu kerjakan.' },
-  { number: '02', title: 'Susun langkah yang jelas', description: 'Ubah tantangan besar menjadi agenda belajar yang lebih mudah dijalankan.' },
-  { number: '03', title: 'Perbaiki dengan terarah', description: 'Gunakan setiap sesi dan materi untuk meninjau, mencoba, lalu menyempurnakan.' },
+  { number: '01', title: 'Future-Ready Skills Mastery', description: 'Build practical skills through focused, structured learning.' },
+  { number: '02', title: 'Business & Financial Literacy', description: 'Strengthen business, accounting, and analytical thinking.' },
+  { number: '03', title: 'Sustainable Learning Ecosystem', description: 'Keep learning through coaching, practice, and community.' },
+] as const
+
+export const homepageExpertise = [
+  { title: 'Business Plan', description: 'Crafting viable and scalable business models.' },
+  { title: 'Business Case', description: 'Solving real-world corporate challenges.' },
+  { title: 'Business Essay', description: 'Articulating critical thoughts on economic issues.' },
+  { title: 'Scientific Paper', description: 'Research-based problems and solutions.' },
+  { title: 'Marketing', description: 'Strategic approaches to market campaigns.' },
+  { title: 'Accounting & Finance', description: 'Mastering numerical and financial analysis.' },
+  { title: 'Pitching', description: 'Delivering persuasive and winning presentations.' },
+  { title: 'Policy Case', description: 'Analyzing public policy and governance strategies.' },
+] as const
+
+export const whyChooseStrativate = [
+  'Fast track integrated learning',
+  'Expert coaches & mentors',
+  'Proven curriculum',
+  'Beginner-friendly',
+  'Strong partnerships',
+  'Personalized paths',
 ] as const
 
 export type ProductPreview = {
@@ -58,7 +80,7 @@ export const productPlaceholders: ProductPreview[] = [
 ]
 
 export type MarketingFaq = {
-  category: 'Program' | 'Mentor' | 'Akun' | 'Dukungan'
+  category: 'Programs' | 'Mentors' | 'Account' | 'Support'
   question: string
   answer: string
   source: 'services' | 'mentor-directory' | 'auth' | 'public-contact'
@@ -66,65 +88,65 @@ export type MarketingFaq = {
 
 export const faqPreview = [
   {
-    category: 'Program',
-    question: 'Di mana saya bisa membandingkan program?',
-    answer: 'Halaman Program merangkum pilihan yang tersedia dan mengarahkanmu ke informasi setiap program.',
+    category: 'Programs',
+    question: 'Which programs are available?',
+    answer: 'Explore Private Mentoring, Intensive Mentoring, Big Class, and focused support services on the Programs page.',
     source: 'services',
   },
   {
-    category: 'Program',
-    question: 'Layanan apa saja yang tersedia di Strativate?',
-    answer: 'Halaman Program memuat Private Mentoring, Intensive Mentoring, Big Class, serta layanan pendukung untuk konsultasi, persiapan, dan komunitas.',
+    category: 'Programs',
+    question: 'Which mentoring format should I choose?',
+    answer: 'Choose flexible support for a specific goal or structured ongoing preparation for a competition.',
     source: 'services',
   },
   {
-    category: 'Program',
-    question: 'Program mana yang sudah memiliki halaman informasi?',
-    answer: 'Private Mentoring dan Intensive Mentoring memiliki tautan ke halaman informasi program. Big Class saat ini ditampilkan sebagai gambaran layanan.',
+    category: 'Programs',
+    question: 'Can schools and organizations work with Strativate?',
+    answer: 'Yes. Workshops, competition mentoring and judging, and enrichment programs are available for organizations.',
     source: 'services',
   },
   {
-    category: 'Mentor',
-    question: 'Bagaimana memilih mentor?',
-    answer: 'Gunakan pencarian dan filter pada halaman Mentor untuk melihat kategori, keahlian, dan pengalaman yang tercantum pada setiap profil.',
+    category: 'Mentors',
+    question: 'How do I choose a mentor?',
+    answer: 'Use the Mentor directory search and filters to explore the expertise and public information available for each mentor.',
     source: 'mentor-directory',
   },
   {
-    category: 'Mentor',
-    question: 'Informasi apa yang tersedia pada profil mentor?',
-    answer: 'Setiap profil menampilkan informasi yang tersedia tentang kategori, keahlian, pengalaman, dan tautan LinkedIn bila tercantum.',
+    category: 'Mentors',
+    question: 'What appears on a mentor profile?',
+    answer: 'Profiles show the public headline, expertise, available credentials, and LinkedIn link when provided.',
     source: 'mentor-directory',
   },
   {
-    category: 'Akun',
-    question: 'Bagaimana cara mendaftar?',
-    answer: 'Di halaman Masuk, pilih Daftar lalu masukkan email untuk menerima tautan verifikasi dan melengkapi profil.',
+    category: 'Account',
+    question: 'How do I create an account?',
+    answer: 'Choose Sign in, select the registration option, and follow the verification steps to complete your profile.',
     source: 'auth',
   },
   {
-    category: 'Akun',
-    question: 'Bagaimana cara masuk ke akun?',
-    answer: 'Kamu dapat masuk dengan email dan kata sandi, atau melanjutkan dengan Google dari halaman Masuk.',
+    category: 'Account',
+    question: 'How do I sign in?',
+    answer: 'Sign in with your email and password or continue with Google from the authentication page.',
     source: 'auth',
   },
   {
-    category: 'Dukungan',
-    question: 'Bagaimana menghubungi Strativate?',
-    answer: `Hubungi Strativate melalui WhatsApp di ${publicContact.phone} atau email ${publicContact.email}.`,
+    category: 'Support',
+    question: 'How can I contact Strativate?',
+    answer: `Contact Strativate through WhatsApp at ${publicContact.phone} or email ${publicContact.email}.`,
     source: 'public-contact',
   },
   {
-    category: 'Dukungan',
-    question: 'Saya belum yakin memilih program. Apa yang bisa dilakukan?',
-    answer: 'Sampaikan kebutuhanmu melalui WhatsApp agar tim Strativate dapat membantu mengarahkan percakapan tentang program yang sesuai.',
+    category: 'Support',
+    question: 'What if I am not sure which service I need?',
+    answer: 'Share your goals through WhatsApp and the Strativate team can help you choose a suitable next step.',
     source: 'public-contact',
   },
 ] as const satisfies ReadonlyArray<MarketingFaq>
 
 export const bigClassPlaceholder = {
   title: 'Big Class',
-  kicker: 'Kelas terbuka',
-  description: 'Kelas terbuka untuk mempelajari topik bisnis, akuntansi, riset, dan persiapan kompetisi bersama mentor Strativate.',
+  kicker: 'Open classes',
+  description: 'Open classes covering business, accounting, research, and competition preparation.',
   contentStatus: 'overview',
   cover: 'programs.bigClass.cover' as const,
 }

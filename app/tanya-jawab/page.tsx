@@ -11,11 +11,11 @@ export default function FaqPage() {
     <MarketingShell>
       <main>
         <PageIntro
-          eyebrow="Tanya jawab"
-          title={<>Mulai dari informasi<br /><em>yang sudah pasti.</em></>}
-          description="Temukan cara membandingkan layanan, memilih mentor, dan menghubungi tim Strativate."
+          eyebrow="FAQ"
+          title={<>Start with information<br /><em>you can trust.</em></>}
+          description="Find answers about comparing services, choosing a mentor, and contacting the Strativate team."
           motif="faq"
-          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya masih memiliki pertanyaan tentang layanan Strativate. Bisa dibantu?')} target="_blank" rel="noreferrer" data-testid="faq-page-intro-whatsapp-link">Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
+          aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I have a question and would like some help.')} target="_blank" rel="noreferrer" data-testid="faq-page-intro-whatsapp-link">Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} /></a>}
         />
         <section className="marketing-page-section" data-reveal data-testid="faq-directory-section">
           <FaqDirectory />

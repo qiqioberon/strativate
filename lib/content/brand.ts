@@ -17,10 +17,10 @@ export const publicContact = {
 } as const
 
 export const socialProof = [
-  { value: '2500+', label: 'Siswa didukung' },
-  { value: '15+', label: 'Universitas' },
-  { value: '20+', label: 'Sekolah menengah atas' },
+  { value: '2,500+', label: 'Students supported' },
+  { value: '15+', label: 'Universities' },
+  { value: '20+', label: 'High schools' },
 ] as const
 
 export const brandDescription =
-  'Platform akselerasi untuk pelatihan bisnis, akuntansi, dan persiapan kompetisi.'
+  'Expert mentoring and practical training for business competitions and future-ready skills.'

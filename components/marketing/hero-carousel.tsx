@@ -91,8 +91,8 @@ export function HeroCarousel({ posters }: { posters: MarketingHeroPosterView[] }
         </div>
         <div className="marketing-hero__brand-art"><BrandLogo variant="mark" priority /></div>
         <div className="marketing-hero__visual-foot">
-          <strong data-testid="hero-fallback-title">Ruang untuk<br />bertumbuh.</strong>
-          <p data-testid="hero-fallback-description">Pelatihan bisnis, akuntansi, dan persiapan kompetisi dengan pendekatan praktis.</p>
+          <strong data-testid="hero-fallback-title">Space to<br />grow.</strong>
+          <p data-testid="hero-fallback-description">Practical business training, mentoring, and competition preparation.</p>
           <ArrowDownRight aria-hidden="true" size={28} />
         </div>
       </div>

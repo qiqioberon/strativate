@@ -12,9 +12,9 @@ import './program-page.css'
 import './program-layout-fix.css'
 
 const journey = [
-  { number: '01', title: 'Pilih kebutuhan', copy: 'Mulai dari target, tantangan, dan ritme persiapanmu.' },
-  { number: '02', title: 'Kenali format', copy: 'Bandingkan pendampingan personal, intensif, kelas, atau review.' },
-  { number: '03', title: 'Mulai persiapan', copy: 'Masuk ke program yang paling relevan dan bergerak lebih terarah.' },
+  { number: '01', title: 'Define your goal', copy: 'Start with your target, challenge, and preparation timeline.' },
+  { number: '02', title: 'Choose your format', copy: 'Compare personal, intensive, class, or review-based support.' },
+  { number: '03', title: 'Start preparing', copy: 'Enter the most relevant program and move with a clearer plan.' },
 ]
 
 export default function ProgramPage() {
@@ -26,19 +26,19 @@ export default function ProgramPage() {
     <MarketingShell>
       <main className="program-page">
         <PageIntro
-          eyebrow="Program Strativate"
-          title={<>Pilih dukungan yang<br /><em>sesuai tahapmu.</em></>}
-          description="Delapan layanan Strativate mendukung kebutuhan belajar, konsultasi, dan persiapan kompetisi. Informasi komersial yang belum memiliki sumber domain aktif tidak ditampilkan sebagai fakta produksi."
+          eyebrow="Our Programs"
+          title={<>Build skills for<br /><em>competition success.</em></>}
+          description="Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills."
           motif="program"
           aside={(
             <div className="program-intro-panel">
               <div className="program-intro-facts" aria-label="Ringkasan layanan Strativate">
-                <span><strong>08</strong> layanan</span>
-                <span><strong>02</strong> program utama</span>
-                <span><strong>01</strong> tujuan: lebih terarah</span>
+                <span><strong>08</strong> services</span>
+                <span><strong>02</strong> core programs</span>
+                <span><strong>01</strong> clearer path</span>
               </div>
               <a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Halo Strativate, saya ingin konsultasi untuk memilih program Strativate yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-intro-whatsapp-link">
-                Konsultasi WhatsApp <MessageCircle aria-hidden="true" size={17} />
+                Chat on WhatsApp <MessageCircle aria-hidden="true" size={17} />
               </a>
             </div>
           )}
@@ -49,8 +49,8 @@ export default function ProgramPage() {
             <div className="marketing-container">
               <div className="program-journey" aria-label="Alur memilih dukungan">
                 <div className="program-journey__heading">
-                  <span>Mulai dari kebutuhanmu</span>
-                  <strong>Tiga langkah untuk menemukan format yang pas.</strong>
+                  <span>Find your format</span>
+                  <strong>Three steps to choose the right support.</strong>
                 </div>
                 <div className="program-journey__steps">
                   {journey.map((step) => (
@@ -63,15 +63,15 @@ export default function ProgramPage() {
               </div>
 
               <div className="marketing-services-hierarchy">
-                <section className="marketing-services-primary" data-testid="program-primary-services" aria-label="Program utama">
+                <section className="marketing-services-primary" data-testid="program-primary-services" aria-label="Core programs">
                   {primaryServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="primary" key={service.id} />)}
                 </section>
                 {secondaryService ? (
-                  <section className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Gambaran Big Class">
+                    <section className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Big Class overview">
                     <ServiceCard service={secondaryService} index={services.indexOf(secondaryService)} variant="secondary" />
                   </section>
                 ) : null}
-                <section className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Layanan pendukung">
+                <section className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Supporting services">
                   {supportingServices.map((service) => <ServiceCard service={service} index={services.indexOf(service)} variant="compact" key={service.id} />)}
                 </section>
               </div>
@@ -81,12 +81,12 @@ export default function ProgramPage() {
           <section className="marketing-consultation-band program-consultation" data-program-band data-reveal data-testid="program-consultation-section">
             <div className="marketing-container">
               <div>
-                <p className="marketing-kicker">Belum yakin memilih?</p>
-                <h2>Ceritakan target dan tahap persiapanmu.</h2>
-                <p className="program-consultation__copy">Kami bantu memetakan kebutuhanmu sebelum kamu menentukan format belajar.</p>
+                <p className="marketing-kicker">Not sure where to start?</p>
+                <h2>Tell us about your goal.</h2>
+                <p className="program-consultation__copy">We can help map your needs before you choose a learning format.</p>
               </div>
               <a href={buildWhatsAppHref('Halo Strativate, saya ingin dibantu memilih program yang sesuai.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">
-                Konsultasi via WhatsApp <ArrowRight aria-hidden="true" size={17} />
+                Chat via WhatsApp <ArrowRight aria-hidden="true" size={17} />
               </a>
             </div>
           </section>
