@@ -29,7 +29,7 @@ export function FaqDirectory() {
   }, [category, query])
 
   return (
-    <div className="marketing-container marketing-faq-directory">
+    <div className="marketing-faq-directory">
       <aside className="marketing-faq-directory__aside" data-testid="faq-support-panel">
         <CircleHelp aria-hidden="true" size={30} />
         <strong data-testid="faq-support-title">Still have a question? Share it directly with the Strativate team.</strong>

@@ -45,6 +45,7 @@ test('onboarding headlines use Split Text while supporting copy uses Blur Text',
 })
 
 test('mobile Card Swap leaves deliberate breathing room below the card for navigation dots', () => {
-  assert.match(commerceCss, /@media \(max-width: 560px\)[\s\S]*?digital-product-card-swap__dots \{ bottom: -54px; \}/)
-  assert.match(commerceCss, /@media \(max-width: 390px\)[\s\S]*?digital-product-card-swap__dots \{ bottom: -58px; \}/)
+  assert.match(commerceCss, /\.digital-product-card-swap__scene \{[\s\S]*?inset: 0 0 56px;/)
+  assert.match(commerceCss, /\.digital-product-card-swap__dots \{[\s\S]*?bottom: 0;/)
+  assert.match(commerceCss, /\.digital-product-card-swap__navigation \{[\s\S]*?inset: 0 0 56px;/)
 })

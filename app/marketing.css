@@ -955,8 +955,9 @@
 .faq-reference-hero h1 { margin-top: 18px; font-size: clamp(3.4rem,7.5vw,7.5rem); line-height: .9; letter-spacing: -.08em; }
 .faq-reference-hero h1 em { color: #ffe25b; font-style: normal; }
 .faq-reference-hero p:last-child { max-width: 620px; margin-top: 24px; color: rgba(255,255,255,.86); line-height: 1.7; }
-.faq-reference-page .marketing-faq-directory { width: 100%; }
+.faq-reference-page .marketing-faq-directory { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .faq-reference-page .marketing-faq-directory__aside { display: none; }
+.faq-reference-page .marketing-faq-directory > div { min-width: 0; }
 .faq-reference-page .marketing-faq-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 32px; }
 .faq-reference-page .marketing-faq-list details { min-width: 0; }
 .faq-reference-contact { padding: clamp(56px,8vw,100px) 0; background: #fff4e9; }

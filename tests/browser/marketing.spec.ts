@@ -227,11 +227,69 @@ test('program directory hides digital products and retired digital route redirec
 
 test('FAQ search and contextual WhatsApp consultation remain usable', async ({ page }) => {
   await page.goto('/tanya-jawab')
-  await page.getByTestId('faq-search-input').fill('LinkedIn')
-  await expect(page.getByTestId('faq-result-count')).toHaveText('Menampilkan 1 jawaban')
+  await page.getByTestId('faq-search-input').fill('choose a mentor')
+  await expect(page.getByTestId('faq-result-count')).toHaveText('Showing 1 answers')
   await expect(page.getByTestId('faq-list').locator('details')).toHaveCount(1)
   const whatsapp = new URL(await page.getByTestId('global-whatsapp-cta').getAttribute('href') ?? '')
-  expect(whatsapp.searchParams.get('text')).toContain('pertanyaan')
+  expect(whatsapp.searchParams.get('text')).toContain('question')
+})
+
+test('FAQ directory uses the full desktop container and preserves responsive columns', async ({ page }) => {
+  const viewports = [
+    { width: 1440, height: 900 },
+    { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 360, height: 800 },
+  ] as const
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport)
+    await page.goto('/tanya-jawab')
+
+    const geometry = await page.locator('.faq-reference-page .marketing-faq-directory').evaluate((directory) => {
+      const container = directory.closest('.marketing-container')
+      const content = directory.querySelector(':scope > div:last-child')
+      const list = directory.querySelector('.marketing-faq-list')
+      const rect = (element: Element | null) => {
+        const box = element?.getBoundingClientRect()
+        return box ? { width: box.width, right: box.right } : null
+      }
+      const columns = list ? getComputedStyle(list).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length : 0
+      return {
+        container: rect(container),
+        directory: rect(directory),
+        content: rect(content),
+        list: rect(list),
+        columns,
+        scrollWidth: document.documentElement.scrollWidth,
+      }
+    })
+
+    expect(geometry.scrollWidth).toBeLessThanOrEqual(viewport.width)
+    expect(geometry.container).not.toBeNull()
+    expect(geometry.directory).not.toBeNull()
+    expect(geometry.content).not.toBeNull()
+    expect(geometry.content!.width).toBeGreaterThan(geometry.directory!.width * 0.9)
+    expect(geometry.content!.right).toBeLessThanOrEqual(geometry.directory!.right + 1)
+    expect(geometry.columns).toBe(viewport.width > 900 ? 2 : 1)
+  }
+})
+
+test('FAQ category filters and details remain interactive after the full-width layout', async ({ page }) => {
+  await page.goto('/tanya-jawab')
+
+  const programs = page.getByTestId('faq-category-programs-button')
+  await programs.click()
+  await expect(programs).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('faq-list').locator('details')).toHaveCount(9)
+
+  const firstQuestion = page.getByTestId('faq-list').locator('details').first()
+  await firstQuestion.locator('summary').click()
+  await expect(firstQuestion.locator('p')).toBeHidden()
+  await firstQuestion.locator('summary').click()
+  await expect(firstQuestion.locator('p')).toBeVisible()
 })
 
 test('editorial page intros use their dedicated motifs and exact WhatsApp consultation messages', async ({ page }) => {

@@ -244,13 +244,20 @@
   min-height: 682px;
   overflow: visible;
 }
+.digital-product-card-swap__scene {
+  position: absolute;
+  inset: 0 0 56px;
+  min-width: 0;
+  overflow: visible;
+}
 .rb-card-swap {
   position: absolute;
-  right: 110px;
-  bottom: 18px;
+  top: 50%;
+  left: 50%;
   perspective: 900px;
   overflow: visible;
-  transform-origin: bottom right;
+  transform: translate(-50%, -50%) scale(.82);
+  transform-origin: center center;
 }
 .rb-card-swap__card {
   position: absolute;
@@ -334,13 +341,50 @@
 }
 .digital-product-card-swap__dots {
   position: absolute;
-  right: 350px;
-  bottom: -22px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 20;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  transform: translateX(50%);
+}
+.digital-product-card-swap__navigation {
+  position: absolute;
+  inset: 0 0 56px;
+  z-index: 25;
+  pointer-events: none;
+}
+.digital-product-card-swap__arrow {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #d9cabe;
+  border-radius: 999px;
+  color: #8e3500;
+  background: #fffaf5;
+  box-shadow: 0 12px 28px rgb(75 38 17 / .14);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(-50%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.digital-product-card-swap__arrow--previous { left: 0; }
+.digital-product-card-swap__arrow--next { right: 0; }
+.digital-product-card-swap__arrow:hover {
+  border-color: #ff9a45;
+  box-shadow: 0 15px 32px rgb(75 38 17 / .2);
+  transform: translateY(-50%) scale(1.04);
+}
+.digital-product-card-swap__arrow:active { transform: translateY(-50%) scale(.96); }
+.digital-product-card-swap__arrow:focus-visible {
+  outline: 3px solid #ff7a00;
+  outline-offset: 4px;
 }
 .digital-product-card-swap__dots button {
   width: 9px;
@@ -370,12 +414,8 @@
 @media (max-width: 1080px) {
   .digital-product-card-swap { min-height: 632px; }
   .rb-card-swap {
-    right: 95px;
-    bottom: 0;
-    transform: scale(.9);
-    transform-origin: bottom right;
+    transform: translate(-50%, -50%) scale(.7);
   }
-  .digital-product-card-swap__dots { right: 311px; }
 }
 
 @media (max-width: 900px) {
@@ -385,36 +425,31 @@
     margin-inline: auto;
   }
   .rb-card-swap {
-    right: 50%;
-    bottom: 0;
-    transform: translateX(50%) scale(.88);
-    transform-origin: bottom center;
-  }
-  .digital-product-card-swap__dots {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%) scale(.82);
   }
 }
 
 @media (max-width: 560px) {
-  .digital-product-card-swap { min-height: 580px; }
-  .rb-card-swap {
-    bottom: -20px;
-    transform: translateX(50%) scale(.68);
-  }
-  .digital-product-card-swap__dots { bottom: -54px; }
+  .digital-product-card-swap { min-height: 500px; }
+  .rb-card-swap { transform: translate(-50%, -50%) scale(.54); }
+  .digital-product-card-swap__arrow { width: 42px; height: 42px; }
 }
 
 @media (max-width: 390px) {
-  .digital-product-card-swap { min-height: 530px; }
-  .rb-card-swap { transform: translateX(50%) scale(.59); }
-  .digital-product-card-swap__dots { bottom: -58px; }
+  .digital-product-card-swap { min-height: 470px; }
+  .rb-card-swap { transform: translate(-50%, -50%) scale(.5); }
+}
+
+@media (max-width: 560px) {
+  .digital-product-card-swap[data-product-count='3'] .rb-card-swap { transform: translate(-50%, -50%) scale(.46); }
+  .digital-product-card-swap[data-product-count='4'] .rb-card-swap { transform: translate(-50%, -50%) scale(.42); }
+  .digital-product-card-swap[data-product-count='5'] .rb-card-swap { transform: translate(-50%, -50%) scale(.39); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .rb-card-swap__card { will-change: auto; }
-  .digital-product-card-swap__dots button { transition: none; }
+  .digital-product-card-swap__dots button,
+  .digital-product-card-swap__arrow { transition: none; }
 }
 .commerce-discount-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 18px 0 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .commerce-discount-form input { min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; text-transform: uppercase; }
