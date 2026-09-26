@@ -1376,7 +1376,7 @@
     --testimonial-popout-lift: -34px;
     --testimonial-popout-scale: 1.025;
   }
-  .homepage-hero-cloud.has-gallery { margin-top: 6px; }
+  .homepage-hero-cloud.has-gallery { margin-top: 0; }
   .homepage-hero-cloud { padding: 56px 0 52px; }
   .homepage-hero-cloud__lobes { height: 62px; }
   .homepage-hero-cloud__stats { grid-template-columns: 1fr; max-width: 520px; }
@@ -1389,7 +1389,7 @@
   .homepage-hero .marketing-hero__headline { font-size: clamp(2.35rem, 12.5vw, 3.4rem); }
   .homepage-hero .marketing-hero__lede { font-size: .9rem; }
   .homepage-hero__gallery .marketing-testimonial-gallery { height: 330px; }
-  .homepage-hero-cloud.has-gallery { margin-top: 4px; }
+  .homepage-hero-cloud.has-gallery { margin-top: -2px; }
   .homepage-hero-cloud__lobes { height: 58px; }
 }
 @media (prefers-reduced-motion: reduce) {

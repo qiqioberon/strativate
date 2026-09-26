@@ -63,6 +63,8 @@ test('homepage cloud only masks the lower edge while the gallery stays full-widt
   assert.match(css, /\.homepage-hero-cloud\s*\{[\s\S]*?z-index:\s*4/)
   assert.match(css, /\.homepage-hero-cloud\.has-gallery\s*\{[\s\S]*?margin-top:\s*12px/)
   assert.match(css, /\.homepage-hero-cloud__lobes\s*\{[\s\S]*?height:\s*clamp\(72px, 6vw, 96px\)/)
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.homepage-hero-cloud\.has-gallery \{ margin-top: 0; \}/)
+  assert.match(css, /@media \(max-width: 430px\)[\s\S]*?\.homepage-hero-cloud\.has-gallery \{ margin-top: -2px; \}/)
   assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery__overlay\s*\{[\s\S]*?--testimonial-popout-lift:\s*-52px;[\s\S]*?z-index:\s*3;[\s\S]*?z-index 0s linear 130ms/)
   assert.match(css, /\.homepage-hero__gallery \.marketing-testimonial-gallery__overlay\.is-raised\s*\{[\s\S]*?z-index:\s*8;[\s\S]*?translateY\(var\(--testimonial-popout-lift\)\)/)
   assert.match(gallery, /data-popout-state=\{popoutRaised \? 'raised' : 'lifting'\}/)
