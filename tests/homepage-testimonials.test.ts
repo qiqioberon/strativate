@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
+  getTestimonialDragThreshold,
   getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
   resolveTestimonialPointerRelease,
@@ -106,15 +107,22 @@ test('testimonial gallery keeps OGL as a runtime dependency with the CI pnpm ver
 })
 
 
-test('testimonial gallery only consumes horizontal wheel and horizontal drag intent', () => {
+test('testimonial gallery only consumes horizontal wheel and uses touch-aware drag intent', () => {
   assert.equal(getTestimonialHorizontalWheelDelta(0, 120), 0)
   assert.equal(getTestimonialHorizontalWheelDelta(18, 80), 0)
   assert.equal(getTestimonialHorizontalWheelDelta(42, 8), 42)
+  assert.equal(getTestimonialDragThreshold('mouse'), 7)
+  assert.equal(getTestimonialDragThreshold('touch'), 12)
+  assert.equal(getTestimonialDragThreshold('pen'), 12)
   assert.equal(resolveTestimonialDragIntent(4, 5), 'pending')
+  assert.equal(resolveTestimonialDragIntent(10, 2, getTestimonialDragThreshold('touch')), 'pending')
+  assert.equal(resolveTestimonialDragIntent(13, 2, getTestimonialDragThreshold('touch')), 'horizontal')
+  assert.equal(resolveTestimonialDragIntent(2, 13, getTestimonialDragThreshold('touch')), 'vertical')
   assert.equal(resolveTestimonialDragIntent(12, 60), 'vertical')
   assert.equal(resolveTestimonialDragIntent(60, 12), 'horizontal')
   assert.match(gallery, /getTestimonialHorizontalWheelDelta\(event\.deltaX, event\.deltaY\)/)
-  assert.match(gallery, /resolveTestimonialDragIntent\(deltaX, deltaY\)/)
+  assert.match(gallery, /const threshold = getTestimonialDragThreshold\(this\.pointerType\)/)
+  assert.match(gallery, /resolveTestimonialDragIntent\(deltaX, deltaY, threshold\)/)
   assert.match(gallery, /try \{[\s\S]*?setPointerCapture\?\.\(event\.pointerId\)[\s\S]*?\} catch \{/)
 })
 
@@ -136,6 +144,13 @@ test('testimonial touch release activates taps but never horizontal swipes or ve
   assert.equal(resolveTestimonialPointerRelease('touch', 'horizontal', true), 'resume')
   assert.equal(resolveTestimonialPointerRelease('touch', 'vertical', false), 'ignore')
   assert.equal(resolveTestimonialPointerRelease('mouse', 'pending', false), 'activate')
+})
+
+test('testimonial touch activation is not overridden by focus and switches cards without a dead delay', () => {
+  assert.match(gallery, /showTouch\(hit:[\s\S]*?this\.touchActive = true[\s\S]*?this\.showHover\(hit\)/)
+  assert.doesNotMatch(gallery, /touchSwitchTimer/)
+  assert.match(gallery, /onFocus = \(\) => \{[\s\S]*?if \(this\.touchActive \|\| \(this\.isDown && \(this\.pointerType === 'touch' \|\| this\.pointerType === 'pen'\)\)\) return/)
+  assert.match(gallery, /onDocumentPointerDown = \(event: PointerEvent\) => \{[\s\S]*?this\.touchActive = false[\s\S]*?this\.clearHover\(\)/)
 })
 
 test('testimonial gallery card remains 4:5 while stored/modal imagery is 5:4', () => {

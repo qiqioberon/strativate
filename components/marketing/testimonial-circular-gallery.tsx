@@ -12,6 +12,7 @@ import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  getTestimonialDragThreshold,
   getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
   resolveTestimonialDragIntent,
@@ -257,7 +258,6 @@ class TestimonialGalleryApp {
   hoveredIndex: number | null = null
   activeMedia: TestimonialMedia | null = null
   mediaRestoreTimer: number | null = null
-  touchSwitchTimer: number | null = null
   keyboardRevealRequested = false
   onHover: (value: GalleryHover) => void
   onOpen: (index: number) => void
@@ -393,12 +393,6 @@ class TestimonialGalleryApp {
     this.mediaRestoreTimer = null
   }
 
-  cancelTouchSwitch() {
-    if (this.touchSwitchTimer === null) return
-    window.clearTimeout(this.touchSwitchTimer)
-    this.touchSwitchTimer = null
-  }
-
   restoreActiveMedia(delay = 320) {
     this.cancelMediaRestore()
     const media = this.activeMedia
@@ -425,19 +419,7 @@ class TestimonialGalleryApp {
   showTouch(hit: { media: TestimonialMedia; rect: HoverRect }) {
     this.touchActive = true
     if (this.activeMedia === hit.media && this.hoveredIndex !== null) return
-    if (!this.activeMedia || this.hoveredIndex === null) {
-      this.showHover(hit)
-      return
-    }
-
-    this.cancelTouchSwitch()
-    this.clearHover(false)
-    this.touchActive = true
-    this.touchSwitchTimer = window.setTimeout(() => {
-      this.touchSwitchTimer = null
-      if (!this.touchActive) return
-      this.showHover({ media: hit.media, rect: hit.media.getScreenRect() })
-    }, 320)
+    this.showHover(hit)
   }
 
   muteActiveMedia(mediaIndex: number) {
@@ -446,13 +428,12 @@ class TestimonialGalleryApp {
     return true
   }
 
-  clearHover(resume = true) {
-    this.cancelTouchSwitch()
+  clearHover() {
     this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
     this.restoreActiveMedia()
-    this.paused = !resume
+    this.paused = false
   }
 
   onPointerDown = (event: PointerEvent) => {
@@ -472,7 +453,8 @@ class TestimonialGalleryApp {
       const deltaY = this.startY - event.clientY
 
       if (this.dragIntent === 'pending') {
-        this.dragIntent = resolveTestimonialDragIntent(deltaX, deltaY)
+        const threshold = getTestimonialDragThreshold(this.pointerType)
+        this.dragIntent = resolveTestimonialDragIntent(deltaX, deltaY, threshold)
         if (this.dragIntent === 'vertical') return
         if (this.dragIntent === 'horizontal') {
           this.paused = true
@@ -584,7 +566,7 @@ class TestimonialGalleryApp {
   }
 
   onFocus = () => {
-    if (this.isDown && (this.pointerType === 'touch' || this.pointerType === 'pen')) return
+    if (this.touchActive || (this.isDown && (this.pointerType === 'touch' || this.pointerType === 'pen'))) return
     const media = this.centeredMedia()
     if (media) {
       this.showHover({ media, rect: media.getScreenRect() })
@@ -636,7 +618,6 @@ class TestimonialGalleryApp {
   destroy() {
     window.cancelAnimationFrame(this.raf)
     this.cancelMediaRestore()
-    this.cancelTouchSwitch()
     this.activeMedia?.setMuted(false)
     this.activeMedia = null
     window.removeEventListener('resize', this.onResize)
