@@ -23,6 +23,7 @@ test('homepage proof cloud uses isolated hand-drawn paper styling', () => {
   assert.match(marketingCss, /\.homepage-hero-cloud__lobes span::after/)
   assert.match(marketingCss, /\.homepage-hero-cloud__lobes span:nth-child\(4\)[\s\S]*rotate\(\.35deg\)/)
   assert.match(marketingCss, /background-size: 13px 11px, 17px 15px/)
+  assert.match(marketingCss, /bottom: -4px/)
 })
 
 test('homepage hero uses the React Bits Shape Grid canvas implementation', () => {

@@ -1266,7 +1266,7 @@
 .homepage-hero-cloud__lobes span {
   --homepage-cloud-sketch-tilt: 0deg;
   position: absolute;
-  bottom: -1px;
+  bottom: -4px;
   display: block;
   overflow: hidden;
   border: 1px solid var(--homepage-cloud-sketch);
