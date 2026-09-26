@@ -1087,6 +1087,7 @@
   outline-color: rgba(255,255,255,.92);
 }
 .marketing-header--home .marketing-mobile-panel {
+  color: var(--marketing-ink);
   border-color: rgba(255,255,255,.4);
   box-shadow: 0 24px 60px rgba(92,34,8,.2);
 }

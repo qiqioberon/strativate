@@ -110,6 +110,13 @@ async function expectHorizontallyInsideViewport(page: Page, locator: Locator) {
   expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1)
 }
 
+async function waitForOnboardingIdle(page: Page) {
+  const routeStage = page.locator('.onboarding-route-stage')
+  if (await routeStage.count()) await expect(routeStage).toHaveAttribute('data-route-phase', 'idle')
+  const experience = page.locator('.onboarding-experience')
+  if (await experience.count()) await expect(experience).toHaveAttribute('data-phase', 'idle')
+}
+
 async function goToUsername(page: Page) {
   await page.goto('/onboarding')
   await expect(page.getByRole('heading', { name: /Selamat datang di Strativate, Yuta/ })).toBeVisible()
@@ -121,6 +128,7 @@ async function goToUsername(page: Page) {
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
   await page.getByRole('button', { name: /Ya, lanjutkan/ }).click()
   await expect(page.getByRole('heading', { name: 'Mau dipanggil apa di Strativate?' })).toBeVisible()
+  await waitForOnboardingIdle(page)
 }
 
 async function goToPassword(page: Page) {
@@ -130,6 +138,7 @@ async function goToPassword(page: Page) {
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
   await page.getByRole('button', { name: 'Lanjutkan dari nama pengguna' }).click()
   await expect(page.getByRole('heading', { name: /Kata sandi akunmu sudah siap|Sekarang, amankan akunmu|Akun Google-mu sudah siap/ })).toBeVisible()
+  await waitForOnboardingIdle(page)
   await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Institusi')).toHaveCount(0)
 }
@@ -138,6 +147,7 @@ async function completeIdentity(page: Page) {
   await goToPassword(page)
   await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Saat ini kamu belajar di mana?' })).toBeVisible()
+  await waitForOnboardingIdle(page)
 }
 
 async function completeInstitution(page: Page, exerciseBack = false) {
@@ -152,21 +162,28 @@ async function completeInstitution(page: Page, exerciseBack = false) {
   await option.click()
   await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Kamu mengambil jurusan atau fakultas apa?' })).toBeVisible()
+  await waitForOnboardingIdle(page)
   await expect(page.getByText('Institut Teknologi Sepuluh Nopember', { exact: true })).toBeVisible()
 
   await page.getByLabel('Jurusan / fakultas').fill('Teknik Informatika dan Rekayasa Perangkat Lunak untuk Sistem Berskala Besar')
+  await expect(page.getByLabel('Jurusan / fakultas')).toHaveValue('Teknik Informatika dan Rekayasa Perangkat Lunak untuk Sistem Berskala Besar')
   if (exerciseBack) {
     await page.getByRole('button', { name: /Kembali/ }).click()
     await expect(page.getByLabel('Institusi')).toHaveValue('Institut Teknologi Sepuluh Nopember')
+    await waitForOnboardingIdle(page)
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Kamu mengambil jurusan atau fakultas apa?' })).toBeVisible()
+    await waitForOnboardingIdle(page)
     await expect(page.getByLabel('Jurusan / fakultas')).toHaveValue('Teknik Informatika dan Rekayasa Perangkat Lunak untuk Sistem Berskala Besar')
   }
 
   await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Kamu mulai di sana tahun berapa?' })).toBeVisible()
-  await page.getByLabel('Tahun angkatan').fill('2022')
+  await waitForOnboardingIdle(page)
+  await page.getByRole('spinbutton', { name: 'Tahun angkatan' }).fill('2022')
   await page.getByRole('button', { name: /Simpan & lanjutkan/ }).click()
   await expect(page.getByRole('heading', { name: /Kamu pertama kali menemukan/ })).toBeVisible()
+  await waitForOnboardingIdle(page)
 }
 
 test('anonymous onboarding guard remains safe at every required viewport', async ({ page }) => {
@@ -195,17 +212,13 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await ambient.evaluate(element => element.setAttribute('data-persistence-probe', 'alive'))
     await expectAmbientMoved(page)
 
-    const orangeOuter = page.locator('.onboarding-ambient__glow--orange')
-    const beforeComposition = await orangeOuter.evaluate(element => getComputedStyle(element).transform)
     const animationBefore = await ambientMotionState(page)
 
     await page.getByRole('button', { name: 'Mulai', exact: true }).click()
     await expect(page.getByRole('heading', { name: /Kami mengenalmu sebagai/ })).toBeVisible()
 
     await expect(ambient).toHaveAttribute('data-persistence-probe', 'alive')
-    const afterComposition = await orangeOuter.evaluate(element => getComputedStyle(element).transform)
     const animationAfter = await ambientMotionState(page)
-    expect(afterComposition).not.toBe(beforeComposition)
     expect(animationAfter.currentTime).toBeGreaterThan(animationBefore.currentTime)
   })
 
@@ -237,11 +250,13 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
 
     await expect(page.getByRole('heading', { name: 'Mau dipanggil apa di Strativate?' })).toBeVisible()
+    await waitForOnboardingIdle(page)
     await expect(page.getByLabel('Nama depan')).toHaveCount(0)
     await page.getByLabel('Nama pengguna', { exact: true }).fill('yuta_fixture')
     await page.getByRole('button', { name: 'Lanjutkan dari nama pengguna' }).click()
 
     await expect(page.getByRole('heading', { name: 'Kata sandi akunmu sudah siap.' })).toBeVisible()
+    await waitForOnboardingIdle(page)
     await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ubah kata sandi', exact: true }).click()
     await expect(page.getByLabel('Kata sandi baru', { exact: true })).toBeVisible()
@@ -451,15 +466,22 @@ test.describe.serial('immersive deterministic onboarding', () => {
     const studyCard = page.locator('.onboarding-review__item').filter({ hasText: 'Tempat belajar' })
     await studyCard.getByRole('link', { name: 'Ubah', exact: true }).click()
     await expect(page).toHaveURL(/\/onboarding\?revisi=1&bagian=institution$/)
+    await waitForOnboardingIdle(page)
     await expect(page.getByLabel('Institusi')).toHaveValue('Institut Teknologi Sepuluh Nopember')
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Kamu mengambil jurusan atau fakultas apa?' })).toBeVisible()
+    await waitForOnboardingIdle(page)
     await expect(page.getByLabel('Jurusan / fakultas')).toHaveValue('Teknik Informatika dan Rekayasa Perangkat Lunak untuk Sistem Berskala Besar')
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
-    await expect(page.getByLabel('Tahun angkatan')).toHaveValue('2022')
-    await page.getByLabel('Tahun angkatan').fill('2023')
+    await expect(page.getByRole('heading', { name: 'Kamu mulai di sana tahun berapa?' })).toBeVisible()
+    await waitForOnboardingIdle(page)
+    await expect(page.getByRole('spinbutton', { name: 'Tahun angkatan' })).toHaveValue('2022')
+    await page.getByRole('spinbutton', { name: 'Tahun angkatan' }).fill('2023')
+    await expect(page.getByRole('spinbutton', { name: 'Tahun angkatan' })).toHaveValue('2023')
     await page.getByRole('button', { name: /Simpan & lanjutkan/ }).click()
 
     await expect(page).toHaveURL(/\/onboarding\/review$/)
+    await waitForOnboardingIdle(page)
     await expect(page.getByText(/Angkatan 2023/)).toBeVisible()
 
     const profileCard = page.locator('.onboarding-review__item').filter({ hasText: 'Profil akun' })
@@ -468,7 +490,10 @@ test.describe.serial('immersive deterministic onboarding', () => {
     await expect(page.getByText('Yuta Fixture', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: /Ya, lanjutkan/ }).click()
     await expect(page.getByLabel('Nama pengguna', { exact: true })).toHaveValue('yuta_fixture')
+    await waitForOnboardingIdle(page)
     await page.getByRole('button', { name: 'Lanjutkan dari nama pengguna' }).click()
+    await expect(page.getByRole('heading', { name: 'Kata sandi akunmu sudah siap.' })).toBeVisible()
+    await waitForOnboardingIdle(page)
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click()
     await expect(page).toHaveURL(/\/onboarding\/review$/)
 

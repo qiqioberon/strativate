@@ -14,8 +14,8 @@ const publicRoutes = [
   ['/', 'homepage-hero-section', 'hero-whatsapp-link'],
   ['/program', 'marketing-page-title', 'program-page-intro-whatsapp-link'],
   ['/mentor', 'marketing-page-title', 'mentor-page-intro-whatsapp-link'],
-  ['/tentang-kami', 'marketing-page-title', 'about-page-intro-whatsapp-link'],
-  ['/tanya-jawab', 'marketing-page-title', 'faq-page-intro-whatsapp-link'],
+  ['/tentang-kami', 'about-story-section', 'global-whatsapp-cta'],
+  ['/tanya-jawab', 'faq-reference-hero', 'global-whatsapp-cta'],
   ['/auth', 'auth-back-link', 'auth-mode-switch'],
 ] as const
 
@@ -85,7 +85,8 @@ test('public marketing and auth routes remain actionable and overflow-safe throu
         await page.getByTestId('mentor-navira-putri-detail-button').click()
         const dialog = page.getByTestId('mentor-detail-modal')
         await expect(dialog).toHaveAttribute('open', '')
-        await expect(dialog.locator('.marketing-mentor-dialog__panel')).toHaveCSS('grid-template-columns', /\d+px/)
+        const columns = await dialog.locator('.marketing-mentor-dialog__panel').evaluate(panel => getComputedStyle(panel).gridTemplateColumns.trim().split(/\s+/).length)
+        expect(columns).toBe(1)
         await page.keyboard.press('Escape')
         await expect(dialog).not.toHaveAttribute('open', '')
       }

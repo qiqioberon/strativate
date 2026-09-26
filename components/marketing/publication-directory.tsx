@@ -17,7 +17,7 @@ export function PublicationDirectory({ publications }: { publications: PublicPub
   const [sort,setSort]=useState<PublicationSort>('newest')
   const categories=useMemo(()=>Array.from(new Set(publications.map(item=>item.category).filter((value): value is string=>Boolean(value)))).sort(),[publications])
   const featured=publications.filter(item=>item.is_featured)
-  const filtered=useMemo(()=>filterPublications(publications,{query,category,sort}),[publications,query,category,sort])
+  const filtered=filterPublications(publications,{query,category,sort})
   return <div className="editorial-directory" data-testid="publication-directory">
     <section className="editorial-featured" data-testid="publication-featured-section"><div className="marketing-section-head"><div><p className="marketing-kicker">Featured</p><h2>Featured Stories</h2></div></div>{featured.length?<div className="editorial-featured__grid">{featured.map(item=><PublicationCard key={item.id} item={item} featured />)}</div>:<div className="editorial-empty"><strong>No featured stories yet.</strong><span>Featured publications will appear here after approval.</span></div>}</section>
     <section className="editorial-all" data-testid="publication-all-section"><div className="marketing-section-head"><div><p className="marketing-kicker">All Publications</p><h2>Explore Publications & News</h2></div></div>

@@ -11,14 +11,14 @@ test('Private Mentoring marketing/editorial truth is static frontend content', (
   const editorial = read('lib/program-information.ts')
   assert.match(editorial, /'private-mentoring'\s*:\s*\{/)
   assert.match(editorial, /title:\s*'Private Mentoring'/)
-  assert.match(editorial, /shortDescription:\s*'Flexible mentoring/)
+  assert.match(editorial, /shortDescription:\s*'Get personalized guidance tailored to your goals/)
   assert.match(editorial, /kicker:\s*'Flexible, focused sessions'/)
   assert.match(editorial, /audience:/)
   assert.match(editorial, /highlights:\s*\[/)
   assert.match(editorial, /journey:\s*\[/)
 
   const services = read('lib/content/services.ts')
-  assert.match(services, /id:\s*'private-mentoring'[\s\S]*Flexible mentoring for individuals or small teams/)
+  assert.match(services, /id:\s*'private-mentoring'[\s\S]*Get personalized guidance tailored to your goals/)
 })
 
 test('homepage and program directory do not query the Private Mentoring catalog for marketing copy', () => {

@@ -8,13 +8,16 @@ const card = readFileSync(new URL('components/marketing/service-card.tsx', root)
 const kinetic = readFileSync(new URL('components/marketing/program-kinetic.tsx', root), 'utf8')
 const css = readFileSync(new URL('app/program/program-page.css', root), 'utf8')
 
-test('program page uses kinetic bento hierarchy and journey rail', () => {
+test('program page uses the kinetic service hierarchy and current stakeholder sections', () => {
   assert.match(page, /ProgramKineticSurface/)
-  assert.match(page, /01', title: 'Define your goal/)
-  assert.match(page, /02', title: 'Choose your format/)
-  assert.match(page, /03', title: 'Start preparing/)
-  assert.match(page, /program-intro-facts/)
-  assert.match(page, /data-program-band/)
+  assert.match(page, /data-testid="program-primary-services"/)
+  assert.match(page, /data-testid="program-mentoring-path-section"/)
+  assert.match(page, /href="\/program\/private-mentoring">Start Your Learning Journey/)
+  assert.match(page, /href="\/program\/intensive-mentoring">Explore Intensive Mentoring/)
+  assert.match(page, /data-testid="program-perfect-fit-section"/)
+  assert.match(page, /data-testid="program-organizations-section"/)
+  assert.match(page, /data-testid="program-faq-section"/)
+  assert.match(page, /data-testid="program-final-cta-section"/)
 })
 
 test('service cards expose interactive spotlight hooks', () => {

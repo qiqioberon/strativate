@@ -106,7 +106,7 @@ test('public mentor DTO renders expertise and achievements without private accou
   await expect(page.getByText('Draft Mentor')).toHaveCount(0)
 
   await page.getByTestId('mentor-search-input').fill('Published Mentor')
-  await page.getByRole('button', { name: 'Lihat profil lengkap Published Mentor', exact: true }).click()
+  await page.getByRole('button', { name: 'View full profile for Published Mentor', exact: true }).click()
   const dialog = page.getByTestId('mentor-detail-modal')
   await expect(dialog).toHaveAttribute('open', '')
   await expect(dialog.getByTestId('mentor-modal-expertise-section')).toContainText('Business Case')

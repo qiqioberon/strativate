@@ -697,7 +697,7 @@ test('Cart Link failure states are centered, responsive, and authorization-safe'
   ]){
     for(const size of [{width:1440,height:900},{width:390,height:844}]){
       await page.setViewportSize(size)
-      await page.goto(`http://localhost:3001/cart-link/error?reason=${fixture.reason}`)
+      await page.goto(`http://localhost:3000/cart-link/error?reason=${fixture.reason}`)
       await waitForBrandIntro(page)
       const card=page.locator('.cart-link-error-card')
       await expect(page.getByRole('heading',{name:'Cart Link tidak dapat digunakan.'})).toBeVisible()

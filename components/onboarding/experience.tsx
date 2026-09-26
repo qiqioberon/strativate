@@ -419,7 +419,7 @@ export function OnboardingExperience({ profile, mentee, names, referrals, intere
       className="onboarding-stage-region"
       data-phase={phase}
       tabIndex={-1}
-      inert={phase === 'exit'}
+      inert={phase !== 'idle'}
       aria-hidden={phase === 'exit' ? true : undefined}
       onAnimationEnd={handleStageAnimationEnd}
     >

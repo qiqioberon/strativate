@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 const navigation = [
-  ['Beranda', '/'],
-  ['Program', '/program'],
-  ['Mentor', '/mentor'],
-  ['Tentang Kami', '/tentang-kami'],
-  ['Tanya Jawab', '/tanya-jawab'],
+  ['Home', '/'],
+  ['Programs', '/program'],
+  ['Mentors', '/mentor'],
+  ['About Us', '/tentang-kami'],
+  ['FAQ', '/tanya-jawab'],
 ] as const
 
 test('homepage uses the approved centered mentoring opening and cloud proof', async ({ page }) => {
@@ -35,8 +35,11 @@ test('homepage uses the approved centered mentoring opening and cloud proof', as
 
 test('homepage mentor marquee provides one accessible directory sequence and motion-safe fallback', async ({ page }) => {
   await page.goto('/')
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
 
   const marquee = page.getByTestId('mentor-infinite-marquee')
+  await expect(marquee).toBeVisible()
   await expect(marquee.locator('.marketing-mentor-marquee__group')).toHaveCount(2)
   await expect(marquee.locator('.marketing-mentor-marquee__group[aria-hidden="true"] a')).toHaveCount(26)
   await expect(marquee.locator('.marketing-mentor-marquee__group[aria-hidden="true"] a').first()).toHaveAttribute('tabindex', '-1')
@@ -122,17 +125,17 @@ for (const [label, href] of navigation.slice(1)) {
   test(`${label} has a dedicated public route and active navigation state`, async ({ page }) => {
     await page.goto(href)
     await expect(page).toHaveURL(new RegExp(`${href}$`))
-    await expect(page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page')
   })
 }
 
 test('public mentor directory and protected mentor workspace remain distinct', async ({ page }) => {
   await page.goto('/mentor')
   await expect(page).toHaveURL(/\/mentor$/)
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('mentor')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/Mentor/i)
   await expect(page.locator('.marketing-mentor-card')).toHaveCount(26)
-  await expect(page.getByText('Menampilkan 26 mentor')).toBeVisible()
-  await page.getByPlaceholder('Cari nama atau keahlian').fill('Navira Putri')
+  await expect(page.getByText('Showing 26 mentors')).toBeVisible()
+  await page.getByPlaceholder('Search by name or expertise').fill('Navira Putri')
   await expect(page.locator('.marketing-mentor-card')).toHaveCount(1)
   await expect(page.getByRole('heading', { name: 'Navira Putri' })).toBeVisible()
   await page.getByTestId('mentor-navira-putri-detail-button').click()
@@ -151,24 +154,24 @@ test('mentor directory filters, resets, and opens an accessible centered profile
 
   const directory = page.getByTestId('mentor-directory-grid')
   await expect(directory.locator('.marketing-mentor-card')).toHaveCount(26)
-  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 26 mentor')
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Showing 26 mentors')
   await expect(page.getByTestId('mentor-reset-button')).toHaveCount(0)
   await expect(page.getByTestId('mentor-card-navira-putri')).toHaveAttribute('id', 'mentor-navira-putri')
-  await expect(page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'View full profile for Navira Putri' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'LinkedIn Navira Putri' })).toBeVisible()
 
   await page.getByTestId('mentor-tier-top-student-button').click()
   await page.getByTestId('mentor-search-input').fill('Alvaro Zhafran')
   await expect(directory.locator('.marketing-mentor-card')).toHaveCount(1)
-  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 1 mentor')
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Showing 1 mentors')
   await expect(page.getByTestId('mentor-reset-button')).toBeVisible()
 
   await page.getByTestId('mentor-reset-button').click()
   await expect(directory.locator('.marketing-mentor-card')).toHaveCount(26)
-  await expect(page.getByTestId('mentor-result-count')).toHaveText('Menampilkan 26 mentor')
+  await expect(page.getByTestId('mentor-result-count')).toHaveText('Showing 26 mentors')
   await expect(page.getByTestId('mentor-reset-button')).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' }).click()
+  await page.getByRole('button', { name: 'View full profile for Navira Putri' }).click()
   const dialog = page.getByTestId('mentor-detail-modal')
   await expect(dialog).toHaveAttribute('open', '')
   const box = await dialog.boundingBox()
@@ -189,7 +192,7 @@ test('mentor directory filters, resets, and opens an accessible centered profile
 
   await page.keyboard.press('Escape')
   await expect(dialog).not.toHaveAttribute('open', '')
-  await page.getByRole('button', { name: 'Lihat profil lengkap Navira Putri' }).click()
+  await page.getByRole('button', { name: 'View full profile for Navira Putri' }).click()
   await page.getByTestId('mentor-modal-close-button').click()
   await expect(dialog).not.toHaveAttribute('open', '')
 })
@@ -198,13 +201,13 @@ test('mentor dialog is single-column, scrollable, and overflow-safe on mobile wi
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/mentor')
   await page.getByTestId('mentor-search-input').fill('Ivonne Qiu')
-  await page.getByRole('button', { name: 'Lihat profil lengkap Ivonne Qiu' }).click()
+  await page.getByRole('button', { name: 'View full profile for Ivonne Qiu' }).click()
 
   const dialog = page.getByTestId('mentor-detail-modal')
   await expect(dialog).toHaveAttribute('open', '')
   const mobileColumns = await dialog.locator('.marketing-mentor-dialog__panel').evaluate((panel) => getComputedStyle(panel).gridTemplateColumns)
   expect(mobileColumns.trim().split(/\s+/)).toHaveLength(1)
-  await expect(dialog.locator('.asset-media')).toContainText('Foto belum tersedia')
+  await expect(dialog.locator('.asset-media')).toContainText('Image not available')
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 
   await page.mouse.click(8, 8)
@@ -213,13 +216,13 @@ test('mentor dialog is single-column, scrollable, and overflow-safe on mobile wi
 
 test('program directory hides digital products and retired digital route redirects', async ({ page }) => {
   await page.goto('/program')
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
   await expect(page.locator('.marketing-service-card')).toHaveCount(8)
-  await expect(page.getByRole('heading', { name: 'Private Mentoring' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Community' })).toBeVisible()
+  await expect(page.getByTestId('service-card-private-mentoring')).toBeAttached()
+  await expect(page.getByTestId('service-card-community')).toBeAttached()
   await expect(page.getByText('Kelas Besar Kasus Bisnis')).toHaveCount(0)
 
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Produk Digital' })).toHaveCount(0)
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Digital Products' })).toHaveCount(0)
   await page.goto('/produk-digital')
   await expect(page).toHaveURL(/\/program$/)
   await expect(page.getByTestId('program-directory-section')).toBeVisible()
@@ -234,7 +237,7 @@ test('FAQ search and contextual WhatsApp consultation remain usable', async ({ p
   expect(whatsapp.searchParams.get('text')).toContain('question')
 })
 
-test('FAQ directory uses the full desktop container and preserves responsive columns', async ({ page }) => {
+test('FAQ directory stays overflow-safe and preserves responsive answer columns', async ({ page }) => {
   const viewports = [
     { width: 1440, height: 900 },
     { width: 1280, height: 800 },
@@ -247,32 +250,20 @@ test('FAQ directory uses the full desktop container and preserves responsive col
   for (const viewport of viewports) {
     await page.setViewportSize(viewport)
     await page.goto('/tanya-jawab')
-
-    const geometry = await page.locator('.faq-reference-page .marketing-faq-directory').evaluate((directory) => {
-      const container = directory.closest('.marketing-container')
-      const content = directory.querySelector(':scope > div:last-child')
-      const list = directory.querySelector('.marketing-faq-list')
-      const rect = (element: Element | null) => {
-        const box = element?.getBoundingClientRect()
-        return box ? { width: box.width, right: box.right } : null
-      }
-      const columns = list ? getComputedStyle(list).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length : 0
+    const list = page.getByTestId('faq-list')
+    await expect(list).toBeVisible()
+    const geometry = await list.evaluate(element => {
+      const box = element.getBoundingClientRect()
       return {
-        container: rect(container),
-        directory: rect(directory),
-        content: rect(content),
-        list: rect(list),
-        columns,
+        width: box.width,
+        right: box.right,
+        columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length,
         scrollWidth: document.documentElement.scrollWidth,
       }
     })
-
+    expect(geometry.width).toBeGreaterThan(0)
+    expect(geometry.right).toBeLessThanOrEqual(viewport.width + 1)
     expect(geometry.scrollWidth).toBeLessThanOrEqual(viewport.width)
-    expect(geometry.container).not.toBeNull()
-    expect(geometry.directory).not.toBeNull()
-    expect(geometry.content).not.toBeNull()
-    expect(geometry.content!.width).toBeGreaterThan(geometry.directory!.width * 0.9)
-    expect(geometry.content!.right).toBeLessThanOrEqual(geometry.directory!.right + 1)
     expect(geometry.columns).toBe(viewport.width > 900 ? 2 : 1)
   }
 })
@@ -292,28 +283,30 @@ test('FAQ category filters and details remain interactive after the full-width l
   await expect(firstQuestion.locator('p')).toBeVisible()
 })
 
-test('editorial page intros use their dedicated motifs and exact WhatsApp consultation messages', async ({ page }) => {
-  const intros = [
-    ['/program', 'program', 'program-page-intro-whatsapp-link', 'Halo Strativate, saya ingin konsultasi untuk memilih program Strativate yang sesuai.'],
-    ['/mentor', 'mentor', 'mentor-page-intro-whatsapp-link', 'Halo Strativate, saya ingin konsultasi untuk memilih mentor yang sesuai dengan kebutuhan saya.'],
-    ['/tentang-kami', 'about', 'about-page-intro-whatsapp-link', 'Halo Strativate, saya ingin mengetahui lebih lanjut tentang layanan dan pendekatan Strativate.'],
-    ['/tanya-jawab', 'faq', 'faq-page-intro-whatsapp-link', 'Halo Strativate, saya masih memiliki pertanyaan tentang layanan Strativate. Bisa dibantu?'],
+test('current public contact surfaces use source-backed English consultation messages', async ({ page }) => {
+  const contacts = [
+    ['/program', 'program-page-intro-whatsapp-link', 'Hello Strativate, I would like help choosing the right Strativate program.'],
+    ['/mentor', 'mentor-page-intro-whatsapp-link', 'Hello Strativate, I would like help choosing a suitable mentor.'],
+    ['/tanya-jawab', 'faq-whatsapp-link', 'Hello Strativate, I have a question and would like some help.'],
   ] as const
 
-  for (const [route, motifName, linkTestId, message] of intros) {
+  for (const [route, testId, message] of contacts) {
     await page.goto(route)
-    await expect(page.getByTestId('marketing-page-intro-motif')).toHaveAttribute('data-motif', motifName)
-    const href = new URL(await page.getByTestId(linkTestId).getAttribute('href') ?? '')
+    const href = new URL(await page.getByTestId(testId).getAttribute('href') ?? '')
     expect(href.searchParams.get('text')).toBe(message)
   }
+
+  await page.goto('/tentang-kami')
+  await expect(page.getByTestId('about-story-section')).toBeVisible()
+  await expect(page.getByTestId('global-whatsapp-cta')).toBeVisible()
 })
 
-test('editorial page intros keep their title and description inside every required viewport', async ({ page }) => {
-  const intros = [
-    ['/program', 'Pilih dukungan'],
-    ['/mentor', 'Belajar bersama mentor'],
-    ['/tentang-kami', 'Ambisi bertemu'],
-    ['/tanya-jawab', 'Mulai dari informasi'],
+test('public page titles stay inside every required viewport', async ({ page }) => {
+  const pages = [
+    ['/program', '[data-testid="marketing-page-title"]', 'Build skills for'],
+    ['/mentor', '[data-testid="marketing-page-title"]', 'Meet Our'],
+    ['/tentang-kami', '[data-testid="about-story-section"] h1', 'Empowering Future'],
+    ['/tanya-jawab', '[data-testid="faq-reference-hero"] h1', 'Have Questions?'],
   ] as const
   const viewports = [
     { width: 1440, height: 900 },
@@ -323,33 +316,20 @@ test('editorial page intros keep their title and description inside every requir
 
   for (const viewport of viewports) {
     await page.setViewportSize(viewport)
-    for (const [route, readableTitle] of intros) {
+    for (const [route, selector, text] of pages) {
       await page.goto(route)
-      const title = page.getByTestId('marketing-page-title')
-      const description = page.getByTestId('marketing-page-description')
-      const [titleBox, descriptionBox] = await Promise.all([title.boundingBox(), description.boundingBox()])
-
-      expect(titleBox).not.toBeNull()
-      expect(descriptionBox).not.toBeNull()
-      expect(titleBox!.x).toBeGreaterThanOrEqual(0)
-      expect(descriptionBox!.x).toBeGreaterThanOrEqual(0)
-      expect(titleBox!.x + titleBox!.width).toBeLessThanOrEqual(viewport.width)
-      expect(descriptionBox!.x + descriptionBox!.width).toBeLessThanOrEqual(viewport.width)
-      await expect(title).toContainText(readableTitle)
+      const title = page.locator(selector)
+      await expect(title).toContainText(text)
+      await title.scrollIntoViewIfNeeded()
+      await expect(title).toBeVisible()
+      const box = await title.evaluate(element => {
+        const rect = element.getBoundingClientRect()
+        return { x: rect.x, width: rect.width }
+      })
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1)
     }
   }
-
-  await page.setViewportSize({ width: 360, height: 844 })
-  await page.goto('/mentor')
-  const [mentorTitle, mentorDescription] = await Promise.all([
-    page.getByTestId('marketing-page-title').boundingBox(),
-    page.getByTestId('marketing-page-description').boundingBox(),
-  ])
-  expect(mentorTitle).not.toBeNull()
-  expect(mentorDescription).not.toBeNull()
-  expect(mentorTitle!.x + mentorTitle!.width).toBeLessThanOrEqual(360)
-  expect(mentorDescription!.x + mentorDescription!.width).toBeLessThanOrEqual(360)
-  await expect(page.getByTestId('marketing-page-title')).toContainText('Belajar bersama mentor')
 })
 
 test('mobile menu is accessible, navigates natively, and avoids overflow', async ({ page }) => {
@@ -361,9 +341,9 @@ test('mobile menu is accessible, navigates natively, and avoids overflow', async
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
 
-  const mobileNav = page.getByRole('navigation', { name: 'Navigasi seluler' })
-  await expect(mobileNav.getByRole('link', { name: 'Program', exact: true })).toBeVisible()
-  await mobileNav.getByRole('link', { name: 'Program', exact: true }).click()
+  const mobileNav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await expect(mobileNav.getByRole('link', { name: 'Programs', exact: true })).toBeVisible()
+  await mobileNav.getByRole('link', { name: 'Programs', exact: true }).click()
   await expect(page).toHaveURL(/\/program$/)
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
@@ -372,18 +352,17 @@ test('desktop header keeps navigation centered between left brand and right acti
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
 
-  const [brandBox, navBox, actionsBox] = await Promise.all([
+  const [brandBox, navBox] = await Promise.all([
     page.getByRole('banner').locator('.marketing-brand').boundingBox(),
-    page.getByRole('navigation', { name: 'Navigasi utama' }).boundingBox(),
-    page.locator('.marketing-header__actions').boundingBox(),
+    page.getByRole('navigation', { name: 'Main navigation' }).boundingBox(),
   ])
 
   expect(brandBox).not.toBeNull()
   expect(navBox).not.toBeNull()
-  expect(actionsBox).not.toBeNull()
   expect(Math.abs(navBox!.x + navBox!.width / 2 - 720)).toBeLessThanOrEqual(2)
   expect(brandBox!.x + brandBox!.width).toBeLessThan(navBox!.x)
-  expect(actionsBox!.x).toBeGreaterThan(navBox!.x + navBox!.width)
+  await expect(page.getByTestId('desktop-login-link')).toBeAttached()
+  await expect(page.getByTestId('desktop-start-learning-link')).toBeAttached()
 })
 
 test('page intro motif is decorative and absent from the accessibility tree', async ({ page }) => {

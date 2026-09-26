@@ -90,13 +90,15 @@ select test_digital_discounts.assert(
   'Private Mentoring price is never discounted by a Digital Product code'
 );
 
+-- Redemption lifecycle state is intentionally not exposed to mentees; verify it as the test owner.
+reset role;
+
 select test_digital_discounts.assert(
-  (select status = 'reserved' from public.commerce_discount_redemptions where order_id = (select id from public.orders where user_id = auth.uid()))
+  (select status = 'reserved' from public.commerce_discount_redemptions
+   where order_id = (select id from public.orders where user_id = 'a1000000-0000-0000-0000-000000000002'))
   and (select redemption_count = 0 from public.commerce_discount_codes where code = 'DPONLY'),
   'unpaid Orders reserve but do not permanently redeem the code'
 );
-
-reset role;
 
 update public.orders
 set status = 'paid', paid_at = now()
@@ -178,11 +180,11 @@ where code = 'DPONLY';
 
 select test_digital_discounts.assert(
   (select total_amount = 340000 and discount_amount = 60000
-   from public.orders where user_id = 'a1000000-0000-0000-0000-000000000002')
+   from public.orders where user_id = 'a1000000-0000-0000-0000-000000000002' and status = 'paid')
   and
   (select unit_price_amount = 100000 and discounted_unit_price_amount = 40000
    from public.order_items
-   where order_id = (select id from public.orders where user_id = 'a1000000-0000-0000-0000-000000000002')
+   where order_id = (select id from public.orders where user_id = 'a1000000-0000-0000-0000-000000000002' and status = 'paid')
      and commerce_item_id = 'a1100000-0000-0000-0000-000000000001'),
   'Order and Order Item snapshots remain immutable after source price/code changes'
 );

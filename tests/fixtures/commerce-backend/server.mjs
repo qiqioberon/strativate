@@ -1,7 +1,25 @@
 import http from 'node:http'
+import { readFileSync } from 'node:fs'
 
 const port = Number(process.env.COMMERCE_FIXTURE_PORT || 54321)
 const now = '2026-09-14T00:00:00.000Z'
+
+const mentorPublicRows = JSON.parse(readFileSync(new URL('../../../supabase/seed/mentor_website_profiles.json', import.meta.url), 'utf8'))
+  .filter(row => row.publication_status === 'published')
+  .sort((a, b) => a.sort_order - b.sort_order)
+  .map(row => ({
+    public_slug: row.public_slug,
+    display_name: row.display_name,
+    tier_name: row.tier_name,
+    headline: row.headline,
+    linkedin_url: row.linkedin_url,
+    short_bio: row.short_bio,
+    portrait_asset_key: row.portrait_asset_key,
+    portrait_url: null,
+    photo_status: row.photo_status,
+    achievements: row.achievements,
+    expertise: row.expertise,
+  }))
 
 const ids = {
   mentee: '95000000-0000-0000-0000-000000000001', mentor: '95000000-0000-0000-0000-000000000002', admin: '95000000-0000-0000-0000-000000000003',
@@ -124,6 +142,8 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname.startsWith('/rest/v1/rpc/') && req.method === 'POST') {
     const fn = url.pathname.split('/').pop(); const body = await readBody(req)
+    if (fn === 'list_public_mentors') return json(req, res, 200, mentorPublicRows)
+    if (fn === 'list_public_digital_product_sales') return json(req, res, 200, [{ product_id: ids.product, sales_count: state.order?.status === 'paid' ? 1 : 0 }])
     if (fn === 'search_institutions') return json(req, res, 200, [onboardingInstitution, longOnboardingInstitution])
     if (fn === 'submit_institution') return json(req, res, 200, onboardingInstitution)
     if (fn === 'save_onboarding_step') {

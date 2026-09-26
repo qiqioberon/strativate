@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-test('program page exposes kinetic bento interactions without breaking layout', async ({ page }) => {
+test('program page exposes kinetic service interactions without breaking the stakeholder layout', async ({ page }) => {
   await page.goto('/program')
 
   await expect(page.getByTestId('program-kinetic-surface')).toBeVisible()
-  await expect(page.getByText('Pilih kebutuhan', { exact: true })).toBeVisible()
-  await expect(page.getByText('Kenali format', { exact: true })).toBeVisible()
-  await expect(page.getByText('Mulai persiapan', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('program-mentoring-path-section')).toBeVisible()
+  await expect(page.getByTestId('program-perfect-fit-section')).toBeVisible()
+  await expect(page.getByTestId('program-organizations-section')).toBeVisible()
 
   const privateCard = page.getByTestId('service-card-private-mentoring')
   await privateCard.hover({ position: { x: 180, y: 120 } })

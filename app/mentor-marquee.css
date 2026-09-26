@@ -9,7 +9,7 @@
   cursor: pointer;
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
-.marketing-mentor-marquee__card:hover, .marketing-mentor-marquee__card:focus-visible {
+.marketing-mentor-marquee__card:hover, .marketing-mentor-marquee__card:focus-visible, .marketing-mentor-marquee__card:focus {
   transform: translateY(-2px);
 }
 .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media {
@@ -78,13 +78,17 @@
   text-transform: none;
 }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__identity,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__identity { transform: translateY(0); }
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__identity,
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__identity { transform: translateY(0); }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__tier,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__tier { font-size: .52rem; letter-spacing: .08em; }
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__tier,
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__tier { font-size: .52rem; letter-spacing: .08em; }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__name,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__name { font-size: .9rem; letter-spacing: -.025em; }
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__name,
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__name { font-size: .9rem; letter-spacing: -.025em; }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__details,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__details { opacity: 1; transform: translateY(0); }
+.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__details,
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__details { opacity: 1; transform: translateY(0); }
 @media (max-width: 640px) {
   .marketing-mentor-marquee__card { grid-template-columns: 92px 260px; width: 382px; min-height: 150px; }
   .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media { width: 92px; height: 116px; }

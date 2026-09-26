@@ -6,9 +6,9 @@ test('enabled Digital Products rollout exposes navigation and keeps the storefro
   test.skip(!digitalProductsEnabled, 'Digital Products public rollout is disabled in this browser target.')
 
   await page.goto('/')
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' }).getByRole('link', { name: 'Produk Digital' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Digital Products' })).toBeVisible()
 
   await page.goto('/produk-digital')
   await expect(page).toHaveURL(/\/produk-digital(?:\?.*)?$/)
-  await expect(page.getByRole('heading', { name: /Materi mandiri/i }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: /Keep learning/i })).toBeVisible()
 })

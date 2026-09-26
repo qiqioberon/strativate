@@ -73,6 +73,8 @@ test('homepage opening respects reduced motion and remains complete on mobile', 
   await menuToggle.click()
   await expect(menuToggle).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible()
+  await expect(page.locator('#marketing-mobile-navigation')).toHaveCSS('color', 'rgb(0, 0, 0)')
+  await expect(page.getByTestId('mobile-nav-compass-link')).toHaveCSS('color', 'rgb(0, 0, 0)')
 
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })

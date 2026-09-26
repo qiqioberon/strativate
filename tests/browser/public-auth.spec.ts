@@ -56,8 +56,8 @@ test('session-shaped browser state does not redirect the public homepage', async
 
   await page.goto('/')
   await expect(page).toHaveURL(publicRoot)
-  await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Pilih cara belajarmu.' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Win Business Competitions with Expert Mentoring' })).toBeVisible()
 })
 
 test('registration starts with only email and can return to login', async ({ page }) => {

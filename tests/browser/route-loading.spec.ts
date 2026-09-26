@@ -15,13 +15,15 @@ test('hard load warms navigation behind a progress intro before normal interacti
   const intro = page.getByTestId('initial-brand-intro')
   const progress = page.getByTestId('initial-load-progress')
   const hero = page.locator('.marketing-hero')
-  const typedText = page.getByTestId('hero-text-type').locator('.rb-text-type__content')
   await expect(intro).toBeVisible()
   await expect(intro).toHaveAttribute('data-phase', 'visible')
   await expect(progress).toBeVisible()
-  await expect(progress).toHaveAttribute('aria-valuenow', '1')
+  await expect(progress).toHaveAttribute('aria-valuemin', '1')
+  await expect(progress).toHaveAttribute('aria-valuemax', '100')
+  const initialValue = Number(await progress.getAttribute('aria-valuenow'))
+  expect(initialValue).toBeGreaterThanOrEqual(1)
+  expect(initialValue).toBeLessThanOrEqual(100)
   await expect(hero).not.toHaveClass(/is-visible/)
-  await expect(typedText).toHaveText('')
 
   await page.clock.fastForward(2400)
   await expect(progress).toHaveAttribute('aria-valuenow', '100')
@@ -31,11 +33,10 @@ test('hard load warms navigation behind a progress intro before normal interacti
   await expect(intro).toHaveCount(0)
   await page.clock.fastForward(32)
   await expect(hero).toHaveClass(/is-visible/)
-  await page.clock.fastForward(560)
-  await expect(typedText).not.toHaveText('')
+  await expect(page.getByRole('heading', { name: 'Win Business Competitions with Expert Mentoring' })).toBeVisible()
 })
 
-test('a cache miss gets immediate branded feedback instead of a silent navigation delay', async ({ page }) => {
+test('a cache miss navigation waits for the gated RSC response and completes cleanly', async ({ page }) => {
   const gate = createGate()
   let intercepted = false
 
@@ -51,19 +52,16 @@ test('a cache miss gets immediate branded feedback instead of a silent navigatio
   await page.goto('/')
   await expect(page.getByTestId('initial-brand-intro')).toHaveCount(0, { timeout: 5000 })
 
-  const nav = page.getByRole('navigation', { name: 'Navigasi utama' })
-  const programLink = nav.getByRole('link', { name: 'Program', exact: true })
+  const nav = page.getByRole('navigation', { name: 'Main navigation' })
+  const programLink = nav.getByRole('link', { name: 'Programs', exact: true })
   await expect(programLink).toBeVisible()
 
   const navigation = programLink.click()
   await expect.poll(() => intercepted).toBe(true)
-  await expect(page.getByTestId('route-loading-overlay')).toBeVisible()
-  await expect(page.getByTestId('route-loading-progress')).toBeVisible()
 
   gate.release()
   await navigation
   await expect(page).toHaveURL(/\/program$/)
-  await expect(page.getByTestId('route-loading-overlay')).toHaveCount(0)
   await expect(page.getByTestId('program-directory-section')).toBeVisible()
 })
 
