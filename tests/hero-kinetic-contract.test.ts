@@ -17,12 +17,16 @@ test('homepage hero uses the approved centered success-story composition', () =>
   assert.doesNotMatch(home, /HeroCarousel|hero-program-link|Chat on WhatsApp|TextType|HeroKineticSurface|MagneticAction/)
 })
 
-test('homepage proof cloud uses isolated hand-drawn paper styling', () => {
+test('homepage proof cloud uses layered hand-drawn paper texture', () => {
   assert.match(marketingCss, /--homepage-cloud-paper: #fffaf2/)
   assert.match(marketingCss, /--homepage-cloud-sketch: rgba\(104, 72, 52, \.34\)/)
+  assert.match(marketingCss, /--homepage-cloud-grain-a: rgba\(126, 87, 59, \.052\)/)
+  assert.match(marketingCss, /\.homepage-hero-cloud::before/)
+  assert.match(marketingCss, /repeating-linear-gradient\(-8deg/)
+  assert.match(marketingCss, /\.homepage-hero-cloud__lobes span::before/)
   assert.match(marketingCss, /\.homepage-hero-cloud__lobes span::after/)
   assert.match(marketingCss, /\.homepage-hero-cloud__lobes span:nth-child\(4\)[\s\S]*rotate\(\.35deg\)/)
-  assert.match(marketingCss, /background-size: 13px 11px, 17px 15px/)
+  assert.match(marketingCss, /background-size: 12px 10px, 16px 14px, 20px 18px, 100% 100%/)
   assert.match(marketingCss, /bottom: -4px/)
 })
 
