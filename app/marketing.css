@@ -1394,6 +1394,42 @@
   line-height: 1.4;
 }
 
+.homepage-recognition {
+  position: relative;
+  padding: clamp(64px, 7vw, 104px) 0;
+  background: #f8e7d5;
+}
+.homepage-recognition__inner {
+  display: grid;
+  justify-items: center;
+  gap: clamp(36px, 5vw, 64px);
+  text-align: center;
+}
+.homepage-recognition h2 {
+  max-width: 900px;
+  margin: 0;
+  color: var(--marketing-ink);
+  font-size: clamp(1.8rem, 3vw, 3.1rem);
+  font-weight: 720;
+  letter-spacing: -.045em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.homepage-recognition__logo-wall {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(28px, 4.5vw, 64px);
+}
+.homepage-recognition__logo-wall img {
+  width: auto;
+  max-width: min(220px, 42vw);
+  height: clamp(58px, 7vw, 88px);
+  object-fit: contain;
+}
+
 @media (max-width: 1080px) {
   .homepage-hero { padding-top: 118px; }
   .homepage-hero .marketing-hero__headline { font-size: clamp(3rem, 7.6vw, 5.4rem); }
@@ -1443,6 +1479,9 @@
   .homepage-hero-cloud__stats article { padding: 18px 18px; }
   .homepage-hero-cloud__stats article + article { border-top: 1px solid #f0ddd0; border-left: 0; }
   .homepage-hero-cloud__stats strong { font-size: 2.5rem; }
+  .homepage-recognition { padding: 58px 0 70px; }
+  .homepage-recognition__inner { gap: 34px; }
+  .homepage-recognition__logo-wall { gap: 28px 32px; }
 }
 @media (max-width: 430px) {
   .homepage-hero { padding-top: 104px; }
