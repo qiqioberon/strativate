@@ -25,4 +25,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+## Graphify
+
+Knowledge graph project tersedia di `graphify-out/graph.json`.
+
+Untuk pertanyaan mengenai:
+
+- arsitektur project
+- hubungan antarfile atau modul
+- alur data
+- dependency
+- dampak perubahan
+- lokasi implementasi suatu fitur
+
+gunakan Graphify terlebih dahulu sebelum membaca banyak file secara manual.
+
 <!-- END:nextjs-agent-rules -->

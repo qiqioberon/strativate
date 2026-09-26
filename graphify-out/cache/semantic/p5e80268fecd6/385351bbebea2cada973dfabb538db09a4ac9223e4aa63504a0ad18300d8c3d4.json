@@ -1,0 +1,1 @@
+{"nodes": [{"id": "tests_fixtures_carousel_interaction_agents", "label": "Next.js Agent Rules", "file_type": "document", "source_file": "tests/fixtures/carousel-interaction/AGENTS.md", "rationale": "Contains breaking changes and conventions for a specific Next.js version."}], "edges": [], "hyperedges": []}
