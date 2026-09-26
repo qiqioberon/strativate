@@ -1356,22 +1356,29 @@
     font-size: .95rem;
     line-height: 1.64;
   }
-  .homepage-hero .marketing-hero__actions { width: 100%; margin-top: 25px; }
-  .homepage-hero .homepage-hero__consultation { width: min(100%, 260px); }
+  .homepage-hero .marketing-hero__actions {
+    width: 100%;
+    margin-top: 25px;
+    justify-items: center;
+  }
+  .homepage-hero .homepage-hero__consultation {
+    width: min(calc(100% - 32px), 350px);
+    margin-inline: auto;
+  }
   .homepage-shape-grid {
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(7, 1fr);
     opacity: .52;
   }
   .homepage-hero__gallery { margin-top: 30px; }
-  .homepage-hero__gallery .marketing-testimonial-gallery { height: 320px; }
+  .homepage-hero__gallery .marketing-testimonial-gallery { height: 340px; }
   .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
-    --testimonial-popout-lift: -28px;
-    --testimonial-popout-scale: 1.03;
+    --testimonial-popout-lift: -34px;
+    --testimonial-popout-scale: 1.025;
   }
-  .homepage-hero-cloud.has-gallery { margin-top: 10px; }
+  .homepage-hero-cloud.has-gallery { margin-top: 6px; }
   .homepage-hero-cloud { padding: 56px 0 52px; }
-  .homepage-hero-cloud__lobes { height: 72px; }
+  .homepage-hero-cloud__lobes { height: 62px; }
   .homepage-hero-cloud__stats { grid-template-columns: 1fr; max-width: 520px; }
   .homepage-hero-cloud__stats article { padding: 18px 18px; }
   .homepage-hero-cloud__stats article + article { border-top: 1px solid #f0ddd0; border-left: 0; }
@@ -1381,9 +1388,9 @@
   .homepage-hero { padding-top: 104px; }
   .homepage-hero .marketing-hero__headline { font-size: clamp(2.35rem, 12.5vw, 3.4rem); }
   .homepage-hero .marketing-hero__lede { font-size: .9rem; }
-  .homepage-hero__gallery .marketing-testimonial-gallery { height: 300px; }
-  .homepage-hero-cloud.has-gallery { margin-top: 8px; }
-  .homepage-hero-cloud__lobes { height: 64px; }
+  .homepage-hero__gallery .marketing-testimonial-gallery { height: 330px; }
+  .homepage-hero-cloud.has-gallery { margin-top: 4px; }
+  .homepage-hero-cloud__lobes { height: 58px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .homepage-shape-grid__shape {

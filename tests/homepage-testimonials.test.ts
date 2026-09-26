@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
+  getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
+  resolveTestimonialPointerRelease,
   resolveTestimonialDragIntent,
 } from '../lib/marketing/testimonial-gallery-input'
 
@@ -69,7 +71,7 @@ test('homepage cloud only masks the lower edge while the gallery stays full-widt
   assert.match(gallery, /this\.activeMedia = hit\.media[\s\S]*?this\.onHover\(\{ index: hit\.media\.sourceIndex, mediaIndex: hit\.media\.index, rect: hit\.rect \}\)/)
   assert.doesNotMatch(gallery, /this\.activeMedia = hit\.media\s+this\.activeMedia\.setMuted\(true\)/)
   assert.match(gallery, /muteActiveMedia\(mediaIndex: number\)[\s\S]*?this\.activeMedia\.setMuted\(true\)/)
-  assert.match(gallery, /onLoad=\{\(\) => handlePopoutImageReady\(hover\.mediaIndex\)\}/)
+  assert.match(gallery, /onLoad=\{\(\) => \{[\s\S]*?handlePopoutImageReady\(mediaIndex\)[\s\S]*?\}\}/)
   assert.match(gallery, /handlePopoutImageReady[\s\S]*?requestAnimationFrame[\s\S]*?requestAnimationFrame[\s\S]*?muteActiveMedia\(mediaIndex\)[\s\S]*?setPopoutRaised\(true\)/)
   assert.match(gallery, /restoreActiveMedia\(delay = 320\)/)
   assert.match(gallery, /media\.setMuted\(false\)/)
@@ -113,11 +115,34 @@ test('testimonial gallery only consumes horizontal wheel and horizontal drag int
   assert.equal(resolveTestimonialDragIntent(60, 12), 'horizontal')
   assert.match(gallery, /getTestimonialHorizontalWheelDelta\(event\.deltaX, event\.deltaY\)/)
   assert.match(gallery, /resolveTestimonialDragIntent\(deltaX, deltaY\)/)
+  assert.match(gallery, /try \{[\s\S]*?setPointerCapture\?\.\(event\.pointerId\)[\s\S]*?\} catch \{/)
+})
+
+test('testimonial gallery uses mobile-specific card geometry with deliberate side previews', () => {
+  assert.deepEqual(getTestimonialGalleryGeometry(390), { cardWidth: 252, cardHeight: 315, gap: 14, bend: 1.35 })
+  assert.deepEqual(getTestimonialGalleryGeometry(430), { cardWidth: 278, cardHeight: 347.5, gap: 14, bend: 1.35 })
+  assert.deepEqual(getTestimonialGalleryGeometry(768), { cardWidth: 220, cardHeight: 275, gap: 18, bend: 2.4 })
+  const desktop = getTestimonialGalleryGeometry(1440)
+  assert.equal(desktop.cardWidth, 288)
+  assert.equal(desktop.cardHeight, 360)
+  assert.ok(Math.abs(desktop.gap - 25.92) < Number.EPSILON * 20)
+  assert.equal(desktop.bend, 2.4)
+  assert.deepEqual(getTestimonialGalleryGeometry(1920), { cardWidth: 300, cardHeight: 375, gap: 28, bend: 2.4 })
+})
+
+test('testimonial touch release activates taps but never horizontal swipes or vertical page gestures', () => {
+  assert.equal(resolveTestimonialPointerRelease('touch', 'pending', false), 'activate')
+  assert.equal(resolveTestimonialPointerRelease('touch', 'horizontal', true), 'resume')
+  assert.equal(resolveTestimonialPointerRelease('touch', 'vertical', false), 'ignore')
+  assert.equal(resolveTestimonialPointerRelease('mouse', 'pending', false), 'activate')
 })
 
 test('testimonial gallery card remains 4:5 while stored/modal imagery is 5:4', () => {
-  assert.match(gallery, /cardHeight = cardWidth \* 1\.25/)
-  assert.match(gallery, /Math\.min\(300, this\.screen\.width \* \.2\)/)
+  for (const viewport of [390, 430, 768, 1440, 1920]) {
+    const geometry = getTestimonialGalleryGeometry(viewport)
+    assert.equal(geometry.cardHeight / geometry.cardWidth, 1.25)
+  }
+  assert.match(gallery, /getTestimonialGalleryGeometry\(this\.screen\.width\)/)
   assert.match(css, /marketing-testimonials__heading h2[\s\S]*font-weight: 540/)
   assert.match(css, /height: clamp\(330px, 37vw, 430px\)/)
   assert.match(css, /aspect-ratio: 5 \/ 4/)

@@ -12,8 +12,10 @@ import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
   resolveTestimonialDragIntent,
+  resolveTestimonialPointerRelease,
   type TestimonialDragIntent,
 } from '@/lib/marketing/testimonial-gallery-input'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
@@ -204,9 +206,8 @@ class TestimonialMedia {
   } = {}) {
     if (screen) this.screen = screen
     if (viewport) this.viewport = viewport
-    const cardWidth = Math.max(220, Math.min(300, this.screen.width * .2))
-    const cardHeight = cardWidth * 1.25
-    const gap = Math.max(18, Math.min(28, this.screen.width * .018))
+    const { cardWidth, cardHeight, gap, bend } = getTestimonialGalleryGeometry(this.screen.width)
+    this.bend = bend
     this.plane.scale.y = (this.viewport.height * cardHeight) / this.screen.height
     this.plane.scale.x = (this.viewport.width * cardWidth) / this.screen.width
     this.program.uniforms.uPlaneSizes.value = [this.plane.scale.x, this.plane.scale.y]
@@ -250,10 +251,13 @@ class TestimonialGalleryApp {
   startX = 0
   startY = 0
   dragIntent: TestimonialDragIntent | null = null
+  pointerType = ''
   paused = false
+  touchActive = false
   hoveredIndex: number | null = null
   activeMedia: TestimonialMedia | null = null
   mediaRestoreTimer: number | null = null
+  touchSwitchTimer: number | null = null
   keyboardRevealRequested = false
   onHover: (value: GalleryHover) => void
   onOpen: (index: number) => void
@@ -314,8 +318,7 @@ class TestimonialGalleryApp {
   }
 
   createMedias() {
-    const cardWidth = Math.max(220, Math.min(300, this.screen.width * .2))
-    const gap = Math.max(18, Math.min(28, this.screen.width * .018))
+    const { cardWidth, gap, bend } = getTestimonialGalleryGeometry(this.screen.width)
     const cardSpan = cardWidth + gap
     const cardsForViewport = Math.ceil(this.screen.width / cardSpan)
     const repeatCount = Math.max(3, Math.ceil((cardsForViewport + 8) / this.items.length))
@@ -330,7 +333,7 @@ class TestimonialGalleryApp {
       scene: this.scene,
       screen: this.screen,
       viewport: this.viewport,
-      bend: this.bend,
+      bend,
     }))
   }
 
@@ -390,6 +393,12 @@ class TestimonialGalleryApp {
     this.mediaRestoreTimer = null
   }
 
+  cancelTouchSwitch() {
+    if (this.touchSwitchTimer === null) return
+    window.clearTimeout(this.touchSwitchTimer)
+    this.touchSwitchTimer = null
+  }
+
   restoreActiveMedia(delay = 320) {
     this.cancelMediaRestore()
     const media = this.activeMedia
@@ -413,18 +422,37 @@ class TestimonialGalleryApp {
     this.onHover({ index: hit.media.sourceIndex, mediaIndex: hit.media.index, rect: hit.rect })
   }
 
+  showTouch(hit: { media: TestimonialMedia; rect: HoverRect }) {
+    this.touchActive = true
+    if (this.activeMedia === hit.media && this.hoveredIndex !== null) return
+    if (!this.activeMedia || this.hoveredIndex === null) {
+      this.showHover(hit)
+      return
+    }
+
+    this.cancelTouchSwitch()
+    this.clearHover(false)
+    this.touchActive = true
+    this.touchSwitchTimer = window.setTimeout(() => {
+      this.touchSwitchTimer = null
+      if (!this.touchActive) return
+      this.showHover({ media: hit.media, rect: hit.media.getScreenRect() })
+    }, 320)
+  }
+
   muteActiveMedia(mediaIndex: number) {
     if (!this.activeMedia || this.activeMedia.index !== mediaIndex) return false
     this.activeMedia.setMuted(true)
     return true
   }
 
-  clearHover() {
+  clearHover(resume = true) {
+    this.cancelTouchSwitch()
     this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
     this.restoreActiveMedia()
-    this.paused = false
+    this.paused = !resume
   }
 
   onPointerDown = (event: PointerEvent) => {
@@ -433,6 +461,7 @@ class TestimonialGalleryApp {
     this.moved = false
     this.startX = event.clientX
     this.startY = event.clientY
+    this.pointerType = event.pointerType
     this.dragIntent = 'pending'
     this.scroll.position = this.scroll.current
   }
@@ -447,10 +476,15 @@ class TestimonialGalleryApp {
         if (this.dragIntent === 'vertical') return
         if (this.dragIntent === 'horizontal') {
           this.paused = true
+          this.touchActive = false
           this.hoveredIndex = null
           this.onHover(null)
           this.restoreActiveMedia()
-          this.container.setPointerCapture?.(event.pointerId)
+          try {
+            this.container.setPointerCapture?.(event.pointerId)
+          } catch {
+            // The pointer may already be inactive when a browser finishes dispatching this move.
+          }
         }
       }
 
@@ -474,23 +508,48 @@ class TestimonialGalleryApp {
   onPointerUp = (event: PointerEvent) => {
     if (!this.isDown) return
     const intent = this.dragIntent
+    const pointerType = this.pointerType
     this.isDown = false
     this.dragIntent = null
+    this.pointerType = ''
 
-    if (intent === 'vertical') return
+    if (!intent) return
+    const release = resolveTestimonialPointerRelease(pointerType, intent, this.moved)
+    if (release === 'ignore') return
 
-    if (intent === 'pending' && !this.moved) {
+    if (release === 'activate') {
       const hit = this.hitTest(event.clientX, event.clientY)
       if (hit) {
-        this.showHover(hit)
+        if (pointerType === 'touch' || pointerType === 'pen') this.showTouch(hit)
+        else this.showHover(hit)
+        return
+      }
+      if (this.touchActive) {
+        this.touchActive = false
+        this.clearHover()
         return
       }
     }
     this.paused = false
   }
 
-  onPointerLeave = () => {
+  onPointerCancel = () => {
+    if (!this.isDown) return
+    this.isDown = false
+    this.dragIntent = null
+    this.pointerType = ''
+    this.paused = this.touchActive
+  }
+
+  onPointerLeave = (event: PointerEvent) => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen' || this.touchActive) return
     if (!this.isDown && this.hoveredIndex !== null) this.clearHover()
+  }
+
+  onDocumentPointerDown = (event: PointerEvent) => {
+    if (!this.touchActive || this.container.contains(event.target as Node | null)) return
+    this.touchActive = false
+    this.clearHover()
   }
 
   onWheel = (event: WheelEvent) => {
@@ -525,6 +584,7 @@ class TestimonialGalleryApp {
   }
 
   onFocus = () => {
+    if (this.isDown && (this.pointerType === 'touch' || this.pointerType === 'pen')) return
     const media = this.centeredMedia()
     if (media) {
       this.showHover({ media, rect: media.getScreenRect() })
@@ -547,12 +607,13 @@ class TestimonialGalleryApp {
     this.container.addEventListener('pointerdown', this.onPointerDown)
     this.container.addEventListener('pointermove', this.onPointerMove)
     this.container.addEventListener('pointerup', this.onPointerUp)
-    this.container.addEventListener('pointercancel', this.onPointerUp)
+    this.container.addEventListener('pointercancel', this.onPointerCancel)
     this.container.addEventListener('pointerleave', this.onPointerLeave)
     this.container.addEventListener('wheel', this.onWheel, { passive: true })
     this.container.addEventListener('keydown', this.onKeyDown)
     this.container.addEventListener('focus', this.onFocus)
     this.container.addEventListener('blur', this.onBlur)
+    document.addEventListener('pointerdown', this.onDocumentPointerDown)
   }
 
   update = () => {
@@ -575,18 +636,20 @@ class TestimonialGalleryApp {
   destroy() {
     window.cancelAnimationFrame(this.raf)
     this.cancelMediaRestore()
+    this.cancelTouchSwitch()
     this.activeMedia?.setMuted(false)
     this.activeMedia = null
     window.removeEventListener('resize', this.onResize)
     this.container.removeEventListener('pointerdown', this.onPointerDown)
     this.container.removeEventListener('pointermove', this.onPointerMove)
     this.container.removeEventListener('pointerup', this.onPointerUp)
-    this.container.removeEventListener('pointercancel', this.onPointerUp)
+    this.container.removeEventListener('pointercancel', this.onPointerCancel)
     this.container.removeEventListener('pointerleave', this.onPointerLeave)
     this.container.removeEventListener('wheel', this.onWheel)
     this.container.removeEventListener('keydown', this.onKeyDown)
     this.container.removeEventListener('focus', this.onFocus)
     this.container.removeEventListener('blur', this.onBlur)
+    document.removeEventListener('pointerdown', this.onDocumentPointerDown)
     const canvas = this.renderer?.gl?.canvas as HTMLCanvasElement | undefined
     canvas?.remove()
   }
