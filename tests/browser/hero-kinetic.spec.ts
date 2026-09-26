@@ -10,8 +10,10 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
 
   const shapeGrid = page.getByTestId('hero-shape-grid')
   await expect(shapeGrid).toBeVisible()
-  await expect(shapeGrid.locator('.homepage-shape-grid__shape')).toHaveCount(35)
-  await expect(shapeGrid).toHaveCSS('pointer-events', 'none')
+  await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
+  await expect(shapeGrid).toHaveAttribute('data-motion', 'animated')
+  await expect(shapeGrid).toHaveCSS('pointer-events', 'auto')
+  await expect(shapeGrid.evaluate(node => node.tagName)).resolves.toBe('CANVAS')
 
   const consultation = page.getByTestId('hero-whatsapp-link')
   await expect(consultation).toBeVisible()
@@ -59,8 +61,9 @@ test('homepage opening respects reduced motion and remains complete on mobile', 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
 
-  const shape = page.getByTestId('hero-shape-grid').locator('.homepage-shape-grid__shape').first()
-  await expect(shape).toHaveCSS('animation-name', 'none')
+  const shapeGrid = page.getByTestId('hero-shape-grid')
+  await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
+  await expect(shapeGrid).toHaveAttribute('data-motion', 'reduced')
   await expect(page.getByTestId('hero-whatsapp-link')).toBeVisible()
   await expect(page.getByTestId('homepage-hero-cloud')).toBeVisible()
   await expect(page.getByTestId('homepage-social-proof').locator('article')).toHaveCount(3)

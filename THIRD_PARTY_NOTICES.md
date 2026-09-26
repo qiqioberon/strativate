@@ -49,3 +49,23 @@ already reproduced above.
 The component itself may not be sold, sublicensed, or redistributed as a
 standalone component, bundle, or ported component. The Software is provided
 "AS IS", without warranty of any kind.
+
+
+## React Bits — Shape Grid
+
+The implementation in `components/marketing/hero-shape-grid.tsx` is adapted from the React Bits Shape Grid component by David Haz and integrated into the Strativate homepage hero with brand-specific colors, a motion-safe fallback, and hero layering.
+
+MIT + Commons Clause License Condition v1.0
+
+Copyright (c) 2026 David Haz
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, and distribute the Software **as part of
+an application, website, or product**, subject to the Commons Clause restriction
+already reproduced above.
+
+The component itself may not be sold, sublicensed, or redistributed as a
+standalone component, bundle, or ported component. The Software is provided
+"AS IS", without warranty of any kind.
