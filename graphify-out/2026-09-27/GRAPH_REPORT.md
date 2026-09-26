@@ -1,17 +1,15 @@
-# Graph Report - strativate  (2026-09-27)
+# Graph Report - strativate  (2026-09-26)
 
 ## Corpus Check
-- 559 files · ~339,592 words
-- Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 50 file(s) not represented in the graph (top: .css 46, (none) 2, .example 1)
+- cluster-only mode — file stats not available
 
 ## Summary
-- 3582 nodes · 7537 edges · 263 communities (155 shown, 108 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 61 edges (avg confidence: 0.91)
+- 3478 nodes · 7372 edges · 263 communities (154 shown, 109 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 22 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d60b2078`
+- Built from commit: `d2ccee18`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,17 +20,17 @@
 - application.ts
 - 202609140009_phase3_private_mentoring.sql
 - hero-poster-management.tsx
-- react
+- client.ts
 - 202609200005_intensive_mentoring_operations.sql
 - 202609170003_private_mentoring_stakeholder_rules.sql
 - 202609210001_intensive_custom_offers_and_guarantee_commerce.sql
 - TestimonialGalleryApp
-- mentor-assignments.tsx
+- mentor-dashboard-client.tsx
 - createClient
 - 202609180001_checkout_notifications_zoom_operations.sql
 - database.types.ts
 - testimonial-management.tsx
-- setup-form.tsx
+- next
 - app/layout.tsx
 - mentor-website-seed-data.ts
 - 202609140006_shared_commerce.sql
@@ -43,21 +41,21 @@
 - ref_node_path
 - 202609200006_operational_realtime_invalidation.sql
 - private-mentoring-session-operations.tsx
-- mentor-public-profile-form.tsx
+- public-profile-types.ts
 - 202609060001_auth_onboarding.sql
 - demo-store.ts
 - google-calendar/server.ts
-- Global Constraints
+- react
 - supabase/server.ts
 - 202609170001_mentor_public_profiles_expertise.sql
-- editorial.ts
 - marketing-shell.tsx
+- home-page.tsx
 - availability-editor.tsx
 - 202609130001_mentor_domain.sql
-- home-page.tsx
-- public-profile-types.ts
+- buttonVariants
+- asset-registry.ts
 - requireAccount
-- hero-carousel.tsx
+- marketing-content.ts
 - mentee-availability.ts
 - createAdminClient
 - password-recovery/route.ts
@@ -68,34 +66,34 @@
 - intensive-mentoring-management.tsx
 - account-password-security.tsx
 - package.json
-- createClient
+- commerce/server.ts
 - sync.ts
 - scheduling-availability.ts
-- commerce-cart-link-management.tsx
-- lucide-react
-- humanizeProviderError
+- server-only
+- cn
+- mentor-domain.test.ts
 - private-mentoring-sessions.tsx
 - OnboardingExperience
-- checkout/page.tsx
+- account-provider.tsx
 - mentee-availability-server.ts
 - dependencies
 - 202609160002_mentoring_catalog_schema.sql
 - compilerOptions
 - compilerOptions
 - zoom/route.ts
-- auth-form.tsx
+- isDigitalProductsEnabled
 - role-calendar.tsx
-- intensive-mentoring/types.ts
+- private-mentoring/types.ts
 - public.list_admin_commerce_orders
 - program/page.tsx
 - components.json
 - admin-schedule-dialog.tsx
-- commerce-operations.tsx
+- AdminCommerceOperations
 - onboarding-responsive.spec.ts
-- config.ts
-- private-mentoring/types.ts
+- createClient
+- operational-realtime-provider.test.ts
 - review/page.tsx
-- card-swap.tsx
+- digital-product-card-swap.tsx
 - zoom/server.ts
 - @playwright/test
 - onboarding-ux.test.ts
@@ -103,16 +101,16 @@
 - motion.tsx
 - IntensiveMentoringSessionManagement
 - profile-form.tsx
-- onboarding/page.tsx
+- onboarding/types.ts
 - import-institutions.ts
 - public.admin_cancel_private_mentoring_session
 - onboarding/rules.ts
 - devDependencies
-- Supabase authentication and onboarding implementation plan
-- Global Constraints
+- commerce-operations.tsx
+- discount-code-management.tsx
 - notification-center.tsx
 - hero-kinetic.tsx
-- [token]/route.ts
+- dashboard.ts
 - calendar-scheduling.spec.ts
 - 202609190001_transactional_email_invoices.sql
 - 202609260001_commerce_discounts_sales_counts.sql
@@ -124,15 +122,15 @@
 - dashboard-shared-navigation.spec.ts
 - dashboard-shared-navigation.test.ts
 - digital-product-storefront-auth-ux.test.ts
-- Global Constraints
+- formatRupiah
 - EditorialContentManagement
 - PrivateMentoringManagement
 - 202609260002_commerce_discount_scope_sales_count_fix.sql
 - digital-product-protection.test.ts
 - react-bits-text-motion.test.ts
-- hero-shape-grid.tsx
-- marketing-landing-visual-polish.test.ts
-- formatRupiah
+- admin-account-security.tsx
+- setup-form.tsx
+- user-order-history.tsx
 - intensive-mentoring-engagements.tsx
 - public.service_seed_mentor_website_profiles
 - public.save_onboarding_step
@@ -161,7 +159,7 @@
 - program-kinetic-ui.test.ts
 - mentor_invites.sql
 - BrandedRouteLoading
-- route-loading-ui.test.ts
+- shape-grid-background.tsx
 - next
 - public.service_seed_dev_mentor_account
 - 202609140003_digital_product_domain.sql
@@ -172,12 +170,12 @@
 - Development Portrait Placeholder
 - operational_realtime.sql
 - mentor-public-profile-management.spec.ts
-- digital-product-admin-ui.test.ts
+- checkout-ui.test.ts
 - hero-kinetic-contract.test.ts
 - marketing-testimonials-migration.test.ts
-- marketing-interaction-contract.test.ts
+- mentor-public-runtime.test.ts
 - produk-digital/layout.tsx
-- Supabase Setup
+- README.md
 - Phase 2 Shared Commerce Design
 - pnpm
 - postcss.config.mjs
@@ -185,8 +183,8 @@
 - pg
 - public.import_institutions_batch
 - 202609170002_password_recovery_rate_limit.sql
-- mentor-weekly-admin-ui.test.ts
-- mentoring-catalog-migration.test.ts
+- admin-participant-ui.test.ts
+- program-layout-regression.test.ts
 - Digital Products Commerce, Library, and Protection Implementation Plan
 - Product / Catalog Master Design
 - Branch Integration Design
@@ -194,6 +192,7 @@
 - Operational Realtime Synchronization and Admin Account Security
 - Development Logo Placeholder
 - Next.js Agent Rules
+- Auth Implementation Report
 - Google Calendar Setup
 - Supabase Email Templates
 - Phase 2 Shared Commerce Hardening Implementation Plan
@@ -239,14 +238,14 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `createClient()` - 116 edges
-2. `react` - 103 edges
-3. `formError()` - 100 edges
+2. `react` - 102 edges
+3. `formError()` - 99 edges
 4. `lucide-react` - 99 edges
 5. `next` - 93 edges
 6. `createClient()` - 60 edges
 7. `requireAccount()` - 57 edges
 8. `formatRupiah()` - 37 edges
-9. `TestimonialGalleryApp` - 32 edges
+9. `createAdminClient()` - 32 edges
 10. `OnboardingExperience()` - 32 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -256,10 +255,10 @@
   app/icon.png → docs/strativate/frontend-handoff-receipt-2026-09-11.md
 - `Open Graph Image` --semantically_similar_to--> `Frontend Handoff Receipt (2026-09-11)`  [INFERRED] [semantically similar]
   app/opengraph-image.png → docs/strativate/frontend-handoff-receipt-2026-09-11.md
-- `Task 3: Global visual identity and shared chrome` --references--> `BrandLogo()`  [INFERRED]
-  docs/superpowers/plans/2026-09-11-frontend-handoff-integration.md → components/brand/brand-logo.tsx
-- `Task 4: Add type-specific Product Master detail rendering` --references--> `MarketingShell()`  [INFERRED]
-  docs/superpowers/plans/2026-09-10-product-catalog-main-integration.md → components/marketing/marketing-shell.tsx
+- `Mentor Invitation Email Template` --conceptually_related_to--> `Development Logo Placeholder`  [INFERRED]
+  supabase/email-templates/invite.html → public/assets/placeholders/logo-development.svg
+- `TrendChart()` --calls--> `formatRupiah()`  [EXTRACTED]
+  components/admin/commerce-operations.tsx → lib/commerce/money.ts
 
 ## Import Cycles
 - None detected.
@@ -271,35 +270,35 @@
 - **Shared Commerce Architecture** — public_commerce_items, public_orders, public_order_items, public_payment_attempts, midtrans_snap [EXTRACTED 1.00]
 - **Shared Commerce Implementation Flow** — docs_superpowers_plans_2026_09_14_phase_2_shared_commerce_plan, docs_superpowers_plans_2026_09_14_phase_2_commerce_hardening_plan, docs_superpowers_plans_2026_09_14_digital_products_commerce_library_protection_plan [EXTRACTED 1.00]
 
-## Communities (263 total, 108 thin omitted)
+## Communities (263 total, 109 thin omitted)
 
 ### Community 0 - "ref_node_assert"
-Cohesion: 0.04
-Nodes (17): ref_node_assert, ref_node_fs, ref_node_test, migration, participants, embed, legacy, page (+9 more)
+Cohesion: 0.05
+Nodes (16): ref_node_assert, ref_node_fs, ref_node_test, client, page, adminPage, featureFlags, manager (+8 more)
 
 ### Community 1 - "202609090001_product_catalog_master.sql"
 Cohesion: 0.05
 Nodes (67): public.catalog_protect_definition_identity, public.catalog_protect_deletion, public.catalog_protect_identity, public.catalog_protect_structure_deletion, public.catalog_protect_typed_structure, public.catalog_set_audit_fields, public.catalog_validate_published_item_trigger, catalog_add_ons_delete_guard (+59 more)
 
 ### Community 2 - "digital-product-management.tsx"
-Cohesion: 0.14
-Nodes (26): components_admin_digital_product_dialog_module, DigitalProductManagement(), removeProduct(), save(), updateName(), Draft, emptyDraft, formatFileSize() (+18 more)
+Cohesion: 0.06
+Nodes (56): GET(), maskedEmail(), CartLinkRow, CatalogTab, CommerceCartLinkManagement(), onComboKeyDown(), openDetail(), productCard() (+48 more)
 
 ### Community 3 - "application.ts"
-Cohesion: 0.06
-Nodes (57): POST(), readOrderId(), POST(), readOrderId(), authorized(), dynamic, GET(), POST() (+49 more)
+Cohesion: 0.07
+Nodes (52): POST(), readOrderId(), POST(), CheckoutPage(), loadOwnedOrder(), statusLabel(), ContextBackButton(), MidtransEmbed() (+44 more)
 
 ### Community 4 - "202609140009_phase3_private_mentoring.sql"
 Cohesion: 0.06
 Nodes (59): public.fulfill_paid_private_mentoring_order_trigger, public.private_mentoring_package_guard_identity, public.private_mentoring_session_entitlement_guard, public.sync_private_mentoring_commerce_item, session_number, commerce_cart_links_mentee_history, commerce_cart_links_touch_updated_at, competition_categories_public_order (+51 more)
 
 ### Community 5 - "hero-poster-management.tsx"
-Cohesion: 0.15
-Nodes (22): AdminMarketingPage(), HeroPosterManagement(), move(), remove(), reorderEditedPoster(), resetEditor(), save(), buildHeroPosterPayload() (+14 more)
-
-### Community 6 - "react"
 Cohesion: 0.07
-Nodes (44): Category, components_admin_data_management_module, InstitutionSortKey, types, OptionSortKey, DATE_TIME, InviteRow, InviteSortKey (+36 more)
+Nodes (45): AdminMarketingPage(), HeroPosterManagement(), move(), remove(), reorderEditedPoster(), resetEditor(), save(), toggleActive() (+37 more)
+
+### Community 6 - "client.ts"
+Cohesion: 0.06
+Nodes (47): Category, components_admin_data_management_module, InstitutionSortKey, types, OptionSortKey, EditorState, emptyEditor, components_admin_mentor_expertise_management_module (+39 more)
 
 ### Community 7 - "202609200005_intensive_mentoring_operations.sql"
 Cohesion: 0.07
@@ -315,35 +314,35 @@ Nodes (45): public.cart_items, public.intensive_mentoring_engagements, public.in
 
 ### Community 10 - "TestimonialGalleryApp"
 Cohesion: 0.07
-Nodes (23): GalleryHover, GL, HoverRect, lerp(), TestimonialCircularGallery(), TestimonialGalleryApp, TestimonialMedia, getTestimonialDragScrollDelta() (+15 more)
+Nodes (17): GalleryHover, GL, HoverRect, lerp(), TestimonialCircularGallery(), TestimonialGalleryApp, TestimonialMedia, getTestimonialHorizontalWheelDelta() (+9 more)
 
-### Community 11 - "mentor-assignments.tsx"
-Cohesion: 0.12
-Nodes (43): availabilityLabel(), availabilityTone(), collator, DataError(), detailDate(), EmptyState(), MentorPageHeader(), components_mentor_dashboard_dashboard_ui_mentorsessionstatuslabel (+35 more)
+### Community 11 - "mentor-dashboard-client.tsx"
+Cohesion: 0.15
+Nodes (39): availabilityLabel(), availabilityTone(), collator, DataError(), detailDate(), EmptyState(), MentorPageHeader(), components_mentor_dashboard_dashboard_ui_mentorsessionstatuslabel (+31 more)
 
 ### Community 12 - "createClient"
-Cohesion: 0.10
-Nodes (31): CompetitionCategoryManagement(), remove(), save(), toggleActive(), InstitutionManagement(), merge(), moderate(), save() (+23 more)
+Cohesion: 0.09
+Nodes (35): CompetitionCategoryManagement(), remove(), save(), InstitutionManagement(), merge(), moderate(), save(), compare() (+27 more)
 
 ### Community 13 - "202609180001_checkout_notifications_zoom_operations.sql"
 Cohesion: 0.06
 Nodes (30): public.assign_profile_calendar_color, public.guard_owned_digital_product_cart_link_item, public.notifications, public.notify_order_operational_changes, public.require_private_mentoring_competition_before_schedule, cart_link_owned_digital_product_guard, orders_operational_notifications, private_mentoring_competition_schedule_guard (+22 more)
 
 ### Community 14 - "database.types.ts"
-Cohesion: 0.04
-Nodes (52): DiscountCodeManagement(), closeEditor(), edit(), save(), Draft, emptyDraft, toLocalInput(), allowedImageTypes (+44 more)
+Cohesion: 0.05
+Nodes (40): allowedImageTypes, Draft, EditorialKind, emptyDraft, StatusFilter, AdminCartLinkView, AdminPrivateMentoringSessionRow, ApprovalStatus (+32 more)
 
 ### Community 15 - "testimonial-management.tsx"
 Cohesion: 0.12
 Nodes (35): Draft, draftFromItem(), emptyDraft, components_admin_testimonial_management_module, TestimonialManagement(), beginEdit(), move(), remove() (+27 more)
 
-### Community 16 - "setup-form.tsx"
-Cohesion: 0.17
-Nodes (11): InactiveMentorAccount(), AuthPage(), RecoveryPage(), SetupPage(), AuthShell(), PasswordInput(), Props, SetupForm() (+3 more)
+### Community 16 - "next"
+Cohesion: 0.10
+Nodes (22): POST(), POST(), readOrderId(), InactiveMentorAccount(), AuthPage(), RecoveryPage(), SetupPage(), GET() (+14 more)
 
 ### Community 17 - "app/layout.tsx"
-Cohesion: 0.06
-Nodes (40): app_admin_layout_fixes, app_admin_mentoring_scheduling, app_admin_mentoring_tables, app_auth_auth, app_calendar_integration, app_calendar_mobile_polish, app_digital_product_commerce, app_digital_product_ux (+32 more)
+Cohesion: 0.07
+Nodes (35): app_admin_layout_fixes, app_admin_mentoring_scheduling, app_admin_mentoring_tables, app_auth_auth, app_calendar_integration, app_calendar_mobile_polish, app_digital_product_commerce, app_digital_product_ux (+27 more)
 
 ### Community 18 - "mentor-website-seed-data.ts"
 Cohesion: 0.09
@@ -355,15 +354,15 @@ Nodes (31): public.prevent_order_item_mutation, public.retire_digital_product_co
 
 ### Community 20 - "server.mjs"
 Cohesion: 0.08
-Nodes (37): ref_node_http, activeCart(), bearerUser(), cartRows(), categories, categoryNames, cors(), createOrder() (+29 more)
+Nodes (36): ref_node_http, activeCart(), bearerUser(), cartRows(), categories, categoryNames, cors(), createOrder() (+28 more)
 
 ### Community 21 - "intensive-mentoring/scheduling-server.ts"
-Cohesion: 0.12
-Nodes (24): GET(), POST(), GET(), BookableSlot, buildBookableSlots(), BuildBookableSlotsInput, iso(), millis() (+16 more)
+Cohesion: 0.11
+Nodes (27): POST(), GET(), POST(), GET(), BookableSlot, buildBookableSlots(), BuildBookableSlotsInput, iso() (+19 more)
 
 ### Community 22 - "app/admin/page.tsx"
-Cohesion: 0.07
-Nodes (40): AdminDashboard(), groups, NavItem, Section, buildNav(), DashboardClient(), Overview(), Section (+32 more)
+Cohesion: 0.11
+Nodes (25): AdminDashboard(), groups, NavItem, Section, buildNav(), DashboardClient(), Overview(), Section (+17 more)
 
 ### Community 23 - "private-mentoring-enrollment-management.tsx"
 Cohesion: 0.08
@@ -371,19 +370,19 @@ Nodes (25): AdminMentoringSessionWorkspace(), keydown(), select(), Mode, DATE, D
 
 ### Community 24 - "ref_node_path"
 Cohesion: 0.06
-Nodes (16): ref_node_path, projectRoot, expertiseSeeds, migrationPath, root, productionFiles(), root, root (+8 more)
+Nodes (17): ref_node_path, projectRoot, expertiseSeeds, migrationPath, root, root, experience, root (+9 more)
 
 ### Community 25 - "202609200006_operational_realtime_invalidation.sql"
 Cohesion: 0.07
 Nodes (20): public.invalidate_cart_operational_changes, public.invalidate_intensive_engagement_operational_changes, public.invalidate_intensive_entitlement_operational_changes, public.invalidate_mentor_invitation_operational_changes, public.invalidate_order_operational_changes, public.invalidate_private_enrollment_operational_changes, cart_items_operational_invalidation, carts_operational_invalidation (+12 more)
 
 ### Community 26 - "private-mentoring-session-operations.tsx"
-Cohesion: 0.15
-Nodes (10): AdminCompetitionEditor(), AdminSessionOperations(), Category, Competition, effectiveMeetingLabel(), MeetingState, providerLabel(), recordingLabel() (+2 more)
+Cohesion: 0.12
+Nodes (22): POST(), POST(), GET(), PUT(), requireAdmin(), state(), POST(), AdminSessionOperations() (+14 more)
 
-### Community 27 - "mentor-public-profile-form.tsx"
-Cohesion: 0.20
-Nodes (10): Draft, isRecord(), MentorPublicProfileForm(), cancelEditing(), save(), startEditing(), normalizeSavedPayload(), publicationLabel() (+2 more)
+### Community 27 - "public-profile-types.ts"
+Cohesion: 0.11
+Nodes (23): MentorDashboard(), Draft, isRecord(), MentorPublicProfileForm(), cancelEditing(), save(), startEditing(), normalizeSavedPayload() (+15 more)
 
 ### Community 28 - "202609060001_auth_onboarding.sql"
 Cohesion: 0.09
@@ -395,79 +394,79 @@ Nodes (28): clone(), completePurchase(), createPendingOrder(), DEMO_STORE_KEY, D
 
 ### Community 30 - "google-calendar/server.ts"
 Cohesion: 0.15
-Nodes (27): calendarReturnPath(), GET(), GET(), decryptGoogleCredential(), encryptGoogleCredential(), key(), accessToken(), base64UrlSha256() (+19 more)
+Nodes (26): calendarReturnPath(), GET(), GET(), decryptGoogleCredential(), encryptGoogleCredential(), key(), accessToken(), base64UrlSha256() (+18 more)
 
-### Community 31 - "Global Constraints"
-Cohesion: 0.08
-Nodes (25): CatalogManagement(), CatalogManagementFilter, CatalogManagementItem, CatalogManagementProps, CatalogBrowser(), Global Constraints, Product / Catalog Master Implementation Plan, Task 1: PostgreSQL catalog schema, lifecycle, security, and authoritative seed (+17 more)
+### Community 31 - "react"
+Cohesion: 0.10
+Nodes (14): CatalogManagementFilter, CatalogManagementItem, CatalogManagementProps, ALLOWED, CatalogBrowserItem, CopyTextButton(), MentorCard(), MentorDetailModal() (+6 more)
 
 ### Community 32 - "supabase/server.ts"
-Cohesion: 0.19
-Nodes (17): isAtOrBelow(), isProtectedApplicationPath(), protectedRoots, applyAuthCookiePersistence(), AUTH_PERSISTENCE_COOKIE, AUTH_PERSISTENCE_MAX_AGE, AuthCookieToSet, authPersistenceModeFromCookieValue() (+9 more)
+Cohesion: 0.14
+Nodes (23): PendingLogin, Props, SessionChoiceDialog(), isAtOrBelow(), isProtectedApplicationPath(), protectedRoots, applyAuthCookiePersistence(), AUTH_PERSISTENCE_COOKIE (+15 more)
 
 ### Community 33 - "202609170001_mentor_public_profiles_expertise.sql"
 Cohesion: 0.13
 Nodes (23): public.sync_mentor_public_tier, mentor_expertise_name_ci_unique, mentor_expertise_order_idx, mentor_expertise_touch_updated_at, mentor_profiles_sync_public_tier, mentor_public_achievements_profile_order_idx, mentor_public_achievements_touch_updated_at, mentor_public_profile_expertise_expertise_idx (+15 more)
 
-### Community 34 - "editorial.ts"
+### Community 34 - "marketing-shell.tsx"
 Cohesion: 0.15
-Nodes (17): CompetitionsPage(), CompetitionDetailPage(), PublicationsPage(), PublicationDetailPage(), CompetitionDirectory(), PublicationDirectory(), coverUrl(), CompetitionFilterInput (+9 more)
+Nodes (19): CompetitionsPage(), CompetitionDetailPage(), PublicationsPage(), PublicationDetailPage(), CompetitionDirectory(), MarketingShell(), PublicationDirectory(), coverUrl() (+11 more)
 
-### Community 35 - "marketing-shell.tsx"
-Cohesion: 0.08
-Nodes (32): MentorPage(), ProgramPage(), FaqPage(), icons, categories, FaqCategory, FaqDirectory(), FaqFilter (+24 more)
+### Community 35 - "home-page.tsx"
+Cohesion: 0.12
+Nodes (21): FaqPage(), IntensiveMentoringEntitlements(), kindLabel(), categories, FaqCategory, FaqDirectory(), FaqFilter, testId() (+13 more)
 
 ### Community 36 - "availability-editor.tsx"
-Cohesion: 0.05
-Nodes (62): MentorInviteForm(), submit(), MentorManagement(), deleteMentor(), setMentorActive(), tierSaved(), AvailabilityConfigured, formatWeekRange() (+54 more)
+Cohesion: 0.14
+Nodes (26): AvailabilityConfigured, formatWeekRange(), MentorAvailabilityEditor(), addRange(), removeRange(), replaceSelectedRanges(), save(), updateRange() (+18 more)
 
 ### Community 37 - "202609130001_mentor_domain.sql"
 Cohesion: 0.09
 Nodes (21): public.mentor_profile_require_mentor, public.sync_mentor_profile_for_role, public.validate_mentor_invite_tier, mentor_availability_lookup_idx, mentor_availability_touch_updated_at, mentor_invites_tier_idx, mentor_invites_validate_tier, mentor_profiles_require_mentor (+13 more)
 
-### Community 38 - "home-page.tsx"
-Cohesion: 0.12
-Nodes (28): DigitalProductsPage(), DigitalProductDetailPage(), CartView(), applyDiscount(), removeDiscount(), removeItem(), CheckoutButton(), itemKindLabel() (+20 more)
+### Community 38 - "buttonVariants"
+Cohesion: 0.14
+Nodes (21): CartPage(), DigitalProductsPage(), CartView(), applyDiscount(), removeDiscount(), removeItem(), CheckoutButton(), itemKindLabel() (+13 more)
 
-### Community 39 - "public-profile-types.ts"
-Cohesion: 0.07
-Nodes (36): AssetMedia(), AssetMediaProps, MentorCard(), MentorDetailModal(), MentorDirectory(), TierFilter, MentorMarqueeGroup(), MentorPortraitMedia() (+28 more)
+### Community 39 - "asset-registry.ts"
+Cohesion: 0.09
+Nodes (19): MentorPage(), MentorDirectory(), PageIntro(), PageIntroProps, AssetKey, AssetPriority, assetRegistry, AssetStatus (+11 more)
 
 ### Community 40 - "requireAccount"
-Cohesion: 0.10
-Nodes (19): AdminAccountBoundary(), POST(), DELETE(), GET(), GET(), app_cart_cart, CartLayout(), app_checkout_checkout (+11 more)
+Cohesion: 0.11
+Nodes (15): DELETE(), GET(), dynamic, GET(), GET(), app_cart_cart, CartLayout(), app_checkout_checkout (+7 more)
 
-### Community 41 - "hero-carousel.tsx"
-Cohesion: 0.15
-Nodes (22): HeroCarousel(), selectCarousel(), selectNextPoster(), selectPoster(), selectPreviousPoster(), beginCarouselPointer(), CAROUSEL_AUTOPLAY_DELAY, CAROUSEL_SWIPE_DISTANCE (+14 more)
+### Community 41 - "marketing-content.ts"
+Cohesion: 0.09
+Nodes (20): icons, CartEntryLink(), icons, isActiveRoute(), SiteHeader(), InitialBrandIntro(), IntroPhase, components_navigation_initial_brand_intro_module (+12 more)
 
 ### Community 42 - "mentee-availability.ts"
-Cohesion: 0.12
-Nodes (24): compactDate(), dateButtonLabel(), dateValue(), EMPTY_FILTERS, fullDate(), MentorAvailabilityExplorer(), openFreshDay(), SelectedDetail (+16 more)
+Cohesion: 0.14
+Nodes (20): compactDate(), dateButtonLabel(), dateValue(), EMPTY_FILTERS, fullDate(), MentorAvailabilityExplorer(), openFreshDay(), SelectedDetail (+12 more)
 
 ### Community 43 - "createAdminClient"
 Cohesion: 0.16
-Nodes (17): GET(), PUT(), requireAdmin(), state(), ALLOWED, clamp(), DELETE(), GET() (+9 more)
+Nodes (19): GET(), PUT(), requireAdmin(), state(), POST(), ALLOWED, clamp(), DELETE() (+11 more)
 
 ### Community 44 - "password-recovery/route.ts"
 Cohesion: 0.19
 Nodes (20): clientIp(), consumeRateLimit(), hashIdentifier(), noStoreHeaders, POST(), RateLimitDecision, ForgotPasswordPage(), countdownLabel() (+12 more)
 
 ### Community 45 - "operational-realtime-provider.tsx"
-Cohesion: 0.08
-Nodes (28): createOperationalRealtimeController(), isAppRole(), Listener, OperationalRealtimeChannel, OperationalRealtimeClient, OperationalRealtimeContext, OperationalRealtimeContextValue, OperationalRealtimeControllerOptions (+20 more)
+Cohesion: 0.15
+Nodes (21): createOperationalRealtimeController(), isAppRole(), Listener, OperationalRealtimeClient, OperationalRealtimeContext, OperationalRealtimeContextValue, OperationalRealtimeControllerOptions, parseRevisionRow() (+13 more)
 
 ### Community 46 - "program-detail.tsx"
-Cohesion: 0.15
-Nodes (18): CheckoutPage(), generateMetadata(), ProgramDetailPage(), ProgramComparison(), groupPackages(), components_programs_program_detail_module, ProgramDetail(), getPublicIntensiveMentoringCatalog() (+10 more)
+Cohesion: 0.16
+Nodes (17): CheckoutPage(), generateMetadata(), ProgramDetailPage(), ProgramComparison(), groupPackages(), components_programs_program_detail_module, ProgramDetail(), getPublicIntensiveMentoringCatalog() (+9 more)
 
 ### Community 47 - "intensive-mentoring-session-management.tsx"
-Cohesion: 0.15
-Nodes (12): AddOn, AdminSession, Engagement, Focus, Mentor, RpcClient, scheduleLabel(), STAGES (+4 more)
+Cohesion: 0.10
+Nodes (21): AddOn, AdminSession, Engagement, Focus, Mentor, RpcClient, scheduleLabel(), STAGES (+13 more)
 
 ### Community 48 - "experience.tsx"
-Cohesion: 0.11
-Nodes (31): fullName(), TransitionTarget, InlineError(), OnboardingProgress(), PrimaryAction(), QuestionStage(), CohortStage(), InstitutionStage() (+23 more)
+Cohesion: 0.16
+Nodes (20): fullName(), TransitionTarget, InlineError(), OnboardingProgress(), PrimaryAction(), QuestionStage(), CohortStage(), InstitutionStage() (+12 more)
 
 ### Community 49 - "intensive-mentoring-management.tsx"
 Cohesion: 0.09
@@ -478,32 +477,32 @@ Cohesion: 0.15
 Nodes (19): AccountPasswordAuth, AccountPasswordSecrets, AccountPasswordSecurity(), cancelPasswordChange(), clearPasswordSecrets(), confirmNonce(), sendNonce(), submitPassword() (+11 more)
 
 ### Community 51 - "package.json"
-Cohesion: 0.08
-Nodes (23): name, packageManager, private, version, @base-ui/react, class-variance-authority, clsx, eslint (+15 more)
+Cohesion: 0.10
+Nodes (20): name, packageManager, private, version, clsx, eslint, eslint-config-next, postcss (+12 more)
 
-### Community 52 - "createClient"
-Cohesion: 0.08
-Nodes (46): checkoutActiveCart(), CartPage(), MenteeDashboard(), ProtectedDigitalProductPage(), metadata, Page(), AccessPayload, ProtectedContentViewer() (+38 more)
+### Community 52 - "commerce/server.ts"
+Cohesion: 0.19
+Nodes (18): summarizeCart(), commerceError(), getPublicDigitalProduct(), getPublicSalesCounts(), listHomepageDigitalProducts(), listPublicDigitalProducts(), OwnedDigitalProductRpcRow, withPublicCover() (+10 more)
 
 ### Community 53 - "sync.ts"
-Cohesion: 0.15
-Nodes (15): GoogleCalendarRestProvider, CalendarProvider, cancelSessionEvent(), DeleteEventInput, deterministicGoogleEventId(), EventDeleteProvider, EventUpsertProvider, googleEventDeleteUrl() (+7 more)
+Cohesion: 0.13
+Nodes (16): GoogleCalendarRestProvider, CalendarProvider, cancelSessionEvent(), DeleteEventInput, deterministicGoogleEventId(), EventDeleteProvider, EventUpsertProvider, googleEventDeleteUrl() (+8 more)
 
 ### Community 54 - "scheduling-availability.ts"
 Cohesion: 0.16
 Nodes (19): addIsoDays(), availabilityMatchesFilters(), availabilityWeekKind(), buildBookableMentorDays(), dateKeyInTimeZone(), isoWeekday(), localClockMinutes(), mergeRanges() (+11 more)
 
-### Community 55 - "commerce-cart-link-management.tsx"
-Cohesion: 0.11
-Nodes (19): CartLinkRow, CatalogTab, CommerceCartLinkManagement(), onComboKeyDown(), openDetail(), productCard(), selectMentee(), toggleItem() (+11 more)
-
-### Community 56 - "lucide-react"
+### Community 55 - "server-only"
 Cohesion: 0.18
-Nodes (8): BrandLogo(), BrandLogoProps, CatalogBrowserItem, CartEntryLink(), footerLinks, icons, lucide-react, next
+Nodes (16): authorized(), dynamic, GET(), sendTransactionalEmail(), deliverPaidInvoiceForOrder(), DeliveryRow, drainPaidInvoiceOutbox(), DueOrder (+8 more)
 
-### Community 57 - "humanizeProviderError"
-Cohesion: 0.20
-Nodes (16): POST(), GET(), PUT(), requireAdmin(), state(), POST(), POST(), POST() (+8 more)
+### Community 56 - "cn"
+Cohesion: 0.18
+Nodes (13): BrandLogo(), BrandLogoProps, AssetMedia(), AssetMediaProps, MentorPortraitMedia(), MentorPortraitMediaProps, MarketingProgram, ProgramCard() (+5 more)
+
+### Community 57 - "mentor-domain.test.ts"
+Cohesion: 0.17
+Nodes (13): MentorManagement(), deleteMentor(), setMentorActive(), tierSaved(), parseMentorInvitationInput(), managedMentorAccountStatus(), managedMentorAvailability(), managedMentorName() (+5 more)
 
 ### Community 58 - "private-mentoring-sessions.tsx"
 Cohesion: 0.14
@@ -513,13 +512,13 @@ Nodes (19): canEditTopic(), Category, Competition, CompetitionDraft, Draft, meet
 Cohesion: 0.24
 Nodes (19): OnboardingExperience(), clearInteractionError(), continueInstitution(), renderStage(), runCanonicalSave(), saveIdentity(), saveInstitution(), saveInterests() (+11 more)
 
-### Community 60 - "checkout/page.tsx"
-Cohesion: 0.19
-Nodes (10): CheckoutPage(), loadOwnedOrder(), statusLabel(), ContextBackButton(), MidtransEmbed(), SnapEmbedOptions, Window, getOrderWithItems() (+2 more)
+### Community 60 - "account-provider.tsx"
+Cohesion: 0.14
+Nodes (11): AdminAccountBoundary(), AccountContext, AccountProfile, AccountProvider(), OperationalRealtimeProvider(), Profile, profile, profile (+3 more)
 
 ### Community 61 - "mentee-availability-server.ts"
-Cohesion: 0.17
-Nodes (17): dynamic, GET(), dateInTimeZone(), addIsoDays(), AvailabilityRuleRow, BusySessionRow, controlledError(), fallbackWindow() (+9 more)
+Cohesion: 0.15
+Nodes (19): dateInTimeZone(), buildMenteeAvailabilityMentors(), MenteeAvailabilityTier, MenteeDiscoveryMentorInput, mergeBookableSlotRanges(), addIsoDays(), AvailabilityRuleRow, BusySessionRow (+11 more)
 
 ### Community 62 - "dependencies"
 Cohesion: 0.10
@@ -538,28 +537,28 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib (+11 more)
 
 ### Community 66 - "zoom/route.ts"
-Cohesion: 0.20
-Nodes (12): configurationError(), POST(), runtime, ZoomRecordingFile, ZoomWebhookBody, ZoomWebhookObject, zoomWebhookEventKey(), safeEqual() (+4 more)
+Cohesion: 0.19
+Nodes (13): configurationError(), POST(), runtime, ZoomRecordingFile, ZoomWebhookBody, ZoomWebhookObject, zoomWebhookEventKey(), safeEqual() (+5 more)
 
-### Community 67 - "auth-form.tsx"
-Cohesion: 0.21
-Nodes (11): AuthForm(), authenticate(), submit(), PendingLogin, Props, SessionChoiceDialog(), signOut(), AuthPersistenceMode (+3 more)
+### Community 67 - "isDigitalProductsEnabled"
+Cohesion: 0.18
+Nodes (12): checkoutActiveCart(), ProtectedDigitalProductPage(), metadata, Page(), AccessPayload, ProtectedContentViewer(), watermarkPositions, createOrderFromCart() (+4 more)
 
 ### Community 68 - "role-calendar.tsx"
 Cohesion: 0.14
 Nodes (13): addDays(), Connection, dayKey(), EventItem, eventStyle(), monday(), OauthNotice, Payload (+5 more)
 
-### Community 69 - "intensive-mentoring/types.ts"
-Cohesion: 0.13
-Nodes (16): MentoringWorkspace(), keydown(), select(), Mode, IntensiveAddOnView, IntensiveEngagementView, IntensiveMentoringAddOnCatalogView, IntensiveMentoringBundleItemView (+8 more)
+### Community 69 - "private-mentoring/types.ts"
+Cohesion: 0.15
+Nodes (15): MentoringWorkspace(), keydown(), select(), Mode, IntensiveEngagementView, IntensiveMentoringEntitlementView, PrivateMentoringCompetitionCategoryView, PrivateMentoringLearningPathView (+7 more)
 
 ### Community 70 - "public.list_admin_commerce_orders"
 Cohesion: 0.11
 Nodes (17): public.commerce_cart_link_items, public.get_admin_commerce_item_detail(), public.list_admin_cart_links_page(), public.list_admin_commerce_orders(), public.list_admin_purchasable_commerce_items(), auth.users, public.commerce_cart_links, public.commerce_items (+9 more)
 
 ### Community 71 - "program/page.tsx"
-Cohesion: 0.09
-Nodes (23): intensiveFit, organizationServices, programFaq, app_program_program_layout_fix, app_program_program_page, PageIntro(), PageIntroProps, ProgramKineticSurface() (+15 more)
+Cohesion: 0.16
+Nodes (14): intensiveFit, organizationServices, programFaq, ProgramPage(), app_program_program_layout_fix, app_program_program_page, ProgramKineticSurface(), resetPointer() (+6 more)
 
 ### Community 72 - "components.json"
 Cohesion: 0.11
@@ -569,29 +568,29 @@ Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 mor
 Cohesion: 0.16
 Nodes (15): AdminScheduleDialog(), chooseDay(), availabilityDate(), availabilityFullDate(), AvailabilityRange, availabilityTime(), calendarStatusClass(), calendarStatusLabel() (+7 more)
 
-### Community 74 - "commerce-operations.tsx"
-Cohesion: 0.11
-Nodes (22): AdminCommerceOperations(), exportCsv(), EMPTY_REPORT, itemKindLabel(), Mode, OrderDialog(), OrderSortKey, OrdersTable() (+14 more)
+### Community 74 - "AdminCommerceOperations"
+Cohesion: 0.15
+Nodes (12): AdminCommerceOperations(), exportCsv(), toRange(), AdminCommerceItem, AdminCommerceOrder, AdminCommerceReport, AdminPaymentSummary, buildCommerceCsv() (+4 more)
 
 ### Community 75 - "onboarding-responsive.spec.ts"
-Cohesion: 0.16
-Nodes (11): ambientMotionState(), authenticateOnboardingFixture(), completeIdentity(), completeInstitution(), expectAmbientMoved(), expectHorizontallyInsideViewport(), fixtureJwt(), goToPassword() (+3 more)
+Cohesion: 0.14
+Nodes (10): ambientMotionState(), authenticateOnboardingFixture(), completeIdentity(), completeInstitution(), expectAmbientMoved(), expectHorizontallyInsideViewport(), fixtureJwt(), goToPassword() (+2 more)
 
-### Community 76 - "config.ts"
-Cohesion: 0.19
-Nodes (11): GET(), maskedEmail(), DIGITAL_PRODUCT_CONTENT_BUCKET, DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE, DIGITAL_PRODUCT_CONTENT_NAMESPACE, DIGITAL_PRODUCT_CONTENT_SIGNED_URL_SECONDS, DIGITAL_PRODUCT_IMAGE_ALLOWED_TYPES, DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE (+3 more)
-
-### Community 77 - "private-mentoring/types.ts"
+### Community 76 - "createClient"
 Cohesion: 0.24
-Nodes (8): IntensiveMentoringEntitlements(), kindLabel(), IntensiveMentoringEntitlementView, PrivateMentoringCompetitionCategoryView, PrivateMentoringLearningPathView, PrivateMentoringPackageView, PrivateMentoringSessionView, PrivateMentoringTopicStatus
+Nodes (14): MenteeDashboard(), getActiveCart(), listOwnedDigitalProducts(), listUserOrders(), EngagementRow, listMyIntensiveMentoringEngagements(), getPublicPrivateMentoringCatalog(), IntensiveEntitlementRow (+6 more)
+
+### Community 77 - "operational-realtime-provider.test.ts"
+Cohesion: 0.18
+Nodes (5): OperationalRealtimeChannel, VisibilitySource, createHarness(), FakeChannel, FakeVisibility
 
 ### Community 78 - "review/page.tsx"
-Cohesion: 0.20
-Nodes (12): OnboardingReviewPage(), reviseHref(), summarizeInterests(), days, displayDemoLabel(), displayDemoNotification(), legacyLabels, months (+4 more)
+Cohesion: 0.18
+Nodes (13): OnboardingReviewPage(), reviseHref(), summarizeInterests(), ReferralStage(), days, displayDemoLabel(), displayDemoNotification(), legacyLabels (+5 more)
 
-### Community 79 - "card-swap.tsx"
-Cohesion: 0.24
-Nodes (9): Card, CardProps, CardRef, CardSwap(), CardSwapProps, placeCard(), Slot, slotFor() (+1 more)
+### Community 79 - "digital-product-card-swap.tsx"
+Cohesion: 0.17
+Nodes (12): Card, CardProps, CardRef, CardSwap(), CardSwapProps, placeCard(), Slot, slotFor() (+4 more)
 
 ### Community 80 - "zoom/server.ts"
 Cohesion: 0.28
@@ -607,47 +606,47 @@ Nodes (14): calendar, css, experience, frame, motion, onboardingLayout, page, pi
 
 ### Community 83 - "calendar/server.ts"
 Cohesion: 0.22
-Nodes (12): GET(), CalendarEvent, GoogleCalendarEvent, mergeCalendarEvents(), StrativateCalendarEvent, AccountShape, AnyRow, loadCalendarEvents() (+4 more)
+Nodes (11): GET(), CalendarEvent, GoogleCalendarEvent, mergeCalendarEvents(), StrativateCalendarEvent, AccountShape, AnyRow, loadCalendarEvents() (+3 more)
 
 ### Community 84 - "motion.tsx"
-Cohesion: 0.16
-Nodes (15): MotionContext, MotionContextValue, OnboardingMotionProvider(), OnboardingRouteLink(), OnboardingRouteStage(), RoutePhase, shouldHandle(), useOnboardingMotion() (+7 more)
+Cohesion: 0.20
+Nodes (11): MotionContext, MotionContextValue, OnboardingMotionProvider(), OnboardingRouteLink(), OnboardingRouteStage(), RoutePhase, shouldHandle(), useOnboardingMotion() (+3 more)
 
 ### Community 85 - "IntensiveMentoringSessionManagement"
 Cohesion: 0.21
 Nodes (11): IntensiveMentoringSessionManagement(), addSession(), assignSessionMentor(), attachAddOn(), closeConfig(), resetMentorDraft(), resetProgressDraft(), resolveTopic() (+3 more)
 
 ### Community 86 - "profile-form.tsx"
-Cohesion: 0.13
-Nodes (19): AdminAccountSecurity(), submitEmail(), AdminEmailAuth, AuthError, AuthUser, EmailChangeResult, isValidEmail(), requestAdminEmailChange() (+11 more)
+Cohesion: 0.24
+Nodes (10): ProfileAvatarEditor(), choose(), drop(), displayValue(), ProfileForm(), submit(), ProfileUpdateClient, ProfileWithContact (+2 more)
 
-### Community 87 - "onboarding/page.tsx"
-Cohesion: 0.40
-Nodes (4): revisionTargets, OnboardingExperienceProps, RevisionTarget, OnboardingWizard()
+### Community 87 - "onboarding/types.ts"
+Cohesion: 0.14
+Nodes (13): atmosphereForStage(), CanonicalStep, initialVisualStage(), OnboardingAtmosphere, OnboardingExperienceProps, RevisionTarget, revisionVisualStage(), TransitionPhase (+5 more)
 
 ### Community 88 - "import-institutions.ts"
-Cohesion: 0.22
-Nodes (11): csv-parse, args, dryRun, main(), path, pathArg, postgres, columns (+3 more)
+Cohesion: 0.20
+Nodes (12): Database, csv-parse, args, dryRun, main(), path, pathArg, postgres (+4 more)
 
 ### Community 89 - "public.admin_cancel_private_mentoring_session"
 Cohesion: 0.20
 Nodes (11): public.admin_cancel_private_mentoring_session(), public.list_my_mentor_private_mentoring_sessions(), auth.users, public.mentor_profiles, public.mentor_tiers, public.private_mentoring_enrollments, public.private_mentoring_packages, public.private_mentoring_session_calendar_integrations (+3 more)
 
 ### Community 90 - "onboarding/rules.ts"
-Cohesion: 0.22
-Nodes (14): OnboardingPage(), institutionLabels, InstitutionPicker(), choose(), keyDown(), submitInstitution(), exactInstitutionMatches(), institutionPayload (+6 more)
+Cohesion: 0.27
+Nodes (11): institutionLabels, InstitutionPicker(), choose(), keyDown(), submitInstitution(), exactInstitutionMatches(), normalizeInstitutionName(), onboardingNameDefaults() (+3 more)
 
 ### Community 91 - "devDependencies"
 Cohesion: 0.14
 Nodes (14): devDependencies, eslint, eslint-config-next, exceljs, @playwright/test, postcss, tailwindcss, @tailwindcss/postcss (+6 more)
 
-### Community 92 - "Supabase authentication and onboarding implementation plan"
-Cohesion: 0.20
-Nodes (9): Constraints and inspection, Execution record, Supabase authentication and onboarding implementation plan, Task 1: Database security and persistence, Task 2: Authentication and route integration, Task 3: Onboarding UI, Task 4: Administration and importer, Task 5: Verification and review (+1 more)
+### Community 92 - "commerce-operations.tsx"
+Cohesion: 0.21
+Nodes (11): EMPTY_REPORT, itemKindLabel(), Mode, OrderDialog(), OrderSortKey, OrdersTable(), RpcResult, statusLabel() (+3 more)
 
-### Community 93 - "Global Constraints"
-Cohesion: 0.20
-Nodes (9): Global Constraints, Strativate Homepage Redesign and Asset System Implementation Plan, Task 1: Lock routing and content-safety behavior in tests, Task 3: Migrate the Mentor Dashboard and create native route boundaries, Task 4: Evolve the shared button primitive, Task 6: Build the redesigned editorial homepage, Task 7: Implement the dedicated marketing pages, Task 8: Full verification and visual iteration (+1 more)
+### Community 93 - "discount-code-management.tsx"
+Cohesion: 0.18
+Nodes (10): DiscountCodeManagement(), closeEditor(), edit(), save(), Draft, emptyDraft, toLocalInput(), DiscountCode (+2 more)
 
 ### Community 94 - "notification-center.tsx"
 Cohesion: 0.23
@@ -657,9 +656,9 @@ Nodes (9): Category, categoryLabel(), DashboardNotificationCenter(), markRead(),
 Cohesion: 0.27
 Nodes (12): HeroKineticSurface(), resetSpotlight(), updateSpotlight(), HeroVisualStage(), resetTilt(), updateTilt(), MagneticAction(), resetMagnet() (+4 more)
 
-### Community 96 - "[token]/route.ts"
-Cohesion: 0.39
-Nodes (6): POST(), GET(), redirectWithReturnCookie(), createAdminCartLink(), CreatedCartLink, hashCartLinkToken()
+### Community 96 - "dashboard.ts"
+Cohesion: 0.32
+Nodes (9): buildMentorMenteeSummaries(), buildMentorOverview(), dateKey(), dateParts(), historyMentorSessions(), isUpcomingMentorSession(), MentorOverviewData, monthKey() (+1 more)
 
 ### Community 97 - "calendar-scheduling.spec.ts"
 Cohesion: 0.22
@@ -705,9 +704,9 @@ Nodes (10): accountProvider, admin, adminLayout, mentee, menteeLayout, mentor, m
 Cohesion: 0.18
 Nodes (10): addToCart, dashboard, detailPage, directory, header, listPage, operationsStyles, shell (+2 more)
 
-### Community 108 - "Global Constraints"
-Cohesion: 0.22
-Nodes (8): Frontend Handoff Integration Implementation Plan, Global Constraints, Task 1: Source-backed content contracts, Task 2: Brand and mentor production assets, Task 3: Global visual identity and shared chrome, Task 4: Mentor directory and homepage proof, Task 5: Eight-service Program overview and detail reconciliation, Task 6: Documentation and automated/browser verification
+### Community 108 - "formatRupiah"
+Cohesion: 0.29
+Nodes (8): DigitalProductLibrary(), AddOnTableRow(), BundleTableRow(), remove(), PackageTableRow(), DigitalProductCarousel(), formatRupiah(), rupiah
 
 ### Community 109 - "EditorialContentManagement"
 Cohesion: 0.36
@@ -729,21 +728,21 @@ Nodes (9): addToCart, adminHelpers, cartView, config, dashboardClient, dashboard
 Cohesion: 0.20
 Nodes (9): calendar, commerceCss, heroCss, home, motion, onboardingCss, review, stageFrame (+1 more)
 
-### Community 114 - "hero-shape-grid.tsx"
-Cohesion: 0.25
-Nodes (6): CanvasStrokeStyle, GridOffset, HeroShapeGrid(), ShapeGridDirection, ShapeGridProps, ShapeGridShape
+### Community 114 - "admin-account-security.tsx"
+Cohesion: 0.28
+Nodes (8): AdminAccountSecurity(), submitEmail(), AdminEmailAuth, AuthError, AuthUser, EmailChangeResult, isValidEmail(), requestAdminEmailChange()
 
-### Community 115 - "marketing-landing-visual-polish.test.ts"
-Cohesion: 0.40
-Nodes (4): commerce, marketing, productUx, program
+### Community 115 - "setup-form.tsx"
+Cohesion: 0.39
+Nodes (7): PasswordInput(), Props, SetupForm(), submit(), passwordError(), usernameError(), ProfilePayload
 
-### Community 116 - "formatRupiah"
-Cohesion: 0.13
-Nodes (18): DigitalProductLibrary(), TrendChart(), AddOnTableRow(), BundleTableRow(), remove(), PackageTableRow(), kindLabel(), orderReference() (+10 more)
+### Community 116 - "user-order-history.tsx"
+Cohesion: 0.36
+Nodes (7): kindLabel(), orderReference(), SortMode, statusLabel(), statusTone(), titleFor(), UserOrderHistory()
 
 ### Community 117 - "intensive-mentoring-engagements.tsx"
-Cohesion: 0.29
-Nodes (8): IntensiveMentoringEngagements(), submit(), RpcClient, schedule(), shortId(), status(), tone(), intensiveStageLabels
+Cohesion: 0.33
+Nodes (7): IntensiveMentoringEngagements(), submit(), RpcClient, schedule(), shortId(), status(), tone()
 
 ### Community 118 - "public.service_seed_mentor_website_profiles"
 Cohesion: 0.31
@@ -766,7 +765,7 @@ Cohesion: 0.31
 Nodes (8): competitions_public_order, competitions_touch_updated_at, public.competitions, public.publications, publications_public_order, publications_touch_updated_at, public, public.touch_updated_at
 
 ### Community 123 - "Frontend Handoff Receipt (2026-09-11)"
-Cohesion: 0.39
+Cohesion: 0.32
 Nodes (7): Apple Icon, Browser Icon, Open Graph Image, Asset Status Registry, Frontend Content/Asset Requirements, Frontend Handoff Receipt (2026-09-11), Source Conflict Register
 
 ### Community 125 - "intensive-international-offer-management.tsx"
@@ -837,9 +836,9 @@ Nodes (5): card, css, kinetic, page, root
 Cohesion: 0.40
 Nodes (5): BrandedRouteLoading, Global Route Loading Transition Design, InitialBrandIntro, Strativate Mark, Strativate Wordmark
 
-### Community 146 - "route-loading-ui.test.ts"
-Cohesion: 0.40
-Nodes (3): marketingMotion, motionGate, root
+### Community 146 - "shape-grid-background.tsx"
+Cohesion: 0.70
+Nodes (4): cellHash(), ease(), fract(), OnboardingShapeGrid()
 
 ### Community 148 - "public.service_seed_dev_mentor_account"
 Cohesion: 0.40
@@ -869,21 +868,17 @@ Nodes (4): create_digital_product_access_session, Digital Products Commerce, Lib
 Cohesion: 0.50
 Nodes (4): Mentor Photo: Safira Aulia, Mentor Photo: Syona Hana, Mentor Photo: William Philip, Development Portrait Placeholder
 
-### Community 160 - "digital-product-admin-ui.test.ts"
+### Community 160 - "checkout-ui.test.ts"
 Cohesion: 0.50
-Nodes (3): adminPage, featureFlags, manager
+Nodes (3): embed, legacy, page
 
 ### Community 161 - "hero-kinetic-contract.test.ts"
-Cohesion: 0.33
-Nodes (5): home, kinetic, layout, marketingCss, shapeGrid
+Cohesion: 0.50
+Nodes (3): home, kinetic, layout
 
 ### Community 162 - "marketing-testimonials-migration.test.ts"
 Cohesion: 0.50
 Nodes (3): cleanupMigration, migration, seed
-
-### Community 165 - "Supabase Setup"
-Cohesion: 0.50
-Nodes (3): Auth Implementation Report, Program Information, Supabase Setup
 
 ### Community 166 - "Phase 2 Shared Commerce Design"
 Cohesion: 0.67
@@ -894,24 +889,24 @@ Cohesion: 0.67
 Nodes (3): hono, pnpm, overrides
 
 ## Knowledge Gaps
-- **799 isolated node(s):** `Section`, `NavItem`, `groups`, `RateLimitDecision`, `noStoreHeaders` (+794 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1437 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **108 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **752 isolated node(s):** `GalleryHover`, `GL`, `HoverRect`, `AssignmentSortKey`, `TopicAwareMentorSession` (+747 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1382 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **109 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `digital-product-management.tsx`, `hero-poster-management.tsx`, `TestimonialGalleryApp`, `mentor-assignments.tsx`, `database.types.ts`, `testimonial-management.tsx`, `setup-form.tsx`, `app/layout.tsx`, `app/admin/page.tsx`, `private-mentoring-enrollment-management.tsx`, `private-mentoring-session-operations.tsx`, `mentor-public-profile-form.tsx`, `Global Constraints`, `editorial.ts`, `marketing-shell.tsx`, `availability-editor.tsx`, `home-page.tsx`, `public-profile-types.ts`, `requireAccount`, `hero-carousel.tsx`, `mentee-availability.ts`, `password-recovery/route.ts`, `operational-realtime-provider.tsx`, `intensive-mentoring-session-management.tsx`, `experience.tsx`, `intensive-mentoring-management.tsx`, `account-password-security.tsx`, `package.json`, `createClient`, `commerce-cart-link-management.tsx`, `lucide-react`, `private-mentoring-sessions.tsx`, `checkout/page.tsx`, `auth-form.tsx`, `role-calendar.tsx`, `intensive-mentoring/types.ts`, `program/page.tsx`, `admin-schedule-dialog.tsx`, `commerce-operations.tsx`, `private-mentoring/types.ts`, `card-swap.tsx`, `motion.tsx`, `profile-form.tsx`, `onboarding/rules.ts`, `notification-center.tsx`, `hero-kinetic.tsx`, `calendar/page.tsx`, `hero-shape-grid.tsx`, `formatRupiah`, `intensive-mentoring-engagements.tsx`, `intensive-international-offer-management.tsx`?**
-  _High betweenness centrality (0.085) - this node is a cross-community bridge._
-- **Why does `lucide-react` connect `lucide-react` to `digital-product-management.tsx`, `hero-poster-management.tsx`, `react`, `TestimonialGalleryApp`, `mentor-assignments.tsx`, `database.types.ts`, `testimonial-management.tsx`, `setup-form.tsx`, `app/layout.tsx`, `app/admin/page.tsx`, `private-mentoring-enrollment-management.tsx`, `private-mentoring-session-operations.tsx`, `Global Constraints`, `editorial.ts`, `marketing-shell.tsx`, `availability-editor.tsx`, `home-page.tsx`, `public-profile-types.ts`, `hero-carousel.tsx`, `mentee-availability.ts`, `password-recovery/route.ts`, `program-detail.tsx`, `intensive-mentoring-session-management.tsx`, `experience.tsx`, `intensive-mentoring-management.tsx`, `account-password-security.tsx`, `package.json`, `createClient`, `commerce-cart-link-management.tsx`, `private-mentoring-sessions.tsx`, `checkout/page.tsx`, `auth-form.tsx`, `role-calendar.tsx`, `program/page.tsx`, `admin-schedule-dialog.tsx`, `commerce-operations.tsx`, `private-mentoring/types.ts`, `review/page.tsx`, `profile-form.tsx`, `onboarding/rules.ts`, `notification-center.tsx`, `calendar/page.tsx`, `formatRupiah`, `intensive-mentoring-engagements.tsx`, `intensive-international-offer-management.tsx`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
-- **Why does `next` connect `lucide-react` to `digital-product-management.tsx`, `application.ts`, `hero-poster-management.tsx`, `TestimonialGalleryApp`, `testimonial-management.tsx`, `setup-form.tsx`, `app/layout.tsx`, `intensive-mentoring/scheduling-server.ts`, `app/admin/page.tsx`, `google-calendar/server.ts`, `supabase/server.ts`, `editorial.ts`, `marketing-shell.tsx`, `home-page.tsx`, `public-profile-types.ts`, `requireAccount`, `hero-carousel.tsx`, `createAdminClient`, `password-recovery/route.ts`, `program-detail.tsx`, `account-password-security.tsx`, `package.json`, `createClient`, `humanizeProviderError`, `private-mentoring-sessions.tsx`, `checkout/page.tsx`, `mentee-availability-server.ts`, `zoom/route.ts`, `program/page.tsx`, `config.ts`, `review/page.tsx`, `calendar/server.ts`, `motion.tsx`, `profile-form.tsx`, `onboarding/page.tsx`, `hero-kinetic.tsx`, `[token]/route.ts`, `calendar/page.tsx`, `formatRupiah`, `intensive-mentoring-engagements.tsx`?**
-  _High betweenness centrality (0.063) - this node is a cross-community bridge._
-- **What connects `Section`, `NavItem`, `groups` to the rest of the system?**
-  _799 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `next` connect `next` to `digital-product-management.tsx`, `application.ts`, `hero-poster-management.tsx`, `TestimonialGalleryApp`, `mentor-dashboard-client.tsx`, `testimonial-management.tsx`, `app/layout.tsx`, `intensive-mentoring/scheduling-server.ts`, `app/admin/page.tsx`, `private-mentoring-session-operations.tsx`, `google-calendar/server.ts`, `react`, `supabase/server.ts`, `marketing-shell.tsx`, `home-page.tsx`, `buttonVariants`, `requireAccount`, `marketing-content.ts`, `createAdminClient`, `password-recovery/route.ts`, `program-detail.tsx`, `account-password-security.tsx`, `package.json`, `server-only`, `cn`, `private-mentoring-sessions.tsx`, `account-provider.tsx`, `zoom/route.ts`, `isDigitalProductsEnabled`, `program/page.tsx`, `review/page.tsx`, `digital-product-card-swap.tsx`, `calendar/server.ts`, `motion.tsx`, `profile-form.tsx`, `hero-kinetic.tsx`, `calendar/page.tsx`, `formatRupiah`, `admin-account-security.tsx`, `intensive-mentoring-engagements.tsx`?**
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `digital-product-management.tsx`, `application.ts`, `hero-poster-management.tsx`, `client.ts`, `TestimonialGalleryApp`, `mentor-dashboard-client.tsx`, `database.types.ts`, `testimonial-management.tsx`, `next`, `app/layout.tsx`, `shape-grid-background.tsx`, `app/admin/page.tsx`, `private-mentoring-enrollment-management.tsx`, `private-mentoring-session-operations.tsx`, `public-profile-types.ts`, `supabase/server.ts`, `marketing-shell.tsx`, `home-page.tsx`, `availability-editor.tsx`, `buttonVariants`, `asset-registry.ts`, `requireAccount`, `marketing-content.ts`, `mentee-availability.ts`, `password-recovery/route.ts`, `operational-realtime-provider.tsx`, `intensive-mentoring-session-management.tsx`, `experience.tsx`, `intensive-mentoring-management.tsx`, `account-password-security.tsx`, `package.json`, `private-mentoring-sessions.tsx`, `account-provider.tsx`, `isDigitalProductsEnabled`, `role-calendar.tsx`, `private-mentoring/types.ts`, `program/page.tsx`, `admin-schedule-dialog.tsx`, `digital-product-card-swap.tsx`, `motion.tsx`, `profile-form.tsx`, `onboarding/rules.ts`, `commerce-operations.tsx`, `discount-code-management.tsx`, `notification-center.tsx`, `hero-kinetic.tsx`, `calendar/page.tsx`, `formatRupiah`, `admin-account-security.tsx`, `setup-form.tsx`, `user-order-history.tsx`, `intensive-mentoring-engagements.tsx`, `intensive-international-offer-management.tsx`?**
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+- **Why does `lucide-react` connect `react` to `digital-product-management.tsx`, `application.ts`, `hero-poster-management.tsx`, `client.ts`, `TestimonialGalleryApp`, `mentor-dashboard-client.tsx`, `database.types.ts`, `testimonial-management.tsx`, `next`, `app/layout.tsx`, `app/admin/page.tsx`, `private-mentoring-enrollment-management.tsx`, `private-mentoring-session-operations.tsx`, `supabase/server.ts`, `marketing-shell.tsx`, `home-page.tsx`, `availability-editor.tsx`, `buttonVariants`, `asset-registry.ts`, `marketing-content.ts`, `mentee-availability.ts`, `password-recovery/route.ts`, `program-detail.tsx`, `intensive-mentoring-session-management.tsx`, `experience.tsx`, `intensive-mentoring-management.tsx`, `account-password-security.tsx`, `package.json`, `cn`, `private-mentoring-sessions.tsx`, `isDigitalProductsEnabled`, `role-calendar.tsx`, `program/page.tsx`, `admin-schedule-dialog.tsx`, `review/page.tsx`, `digital-product-card-swap.tsx`, `profile-form.tsx`, `onboarding/rules.ts`, `commerce-operations.tsx`, `discount-code-management.tsx`, `notification-center.tsx`, `calendar/page.tsx`, `formatRupiah`, `admin-account-security.tsx`, `setup-form.tsx`, `user-order-history.tsx`, `intensive-mentoring-engagements.tsx`, `intensive-international-offer-management.tsx`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **What connects `GalleryHover`, `GL`, `HoverRect` to the rest of the system?**
+  _752 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ref_node_assert` be split into smaller, more focused modules?**
-  _Cohesion score 0.04467084639498432 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04570970328789094 - nodes in this community are weakly interconnected._
 - **Should `202609090001_product_catalog_master.sql` be split into smaller, more focused modules?**
   _Cohesion score 0.05194805194805195 - nodes in this community are weakly interconnected._
 - **Should `digital-product-management.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.1443850267379679 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05714285714285714 - nodes in this community are weakly interconnected._
