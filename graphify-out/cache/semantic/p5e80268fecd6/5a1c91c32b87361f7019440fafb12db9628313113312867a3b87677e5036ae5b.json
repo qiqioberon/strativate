@@ -1,0 +1,1 @@
+{"nodes": [{"id": "supabase_email_templates_recovery", "label": "Password Recovery Email Template", "file_type": "document", "source_file": "supabase/email-templates/recovery.html"}], "edges": [], "hyperedges": []}
