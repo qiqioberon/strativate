@@ -11,6 +11,10 @@ export function getTestimonialGalleryGeometry(screenWidth: number) {
   }
 }
 
+export function getTestimonialDragThreshold(pointerType: string) {
+  return pointerType === 'touch' || pointerType === 'pen' ? 12 : 7
+}
+
 export function resolveTestimonialDragIntent(deltaX: number, deltaY: number, threshold = 7): TestimonialDragIntent {
   if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < threshold) return 'pending'
   return Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
