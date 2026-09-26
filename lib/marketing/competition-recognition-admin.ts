@@ -78,9 +78,12 @@ export function reorderCompetitionRecognitionIds(records: CompetitionRecognition
   return ids
 }
 
-export function safeCompetitionLogoFileName(name: string) {
+export function safeCompetitionLogoFileName(name: string, contentType?: string) {
   const normalized = name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')
-  return normalized || 'logo'
+  const safeName = normalized || 'logo'
+  if (/\.(jpe?g|png|webp)$/i.test(safeName) || !contentType) return safeName
+  const extension = contentType === 'image/jpeg' ? 'jpg' : contentType === 'image/png' ? 'png' : 'webp'
+  return `${safeName}.${extension}`
 }
 
 export function isCompetitionRecognitionSetupRequired(error: unknown) {

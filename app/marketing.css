@@ -607,7 +607,7 @@
   overflow: hidden;
   border-radius: 5.5%;
   transform-origin: center;
-  pointer-events: none;
+  pointer-events: auto;
   animation: testimonial-overlay-in 180ms ease-out both;
 }
 .marketing-testimonial-gallery__overlay-image {
@@ -1186,7 +1186,7 @@
   height: 100%;
   border: 0;
   opacity: .82;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .homepage-hero__gallery {
@@ -1370,11 +1370,11 @@
   animation: homepage-cloud-breathe-7 12.25s ease-in-out infinite alternate;
 }
 @keyframes homepage-cloud-breathe-1 { to { transform: translateY(0) rotate(-.55deg) scaleX(1.045) scaleY(.99); } }
-@keyframes homepage-cloud-breathe-2 { to { transform: translateY(-3px) rotate(.3deg) scaleX(1.005) scaleY(1.01); } }
+@keyframes homepage-cloud-breathe-2 { to { transform: translateY(-2px) rotate(.3deg) scaleX(1.005) scaleY(1.01); } }
 @keyframes homepage-cloud-breathe-3 { to { transform: translateY(-1px) rotate(-.15deg) scaleX(1.035) scaleY(.992); } }
 @keyframes homepage-cloud-breathe-4 { to { transform: translateY(-1px) rotate(.42deg) scaleX(1.018) scaleY(.997); } }
 @keyframes homepage-cloud-breathe-5 { to { transform: translateY(-1px) rotate(-.35deg) scaleX(1.04) scaleY(1.008); } }
-@keyframes homepage-cloud-breathe-6 { to { transform: translateY(-3px) rotate(.35deg) scaleX(1.01) scaleY(.99); } }
+@keyframes homepage-cloud-breathe-6 { to { transform: translateY(-2px) rotate(.35deg) scaleX(1.01) scaleY(.99); } }
 @keyframes homepage-cloud-breathe-7 { to { transform: translateY(0) rotate(-.4deg) scaleX(1.055) scaleY(1.012); } }
 .homepage-hero-cloud__stats {
   position: relative;
@@ -1507,7 +1507,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .homepage-shape-grid { opacity: .72; }
-  .homepage-hero-cloud__lobes span { animation: none; }
+  .homepage-hero-cloud__lobes span:nth-child(n) { animation: none; }
   .homepage-hero .homepage-hero__consultation:hover { transform: none; }
   .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
     transition: none;

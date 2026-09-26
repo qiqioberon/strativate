@@ -66,6 +66,8 @@ test('recognition ordering helpers return complete immutable identity lists', ()
 test('recognition filenames are safe and setup detection is limited to missing-schema failures', () => {
   assert.equal(safeCompetitionLogoFileName('Grand Final LOGO (2026).PNG'), 'grand-final-logo-2026-.png')
   assert.equal(safeCompetitionLogoFileName('🔥'), 'logo')
+  assert.equal(safeCompetitionLogoFileName('logo', 'image/png'), 'logo.png')
+  assert.equal(safeCompetitionLogoFileName('logo.unsupported', 'image/webp'), 'logo.unsupported.webp')
   assert.equal(isCompetitionRecognitionSetupRequired({ code: '42P01' }), true)
   assert.equal(isCompetitionRecognitionSetupRequired({ code: 'PGRST205' }), true)
   assert.equal(isCompetitionRecognitionSetupRequired({ message: "Could not find 'competition_recognitions' in the schema cache" }), true)
