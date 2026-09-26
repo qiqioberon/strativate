@@ -6,6 +6,7 @@ const home = readFileSync(new URL('../components/marketing/home-page.tsx', impor
 const kinetic = readFileSync(new URL('../components/marketing/hero-kinetic.tsx', import.meta.url), 'utf8')
 const shapeGrid = readFileSync(new URL('../components/marketing/hero-shape-grid.tsx', import.meta.url), 'utf8')
 const layout = readFileSync(new URL('../app/layout.tsx', import.meta.url), 'utf8')
+const marketingCss = readFileSync(new URL('../app/marketing.css', import.meta.url), 'utf8')
 
 test('homepage hero uses the approved centered success-story composition', () => {
   assert.match(home, /Win Business Competitions with Expert Mentoring/)
@@ -14,6 +15,14 @@ test('homepage hero uses the approved centered success-story composition', () =>
   assert.match(home, /TestimonialCircularGallery/)
   assert.match(home, />Consultation <MessageCircle/)
   assert.doesNotMatch(home, /HeroCarousel|hero-program-link|Chat on WhatsApp|TextType|HeroKineticSurface|MagneticAction/)
+})
+
+test('homepage proof cloud uses isolated hand-drawn paper styling', () => {
+  assert.match(marketingCss, /--homepage-cloud-paper: #fffaf2/)
+  assert.match(marketingCss, /--homepage-cloud-sketch: rgba\(104, 72, 52, \.34\)/)
+  assert.match(marketingCss, /\.homepage-hero-cloud__lobes span::after/)
+  assert.match(marketingCss, /\.homepage-hero-cloud__lobes span:nth-child\(4\)[\s\S]*rotate\(\.35deg\)/)
+  assert.match(marketingCss, /background-size: 13px 11px, 17px 15px/)
 })
 
 test('homepage hero uses the React Bits Shape Grid canvas implementation', () => {
