@@ -3,9 +3,11 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
+  getTestimonialDragScrollDelta,
   getTestimonialDragThreshold,
   getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
+  getTestimonialReleaseMomentum,
   resolveTestimonialPointerRelease,
   resolveTestimonialDragIntent,
 } from '../lib/marketing/testimonial-gallery-input'
@@ -126,6 +128,21 @@ test('testimonial gallery only consumes horizontal wheel and uses touch-aware dr
   assert.match(gallery, /const threshold = getTestimonialDragThreshold\(this\.pointerType\)/)
   assert.match(gallery, /resolveTestimonialDragIntent\(deltaX, deltaY, threshold\)/)
   assert.match(gallery, /try \{[\s\S]*?setPointerCapture\?\.\(event\.pointerId\)[\s\S]*?\} catch \{/)
+})
+
+test('testimonial gallery drag tracks the pointer directly and adds bounded release momentum', () => {
+  assert.equal(getTestimonialDragScrollDelta(100, 400, 20), 5)
+  assert.equal(getTestimonialDragScrollDelta(-80, 400, 20), -4)
+  assert.equal(getTestimonialDragScrollDelta(50, 0, 20), 0)
+  assert.equal(getTestimonialReleaseMomentum(.01, 3), 1.8)
+  assert.equal(getTestimonialReleaseMomentum(.05, 3), 3)
+  assert.equal(getTestimonialReleaseMomentum(-.05, 3), -3)
+  assert.match(gallery, /this\.scroll\.target = this\.scroll\.current\s+this\.scroll\.position = this\.scroll\.current/)
+  assert.match(gallery, /const dragDelta = getTestimonialDragScrollDelta\(deltaX, this\.screen\.width, this\.viewport\.width\)/)
+  assert.match(gallery, /this\.scroll\.current = nextScroll\s+this\.scroll\.target = nextScroll/)
+  assert.doesNotMatch(gallery, /deltaX \* 0\.018/)
+  assert.match(gallery, /getTestimonialReleaseMomentum\(velocity, maxMomentum\)/)
+  assert.match(gallery, /closest\('\[data-testimonial-overlay-action\]'\)/)
 })
 
 test('testimonial gallery restores the original mobile card geometry and keeps a visible gap', () => {

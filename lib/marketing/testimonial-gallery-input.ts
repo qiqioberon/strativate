@@ -15,6 +15,16 @@ export function getTestimonialDragThreshold(pointerType: string) {
   return pointerType === 'touch' || pointerType === 'pen' ? 12 : 7
 }
 
+export function getTestimonialDragScrollDelta(deltaX: number, screenWidth: number, viewportWidth: number) {
+  if (screenWidth <= 0) return 0
+  return deltaX * (viewportWidth / screenWidth)
+}
+
+export function getTestimonialReleaseMomentum(velocity: number, maxDistance: number, duration = 180) {
+  const distance = velocity * duration
+  return Math.max(-maxDistance, Math.min(maxDistance, distance))
+}
+
 export function resolveTestimonialDragIntent(deltaX: number, deltaY: number, threshold = 7): TestimonialDragIntent {
   if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < threshold) return 'pending'
   return Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
