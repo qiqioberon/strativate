@@ -34,6 +34,7 @@ owned by the database-backed mentor public-profile domain introduced by
 | Program/achievement photography | Missing | Hero uses approved brand composition; registry slots remain placeholders | Supply standalone originals and captions if desired |
 | Testimonials and portraits | Missing | Not published | Supply approved quote, identity, context and consent |
 | Institution logos | Missing / intentionally omitted | Text-only social-proof wording | Supply official files and approved usage language |
+| Competition recognition logos | Admin-ready; no logos supplied | `public.competition_recognitions` owns approved names, ordering, and visibility; logo files are admin-managed in `marketing-editorial/recognition-logos/`. The homepage keeps the approved recognition statement visible when no active logos exist. | Add only approved official logo files and competition names through Admin → Competition Recognition; no fake assets are seeded |
 | Contact/social | Ready | Phone, WhatsApp, email, canonical site, Instagram | Keep current source master synchronized |
 | About/FAQ | Ready | Source-backed public copy | Add policy answers only after policy approval |
 | Legal documents | Missing | No invented legal copy or routes | Stakeholder/legal counsel must supply final text |
