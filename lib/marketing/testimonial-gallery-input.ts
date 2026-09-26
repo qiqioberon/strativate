@@ -2,11 +2,6 @@ export type TestimonialDragIntent = 'pending' | 'horizontal' | 'vertical'
 export type TestimonialPointerRelease = 'activate' | 'resume' | 'ignore'
 
 export function getTestimonialGalleryGeometry(screenWidth: number) {
-  if (screenWidth <= 600) {
-    const cardWidth = Math.round(screenWidth * .646)
-    return { cardWidth, cardHeight: cardWidth * 1.25, gap: 14, bend: 1.35 }
-  }
-
   const cardWidth = Math.max(220, Math.min(300, screenWidth * .2))
   return {
     cardWidth,
