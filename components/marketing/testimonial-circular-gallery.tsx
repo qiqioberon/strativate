@@ -428,12 +428,12 @@ class TestimonialGalleryApp {
     return true
   }
 
-  clearHover(resume = true) {
+  clearHover() {
     this.keyboardRevealRequested = false
     this.hoveredIndex = null
     this.onHover(null)
     this.restoreActiveMedia()
-    this.paused = !resume
+    this.paused = false
   }
 
   onPointerDown = (event: PointerEvent) => {
