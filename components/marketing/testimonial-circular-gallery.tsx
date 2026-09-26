@@ -12,9 +12,11 @@ import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  getTestimonialDragScrollDelta,
   getTestimonialDragThreshold,
   getTestimonialGalleryGeometry,
   getTestimonialHorizontalWheelDelta,
+  getTestimonialReleaseMomentum,
   resolveTestimonialDragIntent,
   resolveTestimonialPointerRelease,
   type TestimonialDragIntent,
@@ -251,6 +253,9 @@ class TestimonialGalleryApp {
   moved = false
   startX = 0
   startY = 0
+  dragVelocity = 0
+  dragLastScroll = 0
+  dragLastTime = 0
   dragIntent: TestimonialDragIntent | null = null
   pointerType = ''
   paused = false
@@ -437,13 +442,17 @@ class TestimonialGalleryApp {
   }
 
   onPointerDown = (event: PointerEvent) => {
-    if ((event.target as HTMLElement | null)?.closest('[data-testimonial-popout]')) return
+    if ((event.target as HTMLElement | null)?.closest('[data-testimonial-overlay-action]')) return
     this.isDown = true
     this.moved = false
     this.startX = event.clientX
     this.startY = event.clientY
     this.pointerType = event.pointerType
+    this.dragVelocity = 0
+    this.dragLastScroll = this.scroll.current
+    this.dragLastTime = event.timeStamp
     this.dragIntent = 'pending'
+    this.scroll.target = this.scroll.current
     this.scroll.position = this.scroll.current
   }
 
@@ -457,6 +466,11 @@ class TestimonialGalleryApp {
         this.dragIntent = resolveTestimonialDragIntent(deltaX, deltaY, threshold)
         if (this.dragIntent === 'vertical') return
         if (this.dragIntent === 'horizontal') {
+          const dragDelta = getTestimonialDragScrollDelta(deltaX, this.screen.width, this.viewport.width)
+          this.scroll.position = this.scroll.current - dragDelta
+          this.dragVelocity = 0
+          this.dragLastScroll = this.scroll.current
+          this.dragLastTime = event.timeStamp
           this.paused = true
           this.touchActive = false
           this.hoveredIndex = null
@@ -472,7 +486,15 @@ class TestimonialGalleryApp {
 
       if (this.dragIntent === 'horizontal') {
         this.moved = true
-        this.scroll.target = this.scroll.position + deltaX * 0.018
+        const dragDelta = getTestimonialDragScrollDelta(deltaX, this.screen.width, this.viewport.width)
+        const nextScroll = this.scroll.position + dragDelta
+        const elapsed = Math.max(1, event.timeStamp - this.dragLastTime)
+        const instantVelocity = (nextScroll - this.dragLastScroll) / elapsed
+        this.dragVelocity = this.dragVelocity * .65 + instantVelocity * .35
+        this.dragLastScroll = nextScroll
+        this.dragLastTime = event.timeStamp
+        this.scroll.current = nextScroll
+        this.scroll.target = nextScroll
       }
       return
     }
@@ -512,14 +534,25 @@ class TestimonialGalleryApp {
         return
       }
     }
+
+    if (release === 'resume') {
+      const releaseAge = Math.max(0, event.timeStamp - this.dragLastTime)
+      const velocity = releaseAge <= 80 ? this.dragVelocity : 0
+      const maxMomentum = (this.medias[0]?.width ?? 1) * 1.1
+      this.scroll.target = this.scroll.current + getTestimonialReleaseMomentum(velocity, maxMomentum)
+    }
+
+    this.dragVelocity = 0
     this.paused = false
   }
 
   onPointerCancel = () => {
     if (!this.isDown) return
     this.isDown = false
+    this.dragVelocity = 0
     this.dragIntent = null
     this.pointerType = ''
+    this.scroll.target = this.scroll.current
     this.paused = this.touchActive
   }
 
