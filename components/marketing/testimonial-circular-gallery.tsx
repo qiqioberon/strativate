@@ -722,7 +722,11 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
               fill
               sizes="300px"
               unoptimized
-              onLoad={() => handlePopoutImageReady(hover.mediaIndex)}
+              onLoad={() => {
+                const mediaIndex = hover?.mediaIndex
+                if (mediaIndex === undefined) return
+                handlePopoutImageReady(mediaIndex)
+              }}
             />
             <div className="marketing-testimonial-gallery__overlay-content">
               <span>{hoveredItem.competition_name}</span>
