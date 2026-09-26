@@ -334,9 +334,12 @@
   .workspace .order-detail-top { align-items: flex-start; flex-direction: column; }
   .workspace .order-detail-card .confirmation-grid { grid-template-columns: 1fr; }
 }
-.digital-product-directory__toolbar { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
-.digital-product-directory__toolbar label { display: flex; align-items: center; gap: 10px; min-width: min(100%, 300px); padding: 11px 14px; border: 1px solid var(--marketing-line); border-radius: 10px; color: var(--marketing-muted); background: #fff; }
-.digital-product-directory__toolbar input, .digital-product-directory__toolbar select { min-width: 0; border: 0; outline: 0; color: var(--marketing-ink); background: transparent; font: inherit; }
-.digital-product-directory__toolbar select { cursor: pointer; }
+.digital-product-directory__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 24px; }
+.digital-product-directory__toolbar label { position: relative; display: flex; min-width: 0; min-height: 46px; flex: 1 1 150px; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid #eadbd0; border-radius: 14px; color: var(--marketing-muted); background: linear-gradient(180deg, #fff, #fffaf6); box-shadow: 0 7px 22px rgba(98, 50, 22, .035); transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease; }
+.digital-product-directory__toolbar label:first-child { flex: 1.6 1 230px; }
+.digital-product-directory__toolbar label:focus-within { border-color: #ffb373; background: #fff; box-shadow: 0 0 0 3px rgba(255,122,0,.1), 0 9px 24px rgba(98,50,22,.05); }
+.digital-product-directory__toolbar input, .digital-product-directory__toolbar select { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--marketing-ink); background: transparent; font: inherit; }
+.digital-product-directory__toolbar select { appearance: none; cursor: pointer; padding-right: 18px; }
+.digital-product-directory__toolbar label:has(select)::after { width: 6px; height: 6px; flex: 0 0 auto; border-right: 1.5px solid #8c7465; border-bottom: 1.5px solid #8c7465; content: ''; transform: rotate(45deg) translateY(-2px); pointer-events: none; }
 .digital-product-card__sales { color: var(--marketing-orange-dark); font-size: .74rem; font-weight: 700; }
 @media (max-width: 620px) { .digital-product-directory__toolbar { align-items: stretch; flex-direction: column; } .digital-product-directory__toolbar label { width: 100%; } }

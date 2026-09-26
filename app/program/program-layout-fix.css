@@ -11,7 +11,10 @@
 .program-page .marketing-page-intro h1 {
   max-width: 850px;
   font-size: clamp(3.55rem, 4.8vw, 5.1rem);
-  line-height: .91;
+  font-weight: 650;
+  letter-spacing: -.045em;
+  line-height: 1.02;
+  text-wrap: balance;
 }
 
 .program-page .marketing-page-intro__aside {
@@ -106,6 +109,11 @@
 
 .program-page .marketing-services-primary {
   align-items: stretch;
+}
+
+.program-page .marketing-service-card--primary .marketing-service-card__copy,
+.program-page .marketing-service-card--secondary .marketing-service-card__copy {
+  margin-top: 24px;
 }
 
 .program-page .marketing-service-card--primary {
