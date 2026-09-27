@@ -16,7 +16,7 @@ Split the homepage competition-recognition presentation into two visually distin
 
 - One logo is static and centered.
 - Two or more logos move autonomously in a straight horizontal direction. There is no drag, swipe, scrolling, hover behavior, pause control, or carousel control.
-- Begin with one row for 2–7 logos and two rows for 8 or more. Treat this as a visual implementation threshold and adjust only if required by validation at 390, 430, 768, 1440, and 1920 pixels.
+- Use one row for 2–11 logos and two rows for 12 or more, so each two-row sequence has at least six distinct logos before visual repetition. This replaces the initial 8-logo threshold after stakeholder visual review found the lower row too sparse.
 - In the two-row state, distribute records deterministically across rows while preserving admin order; the upper row moves left and the lower row moves right.
 - Duplicate visual cycles as needed for a filled, centered initial composition and seamless looping. Duplicate content is hidden from assistive technology.
 - Motion is slow, linear, CSS-transform-only, continuous, and non-interactive. The first frame must not expose a large empty edge, including at 1920 pixels.
