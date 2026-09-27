@@ -138,6 +138,7 @@ async function movingRowGeometry(row: Locator) {
       rightEdgeGap: nearestRight,
       hasLogoLeftOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 < center),
       hasLogoRightOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 > center),
+      slotWidths: visibleSlots.slice(0, 4).map(slot => slot.width),
       logoContainment,
     }
   })
@@ -248,6 +249,10 @@ for (const width of widths) {
       expect(geometry.rightEdgeGap).toBeLessThan(96)
       expect(geometry.hasLogoLeftOfCenter).toBe(true)
       expect(geometry.hasLogoRightOfCenter).toBe(true)
+      const maximumLogoWidth = width <= 430 ? 84 : width <= 760 ? 92 : 120
+      geometry.slotWidths.forEach(slotWidth => {
+        expect(slotWidth).toBeLessThanOrEqual(maximumLogoWidth + 1)
+      })
       geometry.logoContainment.forEach(({ objectFit, insideSlot }) => {
         expect(objectFit).toBe('contain')
         expect(insideSlot).toBe(true)
@@ -306,7 +311,7 @@ test('one logo remains static, centered, and keeps its source aspect ratio', asy
   expect(result.objectFit).toBe('contain')
   expect(result.aspectRatio).toBe(4)
   expect(result.renderedAspectRatio).toBeCloseTo(2.5, 2)
-  expect(result.width).toBeLessThanOrEqual(160)
+  expect(result.width).toBeLessThanOrEqual(120)
   expect(result.alt).toBe('Competition 1')
 })
 
