@@ -199,10 +199,15 @@ export function WhoWeArePhotoManagement() {
       })
       intendedPayload = payload
       persistAttempted = true
-      const { error: persistError } = await supabase
-        .from('homepage_who_we_are_photos')
-        .upsert({ role: activeRole, ...payload }, { onConflict: 'role' })
-      if (persistError) throw persistError
+      const persistResult = selected
+        ? await supabase
+            .from('homepage_who_we_are_photos')
+            .update(payload)
+            .eq('role', activeRole)
+        : await supabase
+            .from('homepage_who_we_are_photos')
+            .insert({ role: activeRole, ...payload })
+      if (persistResult.error) throw persistResult.error
 
       await completePersistedSave(storedPath, payload.image_path)
     } catch (caught) {
