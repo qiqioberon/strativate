@@ -17,10 +17,13 @@ test('public navigation includes the approved English destinations', async () =>
 })
 
 test('homepage uses the stakeholder copy and new proof-led order without typing animation', async () => {
-  const source = await read('components/marketing/home-page.tsx')
+  const [source, whoWeAre] = await Promise.all([
+    read('components/marketing/home-page.tsx'),
+    read('components/marketing/who-we-are-section.tsx'),
+  ])
 
   assert.match(source, /Win Business Competitions with Expert Mentoring/)
-  assert.match(source, /Where Future-Ready Skills Meet Competition Success/)
+  assert.match(whoWeAre, /Where Future-Ready Skills Meet Competition Success/)
   assert.match(source, /What We Specialize In/)
   assert.match(source, /TestimonialCircularGallery/)
   assert.doesNotMatch(source, /Partnered with Leading Organizations/)
@@ -28,7 +31,7 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
 
   const sections = [
     'homepage-success-proof-section',
-    'homepage-who-we-are-section',
+    '<WhoWeAreSection',
     'homepage-programs-section',
     'homepage-products-section',
     'homepage-expertise-section',

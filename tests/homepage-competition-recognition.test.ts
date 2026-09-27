@@ -18,7 +18,7 @@ test('homepage loads competition recognition data and places the section directl
 
   const heroEnd = home.indexOf('</section>', home.indexOf('homepage-hero-section'))
   const recognition = home.indexOf('<CompetitionRecognitionSection')
-  const whoWeAre = home.indexOf('homepage-who-we-are-section')
+  const whoWeAre = home.indexOf('<WhoWeAreSection')
   assert.ok(heroEnd >= 0 && heroEnd < recognition && recognition < whoWeAre)
 })
 

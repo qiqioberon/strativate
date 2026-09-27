@@ -35,6 +35,7 @@ import { MentorExpertiseManagement } from '@/components/admin/mentor-expertise-m
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { MenteeManagement } from '@/components/admin/people'
 import { TestimonialManagement } from '@/components/admin/testimonial-management'
+import { WhoWeArePhotoManagement } from '@/components/admin/who-we-are-photo-management'
 import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
 import { AdminMentoringSessionWorkspace } from '@/components/admin/admin-mentoring-session-workspace'
 import { useAccount } from '@/components/auth/account-provider'
@@ -67,6 +68,7 @@ type Section =
   | 'Publications'
   | 'Competitions'
   | 'Competition Recognition'
+  | 'Who We Are Photos'
   | 'Reports'
   | 'Mentor Expertise'
   | 'Institutions'
@@ -113,6 +115,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Publications', label: 'Publications', icon: Newspaper },
       { id: 'Competitions', label: 'Competitions', icon: Trophy },
       { id: 'Competition Recognition', label: 'Competition Recognition', icon: Trophy },
+      { id: 'Who We Are Photos', label: 'Who We Are Photos', icon: Images },
     ],
   },
   { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
@@ -179,6 +182,7 @@ export default function AdminDashboard() {
           {section === 'Publications' ? <EditorialContentManagement initialKind="publications"/> : null}
           {section === 'Competitions' ? <EditorialContentManagement initialKind="competitions"/> : null}
           {section === 'Competition Recognition' ? <CompetitionRecognitionManagement/> : null}
+          {section === 'Who We Are Photos' ? <WhoWeArePhotoManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}

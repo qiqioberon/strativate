@@ -7,6 +7,7 @@ import { socialProof } from '@/lib/content/brand'
 import { bigClassPlaceholder, faqPreview, homepageExpertise, whyChooseStrativate } from '@/lib/content/marketing-content'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
+import type { HomepageWhoWeArePhotoView } from '@/lib/marketing/who-we-are-photos'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import type { PublicMentor } from '@/lib/mentor/public-profile-types'
 import { mentoringProgramEditorial } from '@/lib/program-information'
@@ -18,6 +19,7 @@ import { HeroShapeGrid } from './hero-shape-grid'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
+import { WhoWeAreSection } from './who-we-are-section'
 
 export function HomePage({
   mentors,
@@ -25,12 +27,14 @@ export function HomePage({
   digitalProducts,
   digitalProductsEnabled,
   recognitions,
+  whoWeArePhotos,
 }: {
   mentors: PublicMentor[]
   testimonials: MarketingTestimonialView[]
   digitalProducts: PublicDigitalProduct[]
   digitalProductsEnabled: boolean
   recognitions: CompetitionRecognitionView[]
+  whoWeArePhotos: HomepageWhoWeArePhotoView[]
 }) {
   const homePrograms: MarketingProgram[] = mentoringProgramEditorial.map((program, index) => ({
     id: program.slug,
@@ -89,9 +93,7 @@ export function HomePage({
 
       <CompetitionRecognitionSection recognitions={recognitions} />
 
-      <section className="marketing-section stakeholder-section stakeholder-section--who" aria-labelledby="who-we-are-heading" data-reveal data-testid="homepage-who-we-are-section">
-        <div className="marketing-container stakeholder-split"><div><p className="marketing-kicker">Who We Are</p><h2 id="who-we-are-heading">Where Future-Ready Skills Meet Competition Success</h2></div><div><p>Strativate helps students build practical business skills, sharpen analytical thinking, and prepare for competitions with expert guidance.</p><Link className="marketing-text-link" href="/tentang-kami">Learn about Strativate <ArrowRight aria-hidden="true" size={16} /></Link></div></div>
-      </section>
+      <WhoWeAreSection photos={whoWeArePhotos} />
 
       <section className="marketing-section stakeholder-section" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
         <div className="marketing-container">
