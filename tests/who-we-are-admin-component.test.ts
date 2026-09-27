@@ -74,3 +74,11 @@ test('metadata-only edits preserve the stored path without invoking crop or uplo
   assert.match(manager, /aria-describedby=\{fieldErrors\.altText \? 'who-we-are-alt-error'/)
   assert.match(manager, /aria-invalid=\{Boolean\(fieldErrors\.file\)\}/)
 })
+
+
+test('crop preview establishes its own clipping containing block', async () => {
+  const css = await read('components/admin/who-we-are-photo-management.module.css')
+
+  assert.match(css, /\.preview\s*\{[^}]*position:relative[^}]*overflow:hidden/)
+  assert.match(css, /\.preview img\[style\]\s*\{[^}]*object-fit:fill/)
+})

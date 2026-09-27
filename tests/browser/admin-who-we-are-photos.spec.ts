@@ -70,3 +70,44 @@ test('admin exposes exactly three compact fixed slots and a focused responsive e
   await dialog.getByRole('button', { name: 'Close photo editor' }).click()
   await expect(dialog).toBeHidden()
 })
+
+
+test('extreme replacement aspect ratio stays clipped to the crop preview', async ({ page }) => {
+  await mockBackend(page, [])
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('http://localhost:3001/admin')
+
+  await page.getByRole('button', { name: 'Who We Are Photos' }).click()
+  const manager = page.getByTestId('who-we-are-photo-admin-section')
+  await manager.getByRole('button', { name: 'Manage' }).first().click()
+
+  const dialog = page.getByTestId('who-we-are-photo-editor-dialog')
+  const fileInput = dialog.locator('input[type="file"]')
+  await fileInput.setInputFiles({
+    name: 'extreme-wide.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="300"><rect width="2000" height="300" fill="black"/></svg>'),
+  })
+
+  await expect(dialog.getByText('Horizontal position')).toBeVisible()
+  const previewImage = dialog.locator('img[draggable="false"]')
+  await expect(previewImage).toBeVisible()
+
+  const previewContract = await previewImage.evaluate(image => {
+    const preview = image.parentElement!
+    const previewBox = preview.getBoundingClientRect()
+    const samplePoints = [
+      { x: Math.max(1, previewBox.left - 12), y: previewBox.top + previewBox.height / 2 },
+      { x: previewBox.left + previewBox.width / 2, y: Math.max(1, previewBox.top - 12) },
+    ]
+    return {
+      position: getComputedStyle(preview).position,
+      overflow: getComputedStyle(preview).overflow,
+      leaksOutsideFrame: samplePoints.some(point => document.elementFromPoint(point.x, point.y) === image),
+    }
+  })
+
+  expect(previewContract.position).toBe('relative')
+  expect(previewContract.overflow).toBe('hidden')
+  expect(previewContract.leaksOutsideFrame).toBe(false)
+})
