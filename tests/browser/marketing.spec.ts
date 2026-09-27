@@ -28,6 +28,8 @@ test('homepage uses the approved centered mentoring opening and cloud proof', as
   await expect(socialProof.getByText('High schools', { exact: true })).toBeVisible()
 
   await expect(page.getByTestId('homepage-hero-cloud').locator('.homepage-hero-cloud__lobes span')).toHaveCount(7)
+  await expect(page.getByTestId('homepage-recognition-section')).toContainText('Our mentors and students are award-winning business competition finalists.')
+  await expect(page.getByTestId('homepage-recognition-logo-wall')).toHaveCount(0)
   await expect(page.locator('a[href*="/checkout/"]')).toHaveCount(0)
   await expect(page.getByText(/Alvin Haryanto|Universitas mitra|15\+ kemenangan|di 4 negara/)).toHaveCount(0)
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)

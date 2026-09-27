@@ -13,6 +13,7 @@ export type MarketingHeroPoster = { id:string; image_path:string; alt_text:strin
 export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; image_path:string|null; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
 export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; category:string|null; cover_path:string|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
+export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; created_at:string; updated_at:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
 export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
@@ -76,6 +77,7 @@ export type Database = {
       marketing_testimonials: Table<MarketingTestimonial, Partial<MarketingTestimonial> & Pick<MarketingTestimonial,"slug"|"competition_name"|"achievement"|"testimonial">>
       publications: Table<Publication, Partial<Publication> & Pick<Publication,"slug"|"title"|"excerpt"|"body">>
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
+      competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
       commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
       commerce_discount_code_products: Table<{discount_code_id:string;product_id:string;created_at:string},{discount_code_id:string;product_id:string;created_at?:string}>
@@ -134,6 +136,7 @@ export type Database = {
       merge_institutions: { Args:{p_from:string;p_into:string}; Returns:undefined }
       reorder_marketing_hero_posters: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_marketing_testimonials: { Args:{p_ids:string[]}; Returns:undefined }
+      reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }

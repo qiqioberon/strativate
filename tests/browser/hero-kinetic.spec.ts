@@ -1,8 +1,31 @@
 import { expect, test } from '@playwright/test'
 
+async function waitForBrandIntro(page: import('@playwright/test').Page) {
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+}
+
+async function canvasSample(canvas: import('@playwright/test').Locator) {
+  return canvas.evaluate((node) => {
+    const element = node as HTMLCanvasElement
+    const context = element.getContext('2d')
+    if (!context) throw new Error('Expected a 2D canvas context')
+    const width = Math.min(96, element.width)
+    const height = Math.min(96, element.height)
+    const data = context.getImageData(Math.max(0, Math.floor((element.width - width) / 2)), 0, width, height).data
+    let hash = 2166136261
+    for (let index = 0; index < data.length; index += 16) {
+      hash ^= data[index] + data[index + 1] * 3 + data[index + 2] * 7 + data[index + 3] * 11
+      hash = Math.imul(hash, 16777619)
+    }
+    return hash >>> 0
+  })
+}
+
 test('homepage opening integrates the header, centered hero, consultation CTA, proof cloud, and gallery when published', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
+  await waitForBrandIntro(page)
 
   await expect(page.getByRole('banner')).toHaveClass(/marketing-header--home/)
   await expect(page.getByRole('heading', { level: 1, name: 'Win Business Competitions with Expert Mentoring' })).toBeVisible()
@@ -12,14 +35,30 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
   await expect(shapeGrid).toBeVisible()
   await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
   await expect(shapeGrid).toHaveAttribute('data-motion', 'animated')
-  await expect(shapeGrid).toHaveCSS('pointer-events', 'auto')
+  await expect(shapeGrid).toHaveCSS('pointer-events', 'none')
   await expect(shapeGrid.evaluate(node => node.tagName)).resolves.toBe('CANVAS')
+
+  const initialSample = await canvasSample(shapeGrid)
+  await page.waitForTimeout(350)
+  const ambientSample = await canvasSample(shapeGrid)
+  expect(ambientSample).not.toBe(initialSample)
+
+  const shapeGridBox = await shapeGrid.boundingBox()
+  if (!shapeGridBox) throw new Error('Expected Shape Grid bounds')
+  await page.mouse.move(shapeGridBox.x + shapeGridBox.width / 2, shapeGridBox.y + shapeGridBox.height / 2)
+  await page.waitForTimeout(100)
+  const pointerSample = await canvasSample(shapeGrid)
+  expect(pointerSample).not.toBe(ambientSample)
 
   const consultation = page.getByTestId('hero-whatsapp-link')
   await expect(consultation).toBeVisible()
   await expect(consultation).toHaveText(/Consultation/)
   await expect(consultation).toHaveAttribute('target', '_blank')
   await expect(consultation).toHaveAttribute('href', /^https:\/\/wa\.me\//)
+  const popupPromise = page.waitForEvent('popup')
+  await consultation.click()
+  const popup = await popupPromise
+  await popup.close()
 
   const cloud = page.getByTestId('homepage-hero-cloud')
   await expect(cloud).toBeVisible()
@@ -60,12 +99,21 @@ test('homepage opening respects reduced motion and remains complete on mobile', 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  await waitForBrandIntro(page)
 
   const shapeGrid = page.getByTestId('hero-shape-grid')
   await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
   await expect(shapeGrid).toHaveAttribute('data-motion', 'reduced')
-  await expect(page.getByTestId('hero-whatsapp-link')).toBeVisible()
-  await expect(page.getByTestId('homepage-hero-cloud')).toBeVisible()
+  await expect(shapeGrid).toHaveCSS('pointer-events', 'none')
+  const consultation = page.getByTestId('hero-whatsapp-link')
+  await expect(consultation).toBeVisible()
+  await expect(consultation).toBeEnabled()
+  const cloud = page.getByTestId('homepage-hero-cloud')
+  await expect(cloud).toBeVisible()
+  const lobeAnimationNames = await cloud.locator('.homepage-hero-cloud__lobes span').evaluateAll((lobes) => (
+    lobes.map(lobe => getComputedStyle(lobe).animationName)
+  ))
+  expect(lobeAnimationNames).toEqual(Array(7).fill('none'))
   await expect(page.getByTestId('homepage-social-proof').locator('article')).toHaveCount(3)
 
   const menuToggle = page.getByTestId('mobile-menu-toggle-button')

@@ -22,6 +22,7 @@ import { useState } from 'react'
 
 import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
+import { CompetitionRecognitionManagement } from '@/components/admin/competition-recognition-management'
 import { CompetitionCategoryManagement } from '@/components/admin/competition-category-management'
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
 import { DiscountCodeManagement } from '@/components/admin/discount-code-management'
@@ -65,6 +66,7 @@ type Section =
   | 'Testimonials'
   | 'Publications'
   | 'Competitions'
+  | 'Competition Recognition'
   | 'Reports'
   | 'Mentor Expertise'
   | 'Institutions'
@@ -110,6 +112,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Testimonials', label: 'Testimonials', icon: MessageSquareQuote },
       { id: 'Publications', label: 'Publications', icon: Newspaper },
       { id: 'Competitions', label: 'Competitions', icon: Trophy },
+      { id: 'Competition Recognition', label: 'Competition Recognition', icon: Trophy },
     ],
   },
   { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
@@ -175,6 +178,7 @@ export default function AdminDashboard() {
           {section === 'Testimonials' ? <TestimonialManagement/> : null}
           {section === 'Publications' ? <EditorialContentManagement initialKind="publications"/> : null}
           {section === 'Competitions' ? <EditorialContentManagement initialKind="competitions"/> : null}
+          {section === 'Competition Recognition' ? <CompetitionRecognitionManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}
