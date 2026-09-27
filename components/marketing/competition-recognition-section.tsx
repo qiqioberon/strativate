@@ -1,3 +1,7 @@
+import {
+  COMPETITION_RECOGNITION_LOGO_HEIGHT,
+  COMPETITION_RECOGNITION_LOGO_WIDTH,
+} from '@/lib/marketing/competition-recognition-config'
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
 
 const MINIMUM_LOGOS_PER_CYCLE = 12
@@ -19,8 +23,8 @@ function RecognitionLogo({
       <img
         src={recognition.logoUrl}
         alt={hidden ? '' : recognition.competition_name}
-        width={220}
-        height={96}
+        width={COMPETITION_RECOGNITION_LOGO_WIDTH}
+        height={COMPETITION_RECOGNITION_LOGO_HEIGHT}
         loading="lazy"
         draggable={false}
         tabIndex={-1}

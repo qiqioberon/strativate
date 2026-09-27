@@ -190,33 +190,6 @@ footer { max-width: 1120px; margin: 0 auto; padding: 35px 32px; display: flex; a
   .hero-poster-setup, .hero-poster-load-error { grid-template-columns: minmax(0, 1fr); }
   .hero-poster-setup > svg, .hero-poster-setup .button, .hero-poster-load-error > svg, .hero-poster-load-error .button { grid-column: 1; }
 }
-.competition-recognition-admin { display: grid; min-width: 0; gap: 18px; }
-.competition-recognition-admin__state { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 14px; }
-.competition-recognition-admin__state p { margin-top: 6px; color: #707982; font-size: 10px; line-height: 1.6; }
-.competition-recognition-admin__layout { display: grid; grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); align-items: start; gap: 18px; }
-.competition-recognition-admin__form { position: sticky; top: 84px; display: grid; min-width: 0; gap: 16px; }
-.competition-recognition-admin__form > label { display: grid; min-width: 0; gap: 6px; color: #4f5a64; font-size: 10px; font-weight: 800; }
-.competition-recognition-admin__form > label > span { color: #929ba3; font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
-.competition-recognition-admin__form input { width: 100%; min-width: 0; padding: 10px 11px; border: 1px solid #d9dfe4; border-radius: 9px; background: #fafbfc; font: inherit; font-size: 10px; }
-.competition-recognition-admin__form small { color: #7b858d; font-size: 9px; font-weight: 500; line-height: 1.5; }
-.competition-recognition-admin__preview { display: grid; width: 100%; min-height: 150px; place-items: center; padding: 20px; overflow: hidden; border: 1px solid #e0d9d5; border-radius: 10px; background: #fffaf5; }
-.competition-recognition-admin__preview img { width: 100%; max-width: 240px; height: 110px; object-fit: contain; }
-.competition-recognition-admin__preview svg { color: var(--primary); }
-.competition-recognition-admin__active { display: flex !important; align-items: center; grid-template-columns: auto 1fr; }
-.competition-recognition-admin__active input { width: auto; accent-color: var(--primary); }
-.competition-recognition-admin__list { display: grid; min-width: 0; gap: 12px; }
-.competition-recognition-admin__row { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: 14px; padding: 15px 0; border-top: 1px solid #e8ebee; }
-.competition-recognition-admin__logo { display: grid; width: 120px; height: 78px; place-items: center; overflow: hidden; border: 1px solid #e2ddda; border-radius: 8px; background: #fff; }
-.competition-recognition-admin__logo img { width: 100%; height: 100%; padding: 8px; object-fit: contain; }
-.competition-recognition-admin__row > div:nth-child(2) { display: grid; min-width: 0; gap: 5px; }
-.competition-recognition-admin__row strong { overflow-wrap: anywhere; }
-.competition-recognition-admin__row small { color: #7b858d; font-size: 9px; }
-.competition-recognition-admin__actions { display: flex; grid-column: 1 / -1; flex-wrap: wrap; gap: 7px; }
-.competition-recognition-admin__actions button { display: inline-flex; min-height: 38px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid #dfe3e6; border-radius: 9px; color: #56616c; background: #fff; font-size: 9px; font-weight: 800; }
-.competition-recognition-admin__actions button:last-child { margin-left: auto; color: var(--red); border-color: #ecd1d2; }
-.competition-recognition-admin__actions button:disabled { opacity: .4; }
-@media (max-width: 800px) { .competition-recognition-admin__layout { grid-template-columns: minmax(0, 1fr); } .competition-recognition-admin__form { position: static; } }
-@media (max-width: 520px) { .competition-recognition-admin__state, .competition-recognition-admin__row { grid-template-columns: minmax(0, 1fr); } .competition-recognition-admin__logo { width: 100%; height: 120px; } .competition-recognition-admin__actions { grid-column: 1; } .competition-recognition-admin__actions button { flex: 1 1 auto; } .competition-recognition-admin__actions button:last-child { margin-left: 0; } }
 .mentor-management { display: grid; gap: 18px; }
 .mentor-management-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 8px; }
 .mentor-management-heading h2 { margin: 8px 0; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.07em; }
