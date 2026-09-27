@@ -1,7 +1,9 @@
 import type { CompetitionRecognition } from '@/lib/supabase/database.types'
 
-const allowedLogoTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
-const maximumLogoSize = 5 * 1024 * 1024
+import {
+  COMPETITION_RECOGNITION_LOGO_ALLOWED_TYPES,
+  COMPETITION_RECOGNITION_LOGO_MAX_FILE_SIZE,
+} from './competition-recognition-config'
 
 export type CompetitionRecognitionFile = Pick<File, 'size' | 'type'>
 export type CompetitionRecognitionDraftErrors = Partial<Record<'competitionName' | 'file' | 'position', string>>
@@ -25,14 +27,14 @@ export function validateCompetitionRecognitionDraft({
   else if (name.length > 180) errors.competitionName = 'Competition name must be 180 characters or fewer.'
 
   if (!file && !hasStoredLogo) errors.file = 'Choose a logo for the new recognition.'
-  if (file && !allowedLogoTypes.has(file.type)) errors.file = 'Use a JPG, PNG, or WebP image.'
-  else if (file && file.size > maximumLogoSize) errors.file = 'Logo size must be 5 MB or smaller.'
+  if (file && !COMPETITION_RECOGNITION_LOGO_ALLOWED_TYPES.has(file.type)) errors.file = 'Use a JPG, PNG, or WebP image.'
+  else if (file && file.size > COMPETITION_RECOGNITION_LOGO_MAX_FILE_SIZE) errors.file = 'Logo size must be 5 MB or smaller.'
 
   if (position !== undefined) {
     const parsed = Number(position.trim())
     const maximum = recognitionCount ?? 0
     if (!position.trim() || !Number.isInteger(parsed) || parsed < 1 || parsed > maximum) {
-      errors.position = `Position must be a whole number from 1 to ${maximum}.`
+      errors.position = 'Position must be a whole number from 1 to ' + maximum + '.'
     }
   }
   return errors
@@ -83,7 +85,7 @@ export function safeCompetitionLogoFileName(name: string, contentType?: string) 
   const safeName = normalized || 'logo'
   if (/\.(jpe?g|png|webp)$/i.test(safeName) || !contentType) return safeName
   const extension = contentType === 'image/jpeg' ? 'jpg' : contentType === 'image/png' ? 'png' : 'webp'
-  return `${safeName}.${extension}`
+  return safeName + '.' + extension
 }
 
 export function isCompetitionRecognitionSetupRequired(error: unknown) {
