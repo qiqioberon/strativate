@@ -1410,13 +1410,15 @@
 
 .homepage-recognition {
   position: relative;
+  background: #fff;
+}
+.homepage-recognition__statement {
   padding: clamp(64px, 7vw, 104px) 0;
-  background: #f8e7d5;
+  background: color-mix(in srgb, var(--marketing-orange) 72%, var(--marketing-yellow));
 }
 .homepage-recognition__inner {
   display: grid;
   justify-items: center;
-  gap: clamp(36px, 5vw, 64px);
   text-align: center;
 }
 .homepage-recognition h2 {
@@ -1429,19 +1431,68 @@
   line-height: 1.12;
   text-wrap: balance;
 }
-.homepage-recognition__logo-wall {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: clamp(28px, 4.5vw, 64px);
+.homepage-recognition__logos {
+  overflow: hidden;
+  padding: clamp(44px, 5vw, 72px) 0;
+  pointer-events: none;
+  background: #fff;
 }
-.homepage-recognition__logo-wall img {
-  width: auto;
-  max-width: min(220px, 42vw);
-  height: clamp(58px, 7vw, 88px);
+.homepage-recognition__logo-wall {
+  display: grid;
+  width: 100%;
+  gap: clamp(20px, 2.5vw, 34px);
+}
+.homepage-recognition__logo-wall--static {
+  display: flex;
+  justify-content: center;
+  padding-inline: 24px;
+}
+.homepage-recognition__reduced-grid {
+  display: none;
+}
+.homepage-recognition__logo-row {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.homepage-recognition__logo-track,
+.homepage-recognition__logo-cycle {
+  display: flex;
+  width: max-content;
+  align-items: center;
+}
+.homepage-recognition__logo-track {
+  will-change: transform;
+}
+.homepage-recognition__logo-row--forward .homepage-recognition__logo-track {
+  animation: recognition-logo-forward 96s linear infinite;
+  animation-delay: -48s;
+}
+.homepage-recognition__logo-row--reverse .homepage-recognition__logo-track {
+  animation: recognition-logo-reverse 104s linear infinite;
+  animation-delay: -52s;
+}
+.homepage-recognition__logo-cycle {
+  gap: clamp(36px, 4vw, 72px);
+  padding-right: clamp(36px, 4vw, 72px);
+}
+.homepage-recognition__logo {
+  display: grid;
+  width: clamp(144px, 13vw, 220px);
+  height: clamp(64px, 7vw, 92px);
+  flex: 0 0 auto;
+  place-items: center;
+}
+.homepage-recognition__logo img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+}
+@keyframes recognition-logo-forward {
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes recognition-logo-reverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 @media (max-width: 1080px) {
@@ -1493,9 +1544,16 @@
   .homepage-hero-cloud__stats article { padding: 18px 18px; }
   .homepage-hero-cloud__stats article + article { border-top: 1px solid #f0ddd0; border-left: 0; }
   .homepage-hero-cloud__stats strong { font-size: 2.5rem; }
-  .homepage-recognition { padding: 58px 0 70px; }
-  .homepage-recognition__inner { gap: 34px; }
-  .homepage-recognition__logo-wall { gap: 28px 32px; }
+  .homepage-recognition__statement { padding: 58px 0 64px; }
+  .homepage-recognition__logos { padding: 40px 0 48px; }
+  .homepage-recognition__logo-cycle {
+    gap: 28px;
+    padding-right: 28px;
+  }
+  .homepage-recognition__logo {
+    width: clamp(128px, 33vw, 176px);
+    height: 68px;
+  }
 }
 @media (max-width: 430px) {
   .homepage-hero { padding-top: 104px; }
@@ -1504,6 +1562,13 @@
   .homepage-hero__gallery .marketing-testimonial-gallery { height: 330px; }
   .homepage-hero-cloud.has-gallery { margin-top: -2px; }
   .homepage-hero-cloud__lobes { height: 58px; }
+  .homepage-recognition__statement { padding: 52px 0 58px; }
+  .homepage-recognition__logos { padding: 34px 0 40px; }
+  .homepage-recognition__logo-wall { gap: 18px; }
+  .homepage-recognition__logo-cycle {
+    gap: 22px;
+    padding-right: 22px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .homepage-shape-grid { opacity: .72; }
@@ -1511,5 +1576,31 @@
   .homepage-hero .homepage-hero__consultation:hover { transform: none; }
   .homepage-hero__gallery .marketing-testimonial-gallery__overlay {
     transition: none;
+  }
+  .homepage-recognition__logo-wall--animated {
+    display: none;
+  }
+  .homepage-recognition__reduced-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(24px, 4vw, 52px);
+    padding: 0 24px;
+  }
+  .homepage-recognition__logo-row .homepage-recognition__logo-track {
+    animation: none;
+    transform: none;
+  }
+  .homepage-recognition__logo-cycle {
+    gap: clamp(24px, 4vw, 52px);
+    padding: 0 24px;
+  }
+  .homepage-recognition__logo-cycle[aria-hidden='true'],
+  .homepage-recognition__logo[aria-hidden='true'] {
+    display: none;
+  }
+  .homepage-recognition__logo-row {
+    overflow: visible;
+    mask-image: none;
   }
 }

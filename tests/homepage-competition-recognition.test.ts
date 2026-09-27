@@ -28,9 +28,36 @@ test('recognition section preserves exact copy, accessible names, and its empty 
   assert.match(section, /Our mentors and students are award-winning business competition finalists\./)
   assert.match(section, /data-testid="homepage-recognition-section"/)
   assert.match(section, /recognitions\.length > 0/)
+  assert.match(section, /data-testid="homepage-recognition-logo-section"/)
   assert.match(section, /data-testid="homepage-recognition-logo-wall"/)
-  assert.match(section, /alt=\{recognition\.competition_name\}/)
+  assert.match(section, /alt=\{hidden \? '' : recognition\.competition_name\}/)
   assert.match(section, /loading="lazy"/)
+})
+
+test('recognition logos use static, single-row, and two-row states at the approved initial thresholds', async () => {
+  const section = await read('components/marketing/competition-recognition-section.tsx')
+
+  assert.match(section, /recognitions\.length === 1/)
+  assert.match(section, /recognitions\.length >= 8/)
+  assert.match(section, /recognitions\.filter\(\(_recognition, index\) => index % 2 === 0\)/)
+  assert.match(section, /recognitions\.filter\(\(_recognition, index\) => index % 2 === 1\)/)
+  assert.match(section, /homepage-recognition__logo-wall--static/)
+  assert.match(section, /homepage-recognition__logo-wall--animated/)
+  assert.match(section, /homepage-recognition__reduced-grid/)
+  assert.match(section, /homepage-recognition__logo-row--forward/)
+  assert.match(section, /homepage-recognition__logo-row--reverse/)
+})
+
+test('animated recognition rows fill their cycles while exposing each source logo only once', async () => {
+  const section = await read('components/marketing/competition-recognition-section.tsx')
+
+  assert.match(section, /MINIMUM_LOGOS_PER_CYCLE\s*=\s*12/)
+  assert.match(section, /hidden=\{isDuplicate \|\| repetition > 0\}/)
+  assert.match(section, /aria-hidden=\{isDuplicate \|\| undefined\}/)
+  assert.match(section, /alt=\{hidden \? '' : recognition\.competition_name\}/)
+  assert.match(section, /draggable=\{false\}/)
+  assert.match(section, /tabIndex=\{-1\}/)
+  assert.doesNotMatch(section, /<button|<a\s|onPointer|onMouse|onTouch/)
 })
 
 test('public recognition query returns active records in deterministic order with editorial URLs', async () => {
@@ -45,17 +72,44 @@ test('public recognition query returns active records in deterministic order wit
   assert.match(query, /console\.warn\([^\n]*\{ code: error\.code \}\)/)
 })
 
-test('recognition presentation uses a calm solid background and contained wrapping logos', async () => {
+test('recognition presentation separates a warm statement from the white logo motion band', async () => {
   const css = await read('app/marketing.css')
   const start = css.indexOf('.homepage-recognition')
-  const end = css.indexOf('@media', start)
-  const scoped = start >= 0 ? css.slice(start, end) : ''
+  const scoped = start >= 0 ? css.slice(start) : ''
 
-  assert.match(scoped, /background:\s*#[0-9a-f]{6}/i)
+  assert.match(scoped, /\.homepage-recognition__statement\s*\{[^}]*background:\s*color-mix\([^;]*var\(--marketing-orange\)[^;]*var\(--marketing-yellow\)/)
+  assert.match(scoped, /\.homepage-recognition__logos\s*\{[^}]*background:\s*#fff/)
   assert.match(scoped, /text-align:\s*center/)
-  assert.match(scoped, /display:\s*flex/)
-  assert.match(scoped, /flex-wrap:\s*wrap/)
+  assert.match(scoped, /\.homepage-recognition__logos\s*\{[^}]*pointer-events:\s*none/)
   assert.match(scoped, /object-fit:\s*contain/)
-  assert.doesNotMatch(scoped, /linear-gradient|radial-gradient|box-shadow/)
-  assert.doesNotMatch(scoped, /homepage-recognition[^\n]*:(hover|focus)|marquee|carousel/i)
+  assert.doesNotMatch(scoped.slice(0, scoped.indexOf('@media (max-width', 1)), /background:\s*(?:linear-gradient|radial-gradient)|box-shadow/)
+  assert.doesNotMatch(scoped, /homepage-recognition[^\n]*:(hover|focus)|carousel/i)
+})
+
+test('recognition logo rows animate continuously in opposite straight directions', async () => {
+  const css = await read('app/marketing.css')
+  const start = css.indexOf('.homepage-recognition')
+  const scoped = start >= 0 ? css.slice(start) : ''
+
+  assert.match(scoped, /\.homepage-recognition__logo-track,[\s\S]*?width:\s*max-content/)
+  assert.match(scoped, /\.homepage-recognition__logo-track\s*\{[^}]*will-change:\s*transform/)
+  assert.match(scoped, /\.homepage-recognition__logo-row--forward[^{]*\.homepage-recognition__logo-track\s*\{[^}]*animation:\s*recognition-logo-forward[^}]*linear[^}]*infinite/)
+  assert.match(scoped, /\.homepage-recognition__logo-row--reverse[^{]*\.homepage-recognition__logo-track\s*\{[^}]*animation:\s*recognition-logo-reverse[^}]*linear[^}]*infinite/)
+  assert.match(scoped, /\.homepage-recognition__logo-row--forward[^{]*\.homepage-recognition__logo-track\s*\{[^}]*animation-delay:\s*-48s/)
+  assert.match(scoped, /\.homepage-recognition__logo-row--reverse[^{]*\.homepage-recognition__logo-track\s*\{[^}]*animation-delay:\s*-52s/)
+  assert.match(scoped, /@keyframes recognition-logo-forward\s*\{[^}]*translate3d\(-50%,\s*0,\s*0\)/)
+  assert.match(scoped, /@keyframes recognition-logo-reverse\s*\{[^}]*translate3d\(-50%,\s*0,\s*0\)[\s\S]*translate3d\(0,\s*0,\s*0\)/)
+})
+
+test('reduced motion removes duplicate fillers and centers each real recognition once', async () => {
+  const css = await read('app/marketing.css')
+  const reducedMotion = css.slice(css.lastIndexOf('@media (prefers-reduced-motion: reduce)'))
+
+  assert.match(reducedMotion, /\.homepage-recognition__logo-row \.homepage-recognition__logo-track\s*\{[^}]*animation:\s*none[^}]*transform:\s*none/)
+  assert.match(reducedMotion, /\.homepage-recognition__logo-cycle\[aria-hidden='true'\][^{]*\{\s*display:\s*none/)
+  assert.match(reducedMotion, /\.homepage-recognition__logo\[aria-hidden='true'\][^{]*\{\s*display:\s*none/)
+  assert.match(reducedMotion, /\.homepage-recognition__logo-wall--animated\s*\{\s*display:\s*none/)
+  assert.match(reducedMotion, /\.homepage-recognition__reduced-grid\s*\{[^}]*display:\s*flex[^}]*flex-wrap:\s*wrap/)
+  assert.match(reducedMotion, /flex-wrap:\s*wrap/)
+  assert.doesNotMatch(reducedMotion, /overflow-x:\s*auto|scroll-snap/)
 })
