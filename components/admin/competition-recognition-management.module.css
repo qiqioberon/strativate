@@ -229,7 +229,7 @@
   user-select: none;
 }
 .previewFrame[data-draggable='true'] { cursor: grab; }
-.previewFrame[data-dragging='true'] { cursor: grabbing; }
+.previewFrame[data-draggable='true']:active { cursor: grabbing; }
 .previewFrame img { pointer-events: none; user-select: none; }
 .previewPlaceholder {
   display: grid;

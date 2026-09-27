@@ -717,7 +717,6 @@ export function CompetitionRecognitionManagement() {
                     className={styles.previewFrame}
                     data-testid="competition-recognition-fit-preview"
                     data-draggable={selectedFile ? 'true' : 'false'}
-                    data-dragging={dragRef.current ? 'true' : 'false'}
                     onPointerDown={handlePreviewPointerDown}
                     onPointerMove={handlePreviewPointerMove}
                     onPointerUp={handlePreviewPointerEnd}
