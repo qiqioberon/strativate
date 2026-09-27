@@ -75,25 +75,41 @@ test('recognition filenames are safe and setup detection is limited to missing-s
   assert.equal(isCompetitionRecognitionSetupRequired({ code: '42501' }), false)
 })
 
-test('recognition admin owns safe storage reconciliation and complete CRUD controls', async () => {
-  const [component, admin] = await Promise.all([
+test('recognition admin uses structured modal management and normalized WebP uploads', async () => {
+  const [component, styles, admin, config, image] = await Promise.all([
     read('components/admin/competition-recognition-management.tsx'),
+    read('components/admin/competition-recognition-management.module.css'),
     read('app/admin/page.tsx'),
+    read('lib/marketing/competition-recognition-config.ts'),
+    read('lib/marketing/competition-recognition-image.ts'),
   ])
 
-  assert.match(component, /storage\.from\('marketing-editorial'\)\.upload\(uploadedPath/)
-  assert.match(component, /uploadedPath = `recognition-logos\/\$\{crypto\.randomUUID\(\)\}-/)
-  assert.match(component, /alt=\{recognition\.competition_name\}/)
-  assert.match(component, /rpc\('reorder_competition_recognitions'/)
+  assert.match(component, /<table className=\{styles\.table\}>/)
+  assert.match(component, /data-testid="competition-recognition-editor-dialog"/)
   assert.match(component, /data-testid="competition-recognition-add-button"/)
-  assert.match(component, /data-testid=\{`competition-recognition-\$\{recognition\.id\}-edit-button`\}/)
+  assert.match(component, /data-testid="competition-recognition-fit-preview"/)
+  assert.match(component, /data-testid="competition-recognition-fit-controls"/)
+  assert.match(component, /fitCompetitionRecognitionLogo\(selectedFile, fit\)/)
+  assert.match(component, /contentType:\s*'image\/webp'/)
+  assert.match(component, /uploadedPath = 'recognition-logos\/' \+ crypto\.randomUUID\(\)/)
   assert.match(component, /role="switch"/)
   assert.match(component, /move-up-button/)
+  assert.match(component, /move-down-button/)
   assert.match(component, /delete-button/)
   assert.match(component, /\.eq\('logo_path', uploadedPath\)[\s\S]*\.maybeSingle\(\)/)
-  assert.match(component, /if \(reconciliationError\)[\s\S]*status could not be confirmed[\s\S]*else \{[\s\S]*remove\(\[uploadedPath\]\)/)
-  assert.match(component, /if \(editing && uploadedPath[\s\S]*remove\(\[editing\.logo_path\]\)/)
+  assert.match(component, /status could not be confirmed[\s\S]*remove\(\[uploadedPath\]\)/)
+  assert.match(component, /selected && uploadedPath && selected\.logo_path !== uploadedPath[\s\S]*remove\(\[selected\.logo_path\]\)/)
+  assert.doesNotMatch(component, /name="position"|type="number"/)
   assert.doesNotMatch(component, /\.from\('competitions'\)/)
+
+  assert.match(styles, /aspect-ratio:\s*5\s*\/\s*2/)
+  assert.match(styles, /@media \(max-width:\s*760px\)/)
+  assert.match(styles, /data-label/)
+  assert.match(config, /COMPETITION_RECOGNITION_LOGO_WIDTH\s*=\s*1000/)
+  assert.match(config, /COMPETITION_RECOGNITION_LOGO_HEIGHT\s*=\s*400/)
+  assert.match(image, /context\.clearRect/)
+  assert.match(image, /canvas\.toBlob/)
+  assert.match(image, /'image\/webp'/)
   assert.match(admin, /Competition Recognition/)
   assert.match(admin, /<CompetitionRecognitionManagement\/>/)
 })

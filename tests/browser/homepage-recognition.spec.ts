@@ -113,12 +113,19 @@ async function movingRowGeometry(row: Locator) {
     const visibleSlots = Array.from(node.querySelectorAll<HTMLElement>('.homepage-recognition__logo'))
       .filter(slot => getComputedStyle(slot).display !== 'none')
       .map(slot => slot.getBoundingClientRect())
-    const logoAspectRatios = Array.from(node.querySelectorAll<HTMLImageElement>('.homepage-recognition__logo img'))
+    const logoContainment = Array.from(node.querySelectorAll<HTMLImageElement>('.homepage-recognition__logo img'))
       .slice(0, 4)
-      .map(image => ({
-        natural: image.naturalWidth / image.naturalHeight,
-        rendered: image.getBoundingClientRect().width / image.getBoundingClientRect().height,
-      }))
+      .map(image => {
+        const imageBox = image.getBoundingClientRect()
+        const slotBox = image.closest<HTMLElement>('.homepage-recognition__logo')!.getBoundingClientRect()
+        return {
+          objectFit: getComputedStyle(image).objectFit,
+          insideSlot: imageBox.left >= slotBox.left - 1
+            && imageBox.top >= slotBox.top - 1
+            && imageBox.right <= slotBox.right + 1
+            && imageBox.bottom <= slotBox.bottom + 1,
+        }
+      })
     const rowBox = node.getBoundingClientRect()
     const center = rowBox.left + rowBox.width / 2
     const nearestLeft = Math.min(...visibleSlots.map(slot => Math.max(slot.left - rowBox.left, rowBox.left - slot.right, 0)))
@@ -131,7 +138,7 @@ async function movingRowGeometry(row: Locator) {
       rightEdgeGap: nearestRight,
       hasLogoLeftOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 < center),
       hasLogoRightOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 > center),
-      logoAspectRatios,
+      logoContainment,
     }
   })
 }
@@ -241,8 +248,9 @@ for (const width of widths) {
       expect(geometry.rightEdgeGap).toBeLessThan(96)
       expect(geometry.hasLogoLeftOfCenter).toBe(true)
       expect(geometry.hasLogoRightOfCenter).toBe(true)
-      geometry.logoAspectRatios.forEach(({ natural, rendered }) => {
-        expect(rendered).toBeCloseTo(natural, 2)
+      geometry.logoContainment.forEach(({ objectFit, insideSlot }) => {
+        expect(objectFit).toBe('contain')
+        expect(insideSlot).toBe(true)
       })
     }
     expect(initialForward.animationName).toBe('recognition-logo-forward')
@@ -297,7 +305,7 @@ test('one logo remains static, centered, and keeps its source aspect ratio', asy
   expect(result.centered).toBe(true)
   expect(result.objectFit).toBe('contain')
   expect(result.aspectRatio).toBe(4)
-  expect(result.renderedAspectRatio).toBeCloseTo(4, 2)
+  expect(result.renderedAspectRatio).toBeCloseTo(2.5, 2)
   expect(result.width).toBeLessThanOrEqual(160)
   expect(result.alt).toBe('Competition 1')
 })
