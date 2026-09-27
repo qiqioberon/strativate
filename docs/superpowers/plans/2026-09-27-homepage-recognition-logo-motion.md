@@ -23,7 +23,7 @@
 - Zero records must omit the logo band while retaining the statement.
 - One record must be announced once, remain centered, and not animate.
 - Two records must still fill the viewport continuously without an empty initial edge.
-- Eight or more records must split predictably and move in opposite directions.
+- Twelve or more records must split predictably and move in opposite directions; smaller sets remain one row so a second row never appears sparse.
 - Reduced motion must expose each real logo once without animation or manual scrolling.
 
 ---
@@ -38,7 +38,7 @@
 - Consumes: `CompetitionRecognitionView[]` in admin order.
 - Produces: statement band plus optional static, one-row, or two-row logo band markup with hidden visual duplicate groups.
 
-- [x] Add failing contract tests for zero, one, 2–7, and 8+ record structure; exact alt text; deterministic alternating two-row distribution; hidden duplicate groups; and no controls or links.
+- [x] Add failing contract tests for zero, one, 2–11, and 12+ record structure; exact alt text; deterministic alternating two-row distribution; hidden duplicate groups; and no controls or links.
 - [x] Run the focused unit test and confirm the new assertions fail.
 - [x] Implement the minimal server-rendered row/group composition.
 - [x] Run the focused unit test and confirm it passes.

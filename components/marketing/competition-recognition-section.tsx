@@ -1,6 +1,7 @@
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
 
 const MINIMUM_LOGOS_PER_CYCLE = 12
+const MINIMUM_LOGOS_FOR_TWO_ROWS = 12
 
 function RecognitionLogo({
   recognition,
@@ -84,7 +85,7 @@ export function CompetitionRecognitionSection({
 }: {
   recognitions: CompetitionRecognitionView[]
 }) {
-  const usesTwoRows = recognitions.length >= 8
+  const usesTwoRows = recognitions.length >= MINIMUM_LOGOS_FOR_TWO_ROWS
   const firstRow = usesTwoRows
     ? recognitions.filter((_recognition, index) => index % 2 === 0)
     : recognitions

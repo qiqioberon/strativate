@@ -83,7 +83,7 @@ async function mountRecognitionLogos(page: Page, count: number) {
       wall.classList.add('homepage-recognition__logo-wall--static')
       wall.append(logo(records[0], false, 'static'))
     } else {
-      const usesTwoRows = logoCount >= 8
+      const usesTwoRows = logoCount >= 12
       wall.classList.add('homepage-recognition__logo-wall--animated')
       if (usesTwoRows) wall.classList.add('homepage-recognition__logo-wall--two-rows')
       wall.append(row(usesTwoRows ? records.filter((_record, index) => index % 2 === 0) : records))
@@ -113,6 +113,12 @@ async function movingRowGeometry(row: Locator) {
     const visibleSlots = Array.from(node.querySelectorAll<HTMLElement>('.homepage-recognition__logo'))
       .filter(slot => getComputedStyle(slot).display !== 'none')
       .map(slot => slot.getBoundingClientRect())
+    const logoAspectRatios = Array.from(node.querySelectorAll<HTMLImageElement>('.homepage-recognition__logo img'))
+      .slice(0, 4)
+      .map(image => ({
+        natural: image.naturalWidth / image.naturalHeight,
+        rendered: image.getBoundingClientRect().width / image.getBoundingClientRect().height,
+      }))
     const rowBox = node.getBoundingClientRect()
     const center = rowBox.left + rowBox.width / 2
     const nearestLeft = Math.min(...visibleSlots.map(slot => Math.max(slot.left - rowBox.left, rowBox.left - slot.right, 0)))
@@ -125,6 +131,7 @@ async function movingRowGeometry(row: Locator) {
       rightEdgeGap: nearestRight,
       hasLogoLeftOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 < center),
       hasLogoRightOfCenter: visibleSlots.some(slot => slot.left + slot.width / 2 > center),
+      logoAspectRatios,
     }
   })
 }
@@ -201,6 +208,13 @@ for (const width of widths) {
     expect(recognitionStyles.boxShadow).toBe('none')
     expect(recognitionStyles.headingInsideSection).toBe(true)
     expect(recognitionStyles.touchesHero).toBe(true)
+    if (width >= 1440) {
+      const headingLines = await recognition.locator('h2').evaluate((heading) => {
+        const style = getComputedStyle(heading)
+        return Math.round(heading.getBoundingClientRect().height / Number.parseFloat(style.lineHeight))
+      })
+      expect(headingLines).toBe(2)
+    }
   })
 }
 
@@ -210,7 +224,7 @@ for (const width of widths) {
     await page.goto('/')
     await waitForBrandIntro(page)
     await mountEmptyRecognition(page)
-    await mountRecognitionLogos(page, 8)
+    await mountRecognitionLogos(page, 12)
 
     const logoSection = page.getByTestId('homepage-recognition-logo-section')
     await logoSection.scrollIntoViewIfNeeded()
@@ -227,6 +241,9 @@ for (const width of widths) {
       expect(geometry.rightEdgeGap).toBeLessThan(96)
       expect(geometry.hasLogoLeftOfCenter).toBe(true)
       expect(geometry.hasLogoRightOfCenter).toBe(true)
+      geometry.logoAspectRatios.forEach(({ natural, rendered }) => {
+        expect(rendered).toBeCloseTo(natural, 2)
+      })
     }
     expect(initialForward.animationName).toBe('recognition-logo-forward')
     expect(initialReverse.animationName).toBe('recognition-logo-reverse')
@@ -240,11 +257,11 @@ for (const width of widths) {
   })
 }
 
-test('two logos move in one filled row at 1920px', async ({ page }) => {
+test('eight logos remain in one filled row at 1920px', async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1000 })
   await page.goto('/')
   await waitForBrandIntro(page)
-  await mountRecognitionLogos(page, 2)
+  await mountRecognitionLogos(page, 8)
 
   const rows = page.getByTestId('homepage-recognition-logo-section').locator('.homepage-recognition__logo-row')
   await expect(rows).toHaveCount(1)
@@ -271,10 +288,18 @@ test('one logo remains static, centered, and keeps its source aspect ratio', asy
       centered: Math.abs((imageBox.left + imageBox.width / 2) - (wallBox.left + wallBox.width / 2)) <= 1,
       objectFit: getComputedStyle(image).objectFit,
       aspectRatio: image.naturalWidth / image.naturalHeight,
+      renderedAspectRatio: imageBox.width / imageBox.height,
+      width: imageBox.width,
       alt: image.alt,
     }
   })
-  expect(result).toEqual({ animationName: 'none', centered: true, objectFit: 'contain', aspectRatio: 4, alt: 'Competition 1' })
+  expect(result.animationName).toBe('none')
+  expect(result.centered).toBe(true)
+  expect(result.objectFit).toBe('contain')
+  expect(result.aspectRatio).toBe(4)
+  expect(result.renderedAspectRatio).toBeCloseTo(4, 2)
+  expect(result.width).toBeLessThanOrEqual(160)
+  expect(result.alt).toBe('Competition 1')
 })
 
 test('reduced motion shows each original logo once without scrolling or animation', async ({ page }) => {
@@ -282,7 +307,7 @@ test('reduced motion shows each original logo once without scrolling or animatio
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
   await waitForBrandIntro(page)
-  await mountRecognitionLogos(page, 8)
+  await mountRecognitionLogos(page, 12)
 
   const logoSection = page.getByTestId('homepage-recognition-logo-section')
   const result = await logoSection.evaluate((node) => {
@@ -300,7 +325,7 @@ test('reduced motion shows each original logo once without scrolling or animatio
   expect(result.reducedMotionMatches).toBe(true)
   expect(result.animationNames).toEqual(['none', 'none'])
   expect(result.transforms).toEqual(['none', 'none'])
-  expect(result.visibleAlts).toEqual(Array.from({ length: 8 }, (_, index) => `Competition ${index + 1}`))
+  expect(result.visibleAlts).toEqual(Array.from({ length: 12 }, (_, index) => `Competition ${index + 1}`))
   expect(result.overflowX).toBe('hidden')
   expect(result.pageFits).toBe(true)
 })
