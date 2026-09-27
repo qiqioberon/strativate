@@ -48,12 +48,14 @@ test('slot save performs safe replacement and ambiguous-write reconciliation', a
   const manager = await read('components/admin/who-we-are-photo-management.tsx')
   const crop = manager.indexOf('cropWhoWeArePhoto(selectedFile')
   const upload = manager.indexOf('.upload(uploadedPath')
-  const persist = manager.indexOf(".upsert({ role: activeRole")
+  const persistUpdate = manager.indexOf('.update(payload)')
+  const persistInsert = manager.indexOf(".insert({ role: activeRole, ...payload })")
   const completion = manager.indexOf('await completePersistedSave(storedPath, payload.image_path)')
 
   assert.ok(crop >= 0 && crop < upload)
-  assert.ok(upload >= 0 && upload < persist)
-  assert.ok(persist >= 0 && persist < completion)
+  assert.ok(upload >= 0 && upload < persistUpdate)
+  assert.ok(persistUpdate >= 0 && persistUpdate < completion)
+  assert.ok(persistInsert >= 0 && persistInsert < completion)
   assert.match(manager, /if \(storedPath && storedPath !== nextPath\)[\s\S]*\.remove\(\[storedPath\]\)/)
   assert.match(manager, /\.eq\('role', activeRole\)[\s\S]*\.maybeSingle\(\)/)
   assert.match(manager, /persisted\?\.image_path === intendedPayload\.image_path/)
@@ -81,4 +83,12 @@ test('crop preview establishes its own clipping containing block', async () => {
 
   assert.match(css, /\.preview\s*\{[^}]*position:relative[^}]*overflow:hidden/)
   assert.match(css, /\.preview img\[style\]\s*\{[^}]*object-fit:fill/)
+})
+
+
+test('slot persistence updates existing rows without resending the immutable role and inserts only for empty slots', async () => {
+  const manager = await read('components/admin/who-we-are-photo-management.tsx')
+
+  assert.doesNotMatch(manager, /\.upsert\(/)
+  assert.match(manager, /selected[\s\S]*\.update\(payload\)[\s\S]*\.eq\('role', activeRole\)[\s\S]*\.insert\(\{ role: activeRole, \.\.\.payload \}\)/)
 })

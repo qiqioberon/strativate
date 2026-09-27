@@ -18,9 +18,17 @@ async function json(route: Route, body: unknown, status = 200) {
   })
 }
 
-async function mockBackend(page: Page, rows: Photo[]) {
+async function mockBackend(
+  page: Page,
+  rows: Photo[],
+  mutations: Array<{ method: string; body: unknown }> = [],
+) {
   await page.route('**/rest/v1/homepage_who_we_are_photos*', async route => {
     if (route.request().method() === 'GET') return json(route, rows)
+    mutations.push({
+      method: route.request().method(),
+      body: route.request().postDataJSON(),
+    })
     await route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } })
   })
   await page.route('**/storage/v1/object/public/marketing-editorial/who-we-are/**', route => (
@@ -110,4 +118,38 @@ test('extreme replacement aspect ratio stays clipped to the crop preview', async
   expect(previewContract.position).toBe('relative')
   expect(previewContract.overflow).toBe('hidden')
   expect(previewContract.leaksOutsideFrame).toBe(false)
+})
+
+
+test('editing an existing slot PATCHes mutable fields without resending its fixed role', async ({ page }) => {
+  const mutations: Array<{ method: string; body: unknown }> = []
+  const storedPath = 'who-we-are/primary/a2800000-0000-4000-8000-000000000001.webp'
+  await mockBackend(page, [{
+    role: 'primary',
+    image_path: storedPath,
+    alt_text: 'Students preparing a competition presentation',
+    badge_text: 'Collaborative preparation',
+    created_at: '2026-09-28T00:00:00.000Z',
+    updated_at: '2026-09-28T00:00:00.000Z',
+  }], mutations)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('http://localhost:3001/admin')
+
+  await page.getByRole('button', { name: 'Who We Are Photos' }).click()
+  const manager = page.getByTestId('who-we-are-photo-admin-section')
+  await manager.getByRole('button', { name: 'Manage' }).first().click()
+
+  const dialog = page.getByTestId('who-we-are-photo-editor-dialog')
+  await dialog.getByLabel('Badge text (optional)').fill('Updated achievement')
+  await dialog.getByRole('button', { name: 'Save changes' }).click()
+  await expect(dialog).toBeHidden()
+
+  const patch = mutations.find(mutation => mutation.method === 'PATCH')
+  expect(patch).toBeTruthy()
+  expect(patch?.body).toEqual({
+    image_path: storedPath,
+    alt_text: 'Students preparing a competition presentation',
+    badge_text: 'Updated achievement',
+  })
+  expect(mutations.some(mutation => mutation.method === 'POST')).toBe(false)
 })
