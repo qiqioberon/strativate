@@ -884,14 +884,14 @@
 .homepage-who__lower_right { width: 84%; aspect-ratio: 1; transform: translate(7%, 2%) rotate(-.35deg); }
 .homepage-who__frame figcaption {
   position: absolute;
-  right: 12px;
+  left: 12px;
   bottom: 12px;
   max-width: calc(100% - 24px);
   padding: 7px 11px;
   border-radius: 999px;
-  color: #4f3c31;
-  background: rgba(255, 255, 255, .93);
-  box-shadow: 0 5px 14px rgba(67, 37, 18, .12);
+  color: #fff;
+  background: var(--marketing-orange);
+  box-shadow: 0 5px 14px rgba(190, 69, 0, .18);
   font-size: clamp(.58rem, .7vw, .68rem);
   font-weight: 750;
   line-height: 1.35;

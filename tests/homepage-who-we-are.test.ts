@@ -37,7 +37,7 @@ test('Who We Are section preserves approved source copy, CTA, and optional badge
 
   assert.match(section, />WHO WE ARE</)
   assert.match(section, /Where Future-Ready Skills Meet Competition Success/)
-  assert.match(section, /Strativate helps students build practical business skills, sharpen analytical thinking, and prepare for competitions with expert guidance\./)
+  assert.match(section, /Strativate is a mentorship and coaching platform that helps students build future-ready skills and excel in business and other competitions\. We’ve supported 2,500\+ students across 15\+ universities and 20\+ high schools, with our community earning top honors in prestigious competitions\./)
   assert.match(section, /href="\/tentang-kami"/)
   assert.match(section, />Learn More About Us</)
   assert.match(photo, /photo\.badge_text \? <figcaption/)
@@ -74,6 +74,7 @@ test('Who We Are styles keep a restrained editorial collage and mobile hierarchy
   assert.match(scoped, /\.homepage-who__upper_right\s*\{[^}]*aspect-ratio:\s*4\s*\/\s*3/)
   assert.match(scoped, /\.homepage-who__lower_right\s*\{[^}]*aspect-ratio:\s*1/)
   assert.match(scoped, /\.homepage-who__frame\s*\{[^}]*background:\s*#fff[^}]*box-shadow:/)
+  assert.match(scoped, /\.homepage-who__frame figcaption\s*\{[^}]*left:\s*12px[^}]*bottom:\s*12px[^}]*color:\s*#fff[^}]*background:\s*var\(--marketing-orange\)/)
   assert.match(scoped, /\.homepage-who__collage:has\(> \.homepage-who__frame:only-child\)/)
   assert.match(scoped, /\.homepage-who__cta\s*\{[^}]*border-radius:\s*999px[^}]*color:\s*#fff[^}]*background:\s*var\(--marketing-orange\)/)
   assert.match(scoped, /@media \(max-width:\s*900px\)[\s\S]*\.homepage-who__layout\s*\{[^}]*grid-template-columns:\s*1fr/)
