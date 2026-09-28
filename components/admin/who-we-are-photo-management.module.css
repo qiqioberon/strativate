@@ -9,6 +9,7 @@
 .thumbnail { display:grid; width:66px; height:48px; place-items:center; overflow:hidden; border:1px solid #e3e7ea; border-radius:8px; color:#a1a9b0; background:#f7f8f9; }
 .thumbnail img { width:100%; height:100%; object-fit:cover; }
 .thumbnail.primary { width:42px; height:56px; }
+.thumbnail.upper_right,.thumbnail.lower_right { width:52px; height:52px; }
 .roleName { display:block; font-size:10px; }
 .roleMeta { display:block; margin-top:3px; color:#7a848d; font-size:9px; }
 .badge,.noBadge { display:inline-flex; max-width:190px; padding:5px 8px; border-radius:999px; font-size:9px; line-height:1.3; }
@@ -33,7 +34,7 @@
 .previewColumn { display:grid; align-content:start; gap:8px; }
 .preview { position:relative; display:grid; width:100%; aspect-ratio:4 / 3; place-items:center; overflow:hidden; border:8px solid #fff; border-radius:16px; color:#89929a; background:#f4f5f6; box-shadow:0 12px 30px #2d354018; }
 .preview.primary { width:min(82%,280px); aspect-ratio:3 / 4; justify-self:center; }
-.preview.lower_right { width:min(88%,320px); aspect-ratio:1; justify-self:center; }
+.preview.upper_right,.preview.lower_right { width:min(88%,320px); aspect-ratio:1; justify-self:center; }
 .preview img { width:100%; height:100%; object-fit:cover; }
 .preview img[style] { object-fit:fill; }
 .preview span { display:grid; place-items:center; gap:8px; font-size:9px; }

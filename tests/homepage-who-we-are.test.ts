@@ -71,8 +71,12 @@ test('Who We Are styles keep a restrained editorial collage and mobile hierarchy
 
   assert.match(scoped, /\.homepage-who__layout\s*\{[^}]*display:\s*grid/)
   assert.match(scoped, /\.homepage-who__primary\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/)
-  assert.match(scoped, /\.homepage-who__upper_right\s*\{[^}]*aspect-ratio:\s*4\s*\/\s*3/)
+  assert.match(scoped, /\.homepage-who__upper_right\s*\{[^}]*aspect-ratio:\s*1/)
   assert.match(scoped, /\.homepage-who__lower_right\s*\{[^}]*aspect-ratio:\s*1/)
+  assert.match(scoped, /\.homepage-who__collage\s*\{[^}]*width:\s*min\(100%,\s*650px\)[^}]*aspect-ratio:\s*1\s*\/\s*1/)
+  assert.match(scoped, /\.homepage-who__primary\s*\{[^}]*width:\s*48%[^}]*rotate\(-1deg\)/)
+  assert.match(scoped, /\.homepage-who__upper_right\s*\{[^}]*width:\s*47\.5%[^}]*rotate\(1\.5deg\)/)
+  assert.match(scoped, /\.homepage-who__lower_right\s*\{[^}]*width:\s*47\.5%[^}]*rotate\(2deg\)/)
   assert.match(scoped, /\.homepage-who__frame\s*\{[^}]*background:\s*#fff[^}]*box-shadow:/)
   assert.match(scoped, /\.homepage-who__frame figcaption\s*\{[^}]*left:\s*12px[^}]*bottom:\s*12px[^}]*color:\s*#fff[^}]*background:\s*var\(--marketing-orange\)/)
   assert.match(scoped, /\.homepage-who__collage:has\(> \.homepage-who__frame:only-child\)/)

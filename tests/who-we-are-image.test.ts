@@ -15,7 +15,7 @@ import {
 
 const roles: WhoWeArePhotoRole[] = ['primary', 'upper_right', 'lower_right']
 
-test('who-we-are slots start with portrait, wide, and compact output targets', () => {
+test('who-we-are slots start with one portrait and two square supporting targets', () => {
   assert.deepEqual(WHO_WE_ARE_PHOTO_TARGETS.primary, {
     label: 'Primary photo',
     width: 1200,
@@ -23,8 +23,8 @@ test('who-we-are slots start with portrait, wide, and compact output targets', (
   })
   assert.deepEqual(WHO_WE_ARE_PHOTO_TARGETS.upper_right, {
     label: 'Upper-right photo',
-    width: 1200,
-    height: 900,
+    width: 1000,
+    height: 1000,
   })
   assert.deepEqual(WHO_WE_ARE_PHOTO_TARGETS.lower_right, {
     label: 'Lower-right photo',

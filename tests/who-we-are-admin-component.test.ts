@@ -92,3 +92,11 @@ test('slot persistence updates existing rows without resending the immutable rol
   assert.doesNotMatch(manager, /\.upsert\(/)
   assert.match(manager, /selected[\s\S]*\.update\(payload\)[\s\S]*\.eq\('role', activeRole\)[\s\S]*\.insert\(\{ role: activeRole, \.\.\.payload \}\)/)
 })
+
+
+test('admin previews mirror the square supporting-photo contract', async () => {
+  const css = await read('components/admin/who-we-are-photo-management.module.css')
+
+  assert.match(css, /\.preview\.upper_right,\.preview\.lower_right\s*\{[^}]*aspect-ratio:1/)
+  assert.match(css, /\.thumbnail\.upper_right,\.thumbnail\.lower_right\s*\{[^}]*width:52px;[^}]*height:52px/)
+})
