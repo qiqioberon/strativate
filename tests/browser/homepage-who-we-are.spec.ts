@@ -70,13 +70,15 @@ for (const width of widths) {
       const kickerStyle = getComputedStyle(kicker)
       const headingLineHeight = Number.parseFloat(headingStyle.lineHeight)
       return {
-        copyBeforeCollage: copy.top < collage.top || copy.left < collage.left,
-        stacked: collage.top >= copy.bottom - 1,
+        copyAboveCollage: copy.bottom <= collage.top + 1,
+        collageAboveCopy: collage.bottom <= copy.top + 1,
+        copyLeftOfCollage: copy.right <= collage.left + 1,
         primaryDominant: primary.height > upper.height && primary.height > lower.height,
         supportsBalanced: Math.abs(primary.width - upper.width) <= 32 && Math.abs(upper.width - lower.width) <= 8,
         supportSquares: Math.abs(upper.width - upper.height) <= 4 && Math.abs(lower.width - lower.height) <= 4,
         collageCapped: collage.width <= 651,
-        supportsReadable: upper.width >= 180 && lower.width >= 180,
+        collageWidth: collage.width,
+        supportsReadable: upper.width >= (window.innerWidth <= 520 ? 140 : 180) && lower.width >= (window.innerWidth <= 520 ? 140 : 180),
         ctaWidth: cta.getBoundingClientRect().width,
         ctaHeight: cta.getBoundingClientRect().height,
         copyWidth: copy.width,
@@ -89,7 +91,14 @@ for (const width of widths) {
       }
     })
 
-    expect(geometry.copyBeforeCollage).toBe(true)
+    if (width <= 520) {
+      expect(geometry.collageAboveCopy).toBe(true)
+      expect(geometry.collageWidth).toBeLessThanOrEqual(321)
+    } else if (width <= 900) {
+      expect(geometry.copyAboveCollage).toBe(true)
+    } else {
+      expect(geometry.copyLeftOfCollage).toBe(true)
+    }
     expect(geometry.primaryDominant).toBe(true)
     expect(geometry.supportsBalanced).toBe(true)
     expect(geometry.supportSquares).toBe(true)
@@ -106,7 +115,6 @@ for (const width of widths) {
       expect(geometry.headingLines).toBeGreaterThanOrEqual(2.7)
       expect(geometry.headingLines).toBeLessThanOrEqual(3.3)
     }
-    expect(geometry.stacked).toBe(width <= 900)
     await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
   })
 }
