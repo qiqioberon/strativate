@@ -998,7 +998,7 @@
 @media (max-width: 520px) {
   .homepage-who { padding-block: 74px; }
   .homepage-who__copy h2 {
-    max-width: 100%;
+    max-width: min(100%, 340px);
     font-size: clamp(1.75rem, 7.2vw, 2rem);
     line-height: 1.02;
   }
