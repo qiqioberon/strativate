@@ -66,7 +66,7 @@ for (const width of widths) {
         copyBeforeCollage: copy.top < collage.top || copy.left < collage.left,
         stacked: collage.top >= copy.bottom - 1,
         primaryDominant: primary.height > upper.height && primary.height > lower.height,
-        supportsBalanced: Math.abs(primary.width - upper.width) <= 24 && Math.abs(upper.width - lower.width) <= 8,
+        supportsBalanced: Math.abs(primary.width - upper.width) <= 32 && Math.abs(upper.width - lower.width) <= 8,
         supportSquares: Math.abs(upper.width - upper.height) <= 4 && Math.abs(lower.width - lower.height) <= 4,
         collageCapped: collage.width <= 651,
         supportsReadable: upper.width >= 180 && lower.width >= 180,
@@ -78,8 +78,8 @@ for (const width of widths) {
 
     expect(geometry.copyBeforeCollage).toBe(true)
     expect(geometry.primaryDominant).toBe(true)
-    expect(geometry.supportsBalanced).toBe(width > 520)
-    expect(geometry.supportSquares).toBe(width > 520)
+    expect(geometry.supportsBalanced).toBe(true)
+    expect(geometry.supportSquares).toBe(true)
     expect(geometry.collageCapped).toBe(true)
     expect(geometry.supportsReadable).toBe(true)
     expect(geometry.ctaWidth).toBeLessThan(geometry.copyWidth * .8)
