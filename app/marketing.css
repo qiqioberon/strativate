@@ -837,7 +837,7 @@
   line-height: 1.02;
   text-wrap: balance;
 }
-.homepage-who__lede {
+.homepage-who__copy > .homepage-who__lede {
   max-width: 560px;
   margin-top: 36px;
   color: var(--marketing-muted);
@@ -1002,7 +1002,7 @@
     font-size: clamp(1.75rem, 7.2vw, 2rem);
     line-height: 1.02;
   }
-  .homepage-who__lede {
+  .homepage-who__copy > .homepage-who__lede {
     margin-top: 32px;
     font-size: 1rem;
     line-height: 1.7;
