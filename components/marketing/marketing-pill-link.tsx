@@ -12,7 +12,7 @@ type MarketingPillLinkProps = {
   children: ReactNode
   className?: string
   active?: boolean
-  testId?: string
+  'data-testid'?: string
   prefetch?: boolean
 }
 
@@ -21,7 +21,7 @@ export function MarketingPillLink({
   children,
   className,
   active = false,
-  testId,
+  'data-testid': testId,
   prefetch = true,
 }: MarketingPillLinkProps) {
   const linkRef = useRef<HTMLAnchorElement | null>(null)

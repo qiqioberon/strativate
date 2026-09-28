@@ -109,7 +109,7 @@ export function SiteHeader({
                 href={item.href}
                 active={active}
                 className="marketing-nav__link"
-                testId={`desktop-nav-${item.icon}-link`}
+                data-testid={`desktop-nav-${item.icon}-link`}
               >
                 <Icon aria-hidden="true" size={16} strokeWidth={1.9} />
                 <span>{item.label}</span>
@@ -154,7 +154,7 @@ export function SiteHeader({
                   'marketing-pill-link--cta',
                 )}
                 href="/auth"
-                testId="desktop-start-learning-link"
+                data-testid="desktop-start-learning-link"
               >
                 <span>Start learning</span>
                 <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
