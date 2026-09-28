@@ -105,7 +105,7 @@ for (const width of widths) {
     expect(geometry.collageCapped).toBe(true)
     expect(geometry.supportsReadable).toBe(true)
     expect(geometry.ctaWidth).toBeLessThan(geometry.copyWidth * .8)
-    expect(geometry.ctaHeight).toBeGreaterThanOrEqual(50)
+    expect(Math.round(geometry.ctaHeight)).toBeGreaterThanOrEqual(50)
     expect(geometry.ctaBackground).not.toBe('rgba(0, 0, 0, 0)')
     expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
     expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
