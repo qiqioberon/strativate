@@ -21,6 +21,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
+import { MarketingPillLink } from '@/components/marketing/marketing-pill-link'
 import { CartEntryLink } from '@/components/commerce/cart-entry-link'
 import { buttonVariants } from '@/components/ui/button'
 import type {
@@ -103,17 +104,16 @@ export function SiteHeader({
             const active = isActiveRoute(pathname, item.href)
 
             return (
-              <Link
+              <MarketingPillLink
                 key={item.href}
                 href={item.href}
-                prefetch={true}
-                className={cn('marketing-nav__link', active && 'is-active')}
-                aria-current={active ? 'page' : undefined}
-                data-testid={`desktop-nav-${item.icon}-link`}
+                active={active}
+                className="marketing-nav__link"
+                testId={`desktop-nav-${item.icon}-link`}
               >
                 <Icon aria-hidden="true" size={16} strokeWidth={1.9} />
                 <span>{item.label}</span>
-              </Link>
+              </MarketingPillLink>
             )
           })}
         </nav>
@@ -147,18 +147,18 @@ export function SiteHeader({
                 <LogIn aria-hidden="true" size={16} />
                 <span>Sign in</span>
               </Link>
-              <Link
+              <MarketingPillLink
                 className={cn(
                   buttonVariants({ variant: 'primary', size: 'marketing' }),
                   'marketing-start',
+                  'marketing-pill-link--cta',
                 )}
                 href="/auth"
-                prefetch={true}
-                data-testid="desktop-start-learning-link"
+                testId="desktop-start-learning-link"
               >
-                Start learning
+                <span>Start learning</span>
                 <ArrowRight data-icon="arrow" aria-hidden="true" size={16} />
-              </Link>
+              </MarketingPillLink>
             </>
           )}
           <button

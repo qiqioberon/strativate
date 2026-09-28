@@ -367,6 +367,32 @@ test('desktop header keeps navigation centered between left brand and right acti
   await expect(page.getByTestId('desktop-start-learning-link')).toBeAttached()
 })
 
+test('desktop header uses ReactBits-style pill motion only for navigation and the primary CTA', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+
+  const nav = page.getByRole('navigation', { name: 'Main navigation' })
+  const navLinks = nav.getByRole('link')
+  await expect(nav.locator('.marketing-pill-link')).toHaveCount(await navLinks.count())
+
+  const programs = nav.getByRole('link', { name: 'Programs', exact: true })
+  const hoverLabel = programs.locator('.marketing-pill-link__label--hover')
+  await expect(programs.locator('.marketing-pill-link__circle')).toHaveCount(1)
+
+  await programs.hover()
+  await expect.poll(async () => Number(await hoverLabel.evaluate((node) => getComputedStyle(node).opacity))).toBeGreaterThan(.8)
+
+  await page.mouse.move(20, 300)
+  await expect.poll(async () => Number(await hoverLabel.evaluate((node) => getComputedStyle(node).opacity))).toBeLessThan(.2)
+
+  await expect(page.getByTestId('desktop-login-link')).not.toHaveClass(/marketing-pill-link/)
+  await expect(page.getByTestId('desktop-start-learning-link')).toHaveClass(/marketing-pill-link--cta/)
+  await expect(page.getByTestId('desktop-start-learning-link').locator('.marketing-pill-link__circle')).toHaveCount(1)
+})
+
 test('page intro motif is decorative and absent from the accessibility tree', async ({ page }) => {
   await page.goto('/program')
 
