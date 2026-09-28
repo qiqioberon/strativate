@@ -378,12 +378,36 @@ test('desktop header uses ReactBits-style pill motion only for navigation and th
   const navLinks = nav.getByRole('link')
   await expect(nav.locator('.marketing-pill-link')).toHaveCount(await navLinks.count())
 
+  const home = nav.getByRole('link', { name: 'Home', exact: true })
   const programs = nav.getByRole('link', { name: 'Programs', exact: true })
   const hoverLabel = programs.locator('.marketing-pill-link__label--hover')
   await expect(programs.locator('.marketing-pill-link__circle')).toHaveCount(1)
+  await expect(home).toHaveAttribute('aria-current', 'page')
+  await expect.poll(async () => home.evaluate((link) => getComputedStyle(link, '::after').content)).toBe('none')
 
   await programs.hover()
   await expect.poll(async () => Number(await hoverLabel.evaluate((node) => getComputedStyle(node).opacity))).toBeGreaterThan(.8)
+
+  const hoverCoverage = await programs.evaluate((link) => {
+    const linkRect = link.getBoundingClientRect()
+    const circle = link.querySelector<HTMLElement>('.marketing-pill-link__circle')!
+    const circleRect = circle.getBoundingClientRect()
+    const after = getComputedStyle(link, '::after')
+    return {
+      centered: Math.abs((circleRect.left + circleRect.right) / 2 - (linkRect.left + linkRect.right) / 2),
+      coversLeft: circleRect.left <= linkRect.left + 1,
+      coversRight: circleRect.right >= linkRect.right - 1,
+      coversTop: circleRect.top <= linkRect.top + 1,
+      coversBottom: circleRect.bottom >= linkRect.bottom - 1,
+      activeAfterContent: after.content,
+    }
+  })
+  expect(hoverCoverage.centered).toBeLessThanOrEqual(1)
+  expect(hoverCoverage.coversLeft).toBe(true)
+  expect(hoverCoverage.coversRight).toBe(true)
+  expect(hoverCoverage.coversTop).toBe(true)
+  expect(hoverCoverage.coversBottom).toBe(true)
+  expect(hoverCoverage.activeAfterContent).toBe('none')
 
   await page.mouse.move(20, 300)
   await expect.poll(async () => Number(await hoverLabel.evaluate((node) => getComputedStyle(node).opacity))).toBeLessThan(.2)
