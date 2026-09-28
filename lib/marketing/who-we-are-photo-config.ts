@@ -8,7 +8,7 @@ export const WHO_WE_ARE_PHOTO_TARGETS: Record<
   { label: string; width: number; height: number }
 > = {
   primary: { label: 'Primary photo', width: 1200, height: 1600 },
-  upper_right: { label: 'Upper-right photo', width: 1200, height: 900 },
+  upper_right: { label: 'Upper-right photo', width: 1000, height: 1000 },
   lower_right: { label: 'Lower-right photo', width: 1000, height: 1000 },
 }
 
