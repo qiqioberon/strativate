@@ -83,6 +83,7 @@ for (const width of widths) {
         ctaBackground: getComputedStyle(cta).backgroundColor,
         headingLines: heading.getBoundingClientRect().height / headingLineHeight,
         headingToLedeGap: lede.getBoundingClientRect().top - heading.getBoundingClientRect().bottom,
+        ledeMarginTop: Number.parseFloat(ledeStyle.marginTop),
         ledeFontSize: Number.parseFloat(ledeStyle.fontSize),
         kickerFontSize: Number.parseFloat(kickerStyle.fontSize),
       }
@@ -98,6 +99,7 @@ for (const width of widths) {
     expect(geometry.ctaHeight).toBeGreaterThanOrEqual(50)
     expect(geometry.ctaBackground).not.toBe('rgba(0, 0, 0, 0)')
     expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
+    expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
     expect(geometry.ledeFontSize).toBeGreaterThanOrEqual(16)
     expect(geometry.kickerFontSize).toBeGreaterThanOrEqual(12)
     if (width <= 430) {
