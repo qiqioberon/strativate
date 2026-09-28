@@ -378,9 +378,12 @@ test('desktop header uses ReactBits-style pill motion only for navigation and th
   const navLinks = nav.getByRole('link')
   await expect(nav.locator('.marketing-pill-link')).toHaveCount(await navLinks.count())
 
+  const home = nav.getByRole('link', { name: 'Home', exact: true })
   const programs = nav.getByRole('link', { name: 'Programs', exact: true })
   const hoverLabel = programs.locator('.marketing-pill-link__label--hover')
   await expect(programs.locator('.marketing-pill-link__circle')).toHaveCount(1)
+  await expect(home).toHaveAttribute('aria-current', 'page')
+  await expect.poll(async () => home.evaluate((link) => getComputedStyle(link, '::after').content)).toBe('none')
 
   await programs.hover()
   await expect.poll(async () => Number(await hoverLabel.evaluate((node) => getComputedStyle(node).opacity))).toBeGreaterThan(.8)
