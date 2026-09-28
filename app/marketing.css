@@ -28,13 +28,24 @@
 .marketing-brand img { width: 153px; height: auto; }
 .brand-logo { display: block; height: auto; }
 .marketing-brand:focus-visible, .marketing-login:focus-visible, .marketing-nav__link:focus-visible, .marketing-menu-button:focus-visible, .marketing-mobile-link:focus-visible, .marketing-text-link:focus-visible, .marketing-footer a:focus-visible { outline: 3px solid color-mix(in srgb, var(--marketing-orange) 30%, transparent); outline-offset: 4px; }
-.marketing-nav { display: flex; align-items: center; justify-self: center; gap: 3px; padding: 5px; border: 1px solid var(--marketing-line); border-radius: 15px; background: color-mix(in srgb, #fff 69%, transparent); box-shadow: 0 8px 28px rgba(83, 46, 23, .045); }
-.marketing-nav__link { position: relative; display: inline-flex; align-items: center; min-height: 36px; gap: 6px; padding: 0 10px; border-radius: 10px; color: #695e58; font-size: .72rem; font-weight: 650; white-space: nowrap; transition: color 180ms ease, background-color 180ms ease, transform 180ms ease; }
-.marketing-nav__link svg { color: #9b8e85; transition: color 180ms ease; }
-.marketing-nav__link:hover { color: var(--marketing-ink); background: #f8eee5; }
+.marketing-nav { display: flex; align-items: center; justify-self: center; gap: 3px; padding: 5px; border: 1px solid var(--marketing-line); border-radius: 999px; background: color-mix(in srgb, #fff 72%, transparent); box-shadow: 0 8px 28px rgba(83, 46, 23, .045); }
+.marketing-pill-link { position: relative; isolation: isolate; overflow: hidden; }
+.marketing-pill-link__circle { position: absolute; left: 50%; bottom: 0; z-index: 0; display: block; border-radius: 50%; background: var(--marketing-pill-motion, var(--marketing-orange)); pointer-events: none; transform: translateX(-50%) scale(0); will-change: transform; }
+.marketing-pill-link__stack { position: relative; z-index: 2; display: inline-flex; align-items: center; line-height: 1; }
+.marketing-pill-link__label { display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; will-change: transform; }
+.marketing-pill-link__label--hover { position: absolute; inset: 0; color: #fff; opacity: 0; transform: translateY(calc(100% + 12px)); will-change: transform, opacity; }
+.marketing-nav__link { display: inline-flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 999px; color: #695e58; font-size: .72rem; font-weight: 650; white-space: nowrap; --marketing-pill-motion: var(--marketing-orange); }
+.marketing-nav__link .marketing-pill-link__label > svg { color: #9b8e85; transition: color 180ms ease; }
+.marketing-nav__link .marketing-pill-link__label--hover > svg { color: currentColor; }
 .marketing-nav__link.is-active { color: #9e3500; background: #ffeadc; }
-.marketing-nav__link.is-active svg { color: var(--marketing-orange); }
-.marketing-nav__link.is-active::after { position: absolute; right: 9px; bottom: 3px; left: 9px; height: 1px; background: color-mix(in srgb, var(--marketing-orange) 45%, transparent); content: ''; }
+.marketing-nav__link.is-active .marketing-pill-link__label:not(.marketing-pill-link__label--hover) > svg { color: var(--marketing-orange); }
+.marketing-nav__link.is-active::after { position: absolute; left: 50%; bottom: 3px; z-index: 3; width: 5px; height: 5px; border-radius: 50%; background: var(--marketing-orange); content: ''; transform: translateX(-50%); }
+.marketing-pill-link--cta { --marketing-pill-motion: #a83b00; }
+.marketing-pill-link--cta .marketing-pill-link__label { gap: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .marketing-nav__link:hover, .marketing-nav__link:focus-visible { color: #9e3500; background: #ffeadc; }
+  .marketing-pill-link--cta:hover, .marketing-pill-link--cta:focus-visible { background: #a83b00; }
+}
 .marketing-header__actions { display: flex; justify-self: end; align-items: center; gap: 8px; }
 .marketing-login { display: inline-flex; align-items: center; min-height: 42px; gap: 7px; padding: 0 9px; border-radius: 10px; color: #594f4a; font-size: .75rem; font-weight: 700; transition: color 180ms ease, background-color 180ms ease; }
 .marketing-login:hover { color: var(--marketing-orange-dark); background: #fff0e5; }
