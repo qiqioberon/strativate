@@ -62,6 +62,13 @@ for (const width of widths) {
       const upper = node.querySelector<HTMLElement>('.homepage-who__upper_right')!.getBoundingClientRect()
       const lower = node.querySelector<HTMLElement>('.homepage-who__lower_right')!.getBoundingClientRect()
       const cta = node.querySelector<HTMLElement>('.homepage-who__cta')!
+      const heading = node.querySelector<HTMLElement>('.homepage-who__copy h2')!
+      const lede = node.querySelector<HTMLElement>('.homepage-who__lede')!
+      const kicker = node.querySelector<HTMLElement>('.homepage-who__copy > .marketing-kicker')!
+      const headingStyle = getComputedStyle(heading)
+      const ledeStyle = getComputedStyle(lede)
+      const kickerStyle = getComputedStyle(kicker)
+      const headingLineHeight = Number.parseFloat(headingStyle.lineHeight)
       return {
         copyBeforeCollage: copy.top < collage.top || copy.left < collage.left,
         stacked: collage.top >= copy.bottom - 1,
@@ -71,8 +78,13 @@ for (const width of widths) {
         collageCapped: collage.width <= 651,
         supportsReadable: upper.width >= 180 && lower.width >= 180,
         ctaWidth: cta.getBoundingClientRect().width,
+        ctaHeight: cta.getBoundingClientRect().height,
         copyWidth: copy.width,
         ctaBackground: getComputedStyle(cta).backgroundColor,
+        headingLines: heading.getBoundingClientRect().height / headingLineHeight,
+        headingToLedeGap: lede.getBoundingClientRect().top - heading.getBoundingClientRect().bottom,
+        ledeFontSize: Number.parseFloat(ledeStyle.fontSize),
+        kickerFontSize: Number.parseFloat(kickerStyle.fontSize),
       }
     })
 
@@ -83,7 +95,15 @@ for (const width of widths) {
     expect(geometry.collageCapped).toBe(true)
     expect(geometry.supportsReadable).toBe(true)
     expect(geometry.ctaWidth).toBeLessThan(geometry.copyWidth * .8)
+    expect(geometry.ctaHeight).toBeGreaterThanOrEqual(50)
     expect(geometry.ctaBackground).not.toBe('rgba(0, 0, 0, 0)')
+    expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
+    expect(geometry.ledeFontSize).toBeGreaterThanOrEqual(16)
+    expect(geometry.kickerFontSize).toBeGreaterThanOrEqual(12)
+    if (width <= 430) {
+      expect(geometry.headingLines).toBeGreaterThanOrEqual(2.7)
+      expect(geometry.headingLines).toBeLessThanOrEqual(3.3)
+    }
     expect(geometry.stacked).toBe(width <= 900)
     await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
   })
