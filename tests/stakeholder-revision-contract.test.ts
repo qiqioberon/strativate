@@ -26,6 +26,12 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
   assert.match(whoWeAre, /Where Future-Ready Skills Meet Competition Success/)
   assert.match(source, /What We Specialize In/)
   assert.match(source, /TestimonialCircularGallery/)
+  assert.match(source, /homepage-programs__method/)
+  assert.match(source, /40%/)
+  assert.match(source, /60%/)
+  assert.match(source, /100%/)
+  assert.match(source, /homepage-programs-view-all/)
+  assert.doesNotMatch(source, /stakeholder-service-list/)
   assert.doesNotMatch(source, /Partnered with Leading Organizations/)
   assert.doesNotMatch(source, /TextType|hero-text-type/)
 

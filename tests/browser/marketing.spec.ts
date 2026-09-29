@@ -35,6 +35,47 @@ test('homepage uses the approved centered mentoring opening and cloud proof', as
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 
+test('homepage programs is a three-card showcase with decorative learning mix and no service table', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto('/')
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+
+  const section = page.getByTestId('homepage-programs-section')
+  await section.scrollIntoViewIfNeeded()
+  await expect(section).toBeVisible()
+  await expect(section.getByRole('heading', { name: 'Choose the right program to build your skills and win competitions.' })).toBeVisible()
+  await expect(section.getByText('Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.', { exact: true })).toBeVisible()
+
+  const method = page.getByTestId('homepage-programs-method')
+  await expect(method.getByText('40%', { exact: true })).toBeVisible()
+  await expect(method.getByText('theory', { exact: true })).toBeVisible()
+  await expect(method.getByText('60%', { exact: true })).toBeVisible()
+  await expect(method.getByText('practice', { exact: true })).toBeVisible()
+  await expect(method.getByText('100%', { exact: true })).toBeVisible()
+  await expect(method.getByText('impact', { exact: true })).toBeVisible()
+
+  const cards = page.getByTestId('homepage-program-cards').locator('.marketing-program-card')
+  await expect(cards).toHaveCount(3)
+  await expect(cards.nth(0)).toContainText('Private Mentoring')
+  await expect(cards.nth(1)).toContainText('Intensive Mentoring')
+  await expect(cards.nth(2)).toContainText('Big Class')
+  await expect(cards.locator('img')).toHaveCount(0)
+  await expect(section.locator('.stakeholder-service-list')).toHaveCount(0)
+
+  const viewAll = page.getByTestId('homepage-programs-view-all')
+  await expect(viewAll).toHaveAttribute('href', '/program')
+  await expect(viewAll).toHaveText(/View all programs/)
+
+  const background = await section.evaluate(node => getComputedStyle(node).backgroundImage)
+  expect(background).not.toBe('none')
+  await expect(cards.first()).not.toHaveCSS('box-shadow', 'none')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByTestId('homepage-program-cards')).toHaveCSS('grid-template-columns', /.+/)
+  await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
+})
+
 test('homepage mentor marquee provides one accessible directory sequence and motion-safe fallback', async ({ page }) => {
   await page.goto('/')
   const intro = page.getByTestId('initial-brand-intro')
