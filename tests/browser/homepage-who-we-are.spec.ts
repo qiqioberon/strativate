@@ -107,8 +107,15 @@ for (const width of widths) {
     expect(geometry.ctaWidth).toBeLessThan(geometry.copyWidth * .8)
     expect(Math.round(geometry.ctaHeight)).toBeGreaterThanOrEqual(50)
     expect(geometry.ctaBackground).not.toBe('rgba(0, 0, 0, 0)')
-    expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
-    expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(width <= 520 ? 30 : 34)
+    if (width <= 520) {
+      expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(20)
+      expect(geometry.headingToLedeGap).toBeLessThanOrEqual(24)
+      expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(20)
+      expect(geometry.ledeMarginTop).toBeLessThanOrEqual(24)
+    } else {
+      expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(34)
+      expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(34)
+    }
     expect(geometry.ledeFontSize).toBeGreaterThanOrEqual(16)
     expect(geometry.kickerFontSize).toBeGreaterThanOrEqual(12)
     if (width <= 430) {
