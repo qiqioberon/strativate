@@ -25,7 +25,26 @@ async function canvasSample(canvas: import('@playwright/test').Locator) {
 test('homepage opening integrates the header, centered hero, consultation CTA, proof cloud, and gallery when published', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
+
+  const intro = page.getByTestId('initial-brand-intro')
+  const introGallery = page.getByTestId('testimonial-circular-gallery')
+  if (await introGallery.count()) {
+    await expect(intro).toBeVisible()
+    await expect(introGallery).toHaveAttribute('data-intro-state', 'pending')
+  }
+
   await waitForBrandIntro(page)
+
+  if (await introGallery.count()) {
+    await expect(introGallery).toHaveAttribute('data-intro-state', 'running', { timeout: 1600 })
+    const introOrder = (await introGallery.getAttribute('data-intro-order') ?? '')
+      .split(',')
+      .filter(Boolean)
+      .map(Number)
+    expect(introOrder.length).toBeGreaterThanOrEqual(3)
+    expect(introOrder).toEqual([...introOrder].sort((a, b) => a - b))
+    await expect(introGallery).toHaveAttribute('data-intro-state', 'complete', { timeout: 2600 })
+  }
 
   await expect(page.getByRole('banner')).toHaveClass(/marketing-header--home/)
   await expect(page.getByRole('heading', { level: 1, name: 'Win Business Competitions with Expert Mentoring' })).toBeVisible()
@@ -59,6 +78,11 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
   await consultation.click()
   const popup = await popupPromise
   await popup.close()
+
+  const reducedGallery = page.getByTestId('testimonial-circular-gallery')
+  if (await reducedGallery.count()) {
+    await expect(reducedGallery).toHaveAttribute('data-intro-state', 'complete')
+  }
 
   const cloud = page.getByTestId('homepage-hero-cloud')
   await expect(cloud).toBeVisible()

@@ -21,11 +21,38 @@ import {
   resolveTestimonialPointerRelease,
   type TestimonialDragIntent,
 } from '@/lib/marketing/testimonial-gallery-input'
+import { usePageMotionReady } from '@/components/navigation/use-page-motion-ready'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 
 type GL = Renderer['gl']
 type HoverRect = { left: number; top: number; width: number; height: number; rotation: number }
 type GalleryHover = { index: number; mediaIndex: number; rect: HoverRect } | null
+type GalleryIntroState = 'pending' | 'running' | 'complete'
+
+const GALLERY_INTRO_DURATION_MS = 620
+const GALLERY_INTRO_STAGGER_MS = 110
+const GALLERY_INTRO_MIN_LIFT_PX = 64
+const GALLERY_INTRO_MAX_LIFT_PX = 96
+
+function cssTimeToMs(value: string) {
+  const trimmed = value.trim()
+  if (trimmed.endsWith('ms')) return Number.parseFloat(trimmed) || 0
+  if (trimmed.endsWith('s')) return (Number.parseFloat(trimmed) || 0) * 1000
+  return 0
+}
+
+function maxTransitionTimeMs(style: CSSStyleDeclaration) {
+  const durations = style.transitionDuration.split(',').map(cssTimeToMs)
+  const delays = style.transitionDelay.split(',').map(cssTimeToMs)
+  const count = Math.max(durations.length, delays.length)
+  let max = 0
+  for (let index = 0; index < count; index += 1) {
+    const duration = durations[index % durations.length] ?? 0
+    const delay = delays[index % delays.length] ?? 0
+    max = Math.max(max, duration + delay)
+  }
+  return max
+}
 
 function lerp(from: number, to: number, ease: number) {
   return from + (to - from) * ease
@@ -49,6 +76,11 @@ class TestimonialMedia {
   width = 0
   widthTotal = 0
   x = 0
+  muted = false
+  introProgress = 1
+  introStartAt: number | null = null
+  introDurationMs = 0
+  introLiftPx = 0
 
   constructor({
     geometry,
@@ -162,8 +194,56 @@ class TestimonialMedia {
     this.plane.setParent(this.scene)
   }
 
+  syncOpacity() {
+    this.program.uniforms.uOpacity.value = this.muted ? 0 : this.introProgress
+  }
+
   setMuted(muted: boolean) {
-    this.program.uniforms.uOpacity.value = muted ? 0 : 1
+    this.muted = muted
+    this.syncOpacity()
+  }
+
+  prepareIntro() {
+    this.introProgress = 0
+    this.introStartAt = null
+    this.introDurationMs = 0
+    this.introLiftPx = 0
+    this.syncOpacity()
+  }
+
+  startIntro(startAt: number, durationMs: number, liftPx: number) {
+    this.introProgress = 0
+    this.introStartAt = startAt
+    this.introDurationMs = durationMs
+    this.introLiftPx = liftPx
+    this.syncOpacity()
+  }
+
+  finishIntro() {
+    this.introProgress = 1
+    this.introStartAt = null
+    this.introDurationMs = 0
+    this.introLiftPx = 0
+    this.syncOpacity()
+  }
+
+  updateIntro(now: number) {
+    if (this.introStartAt === null) return this.introProgress >= 1
+    if (now < this.introStartAt) {
+      this.introProgress = 0
+      this.syncOpacity()
+      return false
+    }
+
+    const elapsed = now - this.introStartAt
+    const linear = Math.min(1, elapsed / Math.max(1, this.introDurationMs))
+    this.introProgress = 1 - Math.pow(1 - linear, 3)
+    this.syncOpacity()
+
+    if (linear < 1) return false
+
+    this.finishIntro()
+    return true
   }
 
   update(scroll: { current: number; last: number }, direction: 'right' | 'left') {
@@ -186,6 +266,11 @@ class TestimonialMedia {
         this.plane.position.y = arc
         this.plane.rotation.z = Math.sign(x) * Math.asin(effectiveX / radius)
       }
+    }
+
+    if (this.introProgress < 1 && this.introLiftPx > 0) {
+      const lift = (this.viewport.height * this.introLiftPx) / Math.max(1, this.screen.height)
+      this.plane.position.y -= lift * (1 - this.introProgress)
     }
 
     this.speed = scroll.current - scroll.last
@@ -264,6 +349,9 @@ class TestimonialGalleryApp {
   activeMedia: TestimonialMedia | null = null
   mediaRestoreTimer: number | null = null
   keyboardRevealRequested = false
+  reducedMotion: boolean
+  introState: GalleryIntroState
+  introMedias: TestimonialMedia[] = []
   onHover: (value: GalleryHover) => void
   onOpen: (index: number) => void
 
@@ -287,6 +375,8 @@ class TestimonialGalleryApp {
     this.container = container
     this.items = items
     this.bend = bend
+    this.reducedMotion = reducedMotion
+    this.introState = reducedMotion ? 'complete' : 'pending'
     this.autoSpeed = reducedMotion ? 0 : autoSpeed
     this.onHover = onHover
     this.onOpen = onOpen
@@ -296,7 +386,9 @@ class TestimonialGalleryApp {
     this.onResize()
     this.geometry = new Plane(this.gl, { heightSegments: 32, widthSegments: 64 })
     this.createMedias()
+    if (!this.reducedMotion) this.medias.forEach(media => media.prepareIntro())
     this.centerInitialSequence()
+    this.syncIntroDataset()
     this.addEventListeners()
     this.update()
   }
@@ -351,6 +443,55 @@ class TestimonialGalleryApp {
     this.scroll.target = offset
     this.scroll.last = offset
     this.scroll.position = offset
+  }
+
+  syncIntroDataset(order?: number[]) {
+    this.container.dataset.introState = this.introState
+    if (order) this.container.dataset.introOrder = order.join(',')
+  }
+
+  finishIntro() {
+    this.medias.forEach(media => media.finishIntro())
+    this.introMedias = []
+    this.introState = 'complete'
+    this.syncIntroDataset()
+  }
+
+  beginIntro() {
+    if (this.introState !== 'pending') return
+    if (this.reducedMotion) {
+      this.finishIntro()
+      return
+    }
+
+    const visible = this.medias
+      .map(media => ({ media, rect: media.getScreenRect() }))
+      .filter(({ rect }) => rect.right > 0 && rect.left < this.screen.width)
+      .sort((a, b) => a.rect.left - b.rect.left)
+
+    this.medias.forEach(media => media.finishIntro())
+
+    if (visible.length === 0) {
+      this.finishIntro()
+      return
+    }
+
+    const liftPx = Math.min(
+      GALLERY_INTRO_MAX_LIFT_PX,
+      Math.max(GALLERY_INTRO_MIN_LIFT_PX, this.screen.height * 0.18),
+    )
+    const startedAt = performance.now()
+    visible.forEach(({ media }, index) => {
+      media.startIntro(
+        startedAt + index * GALLERY_INTRO_STAGGER_MS,
+        GALLERY_INTRO_DURATION_MS,
+        liftPx,
+      )
+    })
+
+    this.introMedias = visible.map(({ media }) => media)
+    this.introState = 'running'
+    this.syncIntroDataset(visible.map(({ rect }) => Math.round(rect.left)))
   }
 
   onResize = () => {
@@ -632,7 +773,18 @@ class TestimonialGalleryApp {
   }
 
   update = () => {
-    if (!this.paused && !this.isDown) this.scroll.target += this.autoSpeed
+    const now = performance.now()
+    if (this.introState === 'running') {
+      let complete = true
+      this.introMedias.forEach(media => {
+        if (!media.updateIntro(now)) complete = false
+      })
+      if (complete) this.finishIntro()
+    }
+
+    if (this.introState === 'complete' && !this.paused && !this.isDown) {
+      this.scroll.target += this.autoSpeed
+    }
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease)
     const direction = this.scroll.current >= this.scroll.last ? 'right' : 'left'
     this.medias.forEach(media => media.update(this.scroll, direction))
@@ -670,6 +822,7 @@ class TestimonialGalleryApp {
 }
 
 export function TestimonialCircularGallery({ items }: { items: MarketingTestimonialView[] }) {
+  const motionReady = usePageMotionReady()
   const containerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const appRef = useRef<TestimonialGalleryApp | null>(null)
@@ -765,6 +918,72 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
       app.destroy()
     }
   }, [handleHover, items, open])
+
+  useEffect(() => {
+    if (!motionReady) return
+
+    const container = containerRef.current
+    const app = appRef.current
+    if (!container || !app) return
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      app.finishIntro()
+      return
+    }
+
+    const hero = container.closest<HTMLElement>('[data-testid="homepage-hero-section"]')
+    let frame: number | null = null
+    let fallbackTimer: number | null = null
+    let started = false
+
+    const start = () => {
+      if (started) return
+      started = true
+      if (fallbackTimer !== null) {
+        window.clearTimeout(fallbackTimer)
+        fallbackTimer = null
+      }
+      frame = window.requestAnimationFrame(() => {
+        frame = null
+        if (appRef.current === app) app.beginIntro()
+      })
+    }
+
+    if (!hero) {
+      start()
+      return () => {
+        if (frame !== null) window.cancelAnimationFrame(frame)
+      }
+    }
+
+    const armFallback = () => {
+      if (!hero.classList.contains('is-visible') || fallbackTimer !== null || started) return
+      const transitionMs = maxTransitionTimeMs(window.getComputedStyle(hero))
+      fallbackTimer = window.setTimeout(start, Math.max(40, transitionMs + 48))
+    }
+
+    const onTransitionEnd = (event: TransitionEvent) => {
+      if (
+        event.target === hero &&
+        hero.classList.contains('is-visible') &&
+        (event.propertyName === 'opacity' || event.propertyName === 'transform')
+      ) {
+        start()
+      }
+    }
+
+    hero.addEventListener('transitionend', onTransitionEnd)
+    const observer = new MutationObserver(armFallback)
+    observer.observe(hero, { attributes: true, attributeFilter: ['class'] })
+    armFallback()
+
+    return () => {
+      observer.disconnect()
+      hero.removeEventListener('transitionend', onTransitionEnd)
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer)
+    }
+  }, [motionReady])
 
   useEffect(() => () => {
     if (hoverExitTimerRef.current !== null) window.clearTimeout(hoverExitTimerRef.current)
