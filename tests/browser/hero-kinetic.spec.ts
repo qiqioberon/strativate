@@ -79,11 +79,6 @@ test('homepage opening integrates the header, centered hero, consultation CTA, p
   const popup = await popupPromise
   await popup.close()
 
-  const reducedGallery = page.getByTestId('testimonial-circular-gallery')
-  if (await reducedGallery.count()) {
-    await expect(reducedGallery).toHaveAttribute('data-intro-state', 'complete')
-  }
-
   const cloud = page.getByTestId('homepage-hero-cloud')
   await expect(cloud).toBeVisible()
   await expect(cloud.locator('.homepage-hero-cloud__lobes span')).toHaveCount(7)
@@ -124,6 +119,11 @@ test('homepage opening respects reduced motion and remains complete on mobile', 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await waitForBrandIntro(page)
+
+  const reducedGallery = page.getByTestId('testimonial-circular-gallery')
+  if (await reducedGallery.count()) {
+    await expect(reducedGallery).toHaveAttribute('data-intro-state', 'complete')
+  }
 
   const shapeGrid = page.getByTestId('hero-shape-grid')
   await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
