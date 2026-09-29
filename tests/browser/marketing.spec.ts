@@ -47,6 +47,28 @@ test('homepage programs is a three-card showcase with decorative learning mix an
   await expect(section.getByRole('heading', { name: 'Choose the right program to build your skills and win competitions.' })).toBeVisible()
   await expect(section.getByText('Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.', { exact: true })).toBeVisible()
 
+  const programsKicker = section.getByText('Our Programs', { exact: true })
+  const whoKicker = page.getByTestId('homepage-who-we-are-section').getByText('WHO WE ARE', { exact: true })
+  const kickerStyles = await Promise.all([
+    programsKicker.evaluate(node => {
+      const style = getComputedStyle(node)
+      return {
+        fontSize: style.fontSize,
+        letterSpacing: style.letterSpacing,
+        before: getComputedStyle(node, '::before').content,
+        after: getComputedStyle(node, '::after').content,
+      }
+    }),
+    whoKicker.evaluate(node => {
+      const style = getComputedStyle(node)
+      return { fontSize: style.fontSize, letterSpacing: style.letterSpacing }
+    }),
+  ])
+  expect(kickerStyles[0].fontSize).toBe(kickerStyles[1].fontSize)
+  expect(kickerStyles[0].letterSpacing).toBe(kickerStyles[1].letterSpacing)
+  expect(kickerStyles[0].before).toBe('none')
+  expect(kickerStyles[0].after).toBe('none')
+
   const method = page.getByTestId('homepage-programs-method')
   await expect(method.getByText('40%', { exact: true })).toBeVisible()
   await expect(method.getByText('theory', { exact: true })).toBeVisible()

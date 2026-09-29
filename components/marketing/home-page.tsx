@@ -99,7 +99,7 @@ export function HomePage({
         <div className="marketing-container homepage-programs__inner">
           <div className="marketing-section-head is-wide homepage-programs__head">
             <div className="homepage-programs__copy">
-              <p className="marketing-kicker homepage-programs__kicker">Our Programs</p>
+              <p className="marketing-kicker">Our Programs</p>
               <h2 id="program-heading">Choose the right program to build your skills and win competitions.</h2>
               <p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p>
             </div>
