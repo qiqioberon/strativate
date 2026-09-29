@@ -466,7 +466,7 @@ class TestimonialGalleryApp {
 
     const visible = this.medias
       .map(media => ({ media, rect: media.getScreenRect() }))
-      .filter(({ rect }) => rect.right > 0 && rect.left < this.screen.width)
+      .filter(({ rect }) => rect.left + rect.width > 0 && rect.left < this.screen.width)
       .sort((a, b) => a.rect.left - b.rect.left)
 
     this.medias.forEach(media => media.finishIntro())
