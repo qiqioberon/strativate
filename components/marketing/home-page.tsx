@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowRight, CheckCircle2, CircleHelp, MessageCircle } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpenText, CheckCircle2, CircleHelp, MessageCircle, Settings2, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
@@ -95,11 +95,30 @@ export function HomePage({
 
       <WhoWeAreSection photos={whoWeArePhotos} />
 
-      <section className="marketing-section stakeholder-section" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
-        <div className="marketing-container">
-          <div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Our Programs</p><h2 id="program-heading">Choose the right program to build your skills and win competitions.</h2><p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p></div><div className="stakeholder-method"><strong>40% theory, 60% practice, 100% impact</strong><Link className="marketing-text-link" href="/program">View all programs <ArrowRight aria-hidden="true" size={16} /></Link></div></div>
-          <div className="marketing-program-grid">{homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}</div>
-          <div className="stakeholder-service-list" aria-label="Student services">{['Private Mentoring', 'Intensive Mentoring', 'Big Class', 'Consultation', 'Mock Competition', 'Proposal Review and Feedback', 'Workshop', 'Community'].map((service, index) => <span key={service}><b>0{index + 1}</b>{service}</span>)}</div>
+      <section className="marketing-section stakeholder-section homepage-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
+        <div className="marketing-container homepage-programs__inner">
+          <div className="marketing-section-head is-wide homepage-programs__head">
+            <div className="homepage-programs__copy">
+              <p className="marketing-kicker homepage-programs__kicker">Our Programs</p>
+              <h2 id="program-heading">Choose the right program to build your skills and win competitions.</h2>
+              <p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p>
+            </div>
+            <div className="homepage-programs__method" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
+              <div className="homepage-programs__stat is-theory"><BookOpenText aria-hidden="true" size={22} /><strong>40%</strong><span>theory</span></div>
+              <div className="homepage-programs__stat is-practice"><Settings2 aria-hidden="true" size={22} /><strong>60%</strong><span>practice</span></div>
+              <div className="homepage-programs__stat is-impact"><Trophy aria-hidden="true" size={22} /><strong>100%</strong><span>impact</span></div>
+            </div>
+          </div>
+
+          <div className="marketing-program-grid homepage-programs__cards" data-testid="homepage-program-cards">
+            {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+          </div>
+
+          <div className="homepage-programs__footer">
+            <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'homepage-programs__view-all')} href="/program" data-testid="homepage-programs-view-all">
+              View all programs <ArrowRight aria-hidden="true" size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 
