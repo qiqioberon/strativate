@@ -1013,33 +1013,9 @@
   font-size: .88rem;
   line-height: 1.75;
 }
-.homepage-programs__kicker {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding-left: 24px;
-  color: var(--marketing-orange) !important;
-}
-.homepage-programs__kicker::before {
-  position: absolute;
-  left: 2px;
-  width: 13px;
-  height: 13px;
-  border-bottom: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-  content: '';
-  transform: rotate(45deg);
-}
-.homepage-programs__kicker::after {
-  width: 3px;
-  height: 13px;
-  margin-left: 10px;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 8px 5px 0 -1px currentColor;
-  content: '';
-  transform: rotate(-28deg);
+.homepage-programs__copy > .marketing-kicker {
+  font-size: clamp(.76rem, .82vw, .88rem);
+  letter-spacing: .16em;
 }
 .homepage-programs__method {
   display: grid;
