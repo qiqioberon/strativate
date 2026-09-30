@@ -126,8 +126,29 @@ export function HomePage({
         <div className="marketing-container stakeholder-product-grid marketing-product-library__grid"><div className="marketing-product-library__copy"><p className="marketing-kicker">Digital Products</p><h2 id="digital-products-heading">Learn beyond the session</h2><p className="stakeholder-section__lede">Ready-to-use guides, videos, and templates to help you prepare for business competitions.</p><Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/produk-digital" data-testid="homepage-products-cta">Explore now <ArrowRight aria-hidden="true" size={16} /></Link></div>{digitalProductsEnabled && digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}</div>
       </section>
 
-      <section className="marketing-section stakeholder-section stakeholder-expertise" aria-labelledby="expertise-heading" data-reveal data-testid="homepage-expertise-section">
-        <div className="marketing-container"><div className="marketing-section-head is-wide"><div><p className="marketing-kicker">What We Specialize In</p><h2 id="expertise-heading">Our Expertise</h2></div><p className="marketing-section-head__copy">Explore the disciplines that turn a promising idea into a clear, persuasive competition submission.</p></div><div className="stakeholder-expertise-grid">{homepageExpertise.map((item, index) => <article key={item.title}><span>0{index + 1}</span><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></div>
+      <section className="marketing-section stakeholder-section homepage-expertise" aria-labelledby="expertise-heading" data-reveal data-testid="homepage-expertise-section">
+        <div className="marketing-container homepage-expertise__inner">
+          <div className="homepage-expertise__head">
+            <p className="marketing-kicker">What We Specialize In</p>
+            <h2 id="expertise-heading">Our Expertise</h2>
+            <p>Explore the disciplines that turn a promising idea into a clear, persuasive competition submission.</p>
+          </div>
+
+          <div className="homepage-expertise__grid">
+            {homepageExpertise.map((item, index) => (
+              <article className="homepage-expertise__card" key={item.title}>
+                <div className="homepage-expertise__card-meta" aria-hidden="true">
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <i />
+                </div>
+                <div className="homepage-expertise__card-copy">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="marketing-section stakeholder-section stakeholder-mentors" aria-labelledby="mentor-heading" data-reveal data-testid="homepage-mentors-section">
