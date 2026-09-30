@@ -20,6 +20,7 @@ import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
 import { WhoWeAreSection } from './who-we-are-section'
+import { ExpertiseFloatingBackdrop } from './expertise-floating-backdrop'
 
 const homepageExpertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
@@ -98,6 +99,7 @@ export function HomePage({
       <WhoWeAreSection photos={whoWeArePhotos} />
 
       <section className="marketing-section stakeholder-section homepage-expertise" aria-labelledby="expertise-heading" data-reveal data-testid="homepage-expertise-section">
+        <ExpertiseFloatingBackdrop />
         <div className="marketing-container homepage-expertise__inner">
           <div className="homepage-expertise__head">
             <p className="marketing-kicker">What We Specialize In</p>
