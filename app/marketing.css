@@ -271,9 +271,9 @@
 
 @media (max-width: 1399px) {
   .marketing-nav, .marketing-login, .marketing-start { display: none !important; }
-  .marketing-header__inner { min-height: 72px; }
+  .marketing-header__inner { grid-template-columns: minmax(0, 1fr) auto; min-height: 72px; }
   .marketing-menu-button { display: grid; }
-  .marketing-header__actions { margin-left: auto; }
+  .marketing-header__actions { grid-column: 2; justify-self: end; margin-left: auto; }
   .marketing-mobile-panel { position: absolute; top: calc(100% + 1px); right: 16px; left: 16px; display: block; overflow: hidden; visibility: hidden; border: 1px solid var(--marketing-line); border-radius: 5px 5px 20px 20px; background: rgba(255, 250, 244, .98); box-shadow: 0 24px 50px rgba(56, 30, 18, .14); opacity: 0; pointer-events: none; transform: translateY(-8px); transition: visibility 0s linear 180ms, opacity 180ms ease, transform 180ms ease; }
   .marketing-mobile-panel.is-open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); transition-delay: 0s; }
   .marketing-mobile-panel nav { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; padding: 12px; background: var(--marketing-line); }
