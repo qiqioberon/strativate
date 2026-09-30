@@ -1,6 +1,7 @@
 import { Focus, Repeat2, Waypoints } from 'lucide-react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
+import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { homepageExpertise, preparationPrinciples } from '@/lib/content/marketing-content'
 
@@ -27,6 +28,7 @@ export default function AboutPage() {
         </section>
 
         <section className="marketing-section homepage-expertise about-reference-expertise" data-reveal data-testid="about-expertise-section">
+          <ExpertiseFloatingBackdrop />
           <div className="marketing-container homepage-expertise__inner">
             <div className="homepage-expertise__head">
               <p className="marketing-kicker">Our Expertise</p>
