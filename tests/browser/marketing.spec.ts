@@ -413,6 +413,25 @@ test('mobile menu is accessible, navigates natively, and avoids overflow', async
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 
+test('standard-width header switches to the existing menu button before navigation can collide', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await page.goto('/')
+
+  const desktopNav = page.getByRole('navigation', { name: 'Main navigation' })
+  const toggle = page.getByTestId('mobile-menu-toggle-button')
+
+  await expect(desktopNav).toBeHidden()
+  await expect(page.getByTestId('desktop-login-link')).toBeHidden()
+  await expect(page.getByTestId('desktop-start-learning-link')).toBeHidden()
+  await expect(toggle).toBeVisible()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible()
+  await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
+})
+
 test('desktop header keeps navigation centered between left brand and right actions', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')

@@ -269,7 +269,7 @@
   .marketing-program-card__body { padding-inline: 20px; }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1399px) {
   .marketing-nav, .marketing-login, .marketing-start { display: none !important; }
   .marketing-header__inner { min-height: 72px; }
   .marketing-menu-button { display: grid; }
@@ -282,6 +282,9 @@
   .marketing-mobile-link__icon { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 9px; color: var(--marketing-orange-dark); background: #fff; }
   .marketing-mobile-link__arrow { color: #b8a69a; }
   .marketing-mobile-panel__actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 9px; padding: 14px 4px 3px; background: var(--marketing-paper); }
+}
+
+@media (max-width: 1080px) {
   .marketing-hero { padding-top: 35px; }
   .marketing-hero__grid { grid-template-columns: 1fr .78fr; gap: 42px; min-height: 560px; }
   .marketing-hero__copy { padding-left: 0; }
