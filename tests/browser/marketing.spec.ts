@@ -188,6 +188,7 @@ test('carousel disables autoplay when reduced motion is requested', async ({ pag
 
 for (const [label, href] of navigation.slice(1)) {
   test(`${label} has a dedicated public route and active navigation state`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(href)
     await expect(page).toHaveURL(new RegExp(`${href}$`))
     await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page')
@@ -280,6 +281,7 @@ test('mentor dialog is single-column, scrollable, and overflow-safe on mobile wi
 })
 
 test('program directory hides digital products and retired digital route redirects', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
   await expect(page.locator('.marketing-service-card')).toHaveCount(8)
@@ -410,6 +412,25 @@ test('mobile menu is accessible, navigates natively, and avoids overflow', async
   await expect(mobileNav.getByRole('link', { name: 'Programs', exact: true })).toBeVisible()
   await mobileNav.getByRole('link', { name: 'Programs', exact: true }).click()
   await expect(page).toHaveURL(/\/program$/)
+  await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
+})
+
+test('standard-width header switches to the existing menu button before navigation can collide', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await page.goto('/')
+
+  const desktopNav = page.getByRole('navigation', { name: 'Main navigation' })
+  const toggle = page.getByTestId('mobile-menu-toggle-button')
+
+  await expect(desktopNav).toBeHidden()
+  await expect(page.getByTestId('desktop-login-link')).toBeHidden()
+  await expect(page.getByTestId('desktop-start-learning-link')).toBeHidden()
+  await expect(toggle).toBeVisible()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible()
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('static Private Mentoring marketing and DB catalog coexist without self-service scheduling', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   const homeCard = page.getByTestId('program-card-private-mentoring-link')
   await expect(homeCard).toContainText('Get personalized guidance tailored to your goals')
