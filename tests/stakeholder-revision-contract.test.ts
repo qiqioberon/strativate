@@ -38,10 +38,10 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
   const sections = [
     'homepage-success-proof-section',
     '<WhoWeAreSection',
-    'homepage-programs-section',
-    'homepage-products-section',
     'homepage-expertise-section',
+    'homepage-programs-section',
     'homepage-mentors-section',
+    'homepage-products-section',
     'homepage-why-choose-section',
   ]
   const positions = sections.map(section => source.indexOf(section))
