@@ -102,8 +102,8 @@ export function HomePage({
         <ExpertiseFloatingBackdrop />
         <div className="marketing-container homepage-expertise__inner">
           <div className="homepage-expertise__head">
-            <p className="marketing-kicker">What We Specialize In</p>
-            <h2 id="expertise-heading">Our Expertise</h2>
+            <p className="marketing-kicker">Our Expertise</p>
+            <h2 id="expertise-heading">What We Specialize In</h2>
             <p>Explore the disciplines that turn a promising idea into a clear, persuasive competition submission.</p>
           </div>
 
