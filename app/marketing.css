@@ -1527,7 +1527,6 @@
   .homepage-expertise__ambient-item--tablet-up { display: none; }
   .homepage-expertise__ambient-item {
     font-size: clamp(24px, 6.5vw, 36px) !important;
-    opacity: .15 !important;
   }
 }
 
