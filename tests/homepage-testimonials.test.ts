@@ -30,7 +30,7 @@ test('homepage places the success-story gallery inside the hero before the appro
   const productIndex = home.indexOf('homepage-products-section')
   const expertiseIndex = home.indexOf('homepage-expertise-section')
   const mentorIndex = home.indexOf('homepage-mentors-section')
-  assert.ok(heroIndex >= 0 && proofIndex > heroIndex && whoIndex > proofIndex && programIndex > whoIndex && productIndex > programIndex && expertiseIndex > productIndex && mentorIndex > expertiseIndex)
+  assert.ok(heroIndex >= 0 && proofIndex > heroIndex && whoIndex > proofIndex && expertiseIndex > whoIndex && programIndex > expertiseIndex && mentorIndex > programIndex && productIndex > mentorIndex)
   assert.match(home, /TestimonialCircularGallery/)
   assert.doesNotMatch(home, /A clearer process\.|Stronger competition outcomes\.|homepage-testimonials-section/)
   assert.match(page, /listPublishedTestimonials/)
