@@ -1,5 +1,11 @@
 import type { CSSProperties } from 'react'
 
+type FloatingMarkStyle = CSSProperties & {
+  '--item-rot': string
+  '--item-dur': string
+  '--item-delay': string
+}
+
 interface FloatingMark {
   mark: '📝' | '💼' | '✍️' | '🔬' | '📣' | '📊' | '🎤' | '🏛️'
   top: string
@@ -35,7 +41,7 @@ export function ExpertiseFloatingBackdrop() {
   return (
     <div className="homepage-expertise__ambient" aria-hidden="true">
       {floatingMarks.map((item, index) => {
-        const style: CSSProperties & Record<string, string | number> = {
+        const style: FloatingMarkStyle = {
           top: item.top,
           ...(item.left ? { left: item.left } : { right: item.right }),
           fontSize: `${item.size}px`,
