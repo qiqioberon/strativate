@@ -56,7 +56,11 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
               <div className="checkout-order__items">
                 {order.items.map(item => <article key={item.id}><div><span>{item.item_kind_snapshot === 'digital_product' ? 'Produk Digital' : item.item_kind_snapshot === 'private_mentoring' ? 'Private Mentoring' : item.item_kind_snapshot === 'intensive_mentoring_custom_offer' ? 'Penawaran Intensive Internasional' : item.item_kind_snapshot.startsWith('intensive_mentoring_') ? 'Intensive Mentoring' : 'Item'}</span><h3>{item.name_snapshot}</h3></div><strong>{formatRupiah(item.unit_price_amount)}</strong></article>)}
               </div>
-              <div className="checkout-order__total"><span>Total</span><strong>{formatRupiah(order.total_amount)}</strong></div>
+              <div className="checkout-order__pricing">
+                <div><span>Subtotal</span><strong>{formatRupiah(order.subtotal_amount)}</strong></div>
+                {order.discount_amount > 0 ? <div className="checkout-order__discount"><span>Diskon {order.discount_code_snapshot ? <em title={order.discount_code_snapshot}>({order.discount_code_snapshot})</em> : null}</span><strong>-{formatRupiah(order.discount_amount)}</strong></div> : null}
+                <div className="checkout-order__total"><span>Total</span><strong>{formatRupiah(order.total_amount)}</strong></div>
+              </div>
             </section>
             {order.status === 'paid' ? <section className="checkout-paid-state"><CheckCircle2 aria-hidden="true" size={28} /><h2>Pembayaran berhasil.</h2><p>Produk atau mentoring yang dibeli sudah tersedia pada dashboard akunmu.</p><Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/dashboard">Buka Dashboard</Link></section> : <MidtransEmbed orderId={order.id} clientKey={midtrans.clientKey} snapScriptUrl={midtrans.snapScriptUrl} />}
           </div>

@@ -23,6 +23,7 @@ export type CommerceItem = { id:string; item_kind:string; is_available:boolean; 
 export type CartStatus = "active" | "converted"
 export type DiscountType = 'percentage'|'fixed'
 export type DiscountScope = 'digital_products'|'selected_digital_products'
+export type DiscountCategory = 'digital_products'|'private_mentoring'|'intensive_mentoring'
 export type DiscountCode = { id:string; code:string; description:string|null; discount_type:DiscountType; discount_value:number; minimum_subtotal_amount:number; starts_at:string|null; ends_at:string|null; max_redemptions:number|null; redemption_count:number; scope:DiscountScope; is_active:boolean; created_at:string; updated_at:string }
 export type Cart = { id:string; user_id:string; status:CartStatus; discount_code_id:string|null; discount_code_snapshot:string|null; discount_amount:number; created_at:string; updated_at:string }
 export type CartItem = { id:string; cart_id:string; commerce_item_id:string; created_at:string }
@@ -83,6 +84,7 @@ export type Database = {
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
       commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
+      commerce_discount_code_categories: Table<{discount_code_id:string;category:DiscountCategory;created_at:string},{discount_code_id:string;category:DiscountCategory;created_at?:string}>
       commerce_discount_code_products: Table<{discount_code_id:string;product_id:string;created_at:string},{discount_code_id:string;product_id:string;created_at?:string}>
       commerce_discount_redemptions: Table<{id:string;discount_code_id:string;order_id:string;user_id:string;discount_amount:number;code_snapshot:string;status:'reserved'|'redeemed'|'released';reserved_until:string;redeemed_at:string|null;released_at:string|null;created_at:string}>
       digital_product_access_sessions: Table<DigitalProductAccessSession, Partial<DigitalProductAccessSession> & Pick<DigitalProductAccessSession,"user_id"|"product_id">>
@@ -146,6 +148,7 @@ export type Database = {
       get_active_cart: { Args:Record<PropertyKey,never>; Returns:CartItemView[] }
       get_active_cart_summary: { Args:Record<PropertyKey,never>; Returns:{cart_id:string;subtotal_amount:number;discount_amount:number;total_amount:number;discount_code:string|null}[] }
       apply_discount_code: { Args:{p_cart_id:string;p_code:string}; Returns:{cart_id:string;subtotal_amount:number;discount_amount:number;total_amount:number;code:string}[] }
+      admin_save_discount_code: { Args:{p_discount_code_id:string|null;p_code:string;p_description:string;p_discount_type:DiscountType;p_discount_value:number;p_minimum_subtotal_amount:number;p_starts_at:string|null;p_ends_at:string|null;p_max_redemptions:number|null;p_scope:DiscountScope;p_is_active:boolean;p_categories:DiscountCategory[];p_product_ids:string[]}; Returns:DiscountCode }
       remove_discount_code: { Args:{p_cart_id:string}; Returns:undefined }
       create_order_from_cart: { Args:{p_cart_id:string}; Returns:Order }
       list_public_digital_product_sales: { Args:Record<PropertyKey,never>; Returns:{product_id:string;sales_count:number}[] }

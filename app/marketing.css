@@ -1623,8 +1623,66 @@
 .editorial-admin__cover-field p { margin: 5px 0 12px; color: var(--marketing-muted); font-size: .76rem; }
 .editorial-admin__cover-field img, .editorial-admin__cover-empty { width: 180px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: #f6f2ee; }
 .editorial-admin__cover-empty { display: grid; place-items: center; color: var(--marketing-muted); font-size: .72rem; }
-.discount-admin__products { display: grid; gap: 8px; max-height: 220px; overflow: auto; padding: 14px; border: 1px solid var(--marketing-line); border-radius: 10px; }
-.discount-admin__products legend { padding: 0 6px; font-weight: 700; }
+.discount-admin__list { display: grid; gap: 12px; margin-top: 18px; }
+.discount-admin__list article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid var(--marketing-line); border-radius: 16px; background: #fff; }
+.discount-admin__list h3 { margin-top: 8px; }
+.discount-admin__list p { margin-top: 5px; color: var(--marketing-muted); font-size: .78rem; line-height: 1.55; }
+.discount-dialog { position: fixed; inset: 0; width: min(680px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 1px solid #eaded5; border-radius: 22px; color: var(--marketing-ink); background: #fff; box-shadow: 0 28px 90px rgba(62, 29, 8, .25); }
+.discount-dialog::backdrop { background: rgba(36, 18, 7, .5); backdrop-filter: blur(2px); }
+.discount-dialog__form { position: relative; display: grid; gap: 0; max-height: calc(100dvh - 34px); padding: 30px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.discount-dialog__close { position: absolute; z-index: 1; top: 18px; right: 18px; display: grid; width: 36px; height: 36px; padding: 0; place-items: center; border: 1px solid #f1d8c8; border-radius: 50%; color: #8f3d13; background: #fff6ef; cursor: pointer; }
+.discount-dialog__close:hover { background: #ffeadc; }
+.discount-dialog__close:focus-visible { outline: 3px solid rgb(229 91 19 / .2); outline-offset: 2px; }
+.discount-dialog__close svg { width: 17px; height: 17px; }
+.discount-dialog__header { padding: 0 48px 22px 0; }
+.discount-dialog__header h3 { margin: 5px 0 6px; font-size: 1.55rem; letter-spacing: -.035em; }
+.discount-dialog__header > p:last-child { margin: 0; color: var(--marketing-muted); font-size: .78rem; line-height: 1.6; }
+.discount-dialog__section { display: grid; gap: 16px; padding: 22px 0; border-top: 1px solid #f0e4dc; }
+.discount-dialog__grid, .discount-date-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.discount-date-grid { display: grid; gap: 16px; }
+.discount-field--wide { grid-column: 1 / -1; }
+.discount-field { position: relative; display: grid; min-width: 0; gap: 7px; color: #5f514a; font-size: .73rem; font-weight: 750; }
+.discount-field__optional { position: absolute; top: 1px; right: 0; color: #9a8b82; font-size: .62rem; font-weight: 650; }
+.discount-field > input, .discount-field > select { width: 100%; min-width: 0; height: 44px; padding: 10px 12px; border: 1px solid #d9ccc4; border-radius: 10px; outline: 0; color: var(--marketing-ink); background: #fff; font: inherit; font-size: .78rem; font-weight: 500; }
+.discount-field > input:hover, .discount-field > select:hover, .discount-input-group:hover { border-color: #bda99d; }
+.discount-field > input:focus-visible, .discount-field > select:focus-visible { border-color: var(--marketing-orange); box-shadow: 0 0 0 3px rgb(229 91 19 / .13); }
+.discount-field small, .discount-dialog__fieldset > p, .discount-category small, .discount-scope-options small, .discount-active small { color: #8a7b73; font-size: .64rem; font-weight: 500; line-height: 1.5; }
+.discount-input-group { display: grid; grid-template-columns: minmax(0, 1fr) auto; min-width: 0; height: 44px; overflow: hidden; border: 1px solid #d9ccc4; border-radius: 10px; background: #fff; }
+.discount-input-group--prefix { grid-template-columns: auto minmax(0, 1fr); }
+.discount-input-group:focus-within { border-color: var(--marketing-orange); box-shadow: 0 0 0 3px rgb(229 91 19 / .13); }
+.discount-input-group input { width: 100%; min-width: 0; padding: 10px 12px; border: 0; outline: 0; color: var(--marketing-ink); background: transparent; font: inherit; font-size: .78rem; font-weight: 500; }
+.discount-input-group span { display: grid; min-width: 42px; padding: 0 12px; place-items: center; border-left: 1px solid #e4d8d0; color: #75482f; background: #fff8f2; font-size: .72rem; font-weight: 800; }
+.discount-input-group--prefix span { border-right: 1px solid #e4d8d0; border-left: 0; }
+.discount-dialog__fieldset { min-width: 0; margin: 0; }
+.discount-dialog__fieldset legend { padding: 0; color: #3e332e; font-size: .78rem; font-weight: 800; }
+.discount-dialog__fieldset > p { margin: -9px 0 0; }
+.discount-category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.discount-category, .discount-scope-options label { display: flex; min-width: 0; gap: 10px; padding: 13px; border: 1px solid #dfd3cb; border-radius: 12px; background: #fffdfb; cursor: pointer; }
+.discount-category:has(input:checked), .discount-scope-options label:has(input:checked) { border-color: #e5844f; background: #fff7f0; box-shadow: inset 0 0 0 1px rgb(229 91 19 / .08); }
+.discount-category input, .discount-scope-options input, .discount-active input, .discount-admin__products input { width: 16px; height: 16px; margin: 1px 0 0; flex: 0 0 auto; accent-color: var(--marketing-orange); }
+.discount-category span, .discount-scope-options span, .discount-active span { display: grid; min-width: 0; gap: 4px; }
+.discount-category strong, .discount-scope-options strong, .discount-active strong { color: #403630; font-size: .72rem; line-height: 1.3; }
+.discount-scope-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.discount-admin__products { display: grid; gap: 9px; max-height: 210px; overflow: auto; padding: 14px; border: 1px solid #e2d6ce; border-radius: 12px; background: #fffdfb; }
+.discount-admin__products .checkbox-label { display: flex; align-items: flex-start; gap: 9px; color: #51453f; font-size: .72rem; font-weight: 650; line-height: 1.45; }
+.discount-active { display: flex; align-items: flex-start; gap: 11px; margin-top: 4px; padding: 16px; border: 1px solid #ead7ca; border-radius: 13px; background: #fff8f2; cursor: pointer; }
+.discount-dialog__actions { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 10px; margin: 24px -30px -30px; padding: 18px 30px; border-top: 1px solid #eaded5; background: rgb(255 255 255 / .96); backdrop-filter: blur(8px); }
+
+@media (max-width: 700px) {
+  .discount-category-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .discount-admin__list article { align-items: stretch; flex-direction: column; }
+  .discount-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); border-radius: 17px; }
+  .discount-dialog__form { max-height: calc(100dvh - 22px); padding: 22px 18px; }
+  .discount-dialog__close { top: 14px; right: 14px; }
+  .discount-dialog__header { padding-right: 42px; }
+  .discount-dialog__grid, .discount-date-grid, .discount-scope-options { grid-template-columns: 1fr; }
+  .discount-field--wide { grid-column: auto; }
+  .discount-dialog__actions { margin: 22px -18px -22px; padding: 14px 18px; }
+  .discount-dialog__actions .button { flex: 1 1 0; }
+}
 
 .digital-product-detail__sales { margin: -6px 0 12px; color: var(--marketing-muted); font-size: .78rem; font-weight: 700; }
 

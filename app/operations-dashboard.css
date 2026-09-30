@@ -16,7 +16,7 @@
 .workspace .commerce-cart-screen--embedded .commerce-cart-item__actions { display:grid; justify-items:end; gap:8px; }
 .workspace .commerce-cart-screen--embedded .commerce-cart-item__actions button { display:inline-flex; gap:6px; align-items:center; padding:7px 9px; border-radius:8px; background:transparent; color:#766b64; font-size:.68rem; font-weight:700; }
 .workspace .commerce-cart-screen--embedded .commerce-cart-summary { position:sticky; top:24px; display:grid; gap:16px; padding:22px; border:1px solid #eadfd7; border-radius:20px; background:#fffaf5; }
-.workspace .commerce-cart-screen--embedded .commerce-cart-summary > div { display:flex; justify-content:space-between; gap:14px; padding-top:12px; border-top:1px solid #eadfd7; }
+.workspace .commerce-cart-screen--embedded .commerce-cart-summary__row { display:flex; justify-content:space-between; gap:14px; padding-top:12px; border-top:1px solid #eadfd7; }
 .workspace .commerce-cart-screen--embedded .commerce-cart-summary > span { color:#c45109; font-size:.66rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
 .workspace .commerce-cart-screen--embedded .commerce-cart-summary p { color:#776b64; font-size:.7rem; }
 .workspace .commerce-cart-screen--embedded .commerce-cart-summary form, .workspace .commerce-cart-screen--embedded .commerce-cart-summary .button { width:100%; }

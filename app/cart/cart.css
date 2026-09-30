@@ -17,10 +17,15 @@
 .commerce-cart-item__actions strong { white-space: nowrap; font-size: .9rem; }
 .commerce-cart-item__actions button { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border: 0; border-radius: 8px; color: #766b64; background: transparent; cursor: pointer; font: inherit; font-size: .67rem; font-weight: 700; }
 .commerce-cart-item__actions button:hover { color: #a22222; background: #fff2ef; }
-.commerce-cart-summary { position: sticky; top: 28px; display: grid; gap: 18px; padding: 26px; border: 1px solid #eaded5; border-radius: 22px 22px 8px 22px; background: #fffaf5; }
-.commerce-cart-summary > div { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-top: 14px; border-top: 1px solid #eaded5; }
+.commerce-cart-summary { position: sticky; top: 28px; display: grid; min-width: 0; max-width: 100%; gap: 18px; padding: 26px; border: 1px solid #eaded5; border-radius: 22px 22px 8px 22px; background: #fffaf5; container-type: inline-size; }
+.commerce-cart-summary__row { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 18px; padding-top: 14px; border-top: 1px solid #eaded5; }
 .commerce-cart-summary p { margin: 0; color: #766b64; font-size: .7rem; line-height: 1.6; }
 .commerce-cart-summary strong { font-size: 1.35rem; letter-spacing: -.04em; }
+.commerce-cart-summary__row p { min-width: 0; }
+.commerce-cart-summary__discount p { display: flex; min-width: 0; gap: 4px; color: #8c4e2b; }
+.commerce-cart-summary__discount p span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commerce-cart-summary__discount strong { flex: 0 0 auto; color: #a64917; font-size: .92rem; }
+.commerce-cart-summary__total strong { flex: 0 0 auto; }
 .commerce-inline-error { margin-top: 14px; color: #a22222; font-size: .72rem; }
 .commerce-cart-screen > .commerce-back-button { margin-bottom: 4px; }
 .commerce-empty-state { display: grid; width: min(100%, 760px); min-height: calc(100vh - 240px); margin-inline: auto; align-content: center; justify-items: center; gap: 16px; text-align: center; }

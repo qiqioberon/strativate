@@ -453,8 +453,13 @@
   .digital-product-card-swap__dots button,
   .digital-product-card-swap__arrow { transition: none; }
 }
-.commerce-discount-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 18px 0 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-.commerce-discount-form input { min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; text-transform: uppercase; }
-.commerce-discount-form label { color: var(--marketing-orange-dark); }
-.commerce-discount-message { color: var(--muted-foreground); font-size: .76rem; }
-.commerce-cart-summary__discount strong { color: var(--marketing-orange-dark); }
+.commerce-discount-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; width: 100%; min-width: 0; max-width: 100%; gap: 8px; align-items: center; margin: 4px 0 0; padding: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.commerce-discount-form input { width: 100%; min-width: 0; overflow: hidden; border: 0; outline: 0; background: transparent; font: inherit; text-overflow: ellipsis; text-transform: uppercase; }
+.commerce-discount-form label { display: grid; flex: 0 0 auto; color: var(--marketing-orange-dark); place-items: center; }
+.commerce-discount-form .button { min-width: 0; max-width: 100%; white-space: nowrap; }
+.commerce-discount-message { color: var(--muted-foreground); font-size: .7rem; }
+.commerce-discount-help { margin-top: -8px !important; }
+@container (max-width: 280px) {
+  .commerce-discount-form { grid-template-columns: auto minmax(0, 1fr); }
+  .commerce-discount-form .button { grid-column: 1 / -1; width: 100%; }
+}

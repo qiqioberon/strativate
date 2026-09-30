@@ -32,6 +32,14 @@ function itemKindLabel(kind: string) {
   return 'Item'
 }
 
+function discountErrorMessage(message?: string) {
+  if (message?.includes('redemption limit')) return 'Kode diskon sudah mencapai batas penggunaan.'
+  if (message?.includes('not compatible')) return 'Kode diskon tidak berlaku untuk item di keranjang ini.'
+  if (message?.includes('subtotal does not meet')) return 'Subtotal item yang memenuhi syarat belum mencapai minimum kode diskon.'
+  if (message?.includes('already applied')) return 'Kode diskon ini sudah digunakan.'
+  return 'Kode diskon tidak valid atau sudah kedaluwarsa.'
+}
+
 export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart; embedded?: boolean; onBack?: () => void }) {
   const router = useRouter()
   const { show } = useToast()
@@ -45,17 +53,22 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
     setDiscountBusy(true)
     setDiscountMessage('')
     const { error } = await createClient().rpc('apply_discount_code', { p_cart_id: cart.id, p_code: discountCode })
-    if (error) setDiscountMessage(error.message || 'This discount code is not available.')
-    else { setDiscountMessage('Discount applied.'); router.refresh() }
+    if (error) setDiscountMessage(discountErrorMessage(error.message))
+    else { setDiscountMessage('Kode diskon berhasil digunakan.'); router.refresh() }
     setDiscountBusy(false)
   }
 
   async function removeDiscount() {
     if (discountBusy) return
     setDiscountBusy(true)
-    await createClient().rpc('remove_discount_code', { p_cart_id: cart.id })
+    const { error } = await createClient().rpc('remove_discount_code', { p_cart_id: cart.id })
+    if (error) {
+      setDiscountMessage('Kode diskon belum dapat dihapus. Coba lagi.')
+      setDiscountBusy(false)
+      return
+    }
     setDiscountCode('')
-    setDiscountMessage('Discount removed.')
+    setDiscountMessage('Kode diskon dihapus.')
     router.refresh()
     setDiscountBusy(false)
   }
@@ -124,12 +137,12 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
         </section>
         <aside className="commerce-cart-summary">
           <span>Ringkasan</span>
-          <div><p>Subtotal</p><strong>{formatRupiah(cart.subtotalAmount)}</strong></div>
-          {cart.discountAmount > 0 ? <div className="commerce-cart-summary__discount"><p>Discount {cart.discountCode ? `(${cart.discountCode})` : ''}</p><strong>-{formatRupiah(cart.discountAmount)}</strong></div> : null}
-          <div><p>Total</p><strong>{formatRupiah(cart.totalAmount)}</strong></div>
-          <div className="commerce-discount-form"><label htmlFor="discount-code"><Tag aria-hidden="true" size={16} /><span className="sr-only">Discount code</span></label><input id="discount-code" value={discountCode} onChange={event => setDiscountCode(event.target.value)} placeholder="Discount code" disabled={discountBusy} /><button className="button button-outline button-compact" type="button" onClick={() => void (cart.discountCode ? removeDiscount() : applyDiscount())} disabled={discountBusy || (!cart.discountCode && !discountCode.trim())}>{cart.discountCode ? 'Remove' : 'Apply'}</button></div>
+          <div className="commerce-cart-summary__row"><p>Subtotal</p><strong>{formatRupiah(cart.subtotalAmount)}</strong></div>
+          {cart.discountAmount > 0 ? <div className="commerce-cart-summary__row commerce-cart-summary__discount"><p>Diskon {cart.discountCode ? <span title={cart.discountCode}>({cart.discountCode})</span> : null}</p><strong>-{formatRupiah(cart.discountAmount)}</strong></div> : null}
+          <div className="commerce-cart-summary__row commerce-cart-summary__total"><p>Total</p><strong>{formatRupiah(cart.totalAmount)}</strong></div>
+          <div className="commerce-discount-form"><label htmlFor="discount-code"><Tag aria-hidden="true" size={16} /><span className="sr-only">Kode diskon</span></label><input id="discount-code" maxLength={64} value={discountCode} onChange={event => setDiscountCode(event.target.value)} placeholder="Kode diskon" disabled={discountBusy || Boolean(cart.discountCode)} /><button className="button button-outline button-compact" type="button" onClick={() => void (cart.discountCode ? removeDiscount() : applyDiscount())} disabled={discountBusy || (!cart.discountCode && !discountCode.trim())}>{cart.discountCode ? 'Hapus' : 'Terapkan'}</button></div>
           {discountMessage ? <p className="commerce-discount-message" role="status">{discountMessage}</p> : null}
-          <p>Checkout is recalculated on the server from available Commerce Items and the applied discount.</p>
+          <p className="commerce-discount-help">Masukkan kode promo untuk melihat potongan yang berlaku.</p>
           {cart.hasUnavailableItems ? <button className={buttonVariants({ variant: 'primary', size: 'marketing' })} type="button" disabled>Checkout tidak tersedia</button> : <form action={checkoutActiveCart}><CheckoutButton /></form>}
         </aside>
       </div>
