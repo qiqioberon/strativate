@@ -35,6 +35,31 @@ test('homepage uses the approved centered mentoring opening and cloud proof', as
   await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
 })
 
+test('homepage section headlines share clean punctuation and no inline accent emphasis', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto('/')
+  const intro = page.getByTestId('initial-brand-intro')
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
+
+  const expectations = [
+    ['homepage-who-we-are-section', 'Where Future-Ready Skills Meet Competition Success'],
+    ['homepage-programs-section', 'Choose the right program to build your skills and win competitions'],
+    ['homepage-products-section', 'Learn beyond the session'],
+    ['homepage-expertise-section', 'Our Expertise'],
+    ['homepage-mentors-section', 'Learn from people who have been where you want to go'],
+    ['homepage-why-choose-section', 'A path that fits your ambition'],
+    ['homepage-faq-section', 'Start with the right questions'],
+  ] as const
+
+  for (const [testId, expectedText] of expectations) {
+    const section = page.getByTestId(testId)
+    const heading = section.getByRole('heading', { level: 2 })
+    await expect(heading).toHaveText(expectedText)
+    await expect(heading.locator('em')).toHaveCount(0)
+    expect((await heading.textContent())?.trim().endsWith('.')).toBe(false)
+  }
+})
+
 test('homepage programs is a three-card showcase with decorative learning mix and no service table', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
@@ -44,7 +69,7 @@ test('homepage programs is a three-card showcase with decorative learning mix an
   const section = page.getByTestId('homepage-programs-section')
   await section.scrollIntoViewIfNeeded()
   await expect(section).toBeVisible()
-  await expect(section.getByRole('heading', { name: 'Choose the right program to build your skills and win competitions.' })).toBeVisible()
+  await expect(section.getByRole('heading', { name: 'Choose the right program to build your skills and win competitions' })).toBeVisible()
   await expect(section.getByText('Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.', { exact: true })).toBeVisible()
 
   const programsKicker = section.getByText('Our Programs', { exact: true })
