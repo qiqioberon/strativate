@@ -31,8 +31,8 @@ export default function AboutPage() {
           <ExpertiseFloatingBackdrop />
           <div className="marketing-container homepage-expertise__inner">
             <div className="homepage-expertise__head">
-              <p className="marketing-kicker">Our Expertise</p>
-              <h2>What We Specialize In</h2>
+              <p className="marketing-kicker">What We Specialize In</p>
+              <h2>Our Expertise</h2>
               <p>Coaching across major business competition categories, helping students develop practical skills for each challenge.</p>
             </div>
 
