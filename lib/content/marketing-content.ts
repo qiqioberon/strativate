@@ -47,7 +47,7 @@ export const whyChooseStrativate = [
   'Expert coaches & mentors',
   'Proven curriculum',
   'Beginner-friendly',
-  'Practical skill development',
+  'Strong partnerships',
   'Personalized paths',
 ] as const
 
