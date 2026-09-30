@@ -363,6 +363,16 @@
   .marketing-program-card__body { padding: 21px 17px 23px; }
   .marketing-program-card__tag { max-width: 175px; font-size: .55rem; }
   .marketing-program-card h3 { margin-top: 29px; }
+  .marketing-product-library__grid {
+    gap: 28px;
+  }
+  .marketing-product-library__grid > .digital-product-card-swap {
+    order: -1;
+    margin-top: 0;
+  }
+  .marketing-product-library__copy {
+    order: 1;
+  }
   .marketing-statement__grid { grid-template-columns: 1fr; min-height: 490px; gap: 25px; padding-block: 65px; }
   .marketing-statement__grid > a { grid-column: auto; }
   .marketing-statement h2 { font-size: 2.65rem; }
@@ -1224,6 +1234,11 @@
 .stakeholder-service-list span { display: flex; gap: 12px; align-items: center; min-height: 58px; padding: 12px 14px; border-right: 1px solid var(--marketing-line); border-bottom: 1px solid var(--marketing-line); color: var(--marketing-muted); font-size: .78rem; }
 .stakeholder-service-list b { color: var(--marketing-orange); font-size: .66rem; }
 .stakeholder-product-grid > :last-child { min-height: 260px; }
+@media (min-width: 621px) {
+  .marketing-product-library__grid > .digital-product-card-swap {
+    margin-top: clamp(72px, 6vw, 104px);
+  }
+}
 .stakeholder-expertise { background: linear-gradient(135deg, #fff 0%, #fff8f1 65%, #ffe5d0 100%); }
 .stakeholder-expertise-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--marketing-line); border-left: 1px solid var(--marketing-line); }
 .stakeholder-expertise-grid article { min-height: 190px; padding: 22px; border-right: 1px solid var(--marketing-line); border-bottom: 1px solid var(--marketing-line); }
