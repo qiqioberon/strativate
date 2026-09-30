@@ -37,6 +37,7 @@ test('hard load warms navigation behind a progress intro before normal interacti
 })
 
 test('a cache miss navigation waits for the gated RSC response and completes cleanly', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   const gate = createGate()
   let intercepted = false
 

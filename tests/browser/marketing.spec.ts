@@ -188,6 +188,7 @@ test('carousel disables autoplay when reduced motion is requested', async ({ pag
 
 for (const [label, href] of navigation.slice(1)) {
   test(`${label} has a dedicated public route and active navigation state`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(href)
     await expect(page).toHaveURL(new RegExp(`${href}$`))
     await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page')
@@ -280,6 +281,7 @@ test('mentor dialog is single-column, scrollable, and overflow-safe on mobile wi
 })
 
 test('program directory hides digital products and retired digital route redirects', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/program')
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
   await expect(page.locator('.marketing-service-card')).toHaveCount(8)

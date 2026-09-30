@@ -37,6 +37,7 @@ test('one shared login offers password and Google without a public role picker',
 })
 
 test('session-shaped browser state does not redirect the public homepage', async ({ context, page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   const publicRoot = new URL('/', process.env.TEST_BASE_URL || 'http://localhost:3000').href
   const storedSession = JSON.stringify({
     access_token: 'test-access-token',
