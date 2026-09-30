@@ -97,37 +97,6 @@ export function HomePage({
 
       <WhoWeAreSection photos={whoWeArePhotos} />
 
-      <section className="marketing-section stakeholder-section homepage-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
-        <div className="marketing-container homepage-programs__inner">
-          <div className="marketing-section-head is-wide homepage-programs__head">
-            <div className="homepage-programs__copy">
-              <p className="marketing-kicker">Our Programs</p>
-              <h2 id="program-heading">Choose the right program to build your skills and win competitions</h2>
-              <p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p>
-            </div>
-            <div className="homepage-programs__method" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
-              <div className="homepage-programs__stat is-theory"><BookOpenText aria-hidden="true" size={22} /><strong>40%</strong><span>theory</span></div>
-              <div className="homepage-programs__stat is-practice"><Settings2 aria-hidden="true" size={22} /><strong>60%</strong><span>practice</span></div>
-              <div className="homepage-programs__stat is-impact"><Trophy aria-hidden="true" size={22} /><strong>100%</strong><span>impact</span></div>
-            </div>
-          </div>
-
-          <div className="marketing-program-grid homepage-programs__cards" data-testid="homepage-program-cards">
-            {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
-          </div>
-
-          <div className="homepage-programs__footer">
-            <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'homepage-programs__view-all')} href="/program" data-testid="homepage-programs-view-all">
-              View all programs <ArrowRight aria-hidden="true" size={16} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="marketing-section stakeholder-section stakeholder-products marketing-product-library" aria-labelledby="digital-products-heading" data-reveal data-testid="homepage-products-section">
-        <div className="marketing-container stakeholder-product-grid marketing-product-library__grid"><div className="marketing-product-library__copy"><p className="marketing-kicker">Digital Products</p><h2 id="digital-products-heading">Learn beyond the session</h2><p className="stakeholder-section__lede">Ready-to-use guides, videos, and templates to help you prepare for business competitions.</p><Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/produk-digital" data-testid="homepage-products-cta">Explore now <ArrowRight aria-hidden="true" size={16} /></Link></div>{digitalProductsEnabled && digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}</div>
-      </section>
-
       <section className="marketing-section stakeholder-section homepage-expertise" aria-labelledby="expertise-heading" data-reveal data-testid="homepage-expertise-section">
         <div className="marketing-container homepage-expertise__inner">
           <div className="homepage-expertise__head">
@@ -157,8 +126,39 @@ export function HomePage({
         </div>
       </section>
 
+      <section className="marketing-section stakeholder-section homepage-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
+        <div className="marketing-container homepage-programs__inner">
+          <div className="marketing-section-head is-wide homepage-programs__head">
+            <div className="homepage-programs__copy">
+              <p className="marketing-kicker">Our Programs</p>
+              <h2 id="program-heading">Choose the right program to build your skills and win competitions</h2>
+              <p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p>
+            </div>
+            <div className="homepage-programs__method" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
+              <div className="homepage-programs__stat is-theory"><BookOpenText aria-hidden="true" size={22} /><strong>40%</strong><span>theory</span></div>
+              <div className="homepage-programs__stat is-practice"><Settings2 aria-hidden="true" size={22} /><strong>60%</strong><span>practice</span></div>
+              <div className="homepage-programs__stat is-impact"><Trophy aria-hidden="true" size={22} /><strong>100%</strong><span>impact</span></div>
+            </div>
+          </div>
+
+          <div className="marketing-program-grid homepage-programs__cards" data-testid="homepage-program-cards">
+            {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+          </div>
+
+          <div className="homepage-programs__footer">
+            <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'homepage-programs__view-all')} href="/program" data-testid="homepage-programs-view-all">
+              View all programs <ArrowRight aria-hidden="true" size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="marketing-section stakeholder-section stakeholder-mentors" aria-labelledby="mentor-heading" data-reveal data-testid="homepage-mentors-section">
         <div className="marketing-container"><div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Meet Our Mentors</p><h2 id="mentor-heading">Learn from people who have<br />{' '}been where you want to go</h2></div><div className="marketing-section-head__note"><p>Learn from competition champions and industry professionals who have been where you want to go.</p><Link className="marketing-text-link" href="/mentor">Meet the mentors <ArrowRight aria-hidden="true" size={16} /></Link></div></div><MentorMarquee mentors={mentors} /></div>
+      </section>
+
+      <section className="marketing-section stakeholder-section stakeholder-products marketing-product-library" aria-labelledby="digital-products-heading" data-reveal data-testid="homepage-products-section">
+        <div className="marketing-container stakeholder-product-grid marketing-product-library__grid"><div className="marketing-product-library__copy"><p className="marketing-kicker">Digital Products</p><h2 id="digital-products-heading">Learn beyond the session</h2><p className="stakeholder-section__lede">Ready-to-use guides, videos, and templates to help you prepare for business competitions.</p><Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/produk-digital" data-testid="homepage-products-cta">Explore now <ArrowRight aria-hidden="true" size={16} /></Link></div>{digitalProductsEnabled && digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}</div>
       </section>
 
       <section className="marketing-section stakeholder-section stakeholder-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
