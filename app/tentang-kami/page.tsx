@@ -5,6 +5,7 @@ import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { homepageExpertise, preparationPrinciples } from '@/lib/content/marketing-content'
 
 const icons = [Focus, Waypoints, Repeat2]
+const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
 export default function AboutPage() {
   return (
@@ -25,8 +26,33 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="marketing-section stakeholder-expertise about-reference-expertise" data-reveal data-testid="about-expertise-section">
-          <div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">Our Expertise</p><h2>What We <em>Specialize In</em></h2></div><p className="marketing-section-head__copy">Coaching across major business competition categories, helping students develop practical skills for each challenge.</p></div><div className="stakeholder-expertise-grid">{homepageExpertise.map((item, index) => <article key={item.title}><span>0{index + 1}</span><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></div>
+        <section className="marketing-section homepage-expertise about-reference-expertise" data-reveal data-testid="about-expertise-section">
+          <div className="marketing-container homepage-expertise__inner">
+            <div className="homepage-expertise__head">
+              <p className="marketing-kicker">Our Expertise</p>
+              <h2>What We Specialize In</h2>
+              <p>Coaching across major business competition categories, helping students develop practical skills for each challenge.</p>
+            </div>
+
+            <div className="homepage-expertise__grid">
+              {homepageExpertise.map((item, index) => {
+                const expertiseMark = expertiseMarks[index]
+
+                return (
+                  <article className="homepage-expertise__card" key={item.title}>
+                    <div className="homepage-expertise__icon" aria-hidden="true">
+                      <span className="homepage-expertise__mark">{expertiseMark}</span>
+                    </div>
+                    <span className="homepage-expertise__watermark" aria-hidden="true">{expertiseMark}</span>
+                    <div className="homepage-expertise__card-copy">
+                      <h3>{item.title}</h3>
+                      <p>{item.description}</p>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
         </section>
       </main>
     </MarketingShell>
