@@ -169,7 +169,7 @@ export function HomePage({
           <div className="homepage-why__head">
             <p className="marketing-kicker">Why Us</p>
             <h2 id="why-choose-heading">Why Choose Strativate?</h2>
-            <p>We’ve built the perfect ecosystem to turn ambitious students<br />{' '}into competition winners</p>
+            <p>We’ve built the perfect ecosystem to turn ambitious students<br />{' '}into competition winners.</p>
           </div>
 
           <div className="homepage-why__grid">
