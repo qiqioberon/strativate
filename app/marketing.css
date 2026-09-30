@@ -829,7 +829,6 @@
 .stakeholder-section { position: relative; }
 .stakeholder-section--proof { background: var(--marketing-surface-warm); }
 .stakeholder-section--who, .stakeholder-products { background: transparent; }
-.stakeholder-why { background: #fff5ed; }
 .stakeholder-split, .stakeholder-product-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: clamp(44px, 8vw, 130px); align-items: start; }
 .stakeholder-split h2, .stakeholder-product-grid h2 { max-width: 720px; margin-top: 16px; font-size: clamp(2.8rem, 5.4vw, 5.2rem); font-weight: 640; letter-spacing: var(--marketing-display-tracking); line-height: var(--marketing-display-leading); text-wrap: balance; }
 .marketing-product-library__copy > .marketing-kicker {
@@ -1446,10 +1445,113 @@
   line-height: 1.62;
 }
 .stakeholder-mentors { background: #fff; }
-.stakeholder-why { background: linear-gradient(135deg, #fff3e9, #ffe1cc); }
-.stakeholder-why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid rgba(174, 73, 12, .22); border-left: 1px solid rgba(174, 73, 12, .22); }
-.stakeholder-why-grid div { display: flex; gap: 14px; align-items: center; min-height: 95px; padding: 20px; border-right: 1px solid rgba(174, 73, 12, .22); border-bottom: 1px solid rgba(174, 73, 12, .22); font-weight: 700; }
-.stakeholder-why-grid svg { color: var(--marketing-orange); flex: 0 0 auto; }
+.homepage-why {
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 8% 5%, rgba(177, 43, 0, .48) 0%, rgba(224, 65, 0, .24) 27%, transparent 50%),
+    radial-gradient(circle at 91% 88%, rgba(255, 215, 164, .46) 0%, rgba(255, 187, 103, .14) 31%, transparent 58%),
+    linear-gradient(148deg, #e95708 0%, #f86a08 38%, #ff861c 69%, #f9a34f 100%);
+}
+.homepage-why::after {
+  position: absolute;
+  top: -240px;
+  left: 50%;
+  z-index: -1;
+  width: min(1080px, 86vw);
+  height: 430px;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 247, 233, .15), transparent 67%);
+  pointer-events: none;
+  content: '';
+  transform: translateX(-50%);
+}
+.homepage-why__inner { position: relative; z-index: 1; }
+.homepage-why__head {
+  display: grid;
+  justify-items: center;
+  max-width: 760px;
+  margin: 0 auto clamp(44px, 5vw, 66px);
+  text-align: center;
+}
+.homepage-why__head .marketing-kicker {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border: 1px solid rgba(224, 218, 209, .52);
+  border-radius: 999px;
+  color: #fff1c9;
+  background: rgba(91, 43, 17, .08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+.homepage-why__head h2 {
+  margin-top: 17px;
+  color: #fffaf4;
+  font-size: clamp(2.8rem, 5.2vw, 5.1rem);
+  font-weight: 650;
+  letter-spacing: var(--marketing-display-tracking);
+  line-height: var(--marketing-display-leading);
+  text-wrap: balance;
+}
+.homepage-why__head > p:last-child {
+  max-width: 680px;
+  margin-top: 23px;
+  color: rgba(255, 255, 255, .9);
+  font-size: clamp(.9rem, 1.15vw, 1.02rem);
+  line-height: 1.72;
+  text-wrap: balance;
+}
+.homepage-why__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 1.6vw, 22px);
+}
+.homepage-why__card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 190px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(24px, 2vw, 30px);
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .15), rgba(255, 245, 235, .1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 18px 40px rgba(116, 42, 4, .08);
+  backdrop-filter: blur(6px);
+  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.homepage-why__card:hover {
+  border-color: rgba(255, 255, 255, .42);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .2), rgba(255, 245, 235, .13));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 24px 48px rgba(116, 42, 4, .14);
+  transform: translateY(-5px);
+}
+.homepage-why__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 13px;
+  color: #fffaf4;
+  background: rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.homepage-why__card h3 {
+  max-width: 260px;
+  margin-top: 38px;
+  color: #fffaf4;
+  font-size: clamp(1.05rem, 1.45vw, 1.28rem);
+  font-weight: 680;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
 .stakeholder-partners { background: #fff; }
 .marketing-mentor-card__content > h3 { font-size: clamp(1.45rem, 2vw, 2rem); font-weight: 650; letter-spacing: -.035em; line-height: 1.12; }
 .marketing-mentor-card__content > p { margin-top: 8px; color: var(--marketing-orange-dark); font-size: .95rem; font-weight: 700; line-height: 1.45; }
@@ -1467,7 +1569,7 @@
   .stakeholder-expertise-grid, .homepage-expertise__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .homepage-expertise__ambient-item--desktop-only { display: none; }
   .stakeholder-service-list { grid-template-columns: repeat(2, 1fr); }
-  .stakeholder-why-grid { grid-template-columns: repeat(2, 1fr); }
+  .homepage-why__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -1513,7 +1615,14 @@
   .marketing-hero--revised .marketing-hero__headline { font-size: clamp(2.75rem, 13vw, 4.6rem); }
   .marketing-hero--revised__visual > .marketing-hero__visual { min-height: 330px; }
   .stakeholder-proof-card { grid-template-columns: 1fr; padding: 24px; }
-  .stakeholder-service-list, .stakeholder-expertise-grid, .stakeholder-why-grid { grid-template-columns: 1fr; }
+  .stakeholder-service-list, .stakeholder-expertise-grid { grid-template-columns: 1fr; }
+  .homepage-why { padding-block: 82px; }
+  .homepage-why__head { margin-bottom: 42px; }
+  .homepage-why__head h2 { font-size: clamp(2.45rem, 13vw, 3.25rem); }
+  .homepage-why__head > p:last-child { margin-top: 19px; font-size: .9rem; }
+  .homepage-why__grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .homepage-why__card { min-height: 160px; padding: 22px; }
+  .homepage-why__card h3 { margin-top: 30px; font-size: 1.12rem; }
   .stakeholder-expertise-grid article { min-height: 150px; }
   .stakeholder-expertise-grid h3 { margin-top: 18px; }
   .homepage-expertise { padding-block: 82px; }

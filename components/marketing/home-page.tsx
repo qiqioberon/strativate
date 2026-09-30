@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowRight, BookOpenText, CheckCircle2, CircleHelp, MessageCircle, Settings2, Trophy } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BadgeCheck, BookOpenText, CircleHelp, Handshake, Heart, MessageCircle, Route, Settings2, Trophy, UsersRound, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
@@ -23,6 +23,7 @@ import { WhoWeAreSection } from './who-we-are-section'
 import { ExpertiseFloatingBackdrop } from './expertise-floating-backdrop'
 
 const homepageExpertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
+const whyChooseIcons = [Zap, UsersRound, BadgeCheck, Heart, Handshake, Route] as const
 
 export function HomePage({
   mentors,
@@ -163,8 +164,29 @@ export function HomePage({
         <div className="marketing-container stakeholder-product-grid marketing-product-library__grid"><div className="marketing-product-library__copy"><p className="marketing-kicker">Digital Products</p><h2 id="digital-products-heading">Learn beyond the session</h2><p className="stakeholder-section__lede">Ready-to-use guides, videos, and templates to help you prepare for business competitions.</p><Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/produk-digital" data-testid="homepage-products-cta">Explore now <ArrowRight aria-hidden="true" size={16} /></Link></div>{digitalProductsEnabled && digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}</div>
       </section>
 
-      <section className="marketing-section stakeholder-section stakeholder-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
-        <div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">Why Choose Strativate</p><h2 id="why-choose-heading">A path that fits<br />{' '}your ambition</h2></div><p className="marketing-section-head__copy">A structured learning ecosystem designed to make high-level preparation feel accessible, practical, and personal.</p></div><div className="stakeholder-why-grid">{whyChooseStrativate.map((item) => <div key={item}><CheckCircle2 aria-hidden="true" size={20} /><span>{item}</span></div>)}</div></div>
+      <section className="marketing-section stakeholder-section homepage-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
+        <div className="marketing-container homepage-why__inner">
+          <div className="homepage-why__head">
+            <p className="marketing-kicker">Why Us</p>
+            <h2 id="why-choose-heading">Why Choose Strativate</h2>
+            <p>We’ve built the perfect ecosystem to turn ambitious students into competition winners</p>
+          </div>
+
+          <div className="homepage-why__grid">
+            {whyChooseStrativate.map((item, index) => {
+              const Icon = whyChooseIcons[index]
+
+              return (
+                <article className="homepage-why__card" key={item}>
+                  <span className="homepage-why__icon" aria-hidden="true">
+                    <Icon size={22} strokeWidth={2} />
+                  </span>
+                  <h3>{item}</h3>
+                </article>
+              )
+            })}
+          </div>
+        </div>
       </section>
 
       <section className="marketing-section marketing-faq-preview stakeholder-section" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section"><div className="marketing-container marketing-faq-preview__grid"><div><CircleHelp aria-hidden="true" size={26} /><p className="marketing-kicker">FAQ</p><h2 id="faq-heading">Start with the<br />{' '}right questions</h2><Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/tanya-jawab">Read all FAQs <ArrowRight aria-hidden="true" size={16} /></Link></div><div className="marketing-faq-list">{faqPreview.slice(0, 3).map((item, index) => <details key={item.question} open={index === 0}><summary><span>0{index + 1}</span>{item.question}<ArrowDownRight aria-hidden="true" size={18} /></summary><p>{item.answer}</p></details>)}</div></div></section>
