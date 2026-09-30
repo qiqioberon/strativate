@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowRight, BookOpenText, CheckCircle2, CircleHelp, MessageCircle, Settings2, Trophy } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpenText, BriefcaseBusiness, Calculator, CheckCircle2, CircleHelp, FilePenLine, Landmark, Megaphone, MessageCircle, Microscope, PenLine, Presentation, Settings2, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
@@ -20,6 +20,8 @@ import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
 import { WhoWeAreSection } from './who-we-are-section'
+
+const homepageExpertiseIcons = [FilePenLine, BriefcaseBusiness, PenLine, Microscope, Megaphone, Calculator, Presentation, Landmark] as const
 
 export function HomePage({
   mentors,
@@ -135,18 +137,22 @@ export function HomePage({
           </div>
 
           <div className="homepage-expertise__grid">
-            {homepageExpertise.map((item, index) => (
-              <article className="homepage-expertise__card" key={item.title}>
-                <div className="homepage-expertise__card-meta" aria-hidden="true">
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <i />
-                </div>
-                <div className="homepage-expertise__card-copy">
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </div>
-              </article>
-            ))}
+            {homepageExpertise.map((item, index) => {
+              const ExpertiseIcon = homepageExpertiseIcons[index]
+
+              return (
+                <article className="homepage-expertise__card" key={item.title}>
+                  <div className="homepage-expertise__icon" aria-hidden="true">
+                    <ExpertiseIcon size={25} strokeWidth={1.8} />
+                  </div>
+                  <ExpertiseIcon className="homepage-expertise__watermark" aria-hidden="true" strokeWidth={1.4} />
+                  <div className="homepage-expertise__card-copy">
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
       </section>
