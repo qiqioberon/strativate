@@ -2438,7 +2438,7 @@
 .homepage-recognition h2 {
   max-width: 1180px;
   margin: 0;
-  color: var(--marketing-ink);
+  color: #fff;
   font-size: clamp(1.8rem, 3vw, 3.1rem);
   font-weight: 720;
   letter-spacing: -.045em;
