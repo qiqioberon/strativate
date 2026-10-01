@@ -2257,7 +2257,10 @@
 }
 .homepage-recognition__statement {
   padding: clamp(64px, 7vw, 104px) 0;
-  background: color-mix(in srgb, var(--marketing-orange) 72%, var(--marketing-yellow));
+  background:
+    radial-gradient(circle at 7% 2%, rgba(185,43,0,.72) 0%, rgba(225,63,0,.48) 25%, transparent 52%),
+    radial-gradient(circle at 86% 31%, rgba(255,207,151,.3) 0%, rgba(255,191,116,.12) 32%, transparent 58%),
+    linear-gradient(154deg, #e84a00 0%, #f65f05 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%);
 }
 .homepage-recognition__inner {
   display: grid;
