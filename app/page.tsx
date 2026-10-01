@@ -6,6 +6,7 @@ import { listHomepageDigitalProducts } from '@/lib/commerce/server'
 import { isDigitalProductsEnabled } from '@/lib/features'
 import { listActiveCompetitionRecognitions } from '@/lib/marketing/competition-recognitions'
 import { listPublishedTestimonials } from '@/lib/marketing/testimonials'
+import { listActiveTrustedPartners } from '@/lib/marketing/trusted-partners'
 import { listHomepageWhoWeArePhotos } from '@/lib/marketing/who-we-are-photos'
 import { listPublishedMentors } from '@/lib/mentor/public-profile'
 
@@ -13,11 +14,12 @@ export const metadata: Metadata = { alternates: { canonical: '/' } }
 
 export default async function Page() {
   const digitalProductsEnabled = isDigitalProductsEnabled()
-  const [mentors, testimonials, digitalProducts, recognitions, whoWeArePhotos] = await Promise.all([
+  const [mentors, testimonials, digitalProducts, recognitions, trustedPartners, whoWeArePhotos] = await Promise.all([
     listPublishedMentors(),
     listPublishedTestimonials(),
     digitalProductsEnabled ? listHomepageDigitalProducts() : Promise.resolve([]),
     listActiveCompetitionRecognitions(),
+    listActiveTrustedPartners(),
     listHomepageWhoWeArePhotos(),
   ])
 
@@ -29,6 +31,7 @@ export default async function Page() {
         digitalProducts={digitalProducts}
         digitalProductsEnabled={digitalProductsEnabled}
         recognitions={recognitions}
+        trustedPartners={trustedPartners}
         whoWeArePhotos={whoWeArePhotos}
       />
     </MarketingShell>

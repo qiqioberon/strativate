@@ -1,6 +1,6 @@
 # Strativate asset and content status registry
 
-Current as of 21 September 2026. Runtime asset metadata lives in
+Current as of 2 October 2026. Runtime asset metadata lives in
 `lib/content/asset-registry.ts`; public mentor profile/content runtime data is
 owned by the database-backed mentor public-profile domain introduced by
 `202609170001_mentor_public_profiles_expertise.sql`. The full source receipt is in
@@ -35,6 +35,7 @@ owned by the database-backed mentor public-profile domain introduced by
 | Testimonials and portraits | Missing | Not published | Supply approved quote, identity, context and consent |
 | Institution logos | Missing / intentionally omitted | Text-only social-proof wording | Supply official files and approved usage language |
 | Competition recognition logos | Admin-ready; no logos supplied | `public.competition_recognitions` owns approved names, ordering, and visibility; logo files are admin-managed in `marketing-editorial/recognition-logos/`. The homepage keeps the approved recognition statement visible when no active logos exist. | Add only approved official logo files and competition names through Admin → Competition Recognition; no fake assets are seeded |
+| Trusted partner logos | Admin-ready; no logos supplied | `public.trusted_partners` independently owns approved organization names, ordering, and visibility; logo files are admin-managed in `marketing-editorial/partner-logos/`. The homepage partner gallery is omitted when no active partner records exist. | Add only confirmed partner organizations and approved official logo files through Admin → Trusted Partners; apply `202610020001_trusted_partners.sql` before deploying the feature |
 | Contact/social | Ready | Phone, WhatsApp, email, canonical site, Instagram | Keep current source master synchronized |
 | About/FAQ | Ready | Source-backed public copy | Add policy answers only after policy approval |
 | Legal documents | Missing | No invented legal copy or routes | Stakeholder/legal counsel must supply final text |

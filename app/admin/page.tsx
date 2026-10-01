@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   FileBarChart2,
+  Handshake,
   Images,
   LayoutDashboard,
   MessageSquareQuote,
@@ -35,6 +36,7 @@ import { MentorExpertiseManagement } from '@/components/admin/mentor-expertise-m
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { MenteeManagement } from '@/components/admin/people'
 import { TestimonialManagement } from '@/components/admin/testimonial-management'
+import { TrustedPartnerManagement } from '@/components/admin/trusted-partner-management'
 import { WhoWeArePhotoManagement } from '@/components/admin/who-we-are-photo-management'
 import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
 import { AdminMentoringSessionWorkspace } from '@/components/admin/admin-mentoring-session-workspace'
@@ -68,6 +70,7 @@ type Section =
   | 'Publications'
   | 'Competitions'
   | 'Competition Recognition'
+  | 'Trusted Partners'
   | 'Who We Are Photos'
   | 'Reports'
   | 'Mentor Expertise'
@@ -115,6 +118,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Publications', label: 'Publications', icon: Newspaper },
       { id: 'Competitions', label: 'Competitions', icon: Trophy },
       { id: 'Competition Recognition', label: 'Competition Recognition', icon: Trophy },
+      { id: 'Trusted Partners', label: 'Trusted Partners', icon: Handshake },
       { id: 'Who We Are Photos', label: 'Who We Are Photos', icon: Images },
     ],
   },
@@ -182,6 +186,7 @@ export default function AdminDashboard() {
           {section === 'Publications' ? <EditorialContentManagement initialKind="publications"/> : null}
           {section === 'Competitions' ? <EditorialContentManagement initialKind="competitions"/> : null}
           {section === 'Competition Recognition' ? <CompetitionRecognitionManagement/> : null}
+          {section === 'Trusted Partners' ? <TrustedPartnerManagement/> : null}
           {section === 'Who We Are Photos' ? <WhoWeArePhotoManagement/> : null}
           {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
