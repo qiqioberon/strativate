@@ -7,6 +7,7 @@ import { socialProof } from '@/lib/content/brand'
 import { bigClassPlaceholder, faqPreview, homepageExpertise, whyChooseStrativate } from '@/lib/content/marketing-content'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
+import type { TrustedPartnerView } from '@/lib/marketing/trusted-partners'
 import type { HomepageWhoWeArePhotoView } from '@/lib/marketing/who-we-are-photos'
 import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import type { PublicMentor } from '@/lib/mentor/public-profile-types'
@@ -19,6 +20,7 @@ import { HeroShapeGrid } from './hero-shape-grid'
 import { MentorMarquee } from './mentor-marquee'
 import { ProgramCard, type MarketingProgram } from './program-card'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
+import { TrustedPartnersSection } from './trusted-partners-section'
 import { WhoWeAreSection } from './who-we-are-section'
 import { ExpertiseFloatingBackdrop } from './expertise-floating-backdrop'
 
@@ -31,6 +33,7 @@ export function HomePage({
   digitalProducts,
   digitalProductsEnabled,
   recognitions,
+  trustedPartners,
   whoWeArePhotos,
 }: {
   mentors: PublicMentor[]
@@ -38,6 +41,7 @@ export function HomePage({
   digitalProducts: PublicDigitalProduct[]
   digitalProductsEnabled: boolean
   recognitions: CompetitionRecognitionView[]
+  trustedPartners: TrustedPartnerView[]
   whoWeArePhotos: HomepageWhoWeArePhotoView[]
 }) {
   const homePrograms: MarketingProgram[] = mentoringProgramEditorial.map((program, index) => ({
@@ -188,6 +192,8 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      <TrustedPartnersSection partners={trustedPartners} />
 
       <section className="marketing-section marketing-faq-preview stakeholder-section" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section"><div className="marketing-container marketing-faq-preview__grid"><div><CircleHelp aria-hidden="true" size={26} /><p className="marketing-kicker">FAQ</p><h2 id="faq-heading">Start with the<br />{' '}right questions</h2><Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/tanya-jawab">Read all FAQs <ArrowRight aria-hidden="true" size={16} /></Link></div><div className="marketing-faq-list">{faqPreview.slice(0, 3).map((item, index) => <details key={item.question} open={index === 0}><summary><span>0{index + 1}</span>{item.question}<ArrowDownRight aria-hidden="true" size={18} /></summary><p>{item.answer}</p></details>)}</div></div></section>
     </main>

@@ -14,6 +14,7 @@ export type MarketingTestimonial = { id:string; slug:string; competition_name:st
 export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; category:string|null; cover_path:string|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type TrustedPartner = { id:string; organization_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; created_at:string; updated_at:string }
@@ -81,6 +82,7 @@ export type Database = {
       publications: Table<Publication, Partial<Publication> & Pick<Publication,"slug"|"title"|"excerpt"|"body">>
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
+      trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
       commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
@@ -142,6 +144,7 @@ export type Database = {
       reorder_marketing_hero_posters: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_marketing_testimonials: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
+      reorder_trusted_partners: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }
