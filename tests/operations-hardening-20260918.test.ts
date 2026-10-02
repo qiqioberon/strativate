@@ -1,34 +1,16 @@
 import assert from 'node:assert/strict'
-import { createHmac } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
-import { verifyZoomWebhook, zoomValidationToken } from '../lib/zoom/webhook'
-
 const read=(path:string)=>readFileSync(path,'utf8')
 
-test('Zoom webhook signature accepts authentic recent payload and rejects forged payload',()=>{
- process.env.ZOOM_WEBHOOK_SECRET_TOKEN='unit-test-secret'
- const raw=JSON.stringify({event:'meeting.started',event_ts:Date.now()})
- const timestamp=Math.floor(Date.now()/1000).toString()
- const signature='v0='+createHmac('sha256','unit-test-secret').update('v0:'+timestamp+':'+raw).digest('hex')
- assert.equal(verifyZoomWebhook(raw,timestamp,signature),true)
- assert.equal(verifyZoomWebhook(raw+'x',timestamp,signature),false)
- assert.equal(verifyZoomWebhook(raw,(Math.floor(Date.now()/1000)-1000).toString(),signature),false)
- assert.equal(zoomValidationToken('plain'),createHmac('sha256','unit-test-secret').update('plain').digest('hex'))
-})
-
-test('Zoom provider is server-only, uses account credentials, cloud recording, and idempotent claim before create',()=>{
- const source=read('lib/zoom/server.ts')
- assert.match(source,/import 'server-only'/)
- assert.match(source,/grant_type:'account_credentials'/)
- assert.match(source,/ZOOM_ACCOUNT_ID/)
- assert.match(source,/ZOOM_CLIENT_SECRET/)
- assert.doesNotMatch(source,/NEXT_PUBLIC_ZOOM/)
- assert.match(source,/auto_recording:autoRecording/)
- const claim=source.indexOf("service_claim_zoom_meeting_creation")
- const create=source.indexOf("/users/")
- assert.ok(claim>=0&&create>claim,'DB idempotency claim must happen before Zoom create call')
+test('managed Zoom rooms replace API provisioning in mentoring operations',()=>{
+ const source=read('lib/zoom-rooms/server.ts')
+ const migration=read('supabase/migrations/202610020002_admin_managed_zoom_rooms.sql')
+ assert.match(source,/admin_get_mentoring_zoom_room_pool/)
+ assert.match(source,/reconcileManagedZoomRoomCalendars/)
+ assert.match(migration,/create table public\.mentoring_zoom_rooms/)
+ assert.match(migration,/mentoring_zoom_room_allocations_no_overlap/)
 })
 
 test('Google Calendar creates events without conferencing and preserves the Zoom provider URL',()=>{

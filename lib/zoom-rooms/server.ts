@@ -56,7 +56,7 @@ export function availableManagedZoomRooms(
 }
 
 export async function reconcileManagedZoomRoomCalendars(roomId: string, adminId: string) {
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
   const { data, error } = await admin
     .from('mentoring_zoom_room_allocations')
     .select('private_session_id,intensive_session_id')

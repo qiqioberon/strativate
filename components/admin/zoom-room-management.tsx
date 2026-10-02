@@ -64,7 +64,7 @@ export function ZoomRoomManagement(){
 
  return <div className="zoom-room-management">
   <div className="role-page-title zoom-room-title"><div><p className="kicker">Operasional</p><h2>Zoom</h2><p>Kelola link Zoom tetap Strativate yang digunakan untuk sesi mentoring.</p></div><button type="button" className="button button-primary" onClick={add}><Plus aria-hidden="true"/>Add Zoom Link</button></div>
-  <section className="zoom-room-capacity role-card"><div><Video aria-hidden="true"/><div><span>Kapasitas sesi bersamaan</span><strong>{rooms.filter(room=>room.is_active).length} Zoom room aktif</strong><p>Kapasitas otomatis mengikuti jumlah room aktif. Satu room hanya dapat dipakai satu sesi pada interval yang sama.</p></div></section>
+  <section className="zoom-room-capacity role-card"><div><Video aria-hidden="true"/><div><span>Kapasitas sesi bersamaan</span><strong>{rooms.filter(room=>room.is_active).length} Zoom room aktif</strong><p>Kapasitas otomatis mengikuti jumlah room aktif. Satu room hanya dapat dipakai satu sesi pada interval yang sama.</p></div></div></section>
   {error?<p className="form-error" role="alert">{error}</p>:null}{message?<p className="form-success" role="status">{message}</p>:null}
   {loading?<section className="role-card"><p className="muted">Memuat Zoom room…</p></section>:rooms.length?<div className="zoom-room-grid">{rooms.map(room=><article className="role-card zoom-room-card" key={room.id}>
    <div className="zoom-room-card__head"><div className="zoom-room-card__icon"><Video aria-hidden="true"/></div><div><h3>{room.name}</h3><span className={`ops-status ${room.is_active?'ops-status--success':'ops-status--neutral'}`}>{room.is_active?'Active':'Inactive'}</span></div></div>
