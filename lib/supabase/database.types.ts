@@ -58,6 +58,8 @@ export type CommerceCartLinkItem = { cart_link_id:string; commerce_item_id:strin
 export type PrivateMentoringEnrollment = { id:string; mentee_id:string; order_item_id:string; package_id:string; purchased_sessions:number; learning_path_id:string|null; competition_category_id:string|null; competition_name?:string|null; competition_updated_at?:string|null; status:'active'|'completed'; created_at:string; updated_at:string }
 export type PrivateMentoringSessionStatus = 'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled'
 export type PrivateMentoringSession = { id:string; enrollment_id:string; session_number:number; session_focus_id:string|null; mentor_id:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; status:PrivateMentoringSessionStatus; created_at:string; updated_at:string }
+export type MentoringZoomRoom = { id:string; name:string; meeting_url:string; is_active:boolean; sort_order:number; created_at:string; updated_at:string }
+export type MentoringZoomRoomAllocation = { id:string; zoom_room_id:string; private_session_id:string|null; intensive_session_id:string|null; starts_at:string; ends_at:string; released_at:string|null; created_at:string; updated_at:string }
 export type CartLinkMentee = { user_id:string; email:string; display_name:string|null }
 export type PurchasableCommerceItem = { commerce_item_id:string; item_kind:string; name:string; slug:string; price_amount:number }
 export type AdminCartLinkView = { id:string; mentee_id:string; mentee_email:string; status:string; item_count:number; created_at:string; claimed_at:string|null }
@@ -113,6 +115,8 @@ export type Database = {
       commerce_cart_link_items: Table<CommerceCartLinkItem, Partial<CommerceCartLinkItem> & Pick<CommerceCartLinkItem,'cart_link_id'|'commerce_item_id'>>
       private_mentoring_enrollments: Table<PrivateMentoringEnrollment, Partial<PrivateMentoringEnrollment> & Pick<PrivateMentoringEnrollment,'mentee_id'|'order_item_id'|'package_id'|'purchased_sessions'>>
       private_mentoring_sessions: Table<PrivateMentoringSession, Partial<PrivateMentoringSession> & Pick<PrivateMentoringSession,'enrollment_id'|'session_number'>>
+      mentoring_zoom_rooms: Table<MentoringZoomRoom, Partial<MentoringZoomRoom> & Pick<MentoringZoomRoom,'name'|'meeting_url'>>
+      mentoring_zoom_room_allocations: Table<MentoringZoomRoomAllocation, Partial<MentoringZoomRoomAllocation> & Pick<MentoringZoomRoomAllocation,'zoom_room_id'|'starts_at'|'ends_at'>>
       notifications: Table<Notification, Partial<Notification> & Pick<Notification,'recipient_role'|'type'|'title'|'message'|'idempotency_key'>>
       operational_invalidation_versions: Table<OperationalInvalidationVersion>
     }
@@ -169,7 +173,14 @@ export type Database = {
       list_admin_cart_links: { Args:Record<PropertyKey,never>; Returns:AdminCartLinkView[] }
       claim_commerce_cart_link: { Args:{p_token_hash:string}; Returns:string }
       set_private_mentoring_session_focus: { Args:{p_session_id:string;p_focus_id:string}; Returns:PrivateMentoringSession }
-      admin_schedule_private_mentoring_session: { Args:{p_session_id:string;p_mentor_id:string;p_scheduled_start_at:string}; Returns:PrivateMentoringSession }
+      admin_schedule_private_mentoring_session: { Args:{p_session_id:string;p_mentor_id:string;p_scheduled_start_at:string;p_zoom_room_id?:string|null}; Returns:PrivateMentoringSession }
+      admin_schedule_intensive_mentoring_session: { Args:{p_session_id:string;p_mentor_id:string;p_scheduled_start_at:string;p_zoom_room_id?:string|null}; Returns:Json }
+      admin_list_mentoring_zoom_rooms: { Args:Record<PropertyKey,never>; Returns:(MentoringZoomRoom&{current_usage_count:number;upcoming_usage_count:number;next_usage_at:string|null})[] }
+      admin_upsert_mentoring_zoom_room: { Args:{p_id:string|null;p_name:string;p_meeting_url:string;p_is_active?:boolean;p_sort_order?:number}; Returns:Json }
+      admin_delete_mentoring_zoom_room: { Args:{p_id:string}; Returns:string }
+      admin_get_mentoring_zoom_room_pool: { Args:{p_from:string;p_to:string;p_private_session_id?:string|null;p_intensive_session_id?:string|null}; Returns:Json }
+      admin_assign_mentoring_zoom_room: { Args:{p_session_kind:'private'|'intensive';p_session_id:string;p_zoom_room_id:string}; Returns:Json }
+      admin_get_mentoring_meeting_state: { Args:{p_session_kind:'private'|'intensive';p_session_id:string}; Returns:Json }
       admin_cancel_private_mentoring_session: { Args:{p_session_id:string}; Returns:PrivateMentoringSession }
       admin_set_private_mentoring_session_status: { Args:{p_session_id:string;p_status:string}; Returns:PrivateMentoringSession }
       list_my_private_mentoring_sessions: { Args:Record<PropertyKey,never>; Returns:PrivateMentoringSessionViewRow[] }

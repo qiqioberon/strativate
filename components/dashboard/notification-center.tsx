@@ -27,9 +27,9 @@ function typeLabel(type:string){
 }
 
 function safeMessage(item:Notification){
-  if(item.type==='zoom_failed')return'Zoom meeting belum berhasil disinkronkan. Coba sinkronkan ulang beberapa saat lagi.'
+  if(item.type==='zoom_failed')return'Notifikasi dari integrasi Zoom lama. Periksa link meeting sesi yang berlaku saat ini.'
   if(item.type==='calendar_failed')return'Google Calendar belum berhasil disinkronkan. Periksa koneksi kalender lalu coba lagi.'
-  if(item.type==='recording_failed')return'Cloud recording Zoom tidak tersedia atau memerlukan perhatian. Periksa status Zoom sebelum sesi.'
+  if(item.type==='recording_failed')return'Notifikasi recording dari integrasi Zoom lama. Pengelolaan recording kini berada di akun Zoom Strativate.'
   return item.message
 }
 

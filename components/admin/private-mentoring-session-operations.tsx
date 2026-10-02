@@ -4,6 +4,7 @@ import { CheckCircle2, ExternalLink, Pencil, RefreshCw, RotateCcw, Save } from '
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
+import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { humanizeProviderError, humanizeSyncStatus } from '@/lib/operations/provider-errors'
 import { createClient } from '@/lib/supabase/client'
 
@@ -12,36 +13,20 @@ type Category={id:string;name:string}
 type MeetingState={
   sessionId:string
   status:string
-  meetingProvider:string|null
-  providerMeetingId:string|null
-  providerMeetingUrl:string|null
+  assignedZoomRoomId:string|null
+  assignedZoomRoomName:string|null
+  managedMeetingUrl:string|null
   manualMeetingUrl:string|null
   effectiveMeetingUrl:string|null
-  providerSyncStatus:string
-  providerSyncError:string|null
   calendarSyncStatus:string
   calendarSyncError:string|null
-  recordingStatus:string
-  recordingError:string|null
+  availableZoomRooms:Array<{id:string;name:string;meetingUrl:string}>
 }
 type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 
-function providerLabel(state:MeetingState){
-  if(state.status==='completed'||state.status==='cancelled')return'Tidak aktif'
-  return state.meetingProvider==='zoom'?'Zoom':'Zoom · menunggu sinkronisasi'
-}
-function recordingLabel(state:MeetingState){
-  if(state.recordingStatus==='expected')return'Recording otomatis diminta'
-  if(state.recordingStatus==='processing')return'Recording sedang diproses'
-  if(state.recordingStatus==='available')return'Recording tersedia'
-  if(state.recordingStatus==='unavailable')return'Recording tidak tersedia'
-  if(state.recordingStatus==='failed')return'Recording gagal'
-  if(state.recordingStatus==='not_applicable')return'Tidak berlaku'
-  return humanizeSyncStatus(state.recordingStatus)
-}
 function effectiveMeetingLabel(state:MeetingState){
   if(!state.effectiveMeetingUrl)return'Belum tersedia'
-  return state.manualMeetingUrl?'Manual override':'Zoom'
+  return state.manualMeetingUrl?'Manual override':'Zoom terkelola'
 }
 
 export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
@@ -120,6 +105,8 @@ export function AdminSessionOperations({
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
   const[state,setState]=useState<MeetingState|null>(null)
   const[manualUrl,setManualUrl]=useState('')
+  const[zoomRoomId,setZoomRoomId]=useState('')
+  const[editingRoom,setEditingRoom]=useState(false)
   const[editingOverride,setEditingOverride]=useState(false)
   const[busy,setBusy]=useState('')
   const[message,setMessage]=useState('')
@@ -129,13 +116,27 @@ export function AdminSessionOperations({
     try{
       const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{cache:'no-store'})
       const body=await response.json() as MeetingState&{error?:string}
-      if(response.ok){setState(body);setManualUrl(body.manualMeetingUrl??'');return}
+      if(response.ok){setState(body);setManualUrl(body.manualMeetingUrl??'');setZoomRoomId(body.assignedZoomRoomId??'');return}
       setMessage(body.error||'Status meeting belum dapat dimuat.')
     }catch{
       setMessage('Status meeting belum dapat dimuat.')
     }
   },[mentoringKind,sessionId])
   useEffect(()=>{void load()},[load])
+  useOperationalInvalidation(['provider','calendar'],()=>void load())
+
+  async function assignRoom(){
+    if(!zoomRoomId)return
+    setBusy('room');setMessage('')
+    try{
+      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({zoomRoomId})})
+      const body=await response.json() as MeetingState&{error?:string}
+      if(!response.ok)throw new Error(body.error||'Zoom room belum dapat diganti.')
+      setState(body);setEditingRoom(false);setMessage(body.calendarSyncStatus==='failed'?'Zoom room diperbarui, tetapi Google Calendar perlu disinkronkan ulang.':'Zoom room dan Google Calendar diperbarui.')
+      await onChanged()
+    }catch(error){setMessage(error instanceof Error?error.message:'Zoom room belum dapat diganti.')}
+    finally{setBusy('')}
+  }
 
   async function saveOverride(){
     const trimmed=manualUrl.trim()
@@ -145,7 +146,7 @@ export function AdminSessionOperations({
     const body=await response.json() as MeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Meeting override belum dapat disimpan.');return}
-    setState(body);setManualUrl(body.manualMeetingUrl??'');setEditingOverride(false);setMessage('Manual override aktif dan Calendar telah direconcile menggunakan link efektif.')
+    setState(body);setManualUrl(body.manualMeetingUrl??'');setEditingOverride(false);setMessage(body.calendarSyncStatus==='failed'?'Manual override aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Manual override aktif. Calendar menggunakan link efektif; reservasi Zoom room tetap berlaku.')
     await onChanged()
   }
 
@@ -155,7 +156,7 @@ export function AdminSessionOperations({
     const body=await response.json() as MeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Link Zoom belum dapat dipulihkan.');return}
-    setState(body);setManualUrl('');setEditingOverride(false);setMessage('Manual override dihapus. Link efektif kembali menggunakan Zoom dan Calendar sudah direconcile.')
+    setState(body);setManualUrl('');setEditingOverride(false);setMessage(body.calendarSyncStatus==='failed'?'Link Zoom terkelola aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Link efektif kembali menggunakan Zoom room terkelola dan Calendar sudah diperbarui.')
     await onChanged()
   }
 
@@ -164,8 +165,8 @@ export function AdminSessionOperations({
     const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/sync`,{method:'POST'})
     const body=await response.json() as{error?:string;status?:string}
     setBusy('')
-    if(!response.ok&&response.status!==202){setMessage(body.error||'Zoom dan Calendar belum berhasil disinkronkan.');return}
-    setMessage(body.status==='provider_pending'?'Zoom sedang diproses. Manual override, bila aktif, tetap dipertahankan sebagai link efektif.':'Zoom dan Google Calendar sudah direconcile tanpa mengubah manual override.')
+    if(!response.ok&&response.status!==202){setMessage(body.error||'Google Calendar belum berhasil disinkronkan.');return}
+    setMessage(body.status==='failed'?'Google Calendar masih perlu perhatian. Coba lagi setelah koneksi diperbaiki.':'Google Calendar sudah diperbarui menggunakan link meeting efektif.')
     await load();await onChanged()
   }
 
@@ -177,23 +178,18 @@ export function AdminSessionOperations({
     if(confirmRef.current?.open)confirmRef.current.close()
     setMessage(next==='completed'?'Sesi ditandai selesai.':mentoringKind==='private'?'Tanda selesai dibatalkan dan enrollment dihitung ulang.':'Tanda selesai dibatalkan; engagement tetap aktif.')
     await onChanged()
+    await load()
   }
-
-  const zoomError=state?.providerSyncError?humanizeProviderError('zoom',state.providerSyncError):null
   const calendarError=state?.calendarSyncError?humanizeProviderError('calendar',state.calendarSyncError):null
-  const recordingError=state?.recordingError?humanizeProviderError('recording',state.recordingError):null
 
   return <section className="meeting-override admin-session-operations" data-testid="admin-session-operations">
-    <div className="ops-section-heading"><div><p className="kicker">Operasi sesi</p><h4>Meeting, recording & completion</h4><p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p></div></div>
+    <div className="ops-section-heading"><div><p className="kicker">Operasi sesi</p><h4>Zoom room, Calendar & completion</h4><p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p></div></div>
 
     {showSessionReference?<div className="session-reference-row"><div><span>Session ID</span><strong>{sessionId}</strong></div><CopyTextButton value={sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>:null}
 
     {state?<div className="provider-status-grid">
-      <div><span>Meeting provider</span><strong>{providerLabel(state)}</strong></div>
-      <div><span>Zoom meeting ID</span><strong>{state.providerMeetingId??'Belum tersedia'}</strong></div>
-      <div><span>Zoom sync</span><strong>{humanizeSyncStatus(state.providerSyncStatus)}</strong>{zoomError?<small role="status">{zoomError}</small>:null}</div>
+      <div><span>Zoom room</span><strong>{state.assignedZoomRoomName??(state.manualMeetingUrl?'Link manual lama':'Belum ditetapkan')}</strong></div>
       <div><span>Calendar sync</span><strong>{humanizeSyncStatus(state.calendarSyncStatus)}</strong>{calendarError?<small role="status">{calendarError}</small>:null}</div>
-      <div><span>Recording</span><strong>{recordingLabel(state)}</strong>{recordingError?<small role="status">{recordingError}</small>:null}</div>
       <div><span>Session status</span><strong>{status==='scheduled'?'Terjadwal':status==='completed'?'Selesai':status==='cancelled'?'Dibatalkan':status.replaceAll('_',' ')}</strong></div>
     </div>:<p className="muted">Memuat status meeting…</p>}
 
@@ -202,10 +198,12 @@ export function AdminSessionOperations({
     {status==='scheduled'?<div className="provider-action-stack">
       <div className="button-row">
         {!editingOverride?<button className="button button-outline" type="button" onClick={()=>{setManualUrl(state?.manualMeetingUrl??'');setEditingOverride(true)}}><Pencil aria-hidden="true"/>Override link meeting</button>:null}
-        {state?.manualMeetingUrl?<button className="button button-outline" type="button" disabled={busy==='restore'} onClick={()=>void restoreZoom()}><RotateCcw aria-hidden="true"/>Kembalikan ke Zoom</button>:null}
-        <button className="button button-outline" type="button" disabled={busy==='sync'} onClick={()=>void retrySync()}><RefreshCw aria-hidden="true"/>Sinkronkan ulang Zoom + Kalender</button>
+        <button className="button button-outline" type="button" onClick={()=>{setZoomRoomId(state?.assignedZoomRoomId??'');setEditingRoom(value=>!value)}}><Pencil aria-hidden="true"/>Ganti Zoom room</button>
+        {state?.manualMeetingUrl&&state.assignedZoomRoomId?<button className="button button-outline" type="button" disabled={busy==='restore'} onClick={()=>void restoreZoom()}><RotateCcw aria-hidden="true"/>Kembali ke link Zoom terkelola</button>:null}
+        <button className="button button-outline" type="button" disabled={busy==='sync'} onClick={()=>void retrySync()}><RefreshCw aria-hidden="true"/>Sinkronkan ulang Kalender</button>
       </div>
-      {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override hanya mengganti link efektif dan Calendar event. Canonical Zoom meeting tidak dihapus.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}>Batal</button></div></div>:null}
+      {editingRoom?<div className="override-editor"><label className="ops-field"><span>Zoom room tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Pilih Zoom room</option>{state?.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select></label><p className="muted">Room lain yang sedang dipakai pada jam sesi ini tidak ditampilkan.</p><div className="button-row"><button className="button button-primary" type="button" disabled={!zoomRoomId||busy==='room'} onClick={()=>void assignRoom()}><Save aria-hidden="true"/>Simpan Zoom room</button><button className="button button-outline" type="button" onClick={()=>setEditingRoom(false)}>Batal</button></div></div>:null}
+      {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override mengubah link efektif di Calendar. Zoom room tetap terreservasi untuk sesi ini.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}>Batal</button></div></div>:null}
       {state?.manualMeetingUrl?<p className="calendar-warning" role="status">Manual override sedang aktif. Retry sync akan mempertahankan override sebagai meeting link efektif.</p>:null}
     </div>:null}
 

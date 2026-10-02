@@ -30,11 +30,6 @@ function topicStatus(status:PrivateMentoringSessionView['topicStatus']){
   if(status==='confirmed')return'Topik dikonfirmasi'
   return'Topik belum diajukan'
 }
-function meetingProvider(url:string|null){
-  if(!url)return'Belum tersedia'
-  if(/zoom\./i.test(url))return'Zoom'
-  return'Manual override'
-}
 function supportHref(session:PrivateMentoringSessionView){
   const when=session.scheduledStartAt
     ? new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:session.mentorTimezone||undefined}).format(new Date(session.scheduledStartAt))
@@ -247,7 +242,7 @@ export function PrivateMentoringSessions({
           <div><span>Mentor</span><strong>{selected.mentorName||selected.primaryMentorName||'Menunggu admin'}</strong></div>
           <div><span>Jadwal</span><strong>{scheduleText(selected)}</strong></div>
           <div><span>Timezone</span><strong>{selected.mentorTimezone||'Timezone lokal'}</strong></div>
-          <div><span>Meeting provider</span><strong>{meetingProvider(selected.meetingUrl)}</strong></div>
+          <div><span>Link meeting</span><strong>{selected.status==='scheduled'&&selected.meetingUrl?'Tersedia':'Belum tersedia'}</strong></div>
         </dl>
         <section className="ops-dialog__section"><div className="section-heading-with-action"><div><h3>Topik / scope sesi</h3><p>{topicStatus(selected.topicStatus)}</p></div>{canEditTopic(selected)&&!editingTopic?<button className="button button-outline button-compact" type="button" onClick={()=>setEditingTopic(true)}><Pencil aria-hidden="true"/>Edit topik sesi</button>:null}</div>
           {!editingTopic?<div className="topic-readonly-grid"><div><span>Scope final</span><strong>{selected.resolvedTopic||'Belum dikonfirmasi admin'}</strong></div><div><span>Permintaan kamu</span><strong>{selected.menteeTopicRequest||'Belum diajukan'}</strong></div></div>:<div className="ops-form-stack topic-edit-form"><label className="ops-field"><span>Apa yang ingin kamu bahas di sesi ini?</span><textarea rows={4} disabled={busyId===selected.sessionId} value={draftFor(selected).topic} onChange={event=>patchDraft(selected,{topic:event.target.value})} placeholder="Ceritakan tujuan, masalah, atau scope yang ingin dibahas."/></label><label className="ops-field"><span>Kategori fokus (opsional)</span><select disabled={busyId===selected.sessionId} value={draftFor(selected).focusId} onChange={event=>patchDraft(selected,{focusId:event.target.value})}><option value="">Biarkan admin membantu mengelompokkan</option>{sessionFocuses.map(focus=><option value={focus.id} key={focus.id}>{focus.name}</option>)}</select></label><div className="button-row"><button className="button button-primary" type="button" disabled={busyId===selected.sessionId} onClick={()=>void submitTopic(selected)}><Save aria-hidden="true"/>{selected.topicStatus==='confirmed'?'Ajukan perubahan topik':'Kirim untuk review'}</button><button className="button button-outline" type="button" onClick={()=>setEditingTopic(false)}>Batal</button></div></div>}

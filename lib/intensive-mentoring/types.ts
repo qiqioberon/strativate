@@ -20,7 +20,7 @@ export type IntensiveSessionView={
  sessionId:string;sessionNumber:number;durationMinutes:number;status:'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled';
  focusId:string|null;focusName:string|null;menteeTopicRequest:string|null;topicStatus:'needs_input'|'pending_review'|'confirmed';resolvedTopic:string|null;
  mentorId:string|null;mentorName:string|null;scheduledStartAt:string|null;scheduledEndAt:string|null;meetingUrl:string|null;
- providerSyncStatus?:string;googleSyncStatus:string;recordingStatus:string;creationSource:string;creationReason?:string|null
+ zoomRoomId?:string|null;zoomRoomName?:string|null;googleSyncStatus:string;creationSource:string;creationReason?:string|null
 }
 export type IntensiveEngagementView={
  engagementId:string;baseEntitlementId:string;baseKind:'package'|'bundle'|'custom_offer';programName:string;status:'active'|'completed'|'cancelled';

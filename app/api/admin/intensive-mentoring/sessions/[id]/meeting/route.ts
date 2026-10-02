@@ -1,17 +1,41 @@
 import {NextResponse} from 'next/server'
-import type {SupabaseClient} from '@supabase/supabase-js'
+
 import {requireAccount} from '@/lib/auth/server'
 import {setIntensiveManualMeetingUrl,syncIntensiveMentoringSession} from '@/lib/intensive-mentoring/calendar-server'
-import {humanizeProviderError} from '@/lib/operations/provider-errors'
-import {createAdminClient} from '@/lib/supabase/admin'
+import {createClient} from '@/lib/supabase/server'
 
-async function requireAdmin(){const account=await requireAccount();return account.profile.role==='admin'?account:null}
-async function state(sessionId:string){
- const db=createAdminClient() as unknown as SupabaseClient
- const{data,error}=await db.from('intensive_mentoring_session_calendar_integrations').select('session_id,meeting_provider,provider_meeting_id,provider_meeting_url,manual_meeting_url,provider_sync_status,provider_sync_error,recording_status,recording_error,sync_status,sync_error').eq('session_id',sessionId).maybeSingle()
- if(error)throw new Error('Meeting state belum dapat dimuat.')
- const session=await db.from('intensive_mentoring_sessions').select('status').eq('id',sessionId).maybeSingle(),status=session.data?.status??'unknown',historical=status==='completed'||status==='cancelled'
- return{sessionId,status,meetingProvider:historical?null:(data?.meeting_provider??null),providerMeetingId:data?.provider_meeting_id??null,providerMeetingUrl:historical?null:(data?.provider_meeting_url??null),manualMeetingUrl:historical?null:(data?.manual_meeting_url??null),effectiveMeetingUrl:historical?null:(data?.manual_meeting_url??data?.provider_meeting_url??null),providerSyncStatus:data?.provider_sync_status??'pending',providerSyncError:data?.provider_sync_error?humanizeProviderError('zoom',data.provider_sync_error):null,calendarSyncStatus:data?.sync_status??'pending',calendarSyncError:data?.sync_error?humanizeProviderError('calendar',data.sync_error):null,recordingStatus:data?.recording_status??'expected',recordingError:data?.recording_error?humanizeProviderError('recording',data.recording_error):null}
+type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
+
+async function meetingState(sessionId:string){
+ const supabase=await createClient()
+ const{data,error}=await(supabase as unknown as RpcClient).rpc('admin_get_mentoring_meeting_state',{p_session_kind:'intensive',p_session_id:sessionId})
+ if(error||!data)throw new Error(error?.message||'Status meeting belum dapat dimuat.')
+ return data
 }
-export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){if(!await requireAdmin())return NextResponse.json({error:'Forbidden'},{status:403});const{id}=await params;try{return NextResponse.json(await state(id))}catch(error){console.error('Admin Intensive meeting state failed',{sessionId:id,error});return NextResponse.json({error:'Status meeting belum dapat dimuat.'},{status:400})}}
-export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}){const account=await requireAdmin();if(!account)return NextResponse.json({error:'Forbidden'},{status:403});const{id}=await params;try{const current=await state(id);if(current.status==='completed'||current.status==='cancelled')return NextResponse.json({error:'Sesi historis tidak dapat mengubah meeting link aktif.'},{status:409});const body=await request.json() as{url?:unknown};if(body.url!==null&&typeof body.url!=='string')return NextResponse.json({error:'Meeting URL tidak valid.'},{status:400});await setIntensiveManualMeetingUrl(id,body.url as string|null);await syncIntensiveMentoringSession(id,account.user.id);return NextResponse.json(await state(id))}catch(error){console.error('Admin Intensive meeting override failed',{sessionId:id,error});return NextResponse.json({error:humanizeProviderError('meeting',error)},{status:400})}}
+
+export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){
+ const account=await requireAccount();if(account.profile.role!=='admin')return NextResponse.json({error:'Forbidden'},{status:403})
+ const{id}=await params
+ try{return NextResponse.json(await meetingState(id))}catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Status meeting belum dapat dimuat.'},{status:400})}
+}
+
+export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}){
+ const account=await requireAccount();if(account.profile.role!=='admin')return NextResponse.json({error:'Forbidden'},{status:403})
+ const{id}=await params
+ try{
+  const body=await request.json() as{url?:unknown;zoomRoomId?:unknown}
+  const changingRoom=typeof body.zoomRoomId==='string',changingUrl=body.url===null||typeof body.url==='string'
+  if(changingRoom===changingUrl)return NextResponse.json({error:'Pilih satu perubahan meeting yang valid.'},{status:400})
+  const current=await meetingState(id) as{status:string;assignedZoomRoomId:string|null}
+  if(current.status==='completed'||current.status==='cancelled')return NextResponse.json({error:'Sesi historis tidak dapat mengubah meeting link aktif.'},{status:409})
+  if(changingRoom){
+   const supabase=await createClient(),result=await(supabase as unknown as RpcClient).rpc('admin_assign_mentoring_zoom_room',{p_session_kind:'intensive',p_session_id:id,p_zoom_room_id:body.zoomRoomId})
+   if(result.error)throw new Error(result.error.message)
+  }else{
+   if(body.url===null&&!current.assignedZoomRoomId)return NextResponse.json({error:'Sesi legacy belum memiliki Zoom room terkelola. Pilih Zoom room sebelum menghapus link manual.'},{status:409})
+   await setIntensiveManualMeetingUrl(id,body.url as string|null)
+  }
+  await syncIntensiveMentoringSession(id,account.user.id)
+  return NextResponse.json(await meetingState(id))
+ }catch(error){return NextResponse.json({error:error instanceof Error?error.message:'Meeting sesi belum dapat diperbarui.'},{status:409})}
+}

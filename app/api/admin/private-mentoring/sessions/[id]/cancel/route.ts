@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 
 import { requireAccount } from '@/lib/auth/server'
-import { humanizeProviderError } from '@/lib/operations/provider-errors'
 import { cancelAdminPrivateMentoringSession } from '@/lib/private-mentoring/scheduling-server'
 
 export async function POST(_request:Request,{params}:{params:Promise<{id:string}>}){
@@ -12,13 +11,9 @@ export async function POST(_request:Request,{params}:{params:Promise<{id:string}
     const result=await cancelAdminPrivateMentoringSession(id,account.user.id)
     return NextResponse.json({
       session:result.session,
-      zoom:{
-        status:result.zoom.status,
-        error:'error' in result.zoom&&result.zoom.error?humanizeProviderError('zoom',result.zoom.error):undefined,
-      },
       sync:{
         status:result.sync.status,
-        error:'error' in result.sync&&result.sync.error?humanizeProviderError('calendar',result.sync.error):undefined,
+        error:'error' in result.sync&&result.sync.error?result.sync.error:undefined,
       },
     })
   } catch(error) {

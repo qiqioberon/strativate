@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { MentorProfile } from '@/lib/supabase/database.types'
 import type { MentorDashboardData, MentorSessionRow } from './dashboard'
 
-type IntensiveMentorRow={session_id:string;engagement_id:string;mentee_id:string;mentee_name:string|null;mentee_email:string;program_name:string;session_number:number;status:MentorSessionRow['status'];focus_name:string|null;resolved_topic:string|null;scheduled_start_at:string|null;scheduled_end_at:string|null;mentor_timezone:string|null;duration_minutes:number;meeting_url:string|null;google_event_id:string|null;google_ical_uid:string|null;google_sync_status:string;recording_status:string;add_ons:Array<{name:string;code:string}>}
+type IntensiveMentorRow={session_id:string;engagement_id:string;mentee_id:string;mentee_name:string|null;mentee_email:string;program_name:string;session_number:number;status:MentorSessionRow['status'];focus_name:string|null;resolved_topic:string|null;scheduled_start_at:string|null;scheduled_end_at:string|null;mentor_timezone:string|null;duration_minutes:number;meeting_url:string|null;google_event_id:string|null;google_ical_uid:string|null;google_sync_status:string;add_ons:Array<{name:string;code:string}>}
 
 export async function loadMentorDashboardData(mentorId: string, mentor: MentorProfile): Promise<MentorDashboardData> {
   const supabase = await createClient()

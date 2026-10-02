@@ -11,7 +11,8 @@ import {
 
 type AvailabilityRange={start:string;end:string}
 type EligibleMentor={mentorId:string;mentorName:string;timezone:string;availability:AvailabilityRange[];googleCalendarStatus?:GoogleCalendarAvailabilityStatus}
-type Slot={mentorId:string;mentorName:string;timezone:string;start:string;end:string;menteeConflict:boolean;googleCalendarStatus?:GoogleCalendarAvailabilityStatus}
+type ZoomRoomOption={id:string;name:string;meetingUrl:string}
+type Slot={mentorId:string;mentorName:string;timezone:string;start:string;end:string;menteeConflict:boolean;googleCalendarStatus?:GoogleCalendarAvailabilityStatus;availableZoomRooms:ZoomRoomOption[];zoomRoomCount:number}
 type SlotPayload={
   context:{
     sessionId:string
@@ -52,6 +53,7 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
   const [dateFilter,setDateFilter]=useState('')
   const [timeStart,setTimeStart]=useState('')
   const [timeEnd,setTimeEnd]=useState('')
+  const [zoomRoomId,setZoomRoomId]=useState('')
   const loadSequenceRef=useRef(0)
 
   useEffect(()=>{const dialog=ref.current;if(!dialog)return;if(sessionId&&!dialog.open)dialog.showModal();if(!sessionId&&dialog.open)dialog.close()},[sessionId])
@@ -59,19 +61,19 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
     if(!sessionId)return
     const requestId=++loadSequenceRef.current
     setLoading(true);setError('')
-    if(resetForNewSession){setNotice('');setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('');setSelectedDayKey(null);setSelected(null)}
+    if(resetForNewSession){setNotice('');setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('');setZoomRoomId('');setSelectedDayKey(null);setSelected(null)}
     try{
       const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/slots`,{cache:'no-store'})
       const data=await response.json() as SlotPayload&{error?:string}
       if(!response.ok)throw new Error(data.error||'Slot belum dapat dimuat.')
       if(requestId!==loadSequenceRef.current)return
       setPayload(data)
-      setSelected(current=>retainSelectedScheduleSlot(current,data.slots))
+      setSelected(current=>current?data.slots.find(slot=>slot.mentorId===current.mentorId&&slot.start===current.start)??null:null)
     }catch(err){if(requestId===loadSequenceRef.current)setError(err instanceof Error?err.message:'Slot belum dapat dimuat.')}
     finally{if(requestId===loadSequenceRef.current)setLoading(false)}
   },[mentoringKind,sessionId])
   useEffect(()=>{
-    if(!sessionId){loadSequenceRef.current+=1;setPayload(null);setSelectedDayKey(null);setSelected(null);return}
+    if(!sessionId){loadSequenceRef.current+=1;setPayload(null);setSelectedDayKey(null);setSelected(null);setZoomRoomId('');return}
     void loadSlots(true)
     return()=>{loadSequenceRef.current+=1}
   },[loadSlots,sessionId])
@@ -99,14 +101,18 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
   const invalidTimeRange=Boolean(timeStart&&timeEnd&&timeStart>timeEnd)
 
   useEffect(()=>{
-    if(selectedDayKey&&!bookableDays.some(day=>daySelectionKey(day)===selectedDayKey)){setSelectedDayKey(null);setSelected(null)}
+    if(selectedDayKey&&!bookableDays.some(day=>daySelectionKey(day)===selectedDayKey)){setSelectedDayKey(null);setSelected(null);setZoomRoomId('')}
   },[bookableDays,selectedDayKey])
   useEffect(()=>{
-    if(selected&&(!selectedDay||!selectedDay.slots.some(slot=>slot.mentorId===selected.mentorId&&slot.start===selected.start)))setSelected(null)
+    if(selected&&(!selectedDay||!selectedDay.slots.some(slot=>slot.mentorId===selected.mentorId&&slot.start===selected.start))){setSelected(null);setZoomRoomId('')}
   },[selected,selectedDay])
+  useEffect(()=>{
+    if(zoomRoomId&&selected&&!selected.availableZoomRooms.some(room=>room.id===zoomRoomId))setZoomRoomId('')
+  },[selected,zoomRoomId])
 
   function resetFilters(){setMentorQuery('');setDateFilter('');setTimeStart('');setTimeEnd('')}
-  function chooseDay(day:BookableMentorDay<Slot>){const key=daySelectionKey(day);if(selectedDayKey!==key)setSelected(null);setSelectedDayKey(key)}
+  function chooseDay(day:BookableMentorDay<Slot>){const key=daySelectionKey(day);if(selectedDayKey!==key){setSelected(null);setZoomRoomId('')}setSelectedDayKey(key)}
+  function chooseSlot(slot:Slot){setSelected(slot);setZoomRoomId('')}
 
   const emptyMessage=payload&&bookableDays.length===0
     ?invalidTimeRange
@@ -120,13 +126,11 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
     if(!sessionId||!selected)return
     setBusy(true);setError('');setNotice('')
     try{
-      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/schedule`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mentorId:selected.mentorId,start:selected.start})})
+      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/schedule`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mentorId:selected.mentorId,start:selected.start,zoomRoomId:zoomRoomId||null})})
       const data=await response.json()
       if(!response.ok)throw new Error(data.error||'Jadwal belum dapat disimpan.')
-      if(data.sync?.status==='provider_failed') setNotice('Jadwal tersimpan di Strativate, tetapi Zoom belum berhasil dibuat atau diperbarui. Gunakan Retry sync dari detail sesi.')
-      else if(data.sync?.status==='provider_pending') setNotice('Jadwal tersimpan. Zoom sedang direconcile; Calendar akan dibuat setelah meeting siap.')
-      else if(data.sync?.status==='failed') setNotice('Zoom siap, tetapi sinkronisasi Google Calendar gagal. Coba Retry sync dari detail sesi.')
-      else setNotice('Jadwal tersimpan. Zoom dan Google Calendar sudah direconcile.')
+      if(data.sync?.status==='failed') setNotice('Jadwal dan Zoom room tersimpan, tetapi sinkronisasi Google Calendar gagal. Coba sinkronkan ulang dari detail sesi.')
+      else setNotice('Jadwal, Zoom room, dan Google Calendar sudah diperbarui.')
       onScheduled?.()
     }catch(err){setError(err instanceof Error?err.message:'Jadwal belum dapat disimpan.')}
     finally{setBusy(false)}
@@ -151,7 +155,9 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
 
       {payload?.mentorWarnings?.length?<div className="calendar-warning" role="status"><TriangleAlert/><div><strong>Beberapa Google Calendar belum dapat diverifikasi.</strong>{payload.mentorWarnings.map(item=><span key={item}>{item}</span>)}</div></div>:null}
 
-      {!loading&&selectedDay?<section className="schedule-slot-panel" aria-labelledby="available-slot-heading"><div className="schedule-section-heading"><div><p className="kicker">Slot tersedia</p><h4 id="available-slot-heading">Pilih waktu tersedia</h4></div><span>{selectedDay.slots.length} pilihan</span></div><div className="schedule-selected-day"><CalendarDays aria-hidden="true"/><div><strong>{availabilityFullDate(selectedDay.slots[0].start,selectedDay.timezone)}</strong><span>{selectedDay.mentorName} · {selectedDay.timezone}</span></div></div><div className="schedule-slots schedule-slots--selected-day">{selectedDay.slots.map(slot=><button type="button" key={`${slot.mentorId}-${slot.start}`} aria-pressed={selected?.mentorId===slot.mentorId&&selected?.start===slot.start} className={selected?.mentorId===slot.mentorId&&selected?.start===slot.start?'is-selected':''} onClick={()=>setSelected(slot)}><Clock3/>{availabilityTime(slot.start,slot.end,slot.timezone)}{slot.menteeConflict?<small>⚠ Bentrok agenda mentee</small>:null}{slot.googleCalendarStatus==='unavailable'?<small>⚠ Google mentor belum terverifikasi</small>:null}</button>)}</div></section>:null}
+      {!loading&&selectedDay?<section className="schedule-slot-panel" aria-labelledby="available-slot-heading"><div className="schedule-section-heading"><div><p className="kicker">Slot tersedia</p><h4 id="available-slot-heading">Pilih waktu tersedia</h4></div><span>{selectedDay.slots.length} pilihan</span></div><div className="schedule-selected-day"><CalendarDays aria-hidden="true"/><div><strong>{availabilityFullDate(selectedDay.slots[0].start,selectedDay.timezone)}</strong><span>{selectedDay.mentorName} · {selectedDay.timezone}</span></div></div><div className="schedule-slots schedule-slots--selected-day">{selectedDay.slots.map(slot=><button type="button" key={`${slot.mentorId}-${slot.start}`} aria-pressed={selected?.mentorId===slot.mentorId&&selected?.start===slot.start} className={selected?.mentorId===slot.mentorId&&selected?.start===slot.start?'is-selected':''} onClick={()=>chooseSlot(slot)}><Clock3/>{availabilityTime(slot.start,slot.end,slot.timezone)}<small>{slot.zoomRoomCount} Zoom room tersedia</small>{slot.menteeConflict?<small>⚠ Bentrok agenda mentee</small>:null}{slot.googleCalendarStatus==='unavailable'?<small>⚠ Google mentor belum terverifikasi</small>:null}</button>)}</div></section>:null}
+
+      {selected?<label className="schedule-zoom-room-field"><span>Zoom room · {selected.zoomRoomCount} tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Otomatis — pilih room yang tersedia</option>{selected.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select><small>Room dipakai bersama oleh Private dan Intensive Mentoring. Ketersediaan diperiksa ulang saat konfirmasi.</small></label>:null}
 
       {error?<p className="form-error schedule-dialog__feedback" role="alert">{error}</p>:null}{notice?<p className="form-success schedule-dialog__feedback" role="status">{notice}</p>:null}
     </div>
