@@ -17,6 +17,7 @@ import {
   Tags,
   Trophy,
   UsersRound,
+  Video,
   X,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -38,6 +39,7 @@ import { MenteeManagement } from '@/components/admin/people'
 import { TestimonialManagement } from '@/components/admin/testimonial-management'
 import { TrustedPartnerManagement } from '@/components/admin/trusted-partner-management'
 import { WhoWeArePhotoManagement } from '@/components/admin/who-we-are-photo-management'
+import { ZoomRoomManagement } from '@/components/admin/zoom-room-management'
 import { PrivateMentoringManagement } from '@/components/admin/private-mentoring-management'
 import { AdminMentoringSessionWorkspace } from '@/components/admin/admin-mentoring-session-workspace'
 import { useAccount } from '@/components/auth/account-provider'
@@ -56,6 +58,7 @@ type Section =
   | 'Orders'
   | 'Mentoring Sessions'
   | 'Calendar'
+  | 'Zoom'
   | 'Cart Links'
   | 'Notifications'
   | 'Mentees'
@@ -89,6 +92,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Orders', label: 'Pesanan', icon: ReceiptText },
       { id: 'Mentoring Sessions', label: 'Mentoring Sessions', icon: UsersRound },
       { id: 'Calendar', label: 'Jadwal', icon: CalendarDays },
+      { id: 'Zoom', label: 'Zoom', icon: Video },
       { id: 'Cart Links', label: 'Cart Links', icon: ShoppingCart },
       { id: 'Notifications', label: 'Notifikasi', icon: Bell },
     ],
@@ -172,6 +176,7 @@ export default function AdminDashboard() {
           {section === 'Orders' ? <AdminCommerceOperations mode="orders" focusOrderId={relatedTarget?.entity === 'order' ? relatedTarget.id : null}/> : null}
           {section === 'Mentoring Sessions' ? <AdminMentoringSessionWorkspace focusSessionId={relatedTarget?.entity === 'session' || relatedTarget?.entity === 'intensive_mentoring_session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null} focusEntity={relatedTarget?.entity}/> : null}
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
+          {section === 'Zoom' ? <ZoomRoomManagement/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}
           {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={openNotification}/></> : null}
           {section === 'Mentees' ? <MenteeManagement/> : null}

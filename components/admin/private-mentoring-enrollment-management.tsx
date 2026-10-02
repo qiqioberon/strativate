@@ -215,9 +215,9 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       try{
         const response=await fetch(`/api/admin/private-mentoring/sessions/${session.session_id}/sync`,{method:'POST'})
         const result=await response.json() as{error?:string;status?:string}
-        if(!response.ok||result.status==='failed')setWarning(result.error||'Topik tersimpan, tetapi Zoom/Calendar belum berhasil direconcile.')
-        else setMessage('Topik/scope dikonfirmasi dan provider meeting serta Calendar sudah direconcile.')
-      }catch{setWarning('Topik tersimpan, tetapi Zoom/Calendar belum berhasil direconcile.')}
+        if(!response.ok||result.status==='failed')setWarning(result.error||'Topik tersimpan, tetapi Google Calendar belum berhasil disinkronkan.')
+        else setMessage('Topik/scope dikonfirmasi dan Google Calendar diperbarui.')
+      }catch{setWarning('Topik tersimpan, tetapi Google Calendar belum berhasil disinkronkan.')}
     }else setMessage('Topik/scope final dikonfirmasi. Sesi siap dijadwalkan.')
     await refresh();setBusyId(null)
   }
@@ -226,13 +226,11 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     setBusyId(session.session_id);setError('');setMessage('');setWarning('')
     try{
       const response=await fetch(`/api/admin/private-mentoring/sessions/${session.session_id}/cancel`,{method:'POST'})
-      const result=await response.json() as{error?:string;sync?:{status?:string;error?:string};zoom?:{status?:string;error?:string}}
+      const result=await response.json() as{error?:string;sync?:{status?:string;error?:string}}
       if(!response.ok)throw new Error(result.error||'Sesi belum dapat dibatalkan.')
       setCancelTarget(null)
-      if(result.zoom?.status==='failed'&&result.sync?.status==='failed')setWarning('Sesi dibatalkan di Strativate, tetapi Zoom dan Google Calendar masih perlu direconcile.')
-      else if(result.zoom?.status==='failed')setWarning(result.zoom.error||'Sesi dibatalkan, tetapi Zoom meeting belum berhasil dibatalkan.')
-      else if(result.sync?.status==='failed')setWarning(result.sync.error||'Sesi dibatalkan, tetapi Google Calendar belum berhasil disinkronkan.')
-      else setMessage('Sesi dibatalkan dan Zoom serta Google Calendar sudah direconcile.')
+      if(result.sync?.status==='failed')setWarning(result.sync.error||'Sesi dibatalkan, tetapi Google Calendar belum berhasil disinkronkan.')
+      else setMessage('Sesi dibatalkan, Zoom room dilepas, dan Google Calendar diperbarui.')
       await refresh()
     }catch{setError('Sesi belum dapat dibatalkan. Coba lagi beberapa saat kemudian.')}
     finally{setBusyId(null)}
@@ -245,7 +243,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       const result=await response.json() as{error?:string;status?:string}
       if(!response.ok)throw new Error(result.error||'Sinkronisasi belum berhasil.')
       if(result.status==='failed')setWarning('Google Calendar masih belum berhasil disinkronkan.')
-      else setMessage('Pembatalan provider dan Google Calendar sudah direconcile.')
+      else setMessage('Pembatalan Google Calendar sudah disinkronkan.')
       await refresh()
     }catch{setError('Sinkronisasi pembatalan belum berhasil. Coba lagi.')}
     finally{setBusyId(null)}
@@ -327,7 +325,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     <dialog ref={cancelDialogRef} className="calendar-dialog mentoring-cancel-dialog compact-confirm-dialog" onCancel={event=>{event.preventDefault();setCancelTarget(null)}} onClose={()=>setCancelTarget(null)}>
       {cancelTarget?<>
         <div className="calendar-dialog__head"><div><p className="kicker">Konfirmasi pembatalan</p><h3>Batalkan sesi {cancelTarget.session_number}?</h3></div><button type="button" className="icon-button dialog-close-button" onClick={()=>setCancelTarget(null)} aria-label="Tutup konfirmasi"><X aria-hidden="true"/></button></div>
-        <div className="compact-confirm-dialog__body"><p>Pembatalan akan menjalankan lifecycle berikut:</p><ul className="cancellation-consequences"><li>Sesi dibatalkan di Strativate.</li><li>Zoom meeting akan dihentikan sesuai lifecycle bila sudah tersedia.</li><li>undangan Google Calendar terkait akan dibatalkan atau direconcile.</li><li>Participant tidak dapat menggunakan sesi yang sudah dibatalkan.</li></ul><div className="button-row compact-confirm-dialog__actions"><button className="button button-outline" type="button" onClick={()=>setCancelTarget(null)}>Kembali</button><button className="button mentoring-session-cancel-confirm" type="button" disabled={busyId===cancelTarget.session_id} onClick={()=>void cancelSession(cancelTarget)}>Ya, batalkan sesi</button></div></div>
+        <div className="compact-confirm-dialog__body"><p>Pembatalan akan menjalankan lifecycle berikut:</p><ul className="cancellation-consequences"><li>Sesi dibatalkan di Strativate.</li><li>Reservasi Zoom room dilepas.</li><li>Undangan Google Calendar terkait dibatalkan atau diperbarui.</li><li>Participant tidak dapat menggunakan sesi yang sudah dibatalkan.</li></ul><div className="button-row compact-confirm-dialog__actions"><button className="button button-outline" type="button" onClick={()=>setCancelTarget(null)}>Kembali</button><button className="button mentoring-session-cancel-confirm" type="button" disabled={busyId===cancelTarget.session_id} onClick={()=>void cancelSession(cancelTarget)}>Ya, batalkan sesi</button></div></div>
       </>:null}
     </dialog>
 

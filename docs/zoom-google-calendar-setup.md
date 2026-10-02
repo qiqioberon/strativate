@@ -1,68 +1,22 @@
-# Zoom + Google Calendar mentoring setup
+# Managed Zoom rooms and Google Calendar
 
-Strativate uses **Zoom as the sole video-meeting provider for mentoring**. Google Calendar remains enabled for OAuth, free-busy availability, and canonical event create/update/delete sync. Google Calendar must never create conferencing for a mentoring event, and Google Meet is unsupported as an active mentoring provider.
+Strativate uses reusable Zoom links entered by Admin. The application does not need Zoom OAuth credentials, call the Zoom API, or receive Zoom webhooks. Google Calendar still handles mentor free/busy and mentoring event creation, updates, and cancellation.
 
-## Zoom app
+## Configure rooms
 
-Create a **Server-to-Server OAuth** app in the Zoom account that owns the licensed host used by Strativate.
+1. Open **Admin → Zoom → Add Zoom Link**.
+2. Enter a distinct room name and the real HTTPS Zoom meeting URL owned by Strativate. Do not add generated or placeholder URLs.
+3. Keep the room Active to make it available for scheduling. Every active room adds capacity for one concurrent mentoring session across Private and Intensive Mentoring.
+4. Add or deactivate rooms as operational needs change. A room assigned to an upcoming session must be reassigned before deactivation; referenced rooms cannot be deleted.
 
-Configure these server-only environment variables:
+Rooms use full interval overlap. A session ending at 20:15 does not conflict with one starting at 20:15. Admin can let the scheduler choose the first available room or select a particular available room. The database verifies the assignment when saving.
 
-```text
-ZOOM_ACCOUNT_ID=...
-ZOOM_CLIENT_ID=...
-ZOOM_CLIENT_SECRET=...
-ZOOM_DEFAULT_HOST_USER_ID=...
-ZOOM_WEBHOOK_SECRET_TOKEN=...
-```
+## Session links
 
-Never prefix Zoom credentials with `NEXT_PUBLIC_`. Missing configuration reports the missing variable name without exposing its value.
+For a scheduled session, the effective meeting URL is the manual session override when present, otherwise the assigned managed room URL. A manual override keeps its managed room reserved. Admin can clear it with **Kembali ke link Zoom terkelola**.
 
-## Required Zoom permissions
+Changing a room or its reusable URL updates future session links. Strativate reconciles affected Google Calendar events with the effective URL. If Calendar sync fails, retry it from the session detail. Cancellation releases the room and cancels the Calendar event. The Zoom meeting itself is never deleted by Strativate.
 
-For an account-level Server-to-Server app, grant the current granular scopes required by the implementation:
+Existing scheduled sessions from the retired Zoom API retain their generated URL as a manual link. Admin may assign a managed room when ready; no generated URL is converted into a reusable room automatically.
 
-- `meeting:write:meeting:admin` — create/update/delete meetings for the configured account host.
-- `cloud_recording:read:recording:admin` — receive/use cloud-recording completion metadata for account meetings.
-
-If the Zoom app uses classic scopes instead of granular scopes, use the equivalent account-level meeting write and recording read permissions offered by Zoom Marketplace.
-
-The configured `ZOOM_DEFAULT_HOST_USER_ID` must be a host allowed to create meetings and must have the license/settings required for Cloud Recording.
-
-## Automatic recording
-
-Strativate requests `settings.auto_recording = "cloud"`. If Zoom rejects cloud recording because the host/account does not support it, Strativate records recording as unavailable and may create the meeting without automatic recording rather than reporting false success.
-
-Recording lifecycle is tracked as `expected → processing → available`, with `failed` or `unavailable` handled explicitly.
-
-## Webhook
-
-Production event subscription endpoint:
-
-`https://strativate.vercel.app/api/webhooks/zoom`
-
-Subscribe to the meeting lifecycle and cloud-recording events available to the account/app, including:
-
-- `meeting.started`
-- `meeting.ended`
-- `recording.completed`
-- `recording.failed`
-- `recording.processing_failed` when offered by Zoom
-
-The endpoint handles `endpoint.url_validation` before normal signature verification or database access. Its `encryptedToken` is HMAC-SHA256 of Zoom's `plainToken` using `ZOOM_WEBHOOK_SECRET_TOKEN`, hex encoded.
-
-Normal webhook events verify `x-zm-request-timestamp` and `x-zm-signature`, reject stale requests, and deduplicate retries before state changes. Strativate does **not** require Zoom's optional Authentication Header setting for this endpoint; authenticity is verified with Zoom signature headers and `ZOOM_WEBHOOK_SECRET_TOKEN`.
-
-## Provider lifecycle
-
-- Create: save DB schedule → idempotent DB claim → create Zoom → persist meeting ID/join URL → create/update Google Calendar event.
-- Retry: reuse an existing Zoom meeting ID; do not create a second meeting.
-- Reschedule: PATCH the same Zoom meeting, then PATCH the same Google Calendar event.
-- Cancel: delete/cancel Zoom and reconcile the existing Google event independently.
-- Manual emergency override: `manual_meeting_url ?? provider_meeting_url`; the provider remains Zoom and resetting the override returns to the Zoom URL.
-- Legacy upcoming/scheduled Google Meet rows: normalize to Zoom-pending while preserving the existing Google Calendar event identity, then create/reconcile Zoom and update that same event.
-- Historical completed/cancelled Google Meet rows: retain old provider URL data only for audit/history, normalize the active provider to none, expose no active meeting URL, and never create a Zoom meeting retroactively.
-
-## Google Calendar boundary
-
-Google Calendar remains responsible for OAuth, free-busy, availability/conflict checks, and event create/update/delete sync. Event descriptions contain the effective Zoom/manual override URL. Strativate does not request `conferenceData`, read a Google conference link as the mentoring provider, or fall back to Google Meet.
+For Google OAuth setup and scopes, see [Google Calendar setup](google-calendar-setup.md).

@@ -8,9 +8,9 @@ export type SessionSyncInput = {
   end: string
   attendees: string[]
   manualMeetingUrl: string | null
-  providerMeetingUrl?: string | null
+  managedMeetingUrl?: string | null
 }
-export type UpsertEventInput = Omit<SessionSyncInput, 'manualMeetingUrl' | 'providerMeetingUrl'> & { eventId: string; createEvent: boolean }
+export type UpsertEventInput = Omit<SessionSyncInput, 'manualMeetingUrl' | 'managedMeetingUrl'> & { eventId: string; createEvent: boolean }
 export type DeleteEventInput = { calendarId: string; eventId: string }
 export type ProviderEvent = { eventId: string; iCalUID: string | null; meetingUrl: string | null }
 export type EventUpsertProvider = { upsertEvent(input: UpsertEventInput): Promise<ProviderEvent> }
@@ -23,8 +23,8 @@ export function deterministicGoogleEventId(sessionId: string) {
   return `strativate${normalized}`
 }
 
-export function resolveMeetingUrl(providerMeetingUrl: string | null, manualMeetingUrl: string | null) {
-  return manualMeetingUrl || providerMeetingUrl
+export function resolveMeetingUrl(managedMeetingUrl: string | null, manualMeetingUrl: string | null) {
+  return manualMeetingUrl || managedMeetingUrl
 }
 
 export function googleEventDeleteUrl(calendarApi: string, input: DeleteEventInput) {
@@ -48,8 +48,8 @@ export async function syncSessionEvent(input: SessionSyncInput, provider: EventU
     attendees: [...new Set(input.attendees.filter(Boolean))],
     createEvent: !input.eventId,
   })
-  const providerMeetingUrl = input.providerMeetingUrl || null
-  return { ...result, meetingUrl: providerMeetingUrl, effectiveMeetingUrl: resolveMeetingUrl(providerMeetingUrl, input.manualMeetingUrl) }
+  const managedMeetingUrl = input.managedMeetingUrl || null
+  return { ...result, meetingUrl: managedMeetingUrl, effectiveMeetingUrl: resolveMeetingUrl(managedMeetingUrl, input.manualMeetingUrl) }
 }
 
 export async function cancelSessionEvent(input: { calendarId:string; eventId:string|null }, provider: EventDeleteProvider) {

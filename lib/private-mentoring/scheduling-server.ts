@@ -1,8 +1,8 @@
 import 'server-only'
 import { buildBookableSlots, type SlotMentor, type TimeInterval } from '@/lib/calendar/slot-engine'
 import { getGoogleConnectionStatus, getGoogleFreeBusy, syncPrivateMentoringSession } from '@/lib/google-calendar/server'
-import { cancelZoomMeeting, reconcileZoomMeeting } from '@/lib/zoom/server'
 import { createClient } from '@/lib/supabase/server'
+import { availableManagedZoomRooms, getManagedZoomRoomPool } from '@/lib/zoom-rooms/server'
 import { resolveGoogleCalendarBusy, type GoogleCalendarAvailabilityStatus } from './scheduling-availability'
 
 type SlotContext = {
@@ -93,17 +93,30 @@ export async function getAdminBookableSlots(sessionId:string) {
     stepMinutes:15,
     mentors,
   })
+  const zoomRooms=await getManagedZoomRoomPool({from:horizonStart,to:horizonEnd,sessionId,mentoringKind:'private'})
+  if(!zoomRooms.length)return{
+    context:resolvedContext,
+    slots:[],
+    mentorWarnings,
+    message:'Belum ada Zoom room aktif. Tambahkan link Zoom dari menu Admin → Zoom.',
+  }
   let menteeBusy:TimeInterval[]=[]
   try{
     if((await getGoogleConnectionStatus(context.menteeId)).connected){
       menteeBusy=await getGoogleFreeBusy(context.menteeId,horizonStart,horizonEnd)
     }
   }catch{/* secondary indicator only */}
-  const slots=baseSlots.map(slot=>({
-    ...slot,
-    menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy)),
-    googleCalendarStatus:mentorCalendarStatus.get(slot.mentorId)??'not_connected',
-  }))
+  const slots=baseSlots.flatMap(slot=>{
+    const availableZoomRooms=availableManagedZoomRooms(zoomRooms,slot.start,slot.end)
+    if(!availableZoomRooms.length)return[]
+    return [{
+      ...slot,
+      availableZoomRooms,
+      zoomRoomCount:availableZoomRooms.length,
+      menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy)),
+      googleCalendarStatus:mentorCalendarStatus.get(slot.mentorId)??'not_connected',
+    }]
+  })
   const contextWithCalendarStatus={
     ...resolvedContext,
     mentors:context.mentors.map(mentor=>({
@@ -115,37 +128,32 @@ export async function getAdminBookableSlots(sessionId:string) {
     context:contextWithCalendarStatus,
     slots,
     mentorWarnings,
-    message:slots.length?'':'Availability ditemukan, tetapi belum ada slot yang dapat dipilih setelah mempertimbangkan durasi sesi, waktu yang sudah lewat, sesi Strativate lain, dan Google Calendar yang berhasil diverifikasi.',
+    message:slots.length?'':baseSlots.length?'Semua Zoom room sedang terpakai pada jam yang tersedia. Pilih waktu lain atau tambahkan room dari Admin → Zoom.':'Availability ditemukan, tetapi belum ada slot yang dapat dipilih setelah mempertimbangkan durasi sesi, waktu yang sudah lewat, sesi Strativate lain, dan Google Calendar yang berhasil diverifikasi.',
   }
 }
 
-export async function scheduleAdminPrivateMentoringSession(sessionId:string,mentorId:string,start:string,currentAdminId:string){
+export async function scheduleAdminPrivateMentoringSession(sessionId:string,mentorId:string,start:string,zoomRoomId:string|null,currentAdminId:string){
   const available=await getAdminBookableSlots(sessionId)
   const normalized=new Date(start).toISOString()
   const chosen=available.slots.find(slot=>slot.mentorId===mentorId&&slot.start===normalized)
   if(!chosen) throw new Error('Slot sudah tidak tersedia. Muat ulang pilihan jadwal.')
   const supabase=await createClient();const rpc=supabase as unknown as RpcClient
-  const {data,error}=await rpc.rpc('admin_schedule_private_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized})
+  const {data,error}=await rpc.rpc('admin_schedule_private_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized,p_zoom_room_id:zoomRoomId})
   if(error) throw new Error(error.message)
-  const zoom=await reconcileZoomMeeting(sessionId)
-  if(zoom.status==='failed') return {session:data,sync:{status:'provider_failed' as const,error:zoom.error,meetingUrl:null,eventId:null},zoom}
-  if(zoom.status==='pending') return {session:data,sync:{status:'provider_pending' as const,meetingUrl:zoom.meetingUrl??null,eventId:null},zoom}
   const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
-  return {session:data,sync,zoom}
+  return {session:data,sync}
 }
 
 export async function cancelAdminPrivateMentoringSession(sessionId:string,currentAdminId:string){
   const supabase=await createClient();const rpc=supabase as unknown as RpcClient
   const {data,error}=await rpc.rpc('admin_cancel_private_mentoring_session',{p_session_id:sessionId})
   if(error) throw new Error(error.message)
-  const zoom=await cancelZoomMeeting(sessionId)
   try {
     const sync=await syncPrivateMentoringSession(sessionId,currentAdminId)
-    return {session:data,sync,zoom}
+    return {session:data,sync}
   } catch (syncError) {
     return {
       session:data,
-      zoom,
       sync:{
         status:'failed' as const,
         meetingUrl:null,
