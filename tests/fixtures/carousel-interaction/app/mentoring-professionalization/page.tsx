@@ -132,7 +132,7 @@ const intensiveEngagements: IntensiveEngagementView[] = [{
   ],
   sessions:[{
     sessionId:'94000000-0000-0000-0000-000000000001',sessionNumber:1,durationMinutes:60,status:'scheduled',
-    focusId:focuses[0].id,focusName:focuses[0].name,menteeTopicRequest:'Review final storyline dan anticipated Q&A.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId:'84000000-0000-0000-0000-000000000001',mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-fixture',googleSyncStatus:'synced',recordingStatus:'expected',creationSource:'admin_added'
+    focusId:focuses[0].id,focusName:focuses[0].name,menteeTopicRequest:'Review final storyline dan anticipated Q&A.',topicStatus:'confirmed',resolvedTopic:'Final storyline & Q&A',mentorId:'84000000-0000-0000-0000-000000000001',mentorName:'Mentor Fixture',scheduledStartAt:'2026-09-26T02:00:00.000Z',scheduledEndAt:'2026-09-26T03:00:00.000Z',meetingUrl:'https://zoom.us/j/intensive-fixture',googleSyncStatus:'synced',creationSource:'admin_added'
   }]
 }]
 
