@@ -4,35 +4,35 @@ import { CalendarDays, Eye, Pencil, RefreshCw, RotateCcw, Search, X } from 'luci
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
+import { MentoringSessionPreferences } from '@/components/mentoring/mentoring-session-preferences'
+import { MentoringCompetitionEditor } from '@/components/mentoring/mentoring-competition-editor'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { humanizeProviderError } from '@/lib/operations/provider-errors'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier, PrivateMentoringPackage } from '@/lib/supabase/database.types'
 import { AdminScheduleDialog } from './admin-schedule-dialog'
-import { AdminCompetitionEditor, AdminSessionOperations } from './private-mentoring-session-operations'
+import { AdminSessionOperations } from './private-mentoring-session-operations'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
 import { TablePagination } from './table-pagination'
 
 type EnrollmentRow={total_count:number;enrollment_id:string;mentee_id:string;mentee_email:string;mentee_username:string;mentee_name:string;package_id:string;package_name:string;mentor_tier_id:string;mentor_tier_name:string;purchased_sessions:number;awaiting_focus_sessions:number;awaiting_scheduling_sessions:number;scheduled_sessions:number;completed_sessions:number;configured_sessions:number;purchased_at:string}
 type SessionRow={session_id:string;session_number:number;status:string;session_focus_id:string|null;focus_name:string|null;requested_focus_id:string|null;requested_focus_name:string|null;mentee_topic_request:string|null;topic_status:'needs_input'|'pending_review'|'confirmed';resolved_topic:string|null;mentor_scope_notes:string|null;mentor_id:string|null;mentor_name:string|null;primary_mentor_id:string|null;primary_mentor_name:string|null;scheduled_start_at:string|null;scheduled_end_at:string|null;purchased_sessions:number;google_sync_status:string;google_sync_error:string|null}
-type FocusRow={id:string;name:string;is_active:boolean}
 type EligibleMentor={mentor_id:string;mentor_name:string;tier_id:string;timezone:string}
 type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 type EnrollmentSortKey='user'|'email'|'package'|'purchased_at'|'progress'|'status'
-type TopicDraft={focusId:string;resolvedTopic:string;mentorNotes:string}
 
 const DATE=new Intl.DateTimeFormat('id-ID',{dateStyle:'medium'})
 const DATE_TIME=new Intl.DateTimeFormat('id-ID',{dateStyle:'full',timeStyle:'short'})
 
 function enrollmentStatus(row:EnrollmentRow){
   if(row.completed_sessions===row.purchased_sessions)return'Selesai'
-  if(row.awaiting_focus_sessions>0)return'Menunggu topik'
+  if(row.awaiting_focus_sessions>0)return'Menunggu review'
   if(row.awaiting_scheduling_sessions>0)return'Perlu dijadwalkan'
   if(row.configured_sessions===row.purchased_sessions)return'Semua sesi sudah diatur'
   return'Berjalan'
 }
 function sessionStatus(value:string){
-  if(value==='awaiting_focus')return'Menunggu topik'
+  if(value==='awaiting_focus')return'Menunggu review'
   if(value==='awaiting_scheduling')return'Menunggu admin'
   if(value==='scheduled')return'Terjadwal'
   if(value==='completed')return'Selesai'
@@ -48,14 +48,6 @@ function packageLabel(pkg:PrivateMentoringPackage,tiers:MentorTier[]){
   const tier=tiers.find(item=>item.id===pkg.mentor_tier_id)
   return`${tier?.name??'Private Mentoring'} · ${pkg.session_count} sesi`
 }
-function topicDraft(session:SessionRow):TopicDraft{
-  return{
-    focusId:session.session_focus_id??session.requested_focus_id??'',
-    resolvedTopic:session.resolved_topic??session.mentee_topic_request??'',
-    mentorNotes:session.mentor_scope_notes??'',
-  }
-}
-
 export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmentId}:{focusSessionId?:string|null;focusEnrollmentId?:string|null}={}){
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
@@ -78,7 +70,6 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const[rows,setRows]=useState<EnrollmentRow[]>([])
   const[packages,setPackages]=useState<PrivateMentoringPackage[]>([])
   const[tiers,setTiers]=useState<MentorTier[]>([])
-  const[focuses,setFocuses]=useState<FocusRow[]>([])
   const[loading,setLoading]=useState(true)
   const[error,setError]=useState('')
   const[message,setMessage]=useState('')
@@ -89,22 +80,18 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const[primaryMentorId,setPrimaryMentorId]=useState('')
   const[mentorReason,setMentorReason]=useState('')
   const[editingPrimaryMentor,setEditingPrimaryMentor]=useState(false)
-  const[topicDrafts,setTopicDrafts]=useState<Record<string,TopicDraft>>({})
-  const[editingTopics,setEditingTopics]=useState<Set<string>>(()=>new Set())
   const[scheduleId,setScheduleId]=useState<string|null>(null)
   const[cancelTarget,setCancelTarget]=useState<SessionRow|null>(null)
   const[busyId,setBusyId]=useState<string|null>(null)
 
   const loadCatalog=useCallback(async()=>{
-    const[p,t,f]=await Promise.all([
+    const[p,t]=await Promise.all([
       supabase.from('private_mentoring_packages').select('*').order('sort_order').order('id'),
       supabase.from('mentor_tiers').select('*').eq('is_active',true).order('sort_order').order('name'),
-      supabase.from('private_mentoring_session_focuses').select('id,name,is_active').eq('is_active',true).order('sort_order').order('name'),
     ])
-    if(p.error||t.error||f.error){setError('Catalog Private Mentoring belum dapat dimuat.');return}
+    if(p.error||t.error){setError('Catalog Private Mentoring belum dapat dimuat.');return}
     setPackages(p.data??[])
     setTiers(t.data??[])
-    setFocuses((f.data??[]) as FocusRow[])
   },[supabase])
 
   const load=useCallback(async()=>{
@@ -127,9 +114,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     const next=data??[]
     setSessions(next)
     setPrimaryMentorId(next[0]?.primary_mentor_id??'')
-    setTopicDrafts(Object.fromEntries(next.map(session=>[session.session_id,topicDraft(session)])))
     setEditingPrimaryMentor(false)
-    setEditingTopics(new Set())
   },[rpc])
 
   const loadEligibleMentors=useCallback(async(enrollmentId:string,purchased:number)=>{
@@ -176,9 +161,6 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
 
   function changeSort(key:string|null,direction:SortDirection){setSortKey(key as EnrollmentSortKey|null);setSortDirection(direction)}
   function resetFilters(){setQuery('');setPackageId('');setTierId('');setProgress('all');setFromDate('');setToDate('');setPage(0)}
-  function patchTopic(id:string,patch:Partial<TopicDraft>){setTopicDrafts(current=>({...current,[id]:{...(current[id]??{focusId:'',resolvedTopic:'',mentorNotes:''}),...patch}}))}
-  function cancelTopicEdit(session:SessionRow){setTopicDrafts(current=>({...current,[session.session_id]:topicDraft(session)}));setEditingTopics(current=>{const next=new Set(current);next.delete(session.session_id);return next})}
-
   async function open(row:EnrollmentRow){
     setSelected(row);setMessage('');setWarning('');setError('');setMentorReason('')
     await Promise.all([loadSessions(row.enrollment_id),loadEligibleMentors(row.enrollment_id,row.purchased_sessions)])
@@ -202,24 +184,6 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       setMentorReason('');setEditingPrimaryMentor(false);await refresh()
     }
     setBusyId(null)
-  }
-
-  async function resolveTopic(session:SessionRow){
-    const draft=topicDrafts[session.session_id]??topicDraft(session)
-    if(!draft.focusId||draft.resolvedTopic.trim().length<3){setError('Pilih kategori focus dan isi topik/scope final minimal 3 karakter.');return}
-    setBusyId(`topic:${session.session_id}`);setError('');setWarning('')
-    const{error:e}=await rpc.rpc('admin_resolve_private_mentoring_session_topic',{p_session_id:session.session_id,p_focus_id:draft.focusId,p_resolved_topic:draft.resolvedTopic.trim(),p_mentor_scope_notes:draft.mentorNotes.trim()||null})
-    if(e){setError('Topik/scope belum dapat disimpan. Coba lagi.');setBusyId(null);return}
-    setEditingTopics(current=>{const next=new Set(current);next.delete(session.session_id);return next})
-    if(session.status==='scheduled'){
-      try{
-        const response=await fetch(`/api/admin/private-mentoring/sessions/${session.session_id}/sync`,{method:'POST'})
-        const result=await response.json() as{error?:string;status?:string}
-        if(!response.ok||result.status==='failed')setWarning(result.error||'Topik tersimpan, tetapi Google Calendar belum berhasil disinkronkan.')
-        else setMessage('Topik/scope dikonfirmasi dan Google Calendar diperbarui.')
-      }catch{setWarning('Topik tersimpan, tetapi Google Calendar belum berhasil disinkronkan.')}
-    }else setMessage('Topik/scope final dikonfirmasi. Sesi siap dijadwalkan.')
-    await refresh();setBusyId(null)
   }
 
   async function cancelSession(session:SessionRow){
@@ -259,7 +223,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       <label className="ops-field ops-field--wide"><span>Cari user / Session ID</span><div className="ops-input-with-icon"><Search size={15} aria-hidden="true"/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(0)}} placeholder="Nama, email, paket, atau full Session ID"/></div></label>
       <label className="ops-field"><span>Paket</span><select value={packageId} onChange={event=>{setPackageId(event.target.value);setPage(0)}}><option value="">Semua paket</option>{packages.map(pkg=><option value={pkg.id} key={pkg.id}>{packageLabel(pkg,tiers)}</option>)}</select></label>
       <label className="ops-field"><span>Tier</span><select value={tierId} onChange={event=>{setTierId(event.target.value);setPage(0)}}><option value="">Semua tier</option>{tiers.map(tier=><option key={tier.id} value={tier.id}>{tier.name}</option>)}</select></label>
-      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">Semua</option><option value="needs_focus">Menunggu topik</option><option value="needs_scheduling">Perlu dijadwalkan</option><option value="configured">Semua sesi sudah diatur</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option></select></label>
+      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">Semua</option><option value="needs_focus">Menunggu review</option><option value="needs_scheduling">Perlu dijadwalkan</option><option value="configured">Semua sesi sudah diatur</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option></select></label>
       <label className="ops-field"><span>Dari tanggal beli</span><input type="date" value={fromDate} onChange={event=>{setFromDate(event.target.value);setPage(0)}}/></label>
       <label className="ops-field"><span>Sampai</span><input type="date" value={toDate} onChange={event=>{setToDate(event.target.value);setPage(0)}}/></label>
       <button className="button button-outline ops-reset-action" type="button" onClick={resetFilters}><RotateCcw aria-hidden="true"/>Reset</button>
@@ -276,7 +240,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       {selected?<>
         <div className="calendar-dialog__head"><div><p className="kicker">Kelola sesi</p><h3>{selected.mentee_name} · {selected.package_name}</h3><p>{selected.mentee_email} · {selected.mentor_tier_name}</p></div><button type="button" className="icon-button dialog-close-button" onClick={()=>setSelected(null)} aria-label="Tutup detail"><X aria-hidden="true"/></button></div>
 
-        <AdminCompetitionEditor enrollmentId={selected.enrollment_id}/>
+        <MentoringCompetitionEditor kind="private" parentId={selected.enrollment_id}/>
 
         {selected.purchased_sessions>=5?<section className="schedule-day admin-editable-section">
           <div className="admin-editable-section__head"><div><p className="kicker">Mentor utama paket</p><h4>{currentPrimaryName}</h4><p>Paket {selected.purchased_sessions} sesi memakai mentor default untuk penjadwalan baru.</p></div><div className="button-row"><span className="ops-status ops-status--info">Dedicated mentor</span>{!editingPrimaryMentor?<button className="button button-outline button-compact" type="button" onClick={()=>setEditingPrimaryMentor(true)}><Pencil aria-hidden="true"/>{currentPrimary?'Ganti mentor':'Tetapkan mentor'}</button>:null}</div></div>
@@ -288,23 +252,13 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
         </section>:<section className="schedule-day"><p className="kicker">Mentor per sesi</p><p>Paket di bawah 5 sesi tetap fleksibel; mentor dipilih per sesi dari tier paket saat penjadwalan.</p></section>}
 
         <div className="schedule-slot-list">{sessions.map(session=>{
-          const draft=topicDrafts[session.session_id]??topicDraft(session)
-          const locked=session.status==='completed'||session.status==='cancelled'
-          const editing=editingTopics.has(session.session_id)
           const canSchedule=session.topic_status==='confirmed'&&(session.status==='awaiting_scheduling'||session.status==='scheduled')
           const calendarError=session.google_sync_error?humanizeProviderError('calendar',session.google_sync_error):null
           return <article className="schedule-day admin-session-card" id={`admin-session-${session.session_id}`} key={session.session_id}>
-            <div className="mentoring-session-detail-row"><div><p className="kicker">Sesi {session.session_number}/{session.purchased_sessions} · {topicStatus(session.topic_status)}</p><h4>{session.resolved_topic||session.focus_name||session.mentee_topic_request||'Topik belum diajukan'}</h4><div className="session-id-cell session-id-cell--admin"><code>{session.session_id}</code><CopyTextButton value={session.session_id} label="Salin Session ID" copiedLabel="ID disalin"/></div><p>{session.mentor_name||session.primary_mentor_name||'Mentor belum ditetapkan'} · {session.scheduled_start_at?DATE_TIME.format(new Date(session.scheduled_start_at)):'Belum terjadwal'}</p>{session.status==='cancelled'&&session.google_sync_status==='failed'?<small className="form-error">{calendarError||'Pembatalan Calendar belum tersinkron.'}</small>:null}</div><span className="ops-status ops-status--info">{sessionStatus(session.status)}</span></div>
+            <div className="mentoring-session-detail-row"><div><p className="kicker">Sesi {session.session_number}/{session.purchased_sessions} · {topicStatus(session.topic_status)}</p><h4>{session.resolved_topic||session.focus_name||session.mentee_topic_request||'Preferensi opsional belum diisi'}</h4><p>{session.mentor_name||session.primary_mentor_name||'Mentor belum ditetapkan'} · {session.scheduled_start_at?DATE_TIME.format(new Date(session.scheduled_start_at)):'Belum terjadwal'}</p>{session.status==='cancelled'&&session.google_sync_status==='failed'?<small className="form-error">{calendarError||'Pembatalan Calendar belum tersinkron.'}</small>:null}</div><span className="ops-status ops-status--info">{sessionStatus(session.status)}</span></div>
 
-            {!editing?<div className="admin-topic-readonly">
-              <div className="admin-editable-section__head"><div><p className="kicker">Topic / scope</p><h4>{session.resolved_topic||'Belum dikonfirmasi'}</h4></div>{!locked?<button className="button button-outline button-compact" type="button" onClick={()=>setEditingTopics(current=>new Set(current).add(session.session_id))}><Pencil aria-hidden="true"/>Edit</button>:null}</div>
-              <div className="admin-readonly-grid admin-readonly-grid--topic"><div><span>Focus taxonomy final</span><strong>{session.focus_name||'Belum ditetapkan'}</strong></div><div><span>Request mentee</span><strong>{session.mentee_topic_request||'Tidak ada'}</strong></div><div><span>Kategori yang diminta</span><strong>{session.requested_focus_name||'Tidak ada'}</strong></div><div><span>Catatan untuk mentor</span><strong>{session.mentor_scope_notes||'Tidak ada catatan'}</strong></div></div>
-            </div>:<div className="ops-form-stack admin-edit-form">
-              <label className="ops-field"><span>Focus taxonomy final</span><select value={draft.focusId} onChange={event=>patchTopic(session.session_id,{focusId:event.target.value})}><option value="">Pilih focus</option>{focuses.map(focus=><option key={focus.id} value={focus.id}>{focus.name}</option>)}</select></label>
-              <label className="ops-field"><span>Topik / scope final</span><textarea rows={3} value={draft.resolvedTopic} onChange={event=>patchTopic(session.session_id,{resolvedTopic:event.target.value})}/></label>
-              <label className="ops-field"><span>Catatan untuk mentor (opsional)</span><textarea rows={2} value={draft.mentorNotes} onChange={event=>patchTopic(session.session_id,{mentorNotes:event.target.value})}/></label>
-              <div className="button-row"><button className="button button-primary" type="button" disabled={busyId===`topic:${session.session_id}`} onClick={()=>void resolveTopic(session)}>Simpan topik/scope</button><button className="button button-outline" type="button" onClick={()=>cancelTopicEdit(session)}>Batal</button></div>
-            </div>}
+            <MentoringSessionPreferences kind="private" sessionId={session.session_id} role="admin"/>
+            <details className="mentoring-audit-details"><summary>Detail tambahan</summary><div className="session-id-cell session-id-cell--admin"><code>{session.session_id}</code><CopyTextButton value={session.session_id} label="Salin Session ID" copiedLabel="ID disalin"/></div></details>
 
             <div className="button-row session-primary-actions">
               {canSchedule?<button className="button button-primary" type="button" onClick={()=>setScheduleId(session.session_id)}><CalendarDays aria-hidden="true"/>{session.status==='scheduled'?'Ubah jadwal':'Jadwalkan sesi'}</button>:null}
@@ -312,7 +266,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
               {session.status==='cancelled'&&session.google_sync_status==='failed'?<button className="button button-outline" type="button" disabled={busyId===session.session_id} onClick={()=>void retryCancellation(session)}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button>:null}
             </div>
 
-            <AdminSessionOperations sessionId={session.session_id} status={session.status} menteeName={selected.mentee_name} sessionNumber={session.session_number} mentorName={session.mentor_name||session.primary_mentor_name} scheduledStartAt={session.scheduled_start_at} onChanged={refresh}/>
+            <details className="mentoring-audit-details"><summary>Provider & sinkronisasi</summary><AdminSessionOperations sessionId={session.session_id} status={session.status} menteeName={selected.mentee_name} sessionNumber={session.session_number} mentorName={session.mentor_name||session.primary_mentor_name} scheduledStartAt={session.scheduled_start_at} onChanged={refresh}/></details>
           </article>
         })}</div>
 

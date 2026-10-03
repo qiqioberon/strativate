@@ -4,6 +4,7 @@ import { ExternalLink, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
+import { MentoringSessionPreferences } from '@/components/mentoring/mentoring-session-preferences'
 import type { MentorMenteeSummary, MentorSessionRow } from '@/lib/mentor/dashboard'
 import { detailDate, mentorSessionStatusLabel, sessionDate, statusClass } from './dashboard-ui'
 
@@ -22,8 +23,9 @@ export function SessionDetailDialog({ session, timezone, onClose }: { session: M
   return <dialog ref={ref} className="ops-dialog mentor-detail-dialog" aria-labelledby="mentor-session-detail-title" onClose={onClose}>
     {session ? <div className="ops-dialog__surface">
       <header className="ops-dialog__header"><div><p className="kicker">{session.mentoring_type==='intensive'?'Intensive Mentoring':'Private Mentoring'} · Detail sesi</p><h2 id="mentor-session-detail-title">{session.mentee_name || 'Peserta Strativate'} · Sesi {session.session_number}</h2><p>{detailDate(session, timezone)}</p></div><button type="button" className="ops-icon-button" onClick={onClose} aria-label="Tutup detail sesi"><X aria-hidden="true"/></button></header>
-      <div className="session-reference-row"><div><span>Session ID</span><strong>{session.session_id}</strong></div><CopyTextButton value={session.session_id} label="Salin Session ID" copiedLabel="ID disalin"/></div>
       <div className="ops-detail-grid"><div><span>Status</span><strong>{mentorSessionStatusLabel(session.status)}</strong></div><div><span>Topik / goal sesi</span><strong>{topicSession?.resolved_topic || session.focus_name || 'Belum dicatat'}</strong></div><div><span>Program</span><strong>{session.mentoring_type==='intensive'?(session.program_name||'Intensive Mentoring'):'Private Mentoring · '+(session.purchased_sessions??'—')+' sesi'}</strong></div><div><span>Durasi</span><strong>{session.duration_minutes ? `${session.duration_minutes} menit` : '—'}</strong></div></div>
+      <MentoringSessionPreferences kind={session.mentoring_type==='intensive'?'intensive':'private'} sessionId={session.session_id} role="mentor"/>
+      <details className="mentoring-audit-details"><summary>Detail tambahan</summary><div className="session-reference-row"><div><span>Session ID</span><strong>{session.session_id}</strong></div><CopyTextButton value={session.session_id} label="Salin Session ID" copiedLabel="ID disalin"/></div></details>
       {session.mentoring_type==='intensive'&&session.add_ons?.length?<section className="ops-dialog__section"><h3>Dukungan tambahan</h3><p>{session.add_ons.map(item=>item.name).join(', ')}</p></section>:null}
       {topicSession?.mentor_scope_notes?<section className="ops-dialog__section"><h3>Catatan scope dari admin</h3><p>{topicSession.mentor_scope_notes}</p></section>:null}
       <section className="ops-dialog__section"><h3>Peserta</h3><div className="mentor-dialog-contact"><div><span>Nama</span><strong>{session.mentee_name || 'Peserta Strativate'}</strong></div><div><span>Email</span><strong>{session.mentee_email || 'Tidak tersedia'}</strong></div><div><span>Timezone sesi</span><strong>{session.mentor_timezone || timezone}</strong></div><div><span>Google sync</span><strong>{session.google_sync_status || 'pending'}</strong></div></div></section>

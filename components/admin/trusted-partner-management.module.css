@@ -121,10 +121,11 @@
 .statusButton { padding: 0 9px; }
 .actionCell { width: 1%; white-space: nowrap; }
 .actions { display: flex; justify-content: flex-end; gap: 7px; }
-.manageButton,
-.deleteButton { padding: 0 10px; }
-.deleteButton { color: #ad3c42; border-color: #efd6d8; }
+.manageButton { padding:0 10px; }
+.deleteButton { display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 13px;color: #ad3c42; border-color: #e6b8bb;background:#fffafa; }
+.deleteButton svg { width:15px;height:15px;flex:0 0 auto; }
 .deleteButton:hover:not(:disabled) { color: #8e2027; border-color: #e6b8bb; background: #fff4f4; }
+.deleteButton:focus-visible { outline:3px solid rgb(190 45 55 / .18);outline-offset:2px; }
 
 .form { display: grid; gap: 20px; }
 .formGrid {

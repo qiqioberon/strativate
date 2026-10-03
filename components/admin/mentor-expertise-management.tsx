@@ -57,7 +57,7 @@ export function MentorExpertiseManagement() {
       if (statusFilter === 'active' && !row.is_active) return false
       if (statusFilter === 'inactive' && row.is_active) return false
       if (!normalized) return true
-      return `${row.name} ${row.slug}`.toLocaleLowerCase('id-ID').includes(normalized)
+      return row.name.toLocaleLowerCase('id-ID').includes(normalized)
     })
   }, [query, rows, statusFilter])
 
@@ -173,13 +173,13 @@ export function MentorExpertiseManagement() {
         <div>
           <p className="kicker">Data master</p>
           <h2>Mentor Expertise</h2>
-          <p>Kelola label expertise yang dapat dipilih mentor untuk profil publiknya. Slug tetap stabil setelah record dibuat.</p>
+          <p>Kelola label expertise yang dapat dipilih mentor untuk profil publiknya.</p>
         </div>
         <button type="button" className="button button-primary" onClick={openCreate}><Plus aria-hidden="true" size={16} />Tambah expertise</button>
       </header>
 
       <div className={styles.toolbar}>
-        <label className={styles.search}><Search aria-hidden="true" size={16} /><span className="sr-only">Cari expertise</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari nama atau slug" /></label>
+        <label className={styles.search}><Search aria-hidden="true" size={16} /><span className="sr-only">Cari expertise</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari nama expertise" /></label>
         <label className={styles.filter}>Status<select value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)}><option value="all">Semua</option><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></label>
       </div>
 
@@ -195,7 +195,7 @@ export function MentorExpertiseManagement() {
           const canonicalIndex = rows.findIndex(item => item.id === row.id)
           const busy = busyId === row.id
           return <article className={styles.row} role="listitem" key={row.id} data-testid={`mentor-expertise-row-${row.slug}`}>
-            <div className={styles.identity}><strong>{row.name}</strong><code>{row.slug}</code></div>
+            <div className={styles.identity}><strong>{row.name}</strong></div>
             <div className={styles.meta}><span>Urutan {row.sort_order}</span><span className={`ops-status ops-status--${row.is_active ? 'positive' : 'neutral'}`}>{row.is_active ? 'Aktif' : 'Nonaktif'}</span></div>
             <div className={styles.actions}>
               <button type="button" className={styles.iconButton} onClick={() => void move(row, -1)} disabled={busy || canonicalIndex <= 0} aria-label={`Naikkan ${row.name}`}><ArrowUp aria-hidden="true" size={15} /></button>
@@ -213,7 +213,6 @@ export function MentorExpertiseManagement() {
           <header className={styles.dialogHeader}><div><p className="kicker">Mentor Expertise</p><h2 id="mentor-expertise-dialog-title">{editor.id ? 'Edit expertise' : 'Tambah expertise'}</h2></div><button type="button" className={styles.closeButton} onClick={() => dialogRef.current?.close()} aria-label="Tutup dialog"><X aria-hidden="true" size={18} /></button></header>
           <div className={styles.dialogBody}>
             <label>Nama expertise<input autoFocus required maxLength={100} value={editor.name} onChange={event => setEditor(current => ({ ...current, name: event.target.value }))} /></label>
-            {editor.id ? <label>Stable slug<input readOnly value={rows.find(row => row.id === editor.id)?.slug || ''} /></label> : <p className={styles.helper}>Slug dibuat otomatis saat expertise pertama kali dibuat dan tidak berubah ketika nama diedit.</p>}
             <label className={styles.checkbox}><input type="checkbox" checked={editor.isActive} onChange={event => setEditor(current => ({ ...current, isActive: event.target.checked }))} />Aktif</label>
           </div>
           <footer className={styles.dialogActions}><button type="button" className="button button-outline" onClick={() => dialogRef.current?.close()} disabled={busyId !== null}>Batal</button><button className="button button-primary" disabled={busyId !== null}>{busyId ? 'Menyimpan…' : 'Simpan'}</button></footer>

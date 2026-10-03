@@ -41,7 +41,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
   const supabase = useMemo(() => createClient(), [])
   const dialogRef = useRef<HTMLDialogElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
-  const [kind, setKind] = useState<EditorialKind>(initialKind)
+  const kind = initialKind
   const [publications, setPublications] = useState<Publication[]>([])
   const [competitions, setCompetitions] = useState<Competition[]>([])
   const [categories, setCategories] = useState<CompetitionCategory[]>([])
@@ -79,7 +79,6 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
 
   useEffect(() => { void load() }, [load])
   useEffect(() => {
-    setKind(initialKind)
     setEditingId(null)
     setDraft(emptyDraft)
     setQuery('')
@@ -99,7 +98,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     return (rows as Array<Publication | Competition>).filter(item => {
       const title = 'title' in item ? item.title : item.name
       const description = 'excerpt' in item ? item.excerpt : item.description
-      const matchesQuery = !needle || `${title} ${description} ${item.slug}`.toLocaleLowerCase('en').includes(needle)
+      const matchesQuery = !needle || `${title} ${description}`.toLocaleLowerCase('en').includes(needle)
       const matchesStatus = statusFilter === 'all' || (statusFilter === 'published' ? item.is_published : !item.is_published)
       return matchesQuery && matchesStatus
     })
@@ -198,7 +197,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     try {
       uploadedPath = await uploadCover()
       const common = {
-        slug: draft.slug.trim(),
+        slug: editingId === 'new' ? '' : draft.slug.trim(),
         cover_path: uploadedPath,
         cover_alt_text: draft.coverAltText.trim() || null,
         is_published: draft.isPublished,
@@ -245,17 +244,9 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setBusy(false)
   }
 
-  function switchKind(next: EditorialKind) {
-    if (next === kind) return
-    closeEditor()
-    setKind(next)
-    setQuery('')
-    setStatusFilter('all')
-  }
-
   return <section className="editorial-admin" data-testid="admin-editorial-content-section">
-    <div className="role-page-title"><p className="kicker">Editorial CMS</p><h2>Publications and Competitions</h2><p>Manage approved content, publication state, categories, ordering, links, and cover images.</p></div>
-    <div className="editorial-admin__toolbar"><div role="tablist" aria-label="Editorial content type"><button className={kind === 'publications' ? 'active' : ''} type="button" onClick={() => switchKind('publications')} aria-selected={kind === 'publications'}>Publications</button><button className={kind === 'competitions' ? 'active' : ''} type="button" onClick={() => switchKind('competitions')} aria-selected={kind === 'competitions'}>Competitions</button></div><button className="button button-primary" type="button" onClick={beginCreate}><Plus aria-hidden="true" size={16}/> Add {kind === 'publications' ? 'publication' : 'competition'}</button></div>
+    <div className="role-page-title"><p className="kicker">Editorial CMS</p><h2>{kind === 'publications' ? 'Publications' : 'Competitions'}</h2><p>{kind === 'publications' ? 'Kelola artikel, status publikasi, urutan, dan cover.' : 'Kelola informasi kompetisi, kategori, status, tautan, dan cover.'}</p></div>
+    <div className="editorial-admin__toolbar"><p>{filteredRows.length} {kind === 'publications' ? 'publication' : 'competition'}</p><button className="button button-primary" type="button" onClick={beginCreate}><Plus aria-hidden="true" size={16}/> Add {kind === 'publications' ? 'publication' : 'competition'}</button></div>
     <div className="editorial-admin__filters"><label><Search aria-hidden="true" size={16}/><span className="sr-only">Search editorial content</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${kind}`}/></label><label><span className="sr-only">Publication state</span><select value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)}><option value="all">All states</option><option value="published">Published</option><option value="draft">Draft</option></select></label></div>
     {notice ? <p className="admin-notice">{notice}</p> : null}{error ? <p className="form-error">{error}</p> : null}
     {loading ? <p>Loading editorial content…</p> : <div className="editorial-admin__list">{filteredRows.length ? filteredRows.map(item => <article key={item.id}><div>{item.cover_path ? <img className="editorial-admin__thumb" src={supabase.storage.from('marketing-editorial').getPublicUrl(item.cover_path).data.publicUrl} alt={item.cover_alt_text ?? ''}/> : null}<span className={item.is_published ? 'status-pill status-pill--success' : 'status-pill'}>{item.is_published ? 'Published' : 'Draft'}</span><h3>{'title' in item ? item.title : item.name}</h3><p>{'excerpt' in item ? item.excerpt : item.description}</p></div><div className="editorial-admin__actions"><button className="button button-outline button-compact" type="button" onClick={() => beginEdit(item)}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)} disabled={busy}><Trash2 aria-hidden="true" size={14}/> Delete</button></div></article>) : <div className="editorial-empty"><strong>No matching {kind}.</strong><span>Adjust the filters or add approved content.</span></div>}</div>}
@@ -265,7 +256,6 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
         <button className="dialog-close" type="button" onClick={closeEditor} aria-label="Close editor"><X aria-hidden="true"/></button>
         <p className="kicker">{editingId === 'new' ? 'New' : 'Edit'} {kind === 'publications' ? 'publication' : 'competition'}</p><h3>{draft.title || 'Editorial content'}</h3>
         <label>Title / name<input required maxLength={180} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })}/></label>
-        <label>Slug<input required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxLength={120} value={draft.slug} onChange={event => setDraft({ ...draft, slug: event.target.value })}/></label>
         <label>{kind === 'publications' ? 'Excerpt' : 'Description'}<textarea required rows={4} value={draft.excerpt} onChange={event => setDraft({ ...draft, excerpt: event.target.value })}/></label>
 
         {kind === 'publications' ? <>
