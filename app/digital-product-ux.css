@@ -111,6 +111,16 @@
   letter-spacing: .08em;
   text-transform: uppercase;
 }
+.digital-product-price-values {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.digital-product-price-values del {
+  color: #9a8880;
+  font-size: .76rem;
+}
 .digital-product-card__price strong {
   font-size: 1rem;
   letter-spacing: -.025em;

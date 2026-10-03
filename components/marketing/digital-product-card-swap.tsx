@@ -59,7 +59,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
                   />
                 </div>
                 <div className="digital-product-swap-card__copy">
-                  <span>Digital Product · {formatRupiah(product.price_amount)}</span>
+                  <span>Digital Product · {product.reference_price_amount != null ? <><del>{formatRupiah(product.reference_price_amount)}</del> </> : null}{formatRupiah(product.price_amount)}</span>
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   <strong>View details <ArrowUpRight aria-hidden="true" size={17} /></strong>
