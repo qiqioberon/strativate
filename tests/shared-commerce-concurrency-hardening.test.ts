@@ -7,7 +7,11 @@ const root = path.resolve(import.meta.dirname, '..')
 const migration = readFileSync(
   path.join(root, 'supabase/migrations/202610040004_shared_commerce_concurrency_hardening.sql'),
   'utf8',
-)
+).replaceAll('\r\n', '\n')
+const reservationMigration = readFileSync(
+  path.join(root, 'supabase/migrations/202610040006_shared_commerce_reservation_invariants.sql'),
+  'utf8',
+).replaceAll('\r\n', '\n')
 
 function functionSql(name: string) {
   const marker = `create or replace function public.${name}`
@@ -16,6 +20,15 @@ function functionSql(name: string) {
   const end = migration.indexOf('\n$$;', start)
   assert.notEqual(end, -1, `${name} must have a complete body`)
   return migration.slice(start, end + 4)
+}
+
+function reservationFunctionSql(name: string) {
+  const marker = `create or replace function public.${name}`
+  const start = reservationMigration.indexOf(marker)
+  assert.notEqual(start, -1, `${name} must exist in the reservation hardening migration`)
+  const end = reservationMigration.indexOf('\n$$;', start)
+  assert.notEqual(end, -1, `${name} must have a complete body`)
+  return reservationMigration.slice(start, end + 4)
 }
 
 test('order creation materializes one authoritative commerce snapshot', () => {
@@ -89,4 +102,125 @@ test('discounted payment attempts and stored Snap tokens are capped by the reser
   assert.match(reserve, /payment_expires_at/)
   assert.match(store, /least\([\s\S]*interval '24 hours'[\s\S]*payment_expires_at/)
   assert.match(store, /snap_token_expires_at = v_token_expires_at/)
+})
+
+test('order creation locks every mutable commerce source before resolving each item once', () => {
+  const sql = reservationFunctionSql('create_order_from_cart')
+  const sourceLock = sql.indexOf('lock_cart_commerce_snapshot_sources')
+  const resolution = sql.indexOf('resolve_commerce_item(')
+
+  assert.ok(sourceLock >= 0)
+  assert.ok(resolution > sourceLock)
+  assert.equal((sql.match(/resolve_commerce_item\(/g) ?? []).length, 1)
+  assert.match(sql, /jsonb_to_recordset\(v_commerce_snapshot\)/)
+
+  const lockSql = reservationFunctionSql('lock_cart_commerce_snapshot_sources')
+  for (const table of [
+    'digital_products',
+    'private_mentoring_cart_link_offers',
+    'private_mentoring_packages',
+    'mentor_tiers',
+    'intensive_mentoring_packages',
+    'intensive_mentoring_add_ons',
+    'intensive_mentoring_bundles',
+    'intensive_mentoring_bundle_items',
+    'intensive_mentoring_custom_offers',
+    'commerce_items',
+  ]) {
+    assert.match(lockSql, new RegExp(`public\\.${table}`), `${table} must be row-locked`)
+  }
+  assert.match(lockSql, /order by/)
+  assert.match(lockSql, /for update/g)
+
+  const bundle = lockSql.indexOf('from public.intensive_mentoring_bundles source')
+  const bundleItems = lockSql.indexOf('from public.intensive_mentoring_bundle_items source')
+  const registry = lockSql.indexOf('from public.commerce_items source')
+  const referencedPackage = lockSql.indexOf('from public.intensive_mentoring_packages source', bundle)
+  const referencedAddOn = lockSql.indexOf('from public.intensive_mentoring_add_ons source', bundle)
+  assert.ok(bundle >= 0 && referencedPackage > bundle)
+  assert.ok(referencedAddOn > bundle && referencedAddOn < registry)
+  assert.ok(referencedPackage < registry && registry < bundleItems)
+  assert.match(reservationMigration, /create trigger intensive_bundle_items_lock_parent/)
+})
+
+test('voucher reservations use one 60-minute source of truth and cart application does not reserve', () => {
+  const ttl = reservationFunctionSql('commerce_discount_reservation_ttl')
+  const apply = reservationFunctionSql('apply_discount_code')
+  const create = reservationFunctionSql('create_order_from_cart')
+
+  assert.match(ttl, /interval '60 minutes'/)
+  assert.match(create, /public\.commerce_discount_reservation_ttl\(\)/)
+  assert.doesNotMatch(create, /interval '24 hours'/)
+  assert.doesNotMatch(apply, /insert into public\.commerce_discount_(redemptions|user_claims)/)
+})
+
+test('voucher user claims enforce one active reservation and one lifetime redemption', () => {
+  assert.match(reservationMigration, /create table public\.commerce_discount_user_claims/)
+  assert.match(reservationMigration, /primary key \(user_id, discount_code_id\)/)
+  assert.match(reservationMigration, /status text not null check \(status in \('reserved', 'redeemed'\)\)/)
+  assert.match(reservationMigration, /order_id uuid not null unique references public\.orders\(id\)(?! on delete cascade)/)
+
+  const create = reservationFunctionSql('create_order_from_cart')
+  const sync = reservationFunctionSql('sync_discount_redemption_from_order_status')
+  const apply = reservationFunctionSql('apply_discount_code')
+  const eligibility = reservationFunctionSql('assert_discount_user_eligible')
+  assert.match(create, /insert into public\.commerce_discount_user_claims/)
+  assert.match(create, /Discount code already has an active reservation for this user/)
+  assert.match(apply, /assert_discount_user_eligible\(v_uid, v_discount_code_id\)/)
+  assert.match(eligibility, /Discount code has already been redeemed by this user/)
+  assert.match(sync, /set status = 'redeemed'/)
+  assert.match(sync, /delete from public\.commerce_discount_user_claims/)
+})
+
+test('voucher claim backfill expires legacy active holds for users who already redeemed', () => {
+  const claimsTable = reservationMigration.indexOf('create table public.commerce_discount_user_claims')
+  const cleanup = reservationMigration.indexOf('-- A successful historical use')
+  assert.ok(cleanup >= 0)
+  assert.ok(cleanup < claimsTable)
+  const cleanupSql = reservationMigration.slice(cleanup, claimsTable)
+  assert.match(cleanupSql, /redeemed/)
+  assert.match(cleanupSql, /update public\.payment_attempts/)
+  assert.match(cleanupSql, /update public\.orders/)
+  assert.match(cleanupSql, /set status = 'expired'/)
+})
+
+test('migration cleanup locks each Order before expiring its Payment Attempts', () => {
+  const claimsTable = reservationMigration.indexOf('create table public.commerce_discount_user_claims')
+  const cleanupSql = reservationMigration.slice(0, claimsTable)
+  const cleanupLoops = cleanupSql.match(
+    /for v_order_id in[\s\S]*?order by o\.id[\s\S]*?for update[\s\S]*?update public\.payment_attempts[\s\S]*?update public\.orders[\s\S]*?end loop;/g,
+  ) ?? []
+
+  assert.equal(cleanupLoops.length, 3)
+})
+
+test('Snap claim, store, reserve, and status functions lock Order before Payment Attempt', () => {
+  for (const name of [
+    'reserve_midtrans_payment_attempt',
+    'claim_midtrans_snap_creation',
+    'store_midtrans_snap_token',
+    'release_midtrans_snap_creation',
+    'apply_midtrans_payment_status',
+  ]) {
+    const sql = reservationFunctionSql(name)
+    const orderLock = sql.indexOf('select * into v_order')
+    const attemptLock = sql.indexOf('select * into v_attempt')
+    assert.ok(orderLock >= 0, `${name} must lock the Order`)
+    assert.ok(attemptLock > orderLock, `${name} must lock Payment Attempt after the Order`)
+    assert.ok(sql.indexOf('for update', orderLock) > orderLock)
+    assert.ok(sql.indexOf('for update', attemptLock) > attemptLock)
+  }
+
+  const reserve = reservationFunctionSql('reserve_midtrans_payment_attempt')
+  const reserveAttempt = reserve.indexOf('select * into v_attempt')
+  const reserveRedemption = reserve.indexOf('select * into v_redemption')
+  assert.ok(reserveAttempt >= 0 && reserveRedemption > reserveAttempt)
+})
+
+test('late paid status durably expires a discounted Order instead of rolling expiration back', () => {
+  const sql = reservationFunctionSql('apply_midtrans_payment_status')
+  assert.match(sql, /v_redemption\.reserved_until <= v_now/)
+  assert.match(sql, /set status = 'expired'/)
+  assert.match(sql, /update public\.orders[\s\S]*set status = 'expired'/)
+  assert.doesNotMatch(sql, /raise exception 'Discount reservation expired/)
 })

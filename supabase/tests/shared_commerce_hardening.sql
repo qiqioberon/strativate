@@ -102,6 +102,7 @@ select public.add_cart_item('aa110000-0000-0000-0000-000000000001');
 select public.create_order_from_cart(
   (select id from public.carts where user_id = auth.uid() and status = 'active')
 );
+
 select set_config(
   'test.hardening.order_failed',
   (select id::text from public.orders
@@ -169,10 +170,15 @@ select test_commerce_hardening.assert(
 reset role;
 
 -- A fresh checkout is allowed after payment_failed.
+reset role;
+delete from public.cart_items
+where cart_id = (
+  select id from public.carts
+  where user_id = 'aa100000-0000-0000-0000-000000000001'
+    and status = 'active'
+);
 set local role authenticated;
 select set_config('request.jwt.claim.sub', 'aa100000-0000-0000-0000-000000000001', true);
-delete from public.cart_items
-where cart_id = (select id from public.carts where user_id = auth.uid() and status = 'active');
 select public.add_cart_item('aa110000-0000-0000-0000-000000000001');
 select public.create_order_from_cart(
   (select id from public.carts where user_id = auth.uid() and status = 'active')
@@ -310,6 +316,14 @@ select public.apply_discount_code(
 select public.create_order_from_cart(
   (select id from public.carts where user_id = auth.uid() and status = 'active')
 );
+select public.get_or_create_active_cart();
+select test_commerce_hardening.denied(
+  $$select public.apply_discount_code(
+    (select id from public.carts where user_id = auth.uid() and status = 'active'),
+    'HARDEN20'
+  )$$,
+  'second active reservation for the same user and voucher was allowed'
+);
 select set_config(
   'test.hardening.discount_order',
   (select id::text from public.orders
@@ -321,6 +335,14 @@ select set_config(
 reset role;
 
 set local role service_role;
+select test_commerce_hardening.assert(
+  (select count(*) = 1
+   from public.commerce_discount_user_claims
+   where user_id = 'aa100000-0000-0000-0000-000000000001'
+     and discount_code_id = 'aa120000-0000-0000-0000-000000000001'
+     and status = 'reserved'),
+  'first checkout creates one active user voucher reservation claim'
+);
 select public.reserve_midtrans_payment_attempt(current_setting('test.hardening.discount_order')::uuid);
 select set_config(
   'test.hardening.discount_attempt',
@@ -336,6 +358,14 @@ select test_commerce_hardening.assert(
    join public.commerce_discount_redemptions r on r.order_id = pa.order_id
    where pa.id = current_setting('test.hardening.discount_attempt')::uuid),
   'valid discounted payment attempt inherits the reservation deadline'
+);
+
+select test_commerce_hardening.assert(
+  (select r.reserved_until = r.created_at + public.commerce_discount_reservation_ttl()
+   from public.commerce_discount_redemptions r
+   where r.order_id = current_setting('test.hardening.discount_order')::uuid)
+  and public.commerce_discount_reservation_ttl() = interval '60 minutes',
+  'discount reservation uses the single 60-minute TTL source of truth'
 );
 
 select test_commerce_hardening.assert(
@@ -366,36 +396,32 @@ set reserved_until = now() - interval '1 minute'
 where order_id = current_setting('test.hardening.discount_order')::uuid;
 
 set local role service_role;
-select test_commerce_hardening.denied(
-  format(
-    $$select public.apply_midtrans_payment_status(
-      %L::uuid, 'paid', 'settlement', 'late-paid-transaction', null, 'bank_transfer'
-    )$$,
-    current_setting('test.hardening.discount_attempt')
-  ),
-  'expired discount reservation was redeemed by a late paid transition'
+select public.apply_midtrans_payment_status(
+  current_setting('test.hardening.discount_attempt')::uuid,
+  'paid', 'settlement', 'late-paid-transaction', null, 'bank_transfer'
 );
 
 select test_commerce_hardening.assert(
-  (select status = 'pending_payment'
+  (select status = 'expired'
    from public.orders
    where id = current_setting('test.hardening.discount_order')::uuid)
   and
-  (select status = 'pending'
+  (select status = 'expired'
    from public.payment_attempts
    where id = current_setting('test.hardening.discount_attempt')::uuid)
   and
-  (select status = 'reserved'
+  (select status = 'released'
    from public.commerce_discount_redemptions
    where order_id = current_setting('test.hardening.discount_order')::uuid),
-  'rejected late paid transition does not partially mutate transactional state'
+  'late paid transition durably expires the old discounted lifecycle'
 );
 
-select test_commerce_hardening.assert(
-  public.reserve_midtrans_payment_attempt(
-    current_setting('test.hardening.discount_order')::uuid
-  ) is null,
-  'expired discounted Order returns no reusable/new payment attempt'
+select test_commerce_hardening.denied(
+  format(
+    $$select public.reserve_midtrans_payment_attempt(%L::uuid)$$,
+    current_setting('test.hardening.discount_order')
+  ),
+  'expired discounted Order created or reused a payment attempt'
 );
 
 select test_commerce_hardening.assert(
@@ -418,6 +444,16 @@ select test_commerce_hardening.assert(
   ),
   'expired discounted Order durably releases reservation capacity and purchase claim'
 );
+
+select test_commerce_hardening.assert(
+  not exists (
+    select 1
+    from public.commerce_discount_user_claims
+    where user_id = 'aa100000-0000-0000-0000-000000000001'
+      and discount_code_id = 'aa120000-0000-0000-0000-000000000001'
+  ),
+  'released unpaid reservation does not consume the user lifetime voucher claim'
+);
 reset role;
 
 -- max_redemptions=1 capacity can be legitimately reassigned only through a new checkout.
@@ -435,7 +471,18 @@ select test_commerce_hardening.assert(
 select public.create_order_from_cart(
   (select id from public.carts where user_id = auth.uid() and status = 'active')
 );
+select set_config(
+  'test.hardening.discount_retry_order',
+  (select id::text from public.orders
+   where user_id = auth.uid()
+     and discount_code_id = 'aa120000-0000-0000-0000-000000000001'
+     and status = 'pending_payment'
+   order by created_at desc, id desc limit 1),
+  true
+);
+reset role;
 
+set local role service_role;
 select test_commerce_hardening.assert(
   (select count(*) = 1
    from public.commerce_discount_redemptions
@@ -447,6 +494,37 @@ select test_commerce_hardening.assert(
    where discount_code_id = 'aa120000-0000-0000-0000-000000000001'
      and status = 'released'),
   'new checkout creates a new reservation without re-reserving the expired Order'
+);
+select public.reserve_midtrans_payment_attempt(
+  current_setting('test.hardening.discount_retry_order')::uuid
+);
+select public.apply_midtrans_payment_status(
+  (select id from public.payment_attempts
+   where order_id = current_setting('test.hardening.discount_retry_order')::uuid
+   order by created_at desc, id desc limit 1),
+  'paid', 'settlement', 'successful-voucher-redemption', null, 'bank_transfer'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'aa100000-0000-0000-0000-000000000001', true);
+select public.get_or_create_active_cart();
+select test_commerce_hardening.denied(
+  $$select public.apply_discount_code(
+    (select id from public.carts where user_id = auth.uid() and status = 'active'),
+    'HARDEN20'
+  )$$,
+  'redeemed voucher was applied again by the same user'
+);
+reset role;
+
+set local role service_role;
+select test_commerce_hardening.assert(
+  (select status = 'redeemed'
+   from public.commerce_discount_user_claims
+   where user_id = 'aa100000-0000-0000-0000-000000000001'
+     and discount_code_id = 'aa120000-0000-0000-0000-000000000001'),
+  'paid voucher use permanently redeems the user voucher claim'
 );
 reset role;
 

@@ -82,7 +82,7 @@ async function applyProviderStatus(attempt: PaymentAttempt, status: MidtransStat
     p_payment_type: status.paymentType,
   })
   if (error || !data) throw new Error('Payment status could not be applied.')
-  if (status.normalizedStatus === 'paid') {
+  if (status.normalizedStatus === 'paid' && data.status === 'paid') {
     try {
       await deliverPaidInvoiceForOrder(attempt.order_id)
     } catch (error) {
@@ -93,6 +93,13 @@ async function applyProviderStatus(attempt: PaymentAttempt, status: MidtransStat
     }
   }
   return data
+}
+
+function orderStatusFromAttempt(status: PaymentAttempt['status']): OrderWithItems['status'] {
+  if (status === 'paid') return 'paid'
+  if (status === 'failed') return 'payment_failed'
+  if (status === 'expired' || status === 'cancelled') return status
+  return 'pending_payment'
 }
 
 async function loadAttempt(attemptId: string): Promise<PaymentAttempt | null> {
@@ -223,7 +230,7 @@ export async function reconcileMidtransWebhook(payload: unknown) {
   const applied = await applyProviderStatus(attempt, providerStatus)
   return {
     orderId: order.id,
-    orderStatus: providerStatus.normalizedStatus === 'paid' ? 'paid' : order.status,
+    orderStatus: orderStatusFromAttempt(applied.status),
     paymentStatus: applied.status,
   }
 }
