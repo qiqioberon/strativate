@@ -1,7 +1,5 @@
 'use client'
 
-// Keep this chart client-only so Chart.js never runs in a server component.
-
 import {
   BarElement,
   CategoryScale,
