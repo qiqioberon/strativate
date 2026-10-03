@@ -353,3 +353,62 @@
 .digital-product-directory__toolbar label:has(select)::after { width: 6px; height: 6px; flex: 0 0 auto; border-right: 1.5px solid #8c7465; border-bottom: 1.5px solid #8c7465; content: ''; transform: rotate(45deg) translateY(-2px); pointer-events: none; }
 .digital-product-card__sales { color: var(--marketing-orange-dark); font-size: .74rem; font-weight: 700; }
 @media (max-width: 620px) { .digital-product-directory__toolbar { align-items: stretch; flex-direction: column; } .digital-product-directory__toolbar label { width: 100%; } }
+
+
+/* Pending Digital Product payment handoff modal. */
+.digital-product-active-payment-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(calc(100vw - 32px), 410px);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: 0 24px 70px rgba(58, 31, 16, .22);
+}
+.digital-product-active-payment-dialog::backdrop {
+  background: rgba(27, 18, 13, .42);
+  backdrop-filter: blur(2px);
+}
+.digital-product-active-payment-dialog__surface {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid #eadbd0;
+  border-radius: 18px;
+  background: #fffdfa;
+  color: var(--marketing-ink);
+}
+.digital-product-active-payment-dialog__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--marketing-orange-dark);
+  background: #fff0e3;
+}
+.digital-product-active-payment-dialog h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -.025em;
+}
+.digital-product-active-payment-dialog p {
+  margin: 7px 0 0;
+  color: var(--marketing-muted);
+  font-size: .76rem;
+  line-height: 1.6;
+}
+.digital-product-active-payment-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.digital-product-active-payment-dialog__actions > button { width: 100%; }
+
+@media (max-width: 420px) {
+  .digital-product-active-payment-dialog { width: calc(100vw - 24px); }
+  .digital-product-active-payment-dialog__surface { padding: 19px; }
+}

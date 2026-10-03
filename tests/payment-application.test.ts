@@ -20,6 +20,8 @@ test('checkout start uses trusted Order snapshots and one-owner Snap creation cl
   assert.match(application, /store_midtrans_snap_token/)
   assert.match(application, /release_midtrans_snap_creation/)
   assert.match(application, /randomUUID/)
+  assert.match(application, /order\.status !== 'pending_payment'/)
+  assert.match(application, /paymentExpiresAt: reserved\.payment_expires_at/)
   assert.doesNotMatch(startRoute, /price|gross_amount|paid_status/i)
   assert.doesNotMatch(startRoute, /MIDTRANS_SERVER_KEY/)
 })

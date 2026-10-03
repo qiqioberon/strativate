@@ -75,6 +75,47 @@ test('create Snap uses sandbox URL, Basic Auth, trusted totals, safe item names,
   assert.doesNotMatch(JSON.stringify(result), /server-secret/)
 })
 
+test('discounted Snap caps both page and payment expiry before the trusted reservation deadline', async () => {
+  configure('sandbox')
+  const requests: CapturedRequest[] = []
+  globalThis.fetch = (async (fetchInput, init) => {
+    requests.push({ input: fetchInput, init })
+    return new Response(JSON.stringify({ token: 'discount-token' }), { status: 201 })
+  }) as typeof fetch
+
+  const deadline = new Date(Date.now() + 90 * 60_000).toISOString()
+  await createMidtransSnapTransaction({ ...snapInput(), paymentExpiresAt: deadline })
+
+  const body = JSON.parse(String(requests[0]?.init?.body)) as {
+    expiry: { start_time: string; duration: number; unit: string }
+    page_expiry: { duration: number; unit: string }
+  }
+  assert.match(body.expiry.start_time, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+0700$/)
+  assert.equal(body.expiry.unit, 'minute')
+  assert.equal(body.page_expiry.unit, 'minute')
+  assert.equal(body.page_expiry.duration, body.expiry.duration)
+  assert.ok(body.expiry.duration >= 5)
+  assert.ok(body.expiry.duration < 90)
+})
+
+test('discounted Snap fails before contacting Midtrans when remaining time cannot satisfy provider minimum expiry', async () => {
+  configure('sandbox')
+  let calls = 0
+  globalThis.fetch = (async () => {
+    calls += 1
+    return new Response(JSON.stringify({ token: 'unexpected' }), { status: 201 })
+  }) as typeof fetch
+
+  await assert.rejects(
+    () => createMidtransSnapTransaction({
+      ...snapInput(),
+      paymentExpiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
+    }),
+    /too close to expiry/,
+  )
+  assert.equal(calls, 0)
+})
+
 test('create Snap switches to the production endpoint without changing auth semantics', async () => {
   configure('production')
   let url = ''

@@ -112,6 +112,27 @@ async function midtransFetch(input: string, init: RequestInit): Promise<Response
   }
 }
 
+function formatMidtransJakartaTime(timestamp: number) {
+  const date = new Date(timestamp + 7 * 60 * 60 * 1000)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} +0700`
+}
+
+function buildBoundedPaymentExpiry(expiresAt: string, now = Date.now()) {
+  const deadline = Date.parse(expiresAt)
+  if (!Number.isFinite(deadline)) throw new Error('Invalid trusted payment deadline.')
+
+  // Midtrans page_expiry is relative to provider token creation. Reserve the full
+  // HTTP timeout so even a slow successful request cannot extend beyond our deadline.
+  const durationMinutes = Math.floor((deadline - now - MIDTRANS_REQUEST_TIMEOUT_MS) / 60_000)
+  if (durationMinutes < 5) throw new Error('Discounted Order payment window is too close to expiry. Create a new checkout.')
+
+  return {
+    durationMinutes,
+    startTime: formatMidtransJakartaTime(now),
+  }
+}
+
 async function parseJson(response: Response): Promise<Record<string, unknown>> {
   let payload: unknown
   try {
@@ -134,6 +155,7 @@ export async function createMidtransSnapTransaction(input: {
   grossAmount: number
   items: MidtransItem[]
   customer: MidtransCustomer
+  paymentExpiresAt?: string | null
 }) {
   if (!Number.isSafeInteger(input.grossAmount) || input.grossAmount <= 0) throw new Error('Invalid trusted Order total.')
   if (!input.providerOrderId || input.providerOrderId.length > 49) throw new Error('Invalid Midtrans provider order ID.')
@@ -145,6 +167,10 @@ export async function createMidtransSnapTransaction(input: {
     return sum + item.price
   }, 0)
   if (itemTotal !== input.grossAmount) throw new Error('Order Item total does not match Order total.')
+
+  const boundedExpiry = input.paymentExpiresAt
+    ? buildBoundedPaymentExpiry(input.paymentExpiresAt)
+    : null
 
   const config = getConfig()
   const response = await midtransFetch(config.snapTransactionUrl, {
@@ -170,10 +196,22 @@ export async function createMidtransSnapTransaction(input: {
         ...(input.customer.firstName ? { first_name: input.customer.firstName } : {}),
         ...(input.customer.lastName ? { last_name: input.customer.lastName } : {}),
       },
-      page_expiry: {
-        duration: 24,
-        unit: 'hour',
-      },
+      ...(boundedExpiry ? {
+        expiry: {
+          start_time: boundedExpiry.startTime,
+          duration: boundedExpiry.durationMinutes,
+          unit: 'minute',
+        },
+        page_expiry: {
+          duration: boundedExpiry.durationMinutes,
+          unit: 'minute',
+        },
+      } : {
+        page_expiry: {
+          duration: 24,
+          unit: 'hour',
+        },
+      }),
     }),
     cache: 'no-store',
   })

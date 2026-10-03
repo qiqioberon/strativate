@@ -29,8 +29,11 @@ const SNAP_CREATION_POLL_ATTEMPTS = 10
 
 function hasValidSnapToken(attempt: PaymentAttempt, now = Date.now()) {
   if (!attempt.snap_token || !attempt.snap_token_expires_at) return false
-  const expiresAt = Date.parse(attempt.snap_token_expires_at)
-  return Number.isFinite(expiresAt) && expiresAt > now
+  const tokenExpiresAt = Date.parse(attempt.snap_token_expires_at)
+  if (!Number.isFinite(tokenExpiresAt) || tokenExpiresAt <= now) return false
+  if (!attempt.payment_expires_at) return true
+  const paymentExpiresAt = Date.parse(attempt.payment_expires_at)
+  return Number.isFinite(paymentExpiresAt) && paymentExpiresAt > now
 }
 
 function sanitize(order: OrderWithItems, attempt: PaymentAttempt | null): SanitizedCheckout {
@@ -118,6 +121,7 @@ export async function startOwnedOrderPayment(orderId: string, customer: Checkout
   if (!customer.email) throw new Error('Authenticated customer email is required.')
   const order = await getOrderWithItems(orderId)
   if (order.status === 'paid') throw new Error('Order is already paid.')
+  if (order.status !== 'pending_payment') throw new Error('Order is terminal. Create a new checkout.')
   if (!order.items.length) throw new Error('Order has no items.')
   const trustedItems = buildTrustedMidtransItems(order)
 
@@ -150,6 +154,7 @@ export async function startOwnedOrderPayment(orderId: string, customer: Checkout
       grossAmount: order.total_amount,
       items: trustedItems,
       customer,
+      paymentExpiresAt: reserved.payment_expires_at,
     })
   } catch {
     await admin.rpc('release_midtrans_snap_creation', {
