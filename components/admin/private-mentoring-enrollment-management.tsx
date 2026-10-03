@@ -349,12 +349,11 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
 
         <section className="mentoring-enrollment-summary-panel" aria-label="Ringkasan enrollment">
           <div className="mentoring-enrollment-summary-grid">
-            <div><span>Mentee</span><strong>{selected.mentee_name}</strong><small>{selected.mentee_email}</small></div>
             <div><span>Paket</span><strong>{compactPackageName(selected)}</strong><small>{compactPackageMeta(selected)}</small></div>
             <div><span>Progress</span><strong>{selected.configured_sessions}/{selected.purchased_sessions} sesi diatur</strong><small>{selected.completed_sessions} selesai</small></div>
-            {selected.purchased_sessions>=5?<div className="mentoring-summary-dedicated-mentor"><span>Dedicated Mentor</span><strong>{currentPrimaryName}</strong>{!editingPrimaryMentor?<button className="button button-outline button-compact" type="button" onClick={()=>setEditingPrimaryMentor(true)}><Pencil aria-hidden="true"/>{currentPrimary?'Ganti mentor':'Tetapkan mentor'}</button>:null}</div>:null}
+            {selected.purchased_sessions>=5?<div className="mentoring-summary-dedicated-mentor"><span>Dedicated Mentor</span><div className="mentoring-summary-inline-value"><strong>{currentPrimaryName}</strong>{!editingPrimaryMentor?<button className="mentoring-summary-icon-action" type="button" onClick={()=>setEditingPrimaryMentor(true)} aria-label={currentPrimary?'Ganti mentor':'Tetapkan mentor'} title={currentPrimary?'Ganti mentor':'Tetapkan mentor'}><Pencil aria-hidden="true"/></button>:null}</div></div>:null}
+            <MentoringCompetitionEditor kind="private" parentId={selected.enrollment_id} compact summary/>
           </div>
-          <div className="mentoring-summary-competition"><MentoringCompetitionEditor kind="private" parentId={selected.enrollment_id} compact/></div>
           {selected.purchased_sessions>=5&&editingPrimaryMentor?<div className="mentoring-summary-mentor-editor">
             <label className="ops-field"><span>{currentPrimary?'Ganti mentor':'Set mentor utama'}</span><select value={primaryMentorId} onChange={event=>setPrimaryMentorId(event.target.value)}><option value="">Pilih mentor sesuai tier</option>{eligibleMentors.map(mentor=><option key={mentor.mentor_id} value={mentor.mentor_id}>{mentor.mentor_name}</option>)}</select></label>
             {currentPrimary&&primaryMentorId&&primaryMentorId!==currentPrimary?<label className="ops-field"><span>Alasan perubahan (wajib)</span><textarea rows={2} value={mentorReason} onChange={event=>setMentorReason(event.target.value)} placeholder="Alasan operasional perubahan mentor"/></label>:null}
