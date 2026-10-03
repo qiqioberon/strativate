@@ -199,3 +199,315 @@
     align-items: stretch;
   }
 }
+
+
+/* 2026-10-03 admin commerce + managed Zoom visual polish. */
+.discount-admin .discount-admin__list {
+  gap: 14px;
+}
+
+.discount-admin .discount-code-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 24px;
+  padding: 20px 22px;
+  border: 1px solid #ece1d9;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 9px 26px rgb(89 48 24 / 5%);
+}
+
+.discount-admin .discount-code-card__content {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.discount-admin .discount-code-card__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.discount-admin .discount-value-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 10px;
+  border: 1px solid #ffd1ad;
+  border-radius: 999px;
+  color: #a74600;
+  background: #fff0e3;
+  font-size: .68rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.discount-admin .discount-value-badge--fixed {
+  border-color: #f0ddb0;
+  color: #735300;
+  background: #fff8dc;
+}
+
+.discount-admin .discount-code-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -.015em;
+}
+
+.discount-admin .discount-code-card__description {
+  margin: -2px 0 0;
+  color: #766b65;
+  font-size: .74rem;
+  line-height: 1.5;
+}
+
+.discount-admin .discount-code-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.discount-admin .discount-code-card__meta > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid #eee5df;
+  border-radius: 999px;
+  color: #675d57;
+  background: #fbf8f6;
+  font-size: .68rem;
+  line-height: 1.25;
+}
+
+.discount-admin .discount-code-card__meta strong {
+  color: #231b17;
+  font-size: inherit;
+}
+
+.discount-admin .discount-code-card__actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.zoom-room-management {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.zoom-room-management .role-card:hover {
+  transform: none;
+}
+
+.zoom-room-management .zoom-room-capacity.role-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.zoom-room-management .zoom-room-capacity__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  color: #c94f00;
+  background: #fff0e2;
+}
+
+.zoom-room-management .zoom-room-capacity__icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.zoom-room-management .zoom-room-capacity__copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.zoom-room-management .zoom-room-capacity__copy > span {
+  color: #89776c;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.zoom-room-management .zoom-room-capacity__copy > strong {
+  font-size: 1rem;
+}
+
+.zoom-room-management .zoom-room-capacity__copy > p {
+  color: #756a63;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
+.zoom-room-management .zoom-room-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  gap: 14px;
+}
+
+.zoom-room-management .zoom-room-card.role-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  align-content: start;
+  width: 100%;
+  min-width: 0;
+  gap: 14px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.zoom-room-management .zoom-room-card__head {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 11px;
+}
+
+.zoom-room-management .zoom-room-card__head > div:last-child {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.zoom-room-management .zoom-room-card__head h3 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: .95rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zoom-room-management .zoom-room-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #eee3dc;
+  border-radius: 11px;
+  color: #9c4200;
+  background: #fffaf6;
+  text-decoration: none;
+}
+
+.zoom-room-management .zoom-room-link:hover {
+  border-color: #efc29f;
+  background: #fff5ed;
+}
+
+.zoom-room-management .zoom-room-link__label {
+  color: #776b64;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.zoom-room-management .zoom-room-link__value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-size: .74rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zoom-room-management .zoom-room-link > svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.zoom-room-management .zoom-room-usage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  gap: 4px;
+}
+
+.zoom-room-management .zoom-room-card__actions {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.zoom-room-management .zoom-room-empty.role-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .zoom-room-management .zoom-room-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .discount-admin .discount-code-card {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .discount-admin .discount-code-card__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .zoom-room-management .zoom-room-title {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .zoom-room-management .zoom-room-title > .button {
+    align-self: flex-start;
+  }
+
+  .zoom-room-management .zoom-room-link {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .zoom-room-management .zoom-room-link__label {
+    grid-column: 1 / -1;
+  }
+}

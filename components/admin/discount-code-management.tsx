@@ -34,8 +34,16 @@ const categoryOptions: { value: DiscountCategory; label: string; description: st
   { value: 'intensive_mentoring', label: 'Intensive Mentoring', description: 'Packages, bundles, add-ons, and custom offers.' },
 ]
 
-function toLocalInput(value: string | null) {
-  return value ? new Date(value).toISOString().slice(0, 16) : ''
+function toLocalDateInput(value: string | null) {
+  if (!value) return ''
+  const date = new Date(value)
+  const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  return localTime.toISOString().slice(0, 10)
+}
+
+function dateBoundaryIso(value: string, boundary: 'start' | 'end') {
+  if (!value) return null
+  return new Date(`${value}${boundary === 'start' ? 'T00:00:00.000' : 'T23:59:59.999'}`).toISOString()
 }
 
 function scopeSummary(item: DiscountCode, categories: DiscountCategory[]) {
@@ -104,7 +112,7 @@ export function DiscountCodeManagement() {
     setDraft({
       code: item.code, description: item.description ?? '', discountType: item.discount_type,
       discountValue: item.discount_value, minimumSubtotal: item.minimum_subtotal_amount,
-      startsAt: toLocalInput(item.starts_at), endsAt: toLocalInput(item.ends_at),
+      startsAt: toLocalDateInput(item.starts_at), endsAt: toLocalDateInput(item.ends_at),
       maxRedemptions: item.max_redemptions?.toString() ?? '', scope: item.scope, categories,
       selectedProductIds: (mappingResult.data ?? []).map(row => row.product_id), isActive: item.is_active,
     })
@@ -148,8 +156,8 @@ export function DiscountCodeManagement() {
       p_code: draft.code.trim().toUpperCase(), p_description: draft.description,
       p_discount_type: draft.discountType, p_discount_value: draft.discountValue,
       p_minimum_subtotal_amount: draft.minimumSubtotal,
-      p_starts_at: draft.startsAt ? new Date(draft.startsAt).toISOString() : null,
-      p_ends_at: draft.endsAt ? new Date(draft.endsAt).toISOString() : null,
+      p_starts_at: dateBoundaryIso(draft.startsAt, 'start'),
+      p_ends_at: dateBoundaryIso(draft.endsAt, 'end'),
       p_max_redemptions: draft.maxRedemptions ? Number(draft.maxRedemptions) : null,
       p_scope: draft.scope, p_is_active: draft.isActive, p_categories: draft.categories,
       p_product_ids: draft.categories.includes('digital_products') && draft.scope === 'selected_digital_products' ? draft.selectedProductIds : [],
@@ -181,7 +189,22 @@ export function DiscountCodeManagement() {
     {!editingId && error ? <p className="form-error">{error}</p> : null}
     {loading ? <p>Loading discount codes…</p> : <div className="discount-admin__list">{items.length ? items.map(item => {
       const categories = categoriesByCode[item.id] ?? ['digital_products']
-      return <article key={item.id}><div><span className={item.is_active ? 'status-pill status-pill--success' : 'status-pill'}>{item.is_active ? 'Active' : 'Inactive'}</span><h3>{item.code}</h3><p>{item.discount_type === 'percentage' ? `${item.discount_value}% off` : `${formatRupiah(item.discount_value)} off`} · {item.redemption_count} paid redemption{item.redemption_count === 1 ? '' : 's'} · {scopeSummary(item, categories)}</p></div><div className="button-row"><button className="button button-outline button-compact" type="button" onClick={() => void edit(item)}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)}><Trash2 aria-hidden="true" size={14}/> Delete</button></div></article>
+      const discountLabel = item.discount_type === 'percentage' ? `${item.discount_value}% off` : `${formatRupiah(item.discount_value)} off`
+      return <article className="discount-code-card" key={item.id}>
+        <div className="discount-code-card__content">
+          <div className="discount-code-card__badges">
+            <span className={item.is_active ? 'status-pill status-pill--success' : 'status-pill'}>{item.is_active ? 'Active' : 'Inactive'}</span>
+            <span className={`discount-value-badge discount-value-badge--${item.discount_type}`}>{discountLabel}</span>
+          </div>
+          <h3>{item.code}</h3>
+          {item.description ? <p className="discount-code-card__description">{item.description}</p> : null}
+          <div className="discount-code-card__meta">
+            <span><strong>{item.redemption_count}</strong> paid redemption{item.redemption_count === 1 ? '' : 's'}</span>
+            <span>{scopeSummary(item, categories)}</span>
+          </div>
+        </div>
+        <div className="button-row discount-code-card__actions"><button className="button button-outline button-compact" type="button" onClick={() => void edit(item)}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)}><Trash2 aria-hidden="true" size={14}/> Delete</button></div>
+      </article>
     }) : <p>No discount codes yet.</p>}</div>}
 
     <dialog ref={dialogRef} className="discount-dialog" data-testid="discount-code-dialog" onClose={closeEditor}>
@@ -217,8 +240,8 @@ export function DiscountCodeManagement() {
 
         <div className="discount-dialog__section">
           <div className="discount-date-grid">
-            <label className="discount-field">Starts at<input type="datetime-local" value={draft.startsAt} onChange={event => setDraft({ ...draft, startsAt: event.target.value })}/><small>Leave empty to start immediately.</small></label>
-            <label className="discount-field">Ends at<input type="datetime-local" value={draft.endsAt} onChange={event => setDraft({ ...draft, endsAt: event.target.value })}/><small>Leave empty for no end date.</small></label>
+            <label className="discount-field">Starts on<input type="date" value={draft.startsAt} onChange={event => setDraft({ ...draft, startsAt: event.target.value })}/><small>Starts at the beginning of this date. Leave empty to start immediately.</small></label>
+            <label className="discount-field">Ends on<input type="date" value={draft.endsAt} onChange={event => setDraft({ ...draft, endsAt: event.target.value })}/><small>Valid through the selected date. Leave empty for no end date.</small></label>
           </div>
           <label className="discount-field">Max paid redemptions<input type="number" min="1" placeholder="Unlimited" value={draft.maxRedemptions} onChange={event => setDraft({ ...draft, maxRedemptions: event.target.value })}/><small>Maximum number of successful paid redemptions. Leave empty for unlimited.</small></label>
         </div>
