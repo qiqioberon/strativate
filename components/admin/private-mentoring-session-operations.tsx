@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, ExternalLink, Pencil, RefreshCw, RotateCcw, Save } from 'lucide-react'
+import { ExternalLink, Pencil, RefreshCw, RotateCcw, Save } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 
 type Competition={enrollment_id:string;competition_category_id:string|null;competition_category_name:string|null;competition_name:string|null;competition_updated_at:string|null}
 type Category={id:string;name:string}
-type MeetingState={
+export type AdminMeetingState={
   sessionId:string
   status:string
   assignedZoomRoomId:string|null
@@ -24,9 +24,9 @@ type MeetingState={
 }
 type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 
-function effectiveMeetingLabel(state:MeetingState){
+function effectiveMeetingLabel(state:AdminMeetingState){
   if(!state.effectiveMeetingUrl)return'Belum tersedia'
-  return state.manualMeetingUrl?'Manual override':'Zoom terkelola'
+  return state.manualMeetingUrl?'Link manual':'Zoom terkelola'
 }
 
 export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
@@ -89,7 +89,18 @@ export function AdminCompetitionEditor({enrollmentId}:{enrollmentId:string}){
 }
 
 export function AdminSessionOperations({
-  sessionId,status,menteeName,sessionNumber,mentorName,scheduledStartAt,onChanged,mentoringKind='private',showSessionReference=true,
+  sessionId,
+  status,
+  menteeName,
+  sessionNumber,
+  mentorName,
+  scheduledStartAt,
+  onChanged,
+  mentoringKind='private',
+  showSessionReference=true,
+  showCompletionActions=true,
+  showContextSummary=true,
+  onStateChange,
 }:{
   sessionId:string
   status:string
@@ -100,10 +111,13 @@ export function AdminSessionOperations({
   onChanged:()=>void|Promise<void>
   mentoringKind?:'private'|'intensive'
   showSessionReference?:boolean
+  showCompletionActions?:boolean
+  showContextSummary?:boolean
+  onStateChange?:(state:AdminMeetingState|null)=>void
 }){
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
-  const[state,setState]=useState<MeetingState|null>(null)
+  const[state,setState]=useState<AdminMeetingState|null>(null)
   const[manualUrl,setManualUrl]=useState('')
   const[zoomRoomId,setZoomRoomId]=useState('')
   const[editingRoom,setEditingRoom]=useState(false)
@@ -112,16 +126,29 @@ export function AdminSessionOperations({
   const[message,setMessage]=useState('')
   const confirmRef=useRef<HTMLDialogElement>(null)
 
+  const publishState=useCallback((next:AdminMeetingState|null)=>{
+    setState(next)
+    onStateChange?.(next)
+  },[onStateChange])
+
   const load=useCallback(async()=>{
     try{
-      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{cache:'no-store'})
-      const body=await response.json() as MeetingState&{error?:string}
-      if(response.ok){setState(body);setManualUrl(body.manualMeetingUrl??'');setZoomRoomId(body.assignedZoomRoomId??'');return}
+      const response=await fetch('/api/admin/'+mentoringKind+'-mentoring/sessions/'+sessionId+'/meeting',{cache:'no-store'})
+      const body=await response.json() as AdminMeetingState&{error?:string}
+      if(response.ok){
+        publishState(body)
+        setManualUrl(body.manualMeetingUrl??'')
+        setZoomRoomId(body.assignedZoomRoomId??'')
+        return
+      }
+      publishState(null)
       setMessage(body.error||'Status meeting belum dapat dimuat.')
     }catch{
+      publishState(null)
       setMessage('Status meeting belum dapat dimuat.')
     }
-  },[mentoringKind,sessionId])
+  },[mentoringKind,publishState,sessionId])
+
   useEffect(()=>{void load()},[load])
   useOperationalInvalidation(['provider','calendar'],()=>void load())
 
@@ -129,45 +156,57 @@ export function AdminSessionOperations({
     if(!zoomRoomId)return
     setBusy('room');setMessage('')
     try{
-      const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({zoomRoomId})})
-      const body=await response.json() as MeetingState&{error?:string}
+      const response=await fetch('/api/admin/'+mentoringKind+'-mentoring/sessions/'+sessionId+'/meeting',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({zoomRoomId})})
+      const body=await response.json() as AdminMeetingState&{error?:string}
       if(!response.ok)throw new Error(body.error||'Zoom room belum dapat diganti.')
-      setState(body);setEditingRoom(false);setMessage(body.calendarSyncStatus==='failed'?'Zoom room diperbarui, tetapi Google Calendar perlu disinkronkan ulang.':'Zoom room dan Google Calendar diperbarui.')
+      publishState(body)
+      setEditingRoom(false)
+      setMessage(body.calendarSyncStatus==='failed'?'Zoom room diperbarui, tetapi Google Calendar perlu disinkronkan ulang.':'Zoom room dan Google Calendar diperbarui.')
       await onChanged()
-    }catch(error){setMessage(error instanceof Error?error.message:'Zoom room belum dapat diganti.')}
-    finally{setBusy('')}
+    }catch(error){
+      setMessage(error instanceof Error?error.message:'Zoom room belum dapat diganti.')
+    }finally{
+      setBusy('')
+    }
   }
 
   async function saveOverride(){
     const trimmed=manualUrl.trim()
     if(!/^https:\/\//i.test(trimmed)){setMessage('Gunakan URL meeting HTTPS yang valid.');return}
     setBusy('meeting');setMessage('')
-    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:trimmed})})
-    const body=await response.json() as MeetingState&{error?:string}
+    const response=await fetch('/api/admin/'+mentoringKind+'-mentoring/sessions/'+sessionId+'/meeting',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:trimmed})})
+    const body=await response.json() as AdminMeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Meeting override belum dapat disimpan.');return}
-    setState(body);setManualUrl(body.manualMeetingUrl??'');setEditingOverride(false);setMessage(body.calendarSyncStatus==='failed'?'Manual override aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Manual override aktif. Calendar menggunakan link efektif; reservasi Zoom room tetap berlaku.')
+    publishState(body)
+    setManualUrl(body.manualMeetingUrl??'')
+    setEditingOverride(false)
+    setMessage(body.calendarSyncStatus==='failed'?'Manual override aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Manual override aktif. Calendar menggunakan link efektif; reservasi Zoom room tetap berlaku.')
     await onChanged()
   }
 
   async function restoreZoom(){
     setBusy('restore');setMessage('')
-    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/meeting`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:null})})
-    const body=await response.json() as MeetingState&{error?:string}
+    const response=await fetch('/api/admin/'+mentoringKind+'-mentoring/sessions/'+sessionId+'/meeting',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({url:null})})
+    const body=await response.json() as AdminMeetingState&{error?:string}
     setBusy('')
     if(!response.ok){setMessage(body.error||'Link Zoom belum dapat dipulihkan.');return}
-    setState(body);setManualUrl('');setEditingOverride(false);setMessage(body.calendarSyncStatus==='failed'?'Link Zoom terkelola aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Link efektif kembali menggunakan Zoom room terkelola dan Calendar sudah diperbarui.')
+    publishState(body)
+    setManualUrl('')
+    setEditingOverride(false)
+    setMessage(body.calendarSyncStatus==='failed'?'Link Zoom terkelola aktif, tetapi Google Calendar perlu disinkronkan ulang.':'Link efektif kembali menggunakan Zoom room terkelola dan Calendar sudah diperbarui.')
     await onChanged()
   }
 
   async function retrySync(){
     setBusy('sync');setMessage('')
-    const response=await fetch(`/api/admin/${mentoringKind}-mentoring/sessions/${sessionId}/sync`,{method:'POST'})
+    const response=await fetch('/api/admin/'+mentoringKind+'-mentoring/sessions/'+sessionId+'/sync',{method:'POST'})
     const body=await response.json() as{error?:string;status?:string}
     setBusy('')
     if(!response.ok&&response.status!==202){setMessage(body.error||'Google Calendar belum berhasil disinkronkan.');return}
     setMessage(body.status==='failed'?'Google Calendar masih perlu perhatian. Coba lagi setelah koneksi diperbaiki.':'Google Calendar sudah diperbarui menggunakan link meeting efektif.')
-    await load();await onChanged()
+    await load()
+    await onChanged()
   }
 
   async function setStatus(next:'completed'|'scheduled'){
@@ -180,20 +219,25 @@ export function AdminSessionOperations({
     await onChanged()
     await load()
   }
+
   const calendarError=state?.calendarSyncError?humanizeProviderError('calendar',state.calendarSyncError):null
+  const isClosed=status==='completed'||status==='cancelled'
 
   return <section className="meeting-override admin-session-operations" data-testid="admin-session-operations">
-    <div className="ops-section-heading"><div><p className="kicker">Operasi sesi</p><h4>Zoom room, Calendar & completion</h4><p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p></div></div>
+    <div className="meeting-calendar-heading"><div><h4>Meeting &amp; Calendar</h4>{showContextSummary?<p>{menteeName} · Sesi {sessionNumber}{mentorName?' · '+mentorName:''}{scheduledStartAt?' · '+new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(scheduledStartAt)):''}</p>:null}</div></div>
 
     {showSessionReference?<div className="session-reference-row"><div><span>Session ID</span><strong>{sessionId}</strong></div><CopyTextButton value={sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>:null}
 
-    {state?<div className="provider-status-grid">
-      <div><span>Zoom room</span><strong>{state.assignedZoomRoomName??(state.manualMeetingUrl?'Link manual lama':'Belum ditetapkan')}</strong></div>
-      <div><span>Calendar sync</span><strong>{humanizeSyncStatus(state.calendarSyncStatus)}</strong>{calendarError?<small role="status">{calendarError}</small>:null}</div>
-      <div><span>Session status</span><strong>{status==='scheduled'?'Terjadwal':status==='completed'?'Selesai':status==='cancelled'?'Dibatalkan':status.replaceAll('_',' ')}</strong></div>
+    {state?<div className="provider-status-grid meeting-calendar-grid">
+      <div><span>Zoom Room</span><strong>{state.assignedZoomRoomName??(state.manualMeetingUrl?'Menggunakan link manual':'Belum ditetapkan')}</strong>{state.manualMeetingUrl?<small className="manual-override-badge">Manual override</small>:null}</div>
+      <div className={state.calendarSyncStatus==='failed'?'is-warning':state.calendarSyncStatus==='ready'||state.calendarSyncStatus==='synced'?'is-success':''}><span>Calendar</span><strong>{humanizeSyncStatus(state.calendarSyncStatus)}</strong>{calendarError?<small role="status">{calendarError}</small>:null}</div>
+      <div><span>Meeting Link</span><strong>{effectiveMeetingLabel(state)}</strong></div>
     </div>:<p className="muted">Memuat status meeting…</p>}
 
-    {state?.effectiveMeetingUrl?<div className="effective-meeting-row"><div><span>Meeting link efektif</span><strong>{effectiveMeetingLabel(state)}</strong></div><div className="table-action-group"><a className="button button-primary button-compact" href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer">Buka Zoom <ExternalLink aria-hidden="true"/></a><CopyTextButton value={state.effectiveMeetingUrl} label="Salin link meeting" copiedLabel="Link disalin"/></div></div>:null}
+    {state?.effectiveMeetingUrl?<div className="effective-meeting-row">
+      <div><span>Meeting link efektif</span><code className="meeting-link-value">{state.effectiveMeetingUrl}</code></div>
+      {!isClosed?<div className="table-action-group"><a className="button button-primary button-compact" href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer">Buka Zoom <ExternalLink aria-hidden="true"/></a><CopyTextButton value={state.effectiveMeetingUrl} label="Salin link meeting" copiedLabel="Link disalin"/></div>:null}
+    </div>:null}
 
     {status==='scheduled'?<div className="provider-action-stack">
       <div className="button-row">
@@ -204,20 +248,20 @@ export function AdminSessionOperations({
       </div>
       {editingRoom?<div className="override-editor"><label className="ops-field"><span>Zoom room tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Pilih Zoom room</option>{state?.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select></label><p className="muted">Room lain yang sedang dipakai pada jam sesi ini tidak ditampilkan.</p><div className="button-row"><button className="button button-primary" type="button" disabled={!zoomRoomId||busy==='room'} onClick={()=>void assignRoom()}><Save aria-hidden="true"/>Simpan Zoom room</button><button className="button button-outline" type="button" onClick={()=>setEditingRoom(false)}>Batal</button></div></div>:null}
       {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override mengubah link efektif di Calendar. Zoom room tetap terreservasi untuk sesi ini.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}>Batal</button></div></div>:null}
-      {state?.manualMeetingUrl?<p className="calendar-warning" role="status">Manual override sedang aktif. Retry sync akan mempertahankan override sebagai meeting link efektif.</p>:null}
+      {state?.manualMeetingUrl?<p className="manual-override-note" role="status"><Pencil aria-hidden="true"/>Menggunakan link manual</p>:null}
     </div>:null}
 
-    <div className="completion-actions">
-      <span>Completion</span>
-      {status==='scheduled'?<button className="button button-primary" type="button" onClick={()=>confirmRef.current?.showModal()}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
+    {showCompletionActions?<div className="completion-actions">
+      <span>Lifecycle</span>
+      {status==='scheduled'?<button className="button button-primary" type="button" onClick={()=>confirmRef.current?.showModal()}>Tandai selesai</button>:null}
       {status==='completed'?<button className="button button-outline" type="button" disabled={busy==='scheduled'} onClick={()=>void setStatus('scheduled')}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button>:null}
-    </div>
+    </div>:null}
 
     {message?<p className="muted" role="status">{message}</p>:null}
-    <dialog ref={confirmRef} className="calendar-dialog compact-confirm-dialog" aria-labelledby="complete-session-title">
+    {showCompletionActions?<dialog ref={confirmRef} className="calendar-dialog compact-confirm-dialog" aria-labelledby="complete-session-title">
       <div className="compact-confirm-dialog__header"><p className="kicker">Konfirmasi selesai</p><h3 id="complete-session-title">Tandai sesi {sessionNumber} selesai?</h3></div>
       <div className="compact-confirm-dialog__body"><p>{mentoringKind==='private'?'Progress enrollment akan dihitung ulang. Jika salah, admin masih dapat membatalkan tanda selesai dan transisi tetap diaudit.':'Status sesi akan dicatat ke audit Intensive Mentoring. Jika salah, admin masih dapat membatalkan tanda selesai sesuai lifecycle yang tersedia.'}</p></div>
-      <div className="compact-confirm-dialog__footer"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}>Batal</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}>Ya, tandai selesai</button></div>
-    </dialog>
+      <div className="compact-confirm-dialog__footer"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}>Kembali</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}>Ya, tandai selesai</button></div>
+    </dialog>:null}
   </section>
 }

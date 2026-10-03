@@ -196,3 +196,514 @@
 .mentoring-cancel-dialog .mentoring-session-cancel-confirm{background:#b42318;border-color:#b42318;color:#fff}.mentoring-cancel-dialog .mentoring-session-cancel-confirm:hover{background:#8f1c13;border-color:#8f1c13}
 .session-primary-actions{margin-top:14px}
 @media(max-width:760px){.admin-editable-section__head,.effective-meeting-row{align-items:stretch;flex-direction:column}.admin-readonly-grid,.admin-readonly-grid--topic,.provider-status-grid{grid-template-columns:minmax(0,1fr)}.ops-reset-action{justify-self:stretch}.compact-confirm-dialog__actions>*{flex:1}.mentoring-session-dialog-flow{width:min(100%,calc(100vw - 18px));max-height:92vh}}
+
+/* 2026-10-04 Private Mentoring selected-session workspace. */
+.mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-workspace-dialog:not(.schedule-dialog){
+  width:min(1220px,calc(100vw - 40px));
+  max-width:calc(100vw - 40px);
+  height:min(920px,calc(100dvh - 40px));
+  max-height:calc(100dvh - 40px);
+  padding:0;
+  overflow:hidden;
+  overscroll-behavior:none;
+  background:#f8fafc;
+}
+.mentoring-session-workspace-dialog .mentoring-workspace-shell{
+  height:100%;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto auto minmax(0,1fr);
+  overflow:hidden;
+}
+.mentoring-session-workspace-dialog .mentoring-workspace-modal-head{
+  position:relative;
+  top:auto;
+  z-index:6;
+  padding:18px 22px;
+  background:#fff;
+}
+.mentoring-workspace-modal-head h3{margin:5px 0 0;font-size:1.15rem}
+.mentoring-workspace-modal-head p:last-child{font-size:.72rem}
+
+.mentoring-enrollment-summary-panel{
+  position:relative;
+  z-index:5;
+  display:grid;
+  gap:10px;
+  padding:12px 18px 13px;
+  border-bottom:1px solid #e9e0d9;
+  background:#fffdfb;
+}
+.mentoring-enrollment-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+.mentoring-enrollment-summary-grid>div{
+  min-width:0;
+  display:grid;
+  align-content:start;
+  gap:3px;
+  padding:9px 11px;
+  border:1px solid #ece2db;
+  border-radius:11px;
+  background:#fff;
+}
+.mentoring-enrollment-summary-grid span,
+.mentoring-summary-competition .mentoring-preference-card__head>div>span{
+  color:#81756d;
+  font-size:.58rem;
+  font-weight:800;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.mentoring-enrollment-summary-grid strong{font-size:.74rem;line-height:1.4;overflow-wrap:anywhere}
+.mentoring-enrollment-summary-grid small{color:#81756d;font-size:.62rem;line-height:1.4;overflow-wrap:anywhere}
+.mentoring-summary-dedicated-mentor .button{justify-self:start;margin-top:4px}
+.mentoring-summary-competition .mentoring-preference-card.is-compact{
+  min-height:0;
+  padding:9px 11px;
+  border:1px solid #ece2db;
+  border-radius:11px;
+  background:#fff;
+  box-shadow:none;
+}
+.mentoring-summary-competition .mentoring-preference-card__head{align-items:center;gap:12px}
+.mentoring-summary-competition .mentoring-preference-card__head>div{display:grid;gap:5px}
+.mentoring-summary-competition .mentoring-chip-list{gap:5px}
+.mentoring-summary-competition .mentoring-chip{padding:3px 7px;font-size:.61rem}
+.mentoring-summary-competition .button{min-height:30px;padding:5px 9px;font-size:.64rem}
+.mentoring-summary-mentor-editor{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(220px,1.4fr) auto;
+  gap:10px;
+  align-items:end;
+  padding:11px;
+  border:1px solid #eadfd8;
+  border-radius:12px;
+  background:#fff;
+}
+.mentoring-summary-mentor-editor .button-row{margin:0!important;align-self:end;white-space:nowrap}
+
+.mentoring-workspace-main{
+  min-height:0;
+  min-width:0;
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  overflow:hidden;
+}
+.mentoring-session-navigator{
+  min-width:0;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  border-right:1px solid #e6ddd6;
+  background:#fffaf6;
+}
+.mentoring-session-navigator__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:12px 13px 9px;
+  border-bottom:1px solid #eee5de;
+}
+.mentoring-session-navigator__head strong{font-size:.7rem}
+.mentoring-session-navigator__head span{
+  min-width:23px;
+  height:23px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 6px;
+  border:1px solid #e3d7cf;
+  border-radius:999px;
+  background:#fff;
+  color:#6e625b;
+  font-size:.61rem;
+  font-weight:800;
+}
+.mentoring-session-navigator__list{
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:8px;
+  display:grid;
+  align-content:start;
+  gap:7px;
+  overscroll-behavior:contain;
+}
+.mentoring-session-nav-item{
+  width:100%;
+  min-width:0;
+  display:grid;
+  gap:7px;
+  padding:10px;
+  border:1px solid #e8ddd5;
+  border-radius:11px;
+  background:#fff;
+  color:#342e2a;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+  transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;
+}
+.mentoring-session-nav-item:hover{border-color:#f0ad78;background:#fffdfb}
+.mentoring-session-nav-item:focus-visible{outline:none;border-color:#ff7a00;box-shadow:0 0 0 3px rgb(255 122 0 / .14)}
+.mentoring-session-nav-item.is-active{border-color:#ff7a00;background:#fff4e9;box-shadow:0 0 0 1px rgb(255 122 0 / .1)}
+.mentoring-session-nav-item.is-muted:not(.is-active){opacity:.72;background:#faf8f6}
+.mentoring-session-nav-item.is-cancelled:not(.is-active){border-color:#ebd0cd}
+.mentoring-session-nav-item__title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mentoring-session-nav-item__title strong{font-size:.72rem}
+.mentoring-session-nav-item__title svg{width:14px;height:14px;color:#b45309;flex:0 0 auto}
+.mentoring-session-nav-item__badges{display:flex;flex-wrap:wrap;gap:4px}
+.mentoring-session-nav-item .ops-status{padding:3px 6px;font-size:.52rem;white-space:normal;text-align:left}
+.mentoring-session-nav-item small{
+  display:block;
+  max-width:100%;
+  color:#81756d;
+  font-size:.58rem;
+  line-height:1.4;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.mentoring-status--scheduled{
+  color:#2457a6;
+  border-color:#bfd2f2;
+  background:#eef5ff;
+}
+.mentoring-session-mobile-select{display:none}
+
+.mentoring-selected-session-workspace{
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  background:#f8fafc;
+}
+.mentoring-selected-session-workspace.is-completed,
+.mentoring-selected-session-workspace.is-cancelled{background:#fafafa}
+.mentoring-selected-session-inner{
+  height:100%;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  overflow:hidden;
+}
+.mentoring-selected-session-sticky{
+  position:sticky;
+  top:0;
+  z-index:5;
+  display:grid;
+  gap:9px;
+  padding:13px 17px 11px;
+  border-bottom:1px solid #e9e1db;
+  background:rgba(255,255,255,.98);
+  backdrop-filter:blur(5px);
+}
+.mentoring-selected-session-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.mentoring-selected-session-header__copy{min-width:0;display:grid;gap:3px}
+.mentoring-selected-session-header__copy .kicker{margin:0}
+.mentoring-selected-session-header__copy h3{
+  margin:0;
+  font-size:.96rem;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.mentoring-selected-session-header__copy p:not(.kicker){
+  margin:0;
+  color:#70655e;
+  font-size:.67rem;
+  line-height:1.45;
+}
+.mentoring-selected-session-header__badges{
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:5px;
+  flex:0 1 auto;
+}
+.mentoring-selected-session-header__badges .ops-status{padding:4px 7px;font-size:.56rem}
+.mentoring-manual-override-badge{
+  gap:4px;
+  color:#9b4700;
+  border-color:#f0c39f;
+  background:#fff4e8;
+}
+.mentoring-manual-override-badge svg{width:11px;height:11px}
+
+.mentoring-selected-session-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.mentoring-session-meta-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:25px;
+  padding:4px 8px;
+  border:1px solid #ded6d0;
+  border-radius:999px;
+  background:#f8f6f4;
+  color:#5f554f;
+  font-size:.58rem;
+  font-weight:750;
+}
+.mentoring-session-meta-chip.is-warning{border-color:#f3cf9e;background:#fff7e9;color:#965100}
+.mentoring-session-meta-chip svg{width:12px;height:12px}
+.mentoring-session-id-meta{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  color:#81756d;
+  font-size:.57rem;
+}
+.mentoring-session-id-meta>span{font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.mentoring-session-id-meta code{
+  max-width:190px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#4b423d;
+  font-size:.57rem;
+}
+.mentoring-session-id-meta .button{min-height:27px;padding:4px 7px;font-size:.57rem}
+
+.mentoring-session-action-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width:0;
+}
+.mentoring-session-action-bar__primary{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+.mentoring-session-action-bar .button{
+  min-height:35px;
+  padding:7px 11px;
+  border-radius:9px;
+  font-size:.66rem;
+  line-height:1.15;
+  gap:6px;
+  white-space:nowrap;
+}
+.mentoring-session-action-bar .button svg{width:14px;height:14px}
+.mentoring-session-action-bar .button-outline,
+.mentoring-session-workspace-dialog .button-outline{
+  border:1px solid #d9cec6;
+  background:#fff;
+}
+.mentoring-session-action-bar .button-outline:hover,
+.mentoring-session-workspace-dialog .button-outline:hover{border-color:#efa469;background:#fffaf6}
+.mentoring-session-workspace-dialog .button:focus-visible,
+.mentoring-session-action-bar .button:focus-visible{outline:3px solid rgb(255 122 0 / .15);outline-offset:2px}
+.mentoring-session-action-bar>.mentoring-session-cancel-trigger{margin-left:auto;flex:0 0 auto}
+.mentoring-complete-trigger{background:#ff7a00;border-color:#ff7a00;color:#fff}
+
+.mentoring-selected-session-scroll{
+  min-height:0;
+  min-width:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  padding:15px 17px 24px;
+  display:grid;
+  align-content:start;
+  gap:14px;
+}
+.mentoring-selected-session-scroll>.mentoring-preference-card,
+.mentoring-selected-session-scroll>.admin-session-operations{
+  min-width:0;
+  margin:0;
+  padding:15px;
+  border:1px solid #e8dfd8;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 4px 16px rgb(43 32 24 / .025);
+}
+.mentoring-preference-section-title{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee6e0}
+.mentoring-preference-section-title h4,
+.meeting-calendar-heading h4{margin:0;font-size:.86rem}
+.mentoring-selected-session-scroll .mentoring-preference-card{
+  display:grid;
+  gap:12px;
+}
+.mentoring-selected-session-scroll .mentoring-preference-card__head{gap:12px}
+.mentoring-selected-session-scroll .mentoring-preference-card__head>div,
+.mentoring-selected-session-scroll .mentoring-preference-grid>div,
+.mentoring-session-note{display:grid;gap:4px;min-width:0}
+.mentoring-selected-session-scroll .mentoring-preference-card span,
+.mentoring-selected-session-scroll .mentoring-preference-grid span,
+.mentoring-session-note>span{
+  color:#81756d;
+  font-size:.6rem;
+  font-weight:800;
+  letter-spacing:.035em;
+}
+.mentoring-selected-session-scroll .mentoring-preference-card strong{font-size:.74rem;line-height:1.5;overflow-wrap:anywhere}
+.mentoring-selected-session-scroll .mentoring-preference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mentoring-selected-session-scroll .mentoring-preference-grid>div{padding:10px 11px;border:1px solid #eee5de;border-radius:11px;background:#fffdfb}
+.mentoring-session-note{padding:10px 11px;border-left:3px solid #e4d8cf;background:#faf8f6}
+.mentoring-session-note p{margin:0;color:#4f4640;font-size:.72rem;line-height:1.55}
+.mentoring-selected-session-scroll .mentoring-audit-details{
+  margin-top:2px;
+  padding:0;
+  border:1px solid #e8dfd8;
+  border-radius:11px;
+  background:#faf8f6;
+}
+.mentoring-selected-session-scroll .mentoring-audit-details summary{
+  padding:10px 12px;
+  color:#5e544e;
+  font-size:.68rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.mentoring-selected-session-scroll .mentoring-audit-details dl,
+.mentoring-selected-session-scroll .mentoring-audit-details>p{margin:0;padding:0 12px 12px}
+.mentoring-selected-session-scroll .mentoring-audit-details dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.mentoring-selected-session-scroll .mentoring-audit-details dl>div{display:grid;gap:3px}
+.mentoring-selected-session-scroll .mentoring-audit-details dt{font-size:.58rem;color:#81756d;font-weight:800}
+.mentoring-selected-session-scroll .mentoring-audit-details dd{margin:0;font-size:.69rem;line-height:1.5;overflow-wrap:anywhere}
+
+.mentoring-selected-session-scroll .meeting-override{padding:15px}
+.meeting-calendar-heading{display:flex;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid #eee6e0}
+.meeting-calendar-heading p{margin:3px 0 0;color:#81756d;font-size:.64rem;line-height:1.5}
+.meeting-calendar-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.meeting-calendar-grid>div{min-width:0;padding:10px 11px}
+.meeting-calendar-grid>div.is-warning{border-color:#f1c98e;background:#fff8e8}
+.meeting-calendar-grid>div.is-success{border-color:#c9dfd0;background:#f6fcf8}
+.meeting-calendar-grid small{display:block;margin-top:3px}
+.manual-override-badge{
+  width:fit-content;
+  padding:3px 6px;
+  border:1px solid #f0c39f;
+  border-radius:999px;
+  background:#fff4e8;
+  color:#9b4700!important;
+  font-size:.55rem!important;
+  font-weight:800;
+}
+.manual-override-note{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  margin:0;
+  padding:9px 10px;
+  border:1px solid #f1d0a8;
+  border-radius:10px;
+  background:#fff8ee;
+  color:#8b4a0a;
+  font-size:.65rem;
+  line-height:1.5;
+}
+.manual-override-note svg{width:13px;height:13px;margin-top:2px;flex:0 0 auto}
+.meeting-link-value{
+  display:block;
+  max-width:520px;
+  color:#4f4640;
+  font-size:.65rem;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.mentoring-selected-session-scroll .effective-meeting-row{align-items:flex-start}
+.mentoring-selected-session-scroll .provider-action-stack .button-row{margin:0}
+.mentoring-workspace-feedback{margin:0}
+
+.mentoring-enrollment-page > dialog.calendar-dialog.compact-confirm-dialog:not(.schedule-dialog){
+  position:fixed!important;
+  inset:0!important;
+  width:min(520px,calc(100vw - 32px))!important;
+  height:auto!important;
+  max-width:calc(100vw - 32px)!important;
+  max-height:min(82dvh,680px)!important;
+  margin:auto!important;
+  overflow:auto!important;
+  background:#fff!important;
+}
+.compact-confirm-dialog__header{padding:20px 22px 10px}
+.compact-confirm-dialog__header h3{margin:6px 0 0;font-size:1rem}
+.mentoring-enrollment-page > dialog.compact-confirm-dialog .compact-confirm-dialog__body{padding:10px 22px 20px}
+.mentoring-enrollment-page > dialog.compact-confirm-dialog .compact-confirm-dialog__actions{margin-top:8px!important;justify-content:flex-end}
+.mentoring-enrollment-page > dialog.compact-confirm-dialog .button-outline{border:1px solid #d9cec6;background:#fff}
+.mentoring-enrollment-page > dialog.compact-confirm-dialog .button:focus-visible,
+.mentoring-enrollment-page > dialog.compact-confirm-dialog .mentoring-session-cancel-confirm:focus-visible{outline:3px solid rgb(255 122 0 / .16);outline-offset:2px}
+.mentoring-cancel-dialog .calendar-dialog__head{position:relative;top:auto}
+.mentoring-cancel-dialog .mentoring-session-cancel-confirm:focus-visible{outline-color:rgb(217 45 32 / .18)}
+
+@media(max-width:980px){
+  .mentoring-enrollment-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mentoring-summary-mentor-editor{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mentoring-summary-mentor-editor .button-row{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-workspace-dialog:not(.schedule-dialog){
+    width:calc(100vw - 20px);
+    max-width:calc(100vw - 20px);
+    height:calc(100dvh - 20px);
+    max-height:calc(100dvh - 20px);
+    border-radius:16px;
+  }
+  .mentoring-workspace-main{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  .mentoring-session-navigator{display:none}
+  .mentoring-session-mobile-select{
+    display:grid;
+    gap:5px;
+    padding:10px 14px;
+    border-bottom:1px solid #e9e0d9;
+    background:#fffaf6;
+  }
+  .mentoring-session-mobile-select>span{font-size:.6rem;font-weight:800;color:#6f645d;text-transform:uppercase;letter-spacing:.05em}
+  .mentoring-session-mobile-select select{width:100%;min-height:38px;padding:7px 10px;border:1px solid #d9cec6;border-radius:9px;background:#fff;color:#342e2a;font:inherit;font-size:.7rem}
+  .mentoring-selected-session-workspace{min-height:0}
+}
+@media(max-width:680px){
+  .mentoring-session-workspace-dialog .mentoring-workspace-modal-head{padding:14px 15px}
+  .mentoring-enrollment-summary-panel{padding:10px 12px}
+  .mentoring-enrollment-summary-grid{grid-template-columns:minmax(0,1fr)}
+  .mentoring-summary-mentor-editor{grid-template-columns:minmax(0,1fr)}
+  .mentoring-summary-mentor-editor .button-row{grid-column:auto}
+  .mentoring-selected-session-sticky{padding:11px 12px 10px}
+  .mentoring-selected-session-header{display:grid;gap:8px}
+  .mentoring-selected-session-header__badges{justify-content:flex-start}
+  .mentoring-session-id-meta{width:100%;margin-left:0}
+  .mentoring-session-id-meta code{max-width:min(58vw,260px)}
+  .mentoring-session-action-bar{align-items:stretch;flex-direction:column}
+  .mentoring-session-action-bar__primary{width:100%}
+  .mentoring-session-action-bar>.mentoring-session-cancel-trigger{margin-left:0;align-self:flex-start}
+  .mentoring-selected-session-scroll{padding:11px 12px 20px}
+  .mentoring-selected-session-scroll .mentoring-preference-grid,
+  .mentoring-selected-session-scroll .mentoring-audit-details dl,
+  .meeting-calendar-grid{grid-template-columns:minmax(0,1fr)}
+  .mentoring-selected-session-scroll .effective-meeting-row{align-items:stretch;flex-direction:column}
+  .mentoring-selected-session-scroll .effective-meeting-row .table-action-group{width:100%;flex-wrap:wrap}
+}
+@media(max-width:440px){
+  .mentoring-enrollment-page > dialog.calendar-dialog.mentoring-session-workspace-dialog:not(.schedule-dialog){
+    width:calc(100vw - 12px);
+    max-width:calc(100vw - 12px);
+    height:calc(100dvh - 12px);
+    max-height:calc(100dvh - 12px);
+    border-radius:14px;
+  }
+  .mentoring-session-action-bar__primary .button{flex:1 1 140px}
+  .mentoring-session-id-meta{align-items:flex-start;flex-wrap:wrap}
+  .mentoring-session-id-meta code{max-width:100%;width:100%}
+  .mentoring-enrollment-page > dialog.calendar-dialog.compact-confirm-dialog:not(.schedule-dialog){
+    width:calc(100vw - 20px)!important;
+    max-width:calc(100vw - 20px)!important;
+  }
+}
+
