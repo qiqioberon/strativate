@@ -38,7 +38,7 @@ test('Digital Product active-or-paid purchase claims are database enforced and d
 })
 
 test('migration retires already-expired discounted pending Orders before active-purchase claim backfill', () => {
-  const cleanup = migration.indexOf("update public.orders o\\nset status = 'expired'")
+  const cleanup = migration.indexOf("update public.orders o\nset status = 'expired'")
   const claimBackfill = migration.indexOf('with ranked as (')
   assert.ok(cleanup >= 0)
   assert.ok(claimBackfill > cleanup)
