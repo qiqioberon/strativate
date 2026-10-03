@@ -1,61 +1,150 @@
 'use client'
 
-import { ImagePlus, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import {
+  ArrowDown,
+  ArrowUp,
+  CalendarDays,
+  Eye,
+  FileText,
+  GripVertical,
+  ImagePlus,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  Settings,
+  Sparkles,
+  Trash2,
+  UploadCloud,
+  X,
+} from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
 
+import { EditorialCoverCropper } from '@/components/admin/editorial-cover-cropper'
+import { PublicationCategoryManager } from '@/components/admin/publication-category-manager'
+import { RichTextEditor } from '@/components/admin/rich-text-editor'
+import {
+  emptyRichTextDocument,
+  parseRichTextDocument,
+  richTextHasContent,
+  richTextToPlainText,
+  type RichTextDocument,
+} from '@/lib/content/rich-text'
 import { createClient } from '@/lib/supabase/client'
-import type { Competition, CompetitionCategory, Publication } from '@/lib/supabase/database.types'
+import type {
+  Competition,
+  CompetitionCategory,
+  Json,
+  Publication,
+  PublicationCategory,
+} from '@/lib/supabase/database.types'
 
 export type EditorialKind = 'publications' | 'competitions'
 type StatusFilter = 'all' | 'published' | 'draft'
+type EditorialRow = Publication | Competition
 type Draft = {
   slug: string
   title: string
-  excerpt: string
-  body: string
+  summary: string
+  bodyDocument: RichTextDocument
   coverPath: string
   coverAltText: string
-  publicationCategory: string
+  publicationCategoryId: string
   publishedAt: string
   isPublished: boolean
   isFeatured: boolean
-  sortOrder: number
-  categoryId: string
+  competitionCategoryId: string
   rulesUrl: string
   registrationUrl: string
   registrationDeadline: string
   status: Competition['status']
 }
 
-const emptyDraft: Draft = {
-  slug: '', title: '', excerpt: '', body: '', coverPath: '', coverAltText: '',
-  publicationCategory: '', publishedAt: '', isPublished: false, isFeatured: false,
-  sortOrder: 0, categoryId: '', rulesUrl: '', registrationUrl: '',
-  registrationDeadline: '', status: 'upcoming',
-}
-
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const maxCoverBytes = 5 * 1024 * 1024
 
+function emptyDraft(): Draft {
+  return {
+    slug: '',
+    title: '',
+    summary: '',
+    bodyDocument: emptyRichTextDocument(),
+    coverPath: '',
+    coverAltText: '',
+    publicationCategoryId: '',
+    publishedAt: '',
+    isPublished: false,
+    isFeatured: false,
+    competitionCategoryId: '',
+    rulesUrl: '',
+    registrationUrl: '',
+    registrationDeadline: '',
+    status: 'upcoming',
+  }
+}
+
+function itemTitle(item: EditorialRow) {
+  return 'title' in item ? item.title : item.name
+}
+
+function itemSummary(item: EditorialRow) {
+  return 'excerpt' in item ? item.excerpt : item.description
+}
+
+function validHttpUrl(value: string) {
+  if (!value.trim()) return false
+  try {
+    const url = new URL(value.trim())
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+    reader.onerror = () => reject(reader.error ?? new Error('Cover preview could not be prepared.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function formatShortDate(value: string | null) {
+  if (!value) return 'No date'
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`))
+}
+
 export function EditorialContentManagement({ initialKind = 'publications' }: { initialKind?: EditorialKind }) {
   const supabase = useMemo(() => createClient(), [])
-  const dialogRef = useRef<HTMLDialogElement>(null)
+  const editorDialogRef = useRef<HTMLDialogElement>(null)
+  const deleteDialogRef = useRef<HTMLDialogElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
   const kind = initialKind
+
   const [publications, setPublications] = useState<Publication[]>([])
   const [competitions, setCompetitions] = useState<Competition[]>([])
-  const [categories, setCategories] = useState<CompetitionCategory[]>([])
+  const [publicationCategories, setPublicationCategories] = useState<PublicationCategory[]>([])
+  const [competitionCategories, setCompetitionCategories] = useState<CompetitionCategory[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState<Draft>(emptyDraft)
+  const [editorVersion, setEditorVersion] = useState(0)
+  const [draft, setDraft] = useState<Draft>(() => emptyDraft())
   const [originalCoverPath, setOriginalCoverPath] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverOriginalFile, setCoverOriginalFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState('')
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null)
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<EditorialRow | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [publishErrors, setPublishErrors] = useState<string[]>([])
 
   const clearPreviewObjectUrl = useCallback(() => {
     if (previewObjectUrlRef.current) URL.revokeObjectURL(previewObjectUrlRef.current)
@@ -64,64 +153,100 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [publicationResult, competitionResult, categoryResult] = await Promise.all([
-      supabase.from('publications').select('*').order('sort_order').order('created_at', { ascending: false }),
-      supabase.from('competitions').select('*').order('sort_order').order('created_at', { ascending: false }),
+    const [publicationResult, competitionResult, publicationCategoryResult, competitionCategoryResult] = await Promise.all([
+      supabase.from('publications').select('*').order('sort_order').order('created_at'),
+      supabase.from('competitions').select('*').order('sort_order').order('created_at'),
+      supabase.from('publication_categories').select('*').order('sort_order').order('name'),
       supabase.from('competition_categories').select('*').eq('is_active', true).order('sort_order').order('name'),
     ])
-    const loadError = publicationResult.error ?? competitionResult.error ?? categoryResult.error
+    const loadError = publicationResult.error
+      ?? competitionResult.error
+      ?? publicationCategoryResult.error
+      ?? competitionCategoryResult.error
     if (loadError) setError(loadError.message)
     setPublications(publicationResult.data ?? [])
     setCompetitions(competitionResult.data ?? [])
-    setCategories(categoryResult.data ?? [])
+    setPublicationCategories(publicationCategoryResult.data ?? [])
+    setCompetitionCategories(competitionCategoryResult.data ?? [])
     setLoading(false)
   }, [supabase])
 
   useEffect(() => { void load() }, [load])
   useEffect(() => {
     setEditingId(null)
-    setDraft(emptyDraft)
+    setDraft(emptyDraft())
     setQuery('')
     setStatusFilter('all')
+    setPublishErrors([])
+    setDeleteTarget(null)
+    setCategoryManagerOpen(false)
   }, [initialKind])
+
   useEffect(() => {
-    const dialog = dialogRef.current
+    const dialog = editorDialogRef.current
     if (!dialog) return
     if (editingId && !dialog.open) dialog.showModal()
     if (!editingId && dialog.open) dialog.close()
   }, [editingId])
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current
+    if (!dialog) return
+    if (deleteTarget && !dialog.open) dialog.showModal()
+    if (!deleteTarget && dialog.open) dialog.close()
+  }, [deleteTarget])
+
   useEffect(() => () => clearPreviewObjectUrl(), [clearPreviewObjectUrl])
 
   const rows = kind === 'publications' ? publications : competitions
+  const publicationCategoryNames = useMemo(
+    () => new Map(publicationCategories.map(category => [category.id, category.name])),
+    [publicationCategories],
+  )
+  const competitionCategoryNames = useMemo(
+    () => new Map(competitionCategories.map(category => [category.id, category.name])),
+    [competitionCategories],
+  )
+
   const filteredRows = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase('en')
-    return (rows as Array<Publication | Competition>).filter(item => {
-      const title = 'title' in item ? item.title : item.name
-      const description = 'excerpt' in item ? item.excerpt : item.description
-      const matchesQuery = !needle || `${title} ${description}`.toLocaleLowerCase('en').includes(needle)
+    return (rows as EditorialRow[]).filter(item => {
+      const category = 'title' in item
+        ? publicationCategoryNames.get(item.category_id ?? '') ?? item.category ?? ''
+        : competitionCategoryNames.get(item.category_id ?? '') ?? ''
+      const matchesQuery = !needle || `${itemTitle(item)} ${itemSummary(item)} ${category}`.toLocaleLowerCase('en').includes(needle)
       const matchesStatus = statusFilter === 'all' || (statusFilter === 'published' ? item.is_published : !item.is_published)
       return matchesQuery && matchesStatus
     })
-  }, [query, rows, statusFilter])
+  }, [competitionCategoryNames, publicationCategoryNames, query, rows, statusFilter])
 
-  const currentCoverUrl = coverPreview || (draft.coverPath ? supabase.storage.from('marketing-editorial').getPublicUrl(draft.coverPath).data.publicUrl : '')
+  const currentCoverUrl = coverPreview || (draft.coverPath
+    ? supabase.storage.from('marketing-editorial').getPublicUrl(draft.coverPath).data.publicUrl
+    : '')
+  const selectedPublicationCategory = publicationCategoryNames.get(draft.publicationCategoryId) ?? ''
+  const selectedCompetitionCategory = competitionCategoryNames.get(draft.competitionCategoryId) ?? ''
 
   function resetCoverState() {
     clearPreviewObjectUrl()
     setCoverFile(null)
+    setCoverOriginalFile(null)
+    setCropSourceFile(null)
     setCoverPreview('')
     setOriginalCoverPath('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function beginCreate() {
     resetCoverState()
-    setDraft(emptyDraft)
+    setDraft(emptyDraft())
+    setEditorVersion(version => version + 1)
     setError('')
     setNotice('')
+    setPublishErrors([])
     setEditingId('new')
   }
 
-  function beginEdit(item: Publication | Competition) {
+  function beginEdit(item: EditorialRow) {
     resetCoverState()
     const publication = kind === 'publications' ? item as Publication : null
     const competition = kind === 'competitions' ? item as Competition : null
@@ -129,95 +254,235 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setDraft({
       slug: item.slug,
       title: publication?.title ?? competition?.name ?? '',
-      excerpt: publication?.excerpt ?? competition?.description ?? '',
-      body: publication?.body ?? '',
+      summary: publication?.excerpt ?? competition?.description ?? '',
+      bodyDocument: publication ? parseRichTextDocument(publication.body_json, publication.body) : emptyRichTextDocument(),
       coverPath,
       coverAltText: item.cover_alt_text ?? '',
-      publicationCategory: publication?.category ?? '',
+      publicationCategoryId: publication?.category_id ?? '',
       publishedAt: publication?.published_at ?? '',
       isPublished: item.is_published,
       isFeatured: item.is_featured,
-      sortOrder: item.sort_order,
-      categoryId: competition?.category_id ?? '',
+      competitionCategoryId: competition?.category_id ?? '',
       rulesUrl: competition?.rules_url ?? '',
       registrationUrl: competition?.registration_url ?? '',
       registrationDeadline: competition?.registration_deadline ?? '',
       status: competition?.status ?? 'upcoming',
     })
     setOriginalCoverPath(coverPath)
+    setEditorVersion(version => version + 1)
     setError('')
     setNotice('')
+    setPublishErrors([])
     setEditingId(item.id)
   }
 
   function closeEditor() {
     setEditingId(null)
-    setDraft(emptyDraft)
+    setDraft(emptyDraft())
+    setPublishErrors([])
+    setCategoryManagerOpen(false)
     resetCoverState()
   }
 
-  function chooseCover(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null
-    clearPreviewObjectUrl()
-    setCoverFile(null)
-    setCoverPreview('')
+  function validateCoverCandidate(file: File) {
+    if (!allowedImageTypes.has(file.type)) return 'Cover must be a JPG, PNG, or WebP image.'
+    if (file.size > maxCoverBytes) return 'Cover image must be 5 MB or smaller.'
+    return null
+  }
+
+  function startCoverCrop(file: File | null) {
     if (!file) return
-    if (!allowedImageTypes.has(file.type)) {
-      setError('Cover must be a JPG, PNG, or WebP image.')
-      event.target.value = ''
+    const message = validateCoverCandidate(file)
+    if (message) {
+      setError(message)
       return
     }
-    if (file.size > maxCoverBytes) {
-      setError('Cover image must be 5 MB or smaller.')
-      event.target.value = ''
-      return
-    }
+    setError('')
+    setCropSourceFile(file)
+  }
+
+  function chooseCover(event: ChangeEvent<HTMLInputElement>) {
+    startCoverCrop(event.target.files?.[0] ?? null)
+    event.target.value = ''
+  }
+
+  function dropCover(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault()
+    startCoverCrop(event.dataTransfer.files?.[0] ?? null)
+  }
+
+  function applyCrop(file: File) {
+    const source = cropSourceFile
+    clearPreviewObjectUrl()
     const preview = URL.createObjectURL(file)
     previewObjectUrlRef.current = preview
     setCoverFile(file)
+    setCoverOriginalFile(source)
     setCoverPreview(preview)
+    setCropSourceFile(null)
     setError('')
+  }
+
+  async function recropCover() {
+    if (coverOriginalFile) {
+      setCropSourceFile(coverOriginalFile)
+      return
+    }
+    if (!currentCoverUrl) return
+    setBusy(true)
+    setError('')
+    try {
+      const response = await fetch(currentCoverUrl)
+      if (!response.ok) throw new Error('Current cover could not be loaded for re-cropping.')
+      const blob = await response.blob()
+      const type = allowedImageTypes.has(blob.type) ? blob.type : 'image/webp'
+      setCropSourceFile(new File([blob], 'existing-cover.webp', { type }))
+    } catch (cropError) {
+      setError(cropError instanceof Error ? cropError.message : 'Current cover could not be loaded for re-cropping.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function removeCover() {
+    clearPreviewObjectUrl()
+    setCoverFile(null)
+    setCoverOriginalFile(null)
+    setCoverPreview('')
+    setDraft(current => ({ ...current, coverPath: '', coverAltText: '' }))
+  }
+
+  function validatePublished(candidate: Draft) {
+    const missing: string[] = []
+    const hasCover = Boolean(coverFile || candidate.coverPath)
+    if (kind === 'publications') {
+      if (!candidate.title.trim()) missing.push('Title')
+      if (!candidate.summary.trim()) missing.push('Summary')
+      if (!richTextHasContent(candidate.bodyDocument)) missing.push('Article content')
+      if (!candidate.publicationCategoryId) missing.push('Publication category')
+      if (!hasCover) missing.push('Cover')
+      if (hasCover && !candidate.coverAltText.trim()) missing.push('Cover Alt Text')
+      if (!candidate.publishedAt) missing.push('Publication date')
+    } else {
+      if (!candidate.title.trim()) missing.push('Competition name')
+      if (!candidate.summary.trim()) missing.push('Description')
+      if (!candidate.competitionCategoryId) missing.push('Competition category')
+      if (!hasCover) missing.push('Cover')
+      if (hasCover && !candidate.coverAltText.trim()) missing.push('Cover Alt Text')
+      if (!['upcoming', 'open', 'closed', 'archived'].includes(candidate.status)) missing.push('Competition status')
+      if (candidate.status === 'open' && !validHttpUrl(candidate.registrationUrl)) missing.push('Registration URL for an open competition')
+    }
+    return missing
+  }
+
+  function choosePublishingState(published: boolean) {
+    if (!published) {
+      setDraft(current => ({ ...current, isPublished: false }))
+      setPublishErrors([])
+      return
+    }
+    const missing = validatePublished(draft)
+    if (missing.length) {
+      setPublishErrors(missing)
+      return
+    }
+    setDraft(current => ({ ...current, isPublished: true }))
+    setPublishErrors([])
   }
 
   async function uploadCover() {
     if (!coverFile) return draft.coverPath || null
-    const extension = coverFile.type === 'image/png' ? 'png' : coverFile.type === 'image/webp' ? 'webp' : 'jpg'
-    const path = `${kind}/${crypto.randomUUID()}.${extension}`
-    const { error: uploadError } = await supabase.storage.from('marketing-editorial').upload(path, coverFile, { contentType: coverFile.type, upsert: false })
-    if (uploadError) throw new Error(uploadError.message)
+    const path = `${kind}/${crypto.randomUUID()}.webp`
+    const result = await supabase.storage.from('marketing-editorial').upload(path, coverFile, {
+      contentType: 'image/webp',
+      upsert: false,
+    })
+    if (result.error) throw new Error(result.error.message)
     return path
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!editingId) return
+    if (draft.isPublished) {
+      const missing = validatePublished(draft)
+      if (missing.length) {
+        setPublishErrors(missing)
+        setError('Complete the required publishing fields, or switch back to Draft.')
+        return
+      }
+    }
+
     setBusy(true)
     setError('')
+    setNotice('')
     let uploadedPath: string | null = null
+
     try {
       uploadedPath = await uploadCover()
+      const nextSortOrder = rows.length + 1
       const common = {
         slug: editingId === 'new' ? '' : draft.slug.trim(),
         cover_path: uploadedPath,
-        cover_alt_text: draft.coverAltText.trim() || null,
+        cover_alt_text: uploadedPath ? draft.coverAltText.trim() || null : null,
         is_published: draft.isPublished,
         is_featured: draft.isFeatured,
-        sort_order: draft.sortOrder,
+        ...(editingId === 'new' ? { sort_order: nextSortOrder } : {}),
       }
+
       const result = kind === 'publications'
         ? (editingId === 'new'
-          ? await supabase.from('publications').insert({ ...common, title: draft.title.trim(), excerpt: draft.excerpt.trim(), body: draft.body.trim(), category: draft.publicationCategory.trim() || null, published_at: draft.publishedAt || null })
-          : await supabase.from('publications').update({ ...common, title: draft.title.trim(), excerpt: draft.excerpt.trim(), body: draft.body.trim(), category: draft.publicationCategory.trim() || null, published_at: draft.publishedAt || null }).eq('id', editingId))
+          ? await supabase.from('publications').insert({
+              ...common,
+              title: draft.title.trim(),
+              excerpt: draft.summary.trim(),
+              body: richTextToPlainText(draft.bodyDocument),
+              body_json: draft.bodyDocument as unknown as Json,
+              category_id: draft.publicationCategoryId || null,
+              category: selectedPublicationCategory || null,
+              published_at: draft.publishedAt || null,
+            })
+          : await supabase.from('publications').update({
+              ...common,
+              title: draft.title.trim(),
+              excerpt: draft.summary.trim(),
+              body: richTextToPlainText(draft.bodyDocument),
+              body_json: draft.bodyDocument as unknown as Json,
+              category_id: draft.publicationCategoryId || null,
+              category: selectedPublicationCategory || null,
+              published_at: draft.publishedAt || null,
+            }).eq('id', editingId))
         : (editingId === 'new'
-          ? await supabase.from('competitions').insert({ ...common, name: draft.title.trim(), description: draft.excerpt.trim(), category_id: draft.categoryId || null, rules_url: draft.rulesUrl.trim() || null, registration_url: draft.registrationUrl.trim() || null, registration_deadline: draft.registrationDeadline || null, status: draft.status })
-          : await supabase.from('competitions').update({ ...common, name: draft.title.trim(), description: draft.excerpt.trim(), category_id: draft.categoryId || null, rules_url: draft.rulesUrl.trim() || null, registration_url: draft.registrationUrl.trim() || null, registration_deadline: draft.registrationDeadline || null, status: draft.status }).eq('id', editingId))
+          ? await supabase.from('competitions').insert({
+              ...common,
+              name: draft.title.trim(),
+              description: draft.summary.trim(),
+              category_id: draft.competitionCategoryId || null,
+              rules_url: draft.rulesUrl.trim() || null,
+              registration_url: draft.registrationUrl.trim() || null,
+              registration_deadline: draft.registrationDeadline || null,
+              status: draft.status,
+            })
+          : await supabase.from('competitions').update({
+              ...common,
+              name: draft.title.trim(),
+              description: draft.summary.trim(),
+              category_id: draft.competitionCategoryId || null,
+              rules_url: draft.rulesUrl.trim() || null,
+              registration_url: draft.registrationUrl.trim() || null,
+              registration_deadline: draft.registrationDeadline || null,
+              status: draft.status,
+            }).eq('id', editingId))
 
       if (result.error) throw new Error(result.error.message)
 
-      if (coverFile && originalCoverPath && originalCoverPath !== uploadedPath && originalCoverPath.startsWith(`${kind}/`)) {
-        await supabase.storage.from('marketing-editorial').remove([originalCoverPath])
+      let savedNotice = `${kind === 'publications' ? 'Publication' : 'Competition'} saved.`
+      if (originalCoverPath && originalCoverPath !== uploadedPath && originalCoverPath.startsWith(`${kind}/`)) {
+        const cleanup = await supabase.storage.from('marketing-editorial').remove([originalCoverPath])
+        if (cleanup.error) savedNotice += ` Old cover cleanup needs attention: ${cleanup.error.message}`
       }
-      setNotice(`${kind === 'publications' ? 'Publication' : 'Competition'} saved.`)
+
+      setNotice(savedNotice)
       closeEditor()
       await load()
     } catch (saveError) {
@@ -230,53 +495,377 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     }
   }
 
-  async function remove(item: Publication | Competition) {
-    if (!window.confirm(`Delete ${kind === 'publications' ? 'publication' : 'competition'} “${'title' in item ? item.title : item.name}”?`)) return
+  async function persistOrder(next: EditorialRow[]) {
     setBusy(true)
-    const result = kind === 'publications'
-      ? await supabase.from('publications').delete().eq('id', item.id)
-      : await supabase.from('competitions').delete().eq('id', item.id)
-    if (result.error) setError(result.error.message)
-    else {
-      if (item.cover_path?.startsWith(`${kind}/`)) await supabase.storage.from('marketing-editorial').remove([item.cover_path])
+    setError('')
+    try {
+      for (let index = 0; index < next.length; index += 1) {
+        const result = kind === 'publications'
+          ? await supabase.from('publications').update({ sort_order: index + 1 }).eq('id', next[index].id)
+          : await supabase.from('competitions').update({ sort_order: index + 1 }).eq('id', next[index].id)
+        if (result.error) throw new Error(result.error.message)
+      }
       await load()
+    } catch (orderError) {
+      setError(orderError instanceof Error ? orderError.message : 'Editorial order could not be saved.')
+    } finally {
+      setBusy(false)
     }
+  }
+
+  function moveItem(id: string, delta: number) {
+    const source = [...rows] as EditorialRow[]
+    const from = source.findIndex(item => item.id === id)
+    const to = from + delta
+    if (from < 0 || to < 0 || to >= source.length) return
+    const moved = source.splice(from, 1)[0]
+    source.splice(to, 0, moved)
+    void persistOrder(source)
+  }
+
+  function dropItem(targetId: string) {
+    if (!draggingId || draggingId === targetId) return
+    const source = [...rows] as EditorialRow[]
+    const from = source.findIndex(item => item.id === draggingId)
+    const to = source.findIndex(item => item.id === targetId)
+    if (from < 0 || to < 0) return
+    const moved = source.splice(from, 1)[0]
+    source.splice(to, 0, moved)
+    setDraggingId(null)
+    void persistOrder(source)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const target = deleteTarget
+    setBusy(true)
+    setError('')
+    const result = kind === 'publications'
+      ? await supabase.from('publications').delete().eq('id', target.id)
+      : await supabase.from('competitions').delete().eq('id', target.id)
+
+    if (result.error) {
+      setError(result.error.message)
+      setBusy(false)
+      return
+    }
+
+    if (target.cover_path?.startsWith(`${kind}/`)) {
+      const cleanup = await supabase.storage.from('marketing-editorial').remove([target.cover_path])
+      if (cleanup.error) setError(`Item deleted, but the cover file could not be removed: ${cleanup.error.message}`)
+    }
+
+    const remaining = (rows as EditorialRow[]).filter(item => item.id !== target.id)
+    setDeleteTarget(null)
+    await persistOrder(remaining)
+    setNotice(`${kind === 'publications' ? 'Publication' : 'Competition'} deleted permanently.`)
     setBusy(false)
   }
 
+  async function openPreview() {
+    if (!editingId) return
+    const previewWindow = window.open('about:blank', '_blank')
+    const previewKey = crypto.randomUUID()
+
+    try {
+      const coverUrl = coverFile ? await fileToDataUrl(coverFile) : currentCoverUrl || null
+      const payload = kind === 'publications'
+        ? {
+            createdAt: Date.now(),
+            kind: 'publication' as const,
+            data: {
+              id: editingId,
+              slug: draft.slug || 'preview',
+              title: draft.title || 'Untitled publication',
+              summary: draft.summary,
+              category: selectedPublicationCategory || null,
+              publicationDate: draft.publishedAt || null,
+              coverUrl,
+              coverAltText: draft.coverAltText || null,
+              body: draft.bodyDocument,
+            },
+          }
+        : {
+            createdAt: Date.now(),
+            kind: 'competition' as const,
+            data: {
+              id: editingId,
+              slug: draft.slug || 'preview',
+              name: draft.title || 'Untitled competition',
+              description: draft.summary,
+              category: selectedCompetitionCategory || null,
+              status: draft.status,
+              registrationDeadline: draft.registrationDeadline || null,
+              registrationUrl: draft.registrationUrl.trim() || null,
+              rulesUrl: draft.rulesUrl.trim() || null,
+              coverUrl,
+              coverAltText: draft.coverAltText || null,
+            },
+          }
+
+      window.localStorage.setItem(`strativate-editorial-preview:${previewKey}`, JSON.stringify(payload))
+      const url = `/editorial-preview/${kind === 'publications' ? 'publication' : 'competition'}?key=${encodeURIComponent(previewKey)}`
+      if (previewWindow) {
+        previewWindow.opener = null
+        previewWindow.location.href = url
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
+    } catch (previewError) {
+      previewWindow?.close()
+      setError(previewError instanceof Error ? previewError.message : 'Preview could not be prepared.')
+    }
+  }
+
+  const singular = kind === 'publications' ? 'publication' : 'competition'
+  const countLabel = `${filteredRows.length} ${singular}${filteredRows.length === 1 ? '' : 's'}`
+  const datasetEmpty = !loading && rows.length === 0
+
   return <section className="editorial-admin" data-testid="admin-editorial-content-section">
-    <div className="role-page-title"><p className="kicker">Editorial CMS</p><h2>{kind === 'publications' ? 'Publications' : 'Competitions'}</h2><p>{kind === 'publications' ? 'Kelola artikel, status publikasi, urutan, dan cover.' : 'Kelola informasi kompetisi, kategori, status, tautan, dan cover.'}</p></div>
-    <div className="editorial-admin__toolbar"><p>{filteredRows.length} {kind === 'publications' ? 'publication' : 'competition'}</p><button className="button button-primary" type="button" onClick={beginCreate}><Plus aria-hidden="true" size={16}/> Add {kind === 'publications' ? 'publication' : 'competition'}</button></div>
-    <div className="editorial-admin__filters"><label><Search aria-hidden="true" size={16}/><span className="sr-only">Search editorial content</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${kind}`}/></label><label><span className="sr-only">Publication state</span><select value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)}><option value="all">All states</option><option value="published">Published</option><option value="draft">Draft</option></select></label></div>
-    {notice ? <p className="admin-notice">{notice}</p> : null}{error ? <p className="form-error">{error}</p> : null}
-    {loading ? <p>Loading editorial content…</p> : <div className="editorial-admin__list">{filteredRows.length ? filteredRows.map(item => <article key={item.id}><div>{item.cover_path ? <img className="editorial-admin__thumb" src={supabase.storage.from('marketing-editorial').getPublicUrl(item.cover_path).data.publicUrl} alt={item.cover_alt_text ?? ''}/> : null}<span className={item.is_published ? 'status-pill status-pill--success' : 'status-pill'}>{item.is_published ? 'Published' : 'Draft'}</span><h3>{'title' in item ? item.title : item.name}</h3><p>{'excerpt' in item ? item.excerpt : item.description}</p></div><div className="editorial-admin__actions"><button className="button button-outline button-compact" type="button" onClick={() => beginEdit(item)}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)} disabled={busy}><Trash2 aria-hidden="true" size={14}/> Delete</button></div></article>) : <div className="editorial-empty"><strong>No matching {kind}.</strong><span>Adjust the filters or add approved content.</span></div>}</div>}
+    <div className="editorial-admin__heading">
+      <div className="role-page-title">
+        <p className="kicker">Editorial CMS</p>
+        <h2>{kind === 'publications' ? 'Publications' : 'Competitions'}</h2>
+        <p>{kind === 'publications'
+          ? 'Kelola artikel, kategori, prioritas editorial, status publikasi, dan cover.'
+          : 'Kelola peluang kompetisi, kategori, status, tautan, prioritas editorial, dan cover.'}</p>
+      </div>
+      <button className="button button-primary" type="button" onClick={beginCreate}><Plus aria-hidden="true" size={16} /> Add {singular}</button>
+    </div>
 
-    <dialog ref={dialogRef} className="editorial-admin__dialog" data-testid="editorial-content-dialog" onClose={closeEditor}>
-      <form onSubmit={save}>
-        <button className="dialog-close" type="button" onClick={closeEditor} aria-label="Close editor"><X aria-hidden="true"/></button>
-        <p className="kicker">{editingId === 'new' ? 'New' : 'Edit'} {kind === 'publications' ? 'publication' : 'competition'}</p><h3>{draft.title || 'Editorial content'}</h3>
-        <label>Title / name<input required maxLength={180} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })}/></label>
-        <label>{kind === 'publications' ? 'Excerpt' : 'Description'}<textarea required rows={4} value={draft.excerpt} onChange={event => setDraft({ ...draft, excerpt: event.target.value })}/></label>
+    <div className="editorial-admin__managementbar">
+      <p className="editorial-admin__count">{countLabel}</p>
+      <div className="editorial-admin__filters">
+        <label className="editorial-admin__search">
+          <Search aria-hidden="true" size={16} />
+          <span className="sr-only">Search editorial content</span>
+          <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${kind}`} />
+        </label>
+        <label className="editorial-admin__state-filter">
+          <span className="sr-only">Publication state</span>
+          <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)}>
+            <option value="all">All states</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </label>
+      </div>
+    </div>
 
-        {kind === 'publications' ? <>
-          <label>Category<input maxLength={80} value={draft.publicationCategory} onChange={event => setDraft({ ...draft, publicationCategory: event.target.value })} placeholder="e.g. Insights"/></label>
-          <label>Body<textarea required rows={10} value={draft.body} onChange={event => setDraft({ ...draft, body: event.target.value })}/></label>
-          <label>Published date<input type="date" value={draft.publishedAt} onChange={event => setDraft({ ...draft, publishedAt: event.target.value })}/></label>
-        </> : <>
-          <label>Competition category<select value={draft.categoryId} onChange={event => setDraft({ ...draft, categoryId: event.target.value })} data-testid="editorial-competition-category-select"><option value="">No category</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
-          <label>Registration URL<input type="url" value={draft.registrationUrl} onChange={event => setDraft({ ...draft, registrationUrl: event.target.value })} placeholder="https://…"/></label>
-          <label>Rules URL<input type="url" value={draft.rulesUrl} onChange={event => setDraft({ ...draft, rulesUrl: event.target.value })} placeholder="https://…"/></label>
-          <label>Registration deadline<input type="date" value={draft.registrationDeadline} onChange={event => setDraft({ ...draft, registrationDeadline: event.target.value })}/></label>
-          <label>Status<select value={draft.status} onChange={event => setDraft({ ...draft, status: event.target.value as Competition['status'] })}><option value="upcoming">Upcoming</option><option value="open">Open</option><option value="closed">Closed</option><option value="archived">Archived</option></select></label>
-        </>}
+    {notice ? <p className="admin-notice">{notice}</p> : null}
+    {error ? <p className="form-error">{error}</p> : null}
 
-        <div className="editorial-admin__cover-field"><div><label htmlFor="editorial-cover-file">Cover image</label><p>JPG, PNG, or WebP. Maximum 5 MB.</p><label className="button button-outline button-compact" htmlFor="editorial-cover-file"><ImagePlus aria-hidden="true" size={16}/> Choose image</label><input id="editorial-cover-file" data-testid="editorial-cover-file-input" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseCover}/></div>{currentCoverUrl ? <img src={currentCoverUrl} alt={draft.coverAltText || 'Cover preview'} data-testid="editorial-cover-preview"/> : <div className="editorial-admin__cover-empty">No cover selected</div>}</div>
-        <label>Cover alt text<input maxLength={220} value={draft.coverAltText} onChange={event => setDraft({ ...draft, coverAltText: event.target.value })} placeholder="Describe meaningful cover content"/></label>
-        <label>Sort order<input type="number" min="0" max="100000" value={draft.sortOrder} onChange={event => setDraft({ ...draft, sortOrder: Number(event.target.value) })}/></label>
-        <label className="checkbox-label"><input type="checkbox" checked={draft.isFeatured} onChange={event => setDraft({ ...draft, isFeatured: event.target.checked })}/> Featured</label>
-        <label className="checkbox-label"><input type="checkbox" checked={draft.isPublished} onChange={event => setDraft({ ...draft, isPublished: event.target.checked })}/> Published</label>
-        <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" size={16}/> {busy ? 'Saving…' : 'Save content'}</button>
+    {loading ? <div className="editorial-compact-empty"><FileText aria-hidden="true" /><strong>Loading editorial content…</strong></div> : null}
+
+    {!loading ? <div className="editorial-admin__list">
+      {filteredRows.map(item => {
+        const index = (rows as EditorialRow[]).findIndex(row => row.id === item.id)
+        const publication = 'title' in item ? item : null
+        const competition = 'name' in item ? item : null
+        const categoryName = publication
+          ? publicationCategoryNames.get(publication.category_id ?? '') ?? publication.category ?? 'Uncategorized'
+          : competitionCategoryNames.get(competition?.category_id ?? '') ?? 'Uncategorized'
+        const metadata = publication
+          ? formatShortDate(publication.published_at)
+          : competition?.registration_deadline ? `Deadline ${formatShortDate(competition.registration_deadline)}` : 'No deadline'
+
+        return <article
+          className="editorial-admin-row"
+          key={item.id}
+          draggable={!busy}
+          onDragStart={() => setDraggingId(item.id)}
+          onDragEnd={() => setDraggingId(null)}
+          onDragOver={event => event.preventDefault()}
+          onDrop={() => dropItem(item.id)}
+        >
+          <div className="editorial-admin-row__order">
+            <button className="editorial-drag-handle" type="button" title="Drag to reorder" aria-label={`Drag ${itemTitle(item)} to reorder`}><GripVertical aria-hidden="true" /></button>
+            <span className="editorial-position">#{String(index + 1).padStart(2, '0')}</span>
+          </div>
+          <div className="editorial-admin-row__thumb">
+            {item.cover_path
+              ? <img src={supabase.storage.from('marketing-editorial').getPublicUrl(item.cover_path).data.publicUrl} alt={item.cover_alt_text ?? ''} />
+              : <span aria-hidden="true"><ImagePlus /></span>}
+          </div>
+          <div className="editorial-admin-row__copy">
+            <div className="editorial-admin-row__title">
+              <h3>{itemTitle(item) || `Untitled ${singular}`}</h3>
+              <div className="editorial-admin-row__badges">
+                <span className={item.is_published ? 'editorial-badge editorial-badge--published' : 'editorial-badge'}>{item.is_published ? 'Published' : 'Draft'}</span>
+                {item.is_featured ? <span className="editorial-badge editorial-badge--featured"><Sparkles aria-hidden="true" /> Featured</span> : null}
+                {competition ? <span className="editorial-badge editorial-badge--business">{competition.status}</span> : null}
+              </div>
+            </div>
+            <p className="editorial-admin-row__category">{categoryName}</p>
+            <p className="editorial-admin-row__summary">{itemSummary(item) || 'No summary yet.'}</p>
+          </div>
+          <div className="editorial-admin-row__meta">
+            <CalendarDays aria-hidden="true" />
+            <span>{metadata}</span>
+          </div>
+          <div className="editorial-admin-row__actions">
+            <div className="editorial-admin-row__move">
+              <button type="button" className="editorial-icon-button" onClick={() => moveItem(item.id, -1)} disabled={busy || index === 0} aria-label={`Move ${itemTitle(item)} up`} title="Move up"><ArrowUp aria-hidden="true" /></button>
+              <button type="button" className="editorial-icon-button" onClick={() => moveItem(item.id, 1)} disabled={busy || index === rows.length - 1} aria-label={`Move ${itemTitle(item)} down`} title="Move down"><ArrowDown aria-hidden="true" /></button>
+            </div>
+            <button className="editorial-icon-button" type="button" onClick={() => beginEdit(item)} aria-label={`Edit ${itemTitle(item)}`} title="Edit"><Pencil aria-hidden="true" /></button>
+            <button className="editorial-icon-button editorial-icon-button--danger" type="button" onClick={() => setDeleteTarget(item)} disabled={busy} aria-label={`Delete ${itemTitle(item)}`} title="Delete"><Trash2 aria-hidden="true" /></button>
+          </div>
+        </article>
+      })}
+
+      {!filteredRows.length ? <div className="editorial-compact-empty">
+        <FileText aria-hidden="true" />
+        <strong>{datasetEmpty ? `No ${kind} yet.` : `No ${kind} match these filters.`}</strong>
+        <span>{datasetEmpty ? `Create the first approved ${singular} when the content is ready.` : 'Adjust the search or state filter.'}</span>
+        {datasetEmpty ? <button className="button button-primary button-compact" type="button" onClick={beginCreate}><Plus aria-hidden="true" /> Add {singular}</button> : null}
+      </div> : null}
+    </div> : null}
+
+    <dialog ref={editorDialogRef} className="editorial-admin__dialog" data-testid="editorial-content-dialog" onCancel={event => { event.preventDefault(); closeEditor() }}>
+      <form onSubmit={save} className="editorial-editor">
+        <header className="editorial-editor__header">
+          <div>
+            <p className="kicker">{editingId === 'new' ? 'Create' : 'Edit'} {singular}</p>
+            <h3>{editingId === 'new' ? `Create ${singular}` : `Edit ${singular}`}</h3>
+            {editingId !== 'new' && draft.title ? <p>{draft.title}</p> : null}
+          </div>
+          <button className="editorial-icon-button" type="button" onClick={closeEditor} aria-label="Close editor"><X aria-hidden="true" /></button>
+        </header>
+
+        <div className="editorial-editor__body">
+          <section className="editorial-editor-section">
+            <div className="editorial-editor-section__heading"><span>01</span><div><h4>Basic information</h4><p>Core public-facing identity and listing copy.</p></div></div>
+            <div className="editorial-field-grid">
+              <label className="editorial-field editorial-field--wide">
+                <span>{kind === 'publications' ? 'Title' : 'Competition name'}</span>
+                <input maxLength={180} value={draft.title} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} placeholder={kind === 'publications' ? 'Publication title' : 'Competition name'} />
+                <small>{draft.title.length} / 180</small>
+              </label>
+              <label className="editorial-field editorial-field--wide">
+                <span>{kind === 'publications' ? 'Summary' : 'Description'}</span>
+                <textarea
+                  rows={4}
+                  maxLength={kind === 'publications' ? 500 : 5000}
+                  value={draft.summary}
+                  onChange={event => setDraft(current => ({ ...current, summary: event.target.value }))}
+                  placeholder={kind === 'publications' ? 'Short listing/card summary' : 'Concise public competition description'}
+                />
+                <small>{kind === 'publications' ? 'Appears on listing cards. ' : 'Keep the opportunity clear and scannable. '}{draft.summary.length} / {kind === 'publications' ? '500' : '5000'}</small>
+              </label>
+              {kind === 'publications' ? <div className="editorial-field editorial-field--wide">
+                <span>Publication category</span>
+                <div className="editorial-category-control">
+                  <select value={draft.publicationCategoryId} onChange={event => setDraft(current => ({ ...current, publicationCategoryId: event.target.value }))}>
+                    <option value="">Select category</option>
+                    {publicationCategories.filter(category => category.is_active).map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                  <button type="button" className="editorial-gear-button" onClick={() => setCategoryManagerOpen(true)} aria-label="Manage publication categories" title="Manage publication categories"><Settings aria-hidden="true" /></button>
+                </div>
+              </div> : <label className="editorial-field editorial-field--wide">
+                <span>Competition category</span>
+                <select value={draft.competitionCategoryId} onChange={event => setDraft(current => ({ ...current, competitionCategoryId: event.target.value }))} data-testid="editorial-competition-category-select">
+                  <option value="">Select category</option>
+                  {competitionCategories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+              </label>}
+            </div>
+          </section>
+
+          {kind === 'publications' ? <section className="editorial-editor-section">
+            <div className="editorial-editor-section__heading"><span>02</span><div><h4>Article content</h4><p>Structured article body. The page title remains the only H1.</p></div></div>
+            <RichTextEditor key={editorVersion} initialValue={draft.bodyDocument} onChange={bodyDocument => setDraft(current => ({ ...current, bodyDocument }))} />
+          </section> : <section className="editorial-editor-section">
+            <div className="editorial-editor-section__heading"><span>02</span><div><h4>Competition information</h4><p>Optional URLs and timing used by the public opportunity page.</p></div></div>
+            <div className="editorial-field-grid">
+              <label className="editorial-field"><span>Registration URL</span><input type="url" value={draft.registrationUrl} onChange={event => setDraft(current => ({ ...current, registrationUrl: event.target.value }))} placeholder="https://…" /></label>
+              <label className="editorial-field"><span>Rules URL</span><input type="url" value={draft.rulesUrl} onChange={event => setDraft(current => ({ ...current, rulesUrl: event.target.value }))} placeholder="https://…" /></label>
+              <label className="editorial-field"><span>Registration deadline</span><input type="date" value={draft.registrationDeadline} onChange={event => setDraft(current => ({ ...current, registrationDeadline: event.target.value }))} /></label>
+            </div>
+          </section>}
+
+          <section className="editorial-editor-section">
+            <div className="editorial-editor-section__heading"><span>03</span><div><h4>Cover</h4><p>Use a consistent 16:9 crop for admin rows, cards, previews, and public detail pages.</p></div></div>
+            <div className="editorial-cover-editor">
+              {currentCoverUrl ? <div className="editorial-cover-preview">
+                <img src={currentCoverUrl} alt={draft.coverAltText || 'Cover preview'} data-testid="editorial-cover-preview" />
+                <div className="editorial-cover-preview__actions">
+                  <label className="button button-outline button-compact" htmlFor={`editorial-cover-file-${kind}`}><ImagePlus aria-hidden="true" /> Replace</label>
+                  <button className="button button-outline button-compact" type="button" onClick={() => void recropCover()} disabled={busy}><span aria-hidden="true">↔</span> Re-crop</button>
+                  <button className="button button-danger button-compact" type="button" onClick={removeCover}><Trash2 aria-hidden="true" /> Remove</button>
+                </div>
+              </div> : <label
+                className="editorial-cover-dropzone"
+                htmlFor={`editorial-cover-file-${kind}`}
+                onDragOver={event => event.preventDefault()}
+                onDrop={dropCover}
+              >
+                <UploadCloud aria-hidden="true" />
+                <strong>Drop a cover here or click to upload</strong>
+                <span>JPG / PNG / WebP · max 5 MB · final ratio 16:9</span>
+              </label>}
+              <input
+                ref={fileInputRef}
+                id={`editorial-cover-file-${kind}`}
+                data-testid="editorial-cover-file-input"
+                className="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={chooseCover}
+              />
+              <label className="editorial-field">
+                <span>Cover Alt Text</span>
+                <input maxLength={220} value={draft.coverAltText} onChange={event => setDraft(current => ({ ...current, coverAltText: event.target.value }))} placeholder="Describe meaningful cover content" />
+                <small>{draft.coverAltText.length} / 220 · Required when publishing with a cover.</small>
+              </label>
+            </div>
+          </section>
+
+          <section className="editorial-editor-section">
+            <div className="editorial-editor-section__heading"><span>04</span><div><h4>Publishing</h4><p>Drafts can stay incomplete. Published content must pass public-facing requirements.</p></div></div>
+            <div className="editorial-publishing-grid">
+              <div className="editorial-status-control" aria-label="Publishing status">
+                <button type="button" className={!draft.isPublished ? 'active' : ''} aria-pressed={!draft.isPublished} onClick={() => choosePublishingState(false)}><span className="editorial-status-dot" /> Draft<small>Keep private while editing.</small></button>
+                <button type="button" className={draft.isPublished ? 'active editorial-status-published' : ''} aria-pressed={draft.isPublished} onClick={() => choosePublishingState(true)}><span className="editorial-status-dot" /> Published<small>Visible on the public website.</small></button>
+              </div>
+              {kind === 'publications' ? <label className="editorial-field"><span>Publication date</span><input type="date" value={draft.publishedAt} onChange={event => setDraft(current => ({ ...current, publishedAt: event.target.value }))} /></label> : null}
+              {kind === 'competitions' ? <label className="editorial-field"><span>Competition status</span><select value={draft.status} onChange={event => setDraft(current => ({ ...current, status: event.target.value as Competition['status'] }))}><option value="upcoming">Upcoming</option><option value="open">Open</option><option value="closed">Closed</option><option value="archived">Archived</option></select><small>Open competitions require a Registration URL before publishing.</small></label> : null}
+              <button type="button" className={draft.isFeatured ? 'editorial-feature-toggle active' : 'editorial-feature-toggle'} aria-pressed={draft.isFeatured} onClick={() => setDraft(current => ({ ...current, isFeatured: !current.isFeatured }))}>
+                <Sparkles aria-hidden="true" /><span><strong>Featured</strong><small>{kind === 'publications' ? 'Prioritize this story for the Featured Stories selection.' : 'Mark this opportunity for subtle editorial prominence.'}</small></span><b>{draft.isFeatured ? 'On' : 'Off'}</b>
+              </button>
+            </div>
+            {publishErrors.length ? <div className="editorial-publish-warning" role="alert"><strong>Complete these fields before publishing:</strong><ul>{publishErrors.map(item => <li key={item}>{item}</li>)}</ul><p>You can still save the item as Draft.</p></div> : null}
+          </section>
+        </div>
+
+        <footer className="editorial-editor__footer">
+          <button className="button button-outline" type="button" onClick={closeEditor} disabled={busy}>Cancel</button>
+          <button className="button button-outline" type="button" onClick={() => void openPreview()} disabled={busy}><Eye aria-hidden="true" /> Preview</button>
+          <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
+        </footer>
       </form>
+    </dialog>
+
+    <EditorialCoverCropper sourceFile={cropSourceFile} onCancel={() => setCropSourceFile(null)} onApply={applyCrop} />
+
+    {kind === 'publications' ? <PublicationCategoryManager
+      open={categoryManagerOpen}
+      categories={publicationCategories}
+      publications={publications}
+      onClose={() => setCategoryManagerOpen(false)}
+      onChanged={load}
+    /> : null}
+
+    <dialog ref={deleteDialogRef} className="editorial-delete-dialog" aria-labelledby="editorial-delete-title" onCancel={event => { event.preventDefault(); setDeleteTarget(null) }}>
+      {deleteTarget ? <>
+        <div className="editorial-delete-dialog__icon"><Trash2 aria-hidden="true" /></div>
+        <h3 id="editorial-delete-title">Delete “{itemTitle(deleteTarget)}”?</h3>
+        <p>This permanently deletes the {singular}. {deleteTarget.cover_path ? 'Its stored cover file will also be removed after the record is deleted.' : 'This action cannot be undone.'}</p>
+        <div>
+          <button type="button" className="button button-outline" onClick={() => setDeleteTarget(null)} disabled={busy}>Cancel</button>
+          <button type="button" className="button button-danger" onClick={() => void confirmDelete()} disabled={busy}><Trash2 aria-hidden="true" /> {busy ? 'Deleting…' : 'Delete permanently'}</button>
+        </div>
+      </> : null}
     </dialog>
   </section>
 }

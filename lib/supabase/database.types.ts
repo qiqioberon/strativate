@@ -11,7 +11,8 @@ export type Institution = { id:string; name:string; normalized_name:string; type
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MarketingHeroPoster = { id:string; image_path:string; alt_text:string; title:string|null; url:string|null; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; image_path:string|null; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
-export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; category:string|null; cover_path:string|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
+export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; body_json:Json; category:string|null; category_id:string|null; cover_path:string|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
+export type PublicationCategory = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
@@ -82,6 +83,7 @@ export type Database = {
       marketing_hero_posters: Table<MarketingHeroPoster, Partial<MarketingHeroPoster> & Pick<MarketingHeroPoster,"image_path"|"alt_text">>
       marketing_testimonials: Table<MarketingTestimonial, Partial<MarketingTestimonial> & Pick<MarketingTestimonial,"slug"|"competition_name"|"achievement"|"testimonial">>
       publications: Table<Publication, Partial<Publication> & Pick<Publication,"slug"|"title"|"excerpt"|"body">>
+      publication_categories: Table<PublicationCategory, Partial<PublicationCategory> & Pick<PublicationCategory,'name'|'sort_order'>>
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
