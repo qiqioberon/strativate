@@ -55,7 +55,12 @@ function sessionStatusClass(value:string){
 function topicStatus(value:SessionRow['topic_status']){
   if(value==='pending_review')return'Belum ditinjau'
   if(value==='confirmed')return'Sudah ditinjau'
-  return'Belum ada untuk ditinjau'
+  return'Belum diajukan'
+}
+function preferenceActionLabel(value:SessionRow['topic_status']){
+  if(value==='confirmed')return'Edit preferensi'
+  if(value==='pending_review')return'Review preferensi'
+  return'Lengkapi preferensi'
 }
 function topicStatusClass(value:SessionRow['topic_status']){
   if(value==='confirmed')return'ops-status--success'
@@ -189,6 +194,13 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   useEffect(()=>{const dialog=cancelDialogRef.current;if(!dialog)return;if(cancelTarget&&!dialog.open)dialog.showModal();if(!cancelTarget&&dialog.open)dialog.close()},[cancelTarget])
   useEffect(()=>{const dialog=completeDialogRef.current;if(!dialog)return;if(completeTarget&&!dialog.open)dialog.showModal();if(!completeTarget&&dialog.open)dialog.close()},[completeTarget])
   useEffect(()=>{setMeetingState(null)},[activeSessionId])
+  useEffect(()=>{
+    if(!activeSessionId)return
+    const frame=requestAnimationFrame(()=>{
+      document.getElementById('mentoring-session-tab-'+activeSessionId)?.scrollIntoView({block:'nearest',inline:'nearest'})
+    })
+    return()=>cancelAnimationFrame(frame)
+  },[activeSessionId])
 
   const focusTarget=focusSessionId??focusEnrollmentId
   useEffect(()=>{
@@ -380,8 +392,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
                 </div>
                 <div className="mentoring-session-action-bar">
                   <div className="mentoring-session-action-bar__primary">
-                    {!selectedClosed?<button className="button button-outline" type="button" onClick={()=>setPreferenceEditRequest(value=>value+1)}><Pencil aria-hidden="true"/>{selectedSession.topic_status==='confirmed'?'Edit preferensi':'Review preferensi'}</button>:null}
-                    {selectedCanSchedule?<button className="button button-primary" type="button" onClick={()=>setScheduleId(selectedSession.session_id)}><CalendarDays aria-hidden="true"/>{selectedSession.status==='scheduled'?'Ubah jadwal':'Jadwalkan sesi'}</button>:null}
+                    {!selectedClosed?<button className="button button-outline" type="button" onClick={()=>setPreferenceEditRequest(value=>value+1)}><Pencil aria-hidden="true"/>{preferenceActionLabel(selectedSession.topic_status)}</button>:null}
+                    {selectedCanSchedule?<button className={selectedSession.status==='scheduled'?'button button-outline':'button button-primary'} type="button" onClick={()=>setScheduleId(selectedSession.session_id)}><CalendarDays aria-hidden="true"/>{selectedSession.status==='scheduled'?'Ubah jadwal':'Jadwalkan sesi'}</button>:null}
                     {selectedSession.status==='scheduled'?<button className="button button-primary mentoring-complete-trigger" type="button" onClick={()=>setCompleteTarget(selectedSession)}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
                     {selectedSession.status==='cancelled'&&selectedSession.google_sync_status==='failed'?<button className="button button-outline" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>void retryCancellation(selectedSession)}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button>:null}
                   </div>

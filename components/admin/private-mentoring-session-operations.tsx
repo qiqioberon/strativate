@@ -229,7 +229,7 @@ export function AdminSessionOperations({
     {showSessionReference?<div className="session-reference-row"><div><span>Session ID</span><strong>{sessionId}</strong></div><CopyTextButton value={sessionId} label="Salin Session ID" copiedLabel="ID disalin"/></div>:null}
 
     {state?<div className="provider-status-grid meeting-calendar-grid">
-      <div><span>Zoom Room</span><strong>{state.assignedZoomRoomName??(state.manualMeetingUrl?'Menggunakan link manual':'Belum ditetapkan')}</strong>{state.manualMeetingUrl?<small className="manual-override-badge">Manual override</small>:null}</div>
+      <div><span>Zoom Room</span><strong>{state.assignedZoomRoomName??(state.manualMeetingUrl?'Menggunakan link manual':'Belum ditetapkan')}</strong></div>
       <div className={state.calendarSyncStatus==='failed'?'is-warning':state.calendarSyncStatus==='ready'||state.calendarSyncStatus==='synced'?'is-success':''}><span>Calendar</span><strong>{humanizeSyncStatus(state.calendarSyncStatus)}</strong>{calendarError?<small role="status">{calendarError}</small>:null}</div>
       <div><span>Meeting Link</span><strong>{effectiveMeetingLabel(state)}</strong></div>
     </div>:<p className="muted">Memuat status meeting…</p>}
@@ -248,7 +248,6 @@ export function AdminSessionOperations({
       </div>
       {editingRoom?<div className="override-editor"><label className="ops-field"><span>Zoom room tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Pilih Zoom room</option>{state?.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select></label><p className="muted">Room lain yang sedang dipakai pada jam sesi ini tidak ditampilkan.</p><div className="button-row"><button className="button button-primary" type="button" disabled={!zoomRoomId||busy==='room'} onClick={()=>void assignRoom()}><Save aria-hidden="true"/>Simpan Zoom room</button><button className="button button-outline" type="button" onClick={()=>setEditingRoom(false)}>Batal</button></div></div>:null}
       {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override mengubah link efektif di Calendar. Zoom room tetap terreservasi untuk sesi ini.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}>Batal</button></div></div>:null}
-      {state?.manualMeetingUrl?<p className="manual-override-note" role="status"><Pencil aria-hidden="true"/>Menggunakan link manual</p>:null}
     </div>:null}
 
     {showCompletionActions?<div className="completion-actions">
