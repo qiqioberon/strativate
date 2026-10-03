@@ -128,7 +128,7 @@ export function CartView({ cart, embedded = false, onBack }: { cart: ActiveCart;
                   {unavailable ? <p className="commerce-cart-item__warning"><AlertTriangle aria-hidden="true" size={14} /> Item ini sudah tidak tersedia. Hapus item untuk melanjutkan checkout.</p> : null}
                 </div>
                 <div className="commerce-cart-item__actions">
-                  <strong>{item.price_amount === null ? 'Tidak tersedia' : formatRupiah(item.price_amount)}</strong>
+                  <div className="commerce-cart-item__price">{item.item_kind === 'digital_product' && item.reference_price_amount != null ? <del>{formatRupiah(item.reference_price_amount)}</del> : null}<strong>{item.price_amount === null ? 'Tidak tersedia' : formatRupiah(item.price_amount)}</strong></div>
                   <button type="button" onClick={() => removeItem(item.cart_item_id)} disabled={removingId === item.cart_item_id}><Trash2 aria-hidden="true" size={15} /> {removingId === item.cart_item_id ? 'Menghapus…' : 'Hapus'}</button>
                 </div>
               </article>

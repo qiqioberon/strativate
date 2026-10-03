@@ -16,7 +16,7 @@ const STRICT_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export type DigitalProductContentType = 'pdf' | 'video'
 export type DigitalProductFile = Pick<File, 'size' | 'type'> & Partial<Pick<File, 'name'>>
-export type DigitalProductDraftErrors = Partial<Record<'name' | 'slug' | 'description' | 'price' | 'file', string>>
+export type DigitalProductDraftErrors = Partial<Record<'name' | 'slug' | 'description' | 'price' | 'referencePrice' | 'file', string>>
 
 export function normalizeDigitalProductSlug(value: string) {
   return value
@@ -50,6 +50,7 @@ export function validateDigitalProductDraft({
   slug,
   description,
   priceInput,
+  referencePriceInput = '',
   file,
   hasStoredImage,
 }: {
@@ -57,6 +58,7 @@ export function validateDigitalProductDraft({
   slug: string
   description: string
   priceInput: string
+  referencePriceInput?: string
   file: DigitalProductFile | null
   hasStoredImage: boolean
 }): DigitalProductDraftErrors {
@@ -64,6 +66,9 @@ export function validateDigitalProductDraft({
   const trimmedName = name.trim()
   const trimmedSlug = slug.trim()
   const trimmedDescription = description.trim()
+  const priceAmount = parseDigitalProductPriceInput(priceInput)
+  const trimmedReferencePrice = referencePriceInput.trim()
+  const referencePriceAmount = trimmedReferencePrice ? parseDigitalProductPriceInput(trimmedReferencePrice) : null
 
   if (!trimmedName) errors.name = 'Nama produk wajib diisi.'
   else if (trimmedName.length > NAME_MAX_LENGTH) errors.name = `Nama produk maksimal ${NAME_MAX_LENGTH} karakter.`
@@ -76,8 +81,14 @@ export function validateDigitalProductDraft({
   if (!trimmedDescription) errors.description = 'Deskripsi wajib diisi.'
   else if (trimmedDescription.length > DESCRIPTION_MAX_LENGTH) errors.description = `Deskripsi maksimal ${DESCRIPTION_MAX_LENGTH} karakter.`
 
-  if (parseDigitalProductPriceInput(priceInput) === null) {
+  if (priceAmount === null) {
     errors.price = 'Harga harus berupa Rupiah bulat bernilai 0 atau lebih.'
+  }
+
+  if (trimmedReferencePrice && referencePriceAmount === null) {
+    errors.referencePrice = 'Harga referensi harus berupa Rupiah bulat bernilai 0 atau lebih.'
+  } else if (priceAmount !== null && referencePriceAmount !== null && referencePriceAmount < priceAmount) {
+    errors.referencePrice = 'Harga referensi harus kosong atau setidaknya sebesar harga aktif.'
   }
 
   if (!file && !hasStoredImage) errors.file = 'Pilih cover image untuk membuat Digital Product.'
@@ -156,6 +167,7 @@ export function buildDigitalProductPayload({
   slug,
   description,
   priceInput,
+  referencePriceInput = '',
   imagePath,
   storedImagePath,
 }: {
@@ -163,12 +175,15 @@ export function buildDigitalProductPayload({
   slug: string
   description: string
   priceInput: string
+  referencePriceInput?: string
   imagePath: string | null
   storedImagePath: string | null
 }) {
   const priceAmount = parseDigitalProductPriceInput(priceInput)
+  const trimmedReferencePrice = referencePriceInput.trim()
+  const referencePriceAmount = trimmedReferencePrice ? parseDigitalProductPriceInput(trimmedReferencePrice) : null
   const authoritativeImagePath = imagePath ?? storedImagePath
-  if (priceAmount === null || !authoritativeImagePath) throw new Error('Digital Product payload was built before validation completed.')
+  if (priceAmount === null || (trimmedReferencePrice && referencePriceAmount === null) || (referencePriceAmount !== null && referencePriceAmount < priceAmount) || !authoritativeImagePath) throw new Error('Digital Product payload was built before validation completed.')
 
   return {
     name: name.trim(),
@@ -176,6 +191,7 @@ export function buildDigitalProductPayload({
     description: description.trim(),
     image_path: authoritativeImagePath,
     price_amount: priceAmount,
+    reference_price_amount: referencePriceAmount,
   }
 }
 

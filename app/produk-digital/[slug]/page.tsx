@@ -51,7 +51,10 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
             <div className="digital-product-detail__purchase">
               <div className="digital-product-detail__price">
                 <span>Price</span>
-                <strong>{formatRupiah(product.price_amount)}</strong>
+                <div className="digital-product-price-values">
+                  {product.reference_price_amount != null ? <del>{formatRupiah(product.reference_price_amount)}</del> : null}
+                  <strong>{formatRupiah(product.price_amount)}</strong>
+                </div>
               </div>
               {product.salesCount !== null ? (
                 <p className="digital-product-detail__sales" data-testid="digital-product-detail-sales-count">

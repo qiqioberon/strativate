@@ -307,6 +307,11 @@
   letter-spacing: .075em;
   text-transform: uppercase;
 }
+.digital-product-swap-card__copy > span del {
+  color: #927b70;
+  font-weight: 750;
+  text-decoration-thickness: 1px;
+}
 .digital-product-swap-card__copy h3 {
   margin: 0;
   overflow-wrap: anywhere;
