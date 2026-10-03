@@ -24,8 +24,11 @@
 .pageHeader h2 {
   margin: 0;
   font-size: clamp(30px, 3vw, 42px);
-  line-height: 1.05;
-  letter-spacing: -.065em;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+  word-spacing: .02em;
+  text-wrap: balance;
 }
 
 .pageHeaderCopy > p:last-child {

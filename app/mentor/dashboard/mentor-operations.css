@@ -36,8 +36,11 @@
 .mentor-page-header h1 {
   margin: 0;
   font-size: clamp(30px, 3.4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -.075em;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+  word-spacing: .02em;
+  text-wrap: balance;
 }
 
 .mentor-page-header__copy > p:last-child {
