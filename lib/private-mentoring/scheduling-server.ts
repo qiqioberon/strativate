@@ -46,7 +46,7 @@ export async function getAdminBookableSlots(sessionId:string) {
   const resolvedContext={...context,requiredTierName}
   const tierLabel=requiredTierName||'tier paket ini'
 
-  if(context.topicStatus!=='confirmed'||!context.focusName) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Topik sesi masih menunggu review admin. Konfirmasi topik/scope final sebelum memilih jadwal.'}
+  if(context.topicStatus!=='confirmed') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Preferensi sesi masih menunggu review admin. Tandai sesi sudah ditinjau sebelum memilih jadwal.'}
   if(context.status==='completed') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah selesai tidak dapat dijadwalkan ulang.'}
   if(context.status==='cancelled') return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Sesi yang sudah dibatalkan tidak dapat dijadwalkan ulang.'}
   if(context.primaryMentorRequired&&!context.primaryMentorId) return {context:resolvedContext,slots:[],mentorWarnings:[],message:'Paket 5 sesi atau lebih membutuhkan mentor utama. Tetapkan mentor utama di detail enrollment sebelum menjadwalkan sesi.'}

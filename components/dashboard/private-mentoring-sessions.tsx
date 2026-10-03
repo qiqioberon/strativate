@@ -17,7 +17,7 @@ type Competition={enrollment_id:string;competition_category_id:string|null;compe
 type SortMode='session'|'schedule_asc'|'schedule_desc'
 
 function sessionStatus(status:string){
-  if(status==='awaiting_focus')return{label:'Menunggu review',tone:'warning'}
+  if(status==='awaiting_focus')return{label:'Menunggu review admin',tone:'warning'}
   if(status==='awaiting_scheduling')return{label:'Menunggu admin',tone:'info'}
   if(status==='scheduled')return{label:'Terjadwal',tone:'positive'}
   if(status==='completed')return{label:'Selesai',tone:'neutral'}
@@ -26,8 +26,8 @@ function sessionStatus(status:string){
 }
 function topicStatus(status:PrivateMentoringSessionView['topicStatus']){
   if(status==='pending_review')return'Menunggu review admin'
-  if(status==='confirmed')return'Topik dikonfirmasi'
-  return'Preferensi belum ditinjau'
+  if(status==='confirmed')return'Sudah ditinjau'
+  return'Belum ditinjau'
 }
 function supportHref(session:PrivateMentoringSessionView){
   const when=session.scheduledStartAt
@@ -141,7 +141,7 @@ export function PrivateMentoringSessions({
     {selectedEnrollmentId&&(()=>{
       const rows=sessions.filter(session=>session.enrollmentId===selectedEnrollmentId)
       return <section className="workspace-card private-enrollment-detail" id="private-enrollment-detail">
-        <div className="mentoring-group__header"><div><p className="kicker">Enrollment Private Mentoring</p><h3>{rows[0]?.mentorTierName} · {rows[0]?.purchasedSessions??rows.length} sesi dibeli</h3><p className="muted">Metadata kompetisi berlaku untuk enrollment ini. Topik setiap sesi tetap dikelola pada detail sesi.</p></div><span className="ops-status ops-status--info">{rows.filter(session=>session.status==='completed').length} selesai</span></div>
+        <div className="mentoring-group__header"><div><p className="kicker">Enrollment Private Mentoring</p><h3>{rows[0]?.mentorTierName} · {rows[0]?.purchasedSessions??rows.length} sesi dibeli</h3><p className="muted">Metadata kompetisi berlaku untuk enrollment ini. Preferensi opsional setiap sesi dikelola pada detail sesi.</p></div><span className="ops-status ops-status--info">{rows.filter(session=>session.status==='completed').length} selesai</span></div>
         <div className="mentoring-competition-section"><MentoringCompetitionEditor kind="private" parentId={selectedEnrollmentId}/></div>
       </section>
     })()}
@@ -149,14 +149,14 @@ export function PrivateMentoringSessions({
     <section className="workspace-card mentoring-session-table-section">
       <div className="data-management-toolbar">
         <label className="ops-field ops-field--wide"><span>Cari sesi</span><div className="ops-input-with-icon"><Search aria-hidden="true" size={15}/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);resetPage()}} placeholder="Session ID, topik, mentor, atau nomor sesi"/></div></label>
-        <label className="ops-field"><span>Status</span><select value={statusFilter} onChange={event=>{setStatusFilter(event.target.value);resetPage()}}><option value="all">Semua status</option><option value="awaiting_focus">Menunggu review</option><option value="awaiting_scheduling">Menunggu admin</option><option value="scheduled">Terjadwal</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
+        <label className="ops-field"><span>Status</span><select value={statusFilter} onChange={event=>{setStatusFilter(event.target.value);resetPage()}}><option value="all">Semua status</option><option value="awaiting_focus">Menunggu review admin</option><option value="awaiting_scheduling">Menunggu admin</option><option value="scheduled">Terjadwal</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
         <label className="ops-field"><span>Mentor</span><select value={mentorFilter} onChange={event=>{setMentorFilter(event.target.value);resetPage()}}><option value="all">Semua mentor</option>{mentors.map(value=><option key={value} value={value}>{value}</option>)}</select></label>
         <label className="ops-field"><span>Fokus</span><select value={focusFilter} onChange={event=>{setFocusFilter(event.target.value);resetPage()}}><option value="all">Semua fokus</option>{focusNames.map(value=><option key={value} value={value}>{value}</option>)}</select></label>
         <label className="ops-field"><span>Urutkan</span><select value={sort} onChange={event=>{setSort(event.target.value as SortMode);resetPage()}}><option value="session">Nomor sesi</option><option value="schedule_asc">Jadwal terdekat</option><option value="schedule_desc">Jadwal terbaru</option></select></label>
         <label className="ops-field"><span>Per halaman</span><select value={pageSize} onChange={event=>{setPageSize(Number(event.target.value));resetPage()}}>{[5,10,20,50].map(size=><option value={size} key={size}>{size}</option>)}</select></label>
       </div>
       <div className="data-management-summary"><strong>{filtered.length} sesi</strong><span>Gunakan Session ID saat menghubungi admin.</span></div>
-      <div className="ops-table-wrap"><table className="ops-table mentee-session-table" data-testid="mentee-mentoring-session-table"><thead><tr><th>Sesi</th><th>Topik / Fokus</th><th>Mentor</th><th>Jadwal</th><th>Status</th><th>Zoom</th><th>Detail</th></tr></thead><tbody>{visible.length?visible.map(session=>{const status=sessionStatus(session.status);return <tr key={session.sessionId}><td data-label="Sesi"><strong>Sesi {session.sessionNumber}/{session.purchasedSessions}</strong><small><code title={session.sessionId}>{shortId(session.sessionId)}</code></small></td><td data-label="Topik / Fokus"><strong>{session.resolvedTopic||session.focusName||'Belum dikonfirmasi'}</strong><small>{topicStatus(session.topicStatus)}</small></td><td data-label="Mentor">{session.mentorName||session.primaryMentorName||'Menunggu admin'}</td><td data-label="Jadwal">{scheduleText(session)}</td><td data-label="Status"><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></td><td data-label="Zoom">{session.status==='scheduled'&&session.meetingUrl?<a className="button button-primary button-compact" href={session.meetingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Buka Zoom sesi ${session.sessionNumber}`}><ExternalLink aria-hidden="true"/>Zoom</a>:<span className="muted">Belum tersedia</span>}</td><td data-label="Detail"><button className="button button-outline button-compact" type="button" onClick={()=>setSelectedSessionId(session.sessionId)}><Eye aria-hidden="true"/>Detail</button></td></tr>}):<tr className="responsive-table-empty"><td colSpan={7}>Tidak ada sesi yang cocok dengan filter.</td></tr>}</tbody></table></div>
+      <div className="ops-table-wrap"><table className="ops-table mentee-session-table" data-testid="mentee-mentoring-session-table"><thead><tr><th>Sesi</th><th>Topik / Fokus</th><th>Mentor</th><th>Jadwal</th><th>Status</th><th>Zoom</th><th>Detail</th></tr></thead><tbody>{visible.length?visible.map(session=>{const status=sessionStatus(session.status);return <tr key={session.sessionId}><td data-label="Sesi"><strong>Sesi {session.sessionNumber}/{session.purchasedSessions}</strong><small><code title={session.sessionId}>{shortId(session.sessionId)}</code></small></td><td data-label="Topik / Fokus"><strong>{session.resolvedTopic||session.focusName||'Belum ditentukan'}</strong><small>{topicStatus(session.topicStatus)}</small></td><td data-label="Mentor">{session.mentorName||session.primaryMentorName||'Menunggu admin'}</td><td data-label="Jadwal">{scheduleText(session)}</td><td data-label="Status"><span className={`ops-status ops-status--${status.tone}`}>{status.label}</span></td><td data-label="Zoom">{session.status==='scheduled'&&session.meetingUrl?<a className="button button-primary button-compact" href={session.meetingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Buka Zoom sesi ${session.sessionNumber}`}><ExternalLink aria-hidden="true"/>Zoom</a>:<span className="muted">Belum tersedia</span>}</td><td data-label="Detail"><button className="button button-outline button-compact" type="button" onClick={()=>setSelectedSessionId(session.sessionId)}><Eye aria-hidden="true"/>Detail</button></td></tr>}):<tr className="responsive-table-empty"><td colSpan={7}>Tidak ada sesi yang cocok dengan filter.</td></tr>}</tbody></table></div>
       <TablePagination page={safePage} pageSize={pageSize} totalItems={filtered.length} onPageChange={setPage} label="Pagination sesi Private Mentoring"/>
     </section>
 
@@ -168,7 +168,7 @@ export function PrivateMentoringSessions({
           <div><span>Package / tier</span><strong>{selected.mentorTierName} · {selected.purchasedSessions} sesi</strong></div>
           <div><span>Status</span><strong>{sessionStatus(selected.status).label}</strong></div>
           <div><span>Competition</span><strong>{competitions[selected.enrollmentId]?.competition_name||'Belum dilengkapi'}</strong></div>
-          <div><span>Focus</span><strong>{selected.focusName||'Belum dikonfirmasi'}</strong></div>
+          <div><span>Fokus sesi</span><strong>{selected.focusName||'Belum ditentukan'}</strong></div>
           <div><span>Mentor</span><strong>{selected.mentorName||selected.primaryMentorName||'Menunggu admin'}</strong></div>
           <div><span>Jadwal</span><strong>{scheduleText(selected)}</strong></div>
           <div><span>Timezone</span><strong>{selected.mentorTimezone||'Timezone lokal'}</strong></div>

@@ -26,13 +26,13 @@ const DATE_TIME=new Intl.DateTimeFormat('id-ID',{dateStyle:'full',timeStyle:'sho
 
 function enrollmentStatus(row:EnrollmentRow){
   if(row.completed_sessions===row.purchased_sessions)return'Selesai'
-  if(row.awaiting_focus_sessions>0)return'Menunggu review'
+  if(row.awaiting_focus_sessions>0)return'Menunggu review admin'
   if(row.awaiting_scheduling_sessions>0)return'Perlu dijadwalkan'
   if(row.configured_sessions===row.purchased_sessions)return'Semua sesi sudah diatur'
   return'Berjalan'
 }
 function sessionStatus(value:string){
-  if(value==='awaiting_focus')return'Menunggu review'
+  if(value==='awaiting_focus')return'Menunggu review admin'
   if(value==='awaiting_scheduling')return'Menunggu admin'
   if(value==='scheduled')return'Terjadwal'
   if(value==='completed')return'Selesai'
@@ -40,9 +40,9 @@ function sessionStatus(value:string){
   return value.replaceAll('_',' ')
 }
 function topicStatus(value:SessionRow['topic_status']){
-  if(value==='pending_review')return'Menunggu review'
-  if(value==='confirmed')return'Dikonfirmasi'
-  return'Belum diajukan'
+  if(value==='pending_review')return'Menunggu review admin'
+  if(value==='confirmed')return'Sudah ditinjau'
+  return'Belum ditinjau'
 }
 function packageLabel(pkg:PrivateMentoringPackage,tiers:MentorTier[]){
   const tier=tiers.find(item=>item.id===pkg.mentor_tier_id)
@@ -217,13 +217,13 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const currentPrimaryName=sessions[0]?.primary_mentor_name??'Belum ditetapkan'
 
   return <div className="ops-page mentoring-enrollment-page">
-    <div className="role-page-title"><p className="kicker">Operasional · Private Mentoring</p><h2>Mentoring Sessions</h2><p>Kelola enrollment, review topik, mentor utama, jadwal, Zoom, dan Session ID dari satu detail operasional.</p></div>
+    <div className="role-page-title"><p className="kicker">Operasional · Private Mentoring</p><h2>Mentoring Sessions</h2><p>Kelola enrollment, review preferensi sesi, mentor utama, jadwal, Zoom, dan Session ID dari satu detail operasional.</p></div>
 
     <div className="ops-filter-bar mentoring-enrollment-filters">
       <label className="ops-field ops-field--wide"><span>Cari user / Session ID</span><div className="ops-input-with-icon"><Search size={15} aria-hidden="true"/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(0)}} placeholder="Nama, email, paket, atau full Session ID"/></div></label>
       <label className="ops-field"><span>Paket</span><select value={packageId} onChange={event=>{setPackageId(event.target.value);setPage(0)}}><option value="">Semua paket</option>{packages.map(pkg=><option value={pkg.id} key={pkg.id}>{packageLabel(pkg,tiers)}</option>)}</select></label>
       <label className="ops-field"><span>Tier</span><select value={tierId} onChange={event=>{setTierId(event.target.value);setPage(0)}}><option value="">Semua tier</option>{tiers.map(tier=><option key={tier.id} value={tier.id}>{tier.name}</option>)}</select></label>
-      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">Semua</option><option value="needs_focus">Menunggu review</option><option value="needs_scheduling">Perlu dijadwalkan</option><option value="configured">Semua sesi sudah diatur</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option></select></label>
+      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">Semua</option><option value="needs_focus">Menunggu review admin</option><option value="needs_scheduling">Perlu dijadwalkan</option><option value="configured">Semua sesi sudah diatur</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option></select></label>
       <label className="ops-field"><span>Dari tanggal beli</span><input type="date" value={fromDate} onChange={event=>{setFromDate(event.target.value);setPage(0)}}/></label>
       <label className="ops-field"><span>Sampai</span><input type="date" value={toDate} onChange={event=>{setToDate(event.target.value);setPage(0)}}/></label>
       <button className="button button-outline ops-reset-action" type="button" onClick={resetFilters}><RotateCcw aria-hidden="true"/>Reset</button>

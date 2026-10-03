@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import dataStyles from './data-management.module.css'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
 import { TablePagination } from './table-pagination'
+import { AdminMenteeCommunityAnalytics } from './mentee-community-analytics'
 
 const PAGE_SIZE = 25
 const DATE = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' })
@@ -119,6 +120,8 @@ export function MenteeManagement() {
       </div>
       <span className={dataStyles.countPill}><UsersRound aria-hidden="true" />{totalPeople} mentee</span>
     </header>
+
+    <AdminMenteeCommunityAnalytics/>
 
     <div className={dataStyles.surface}>
       <div className={dataStyles.surfaceHeader}>

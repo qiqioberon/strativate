@@ -141,7 +141,7 @@ export type Database = {
       import_institutions_batch: { Args:{p_rows:Json}; Returns:Json }
       is_admin: { Args:Record<PropertyKey,never>; Returns:boolean }
       save_onboarding_step: { Args:{p_step:number;p_data:Json}; Returns:MenteeProfile }
-      get_mentee_community_stats: { Args:Record<PropertyKey,never>; Returns:Json }
+      get_admin_mentee_community_stats: { Args:Record<PropertyKey,never>; Returns:Json }
       submit_institution: { Args:{p_name:string;p_type:InstitutionType;p_allow_duplicate?:boolean}; Returns:Institution }
       search_institutions: { Args:{p_query:string}; Returns:Institution[] }
       complete_mentor_setup: { Args:{p_first_name:string;p_last_name:string;p_username:string}; Returns:Profile }

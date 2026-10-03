@@ -19,7 +19,6 @@ export async function getAdminIntensiveBookableSlots(sessionId:string){
  const{data,error}=await rpc.rpc<SlotContext>('admin_get_intensive_mentoring_slot_context',{p_session_id:sessionId})
  if(error||!data)throw new Error(error?.message||'Slot context belum dapat dimuat.')
  const context=data
- if(!context.focusName)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Topik sesi belum dikonfirmasi admin.'}
  if(context.status==='completed'||context.status==='cancelled')return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Sesi historis tidak dapat dijadwalkan ulang.'}
  if(!context.mentors.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Belum ada mentor aktif untuk dijadwalkan.'}
  const availability=context.mentors.flatMap(mentor=>mentor.availability)

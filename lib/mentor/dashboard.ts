@@ -94,7 +94,7 @@ function monthKey(value: Date, timezone: string) {
 }
 
 export function mentorSessionStatusLabel(status: MentorSessionStatus) {
-  if (status === 'awaiting_focus') return 'Menunggu fokus'
+  if (status === 'awaiting_focus') return 'Menunggu review admin'
   if (status === 'awaiting_scheduling') return 'Menunggu jadwal'
   if (status === 'scheduled') return 'Terjadwal'
   if (status === 'completed') return 'Selesai'
