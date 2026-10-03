@@ -20,7 +20,8 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
@@ -140,11 +141,36 @@ const groups: { label: string; items: NavItem[] }[] = [
 
 export default function AdminDashboard() {
   const account = useAccount()
-  const [section, setSection] = useState<Section>('Overview')
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const hasMenteeView = searchParams.has('view')
+  const [section, setSection] = useState<Section>(() => hasMenteeView ? 'Mentees' : 'Overview')
   const [mobile, setMobile] = useState(false)
   const [relatedTarget, setRelatedTarget] = useState<{ entity: string | null; id: string | null } | null>(null)
 
-  const navigate = (value: Section) => { setSection(value); setMobile(false) }
+  useEffect(() => {
+    if (hasMenteeView) setSection('Mentees')
+  }, [hasMenteeView])
+
+  const navigate = (value: Section) => {
+    setSection(value)
+    setMobile(false)
+
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === 'Mentees') {
+      const view = params.get('view')
+      if (view !== 'data' && view !== 'analytics') params.set('view', 'data')
+    } else {
+      params.delete('view')
+    }
+
+    const nextQuery = params.toString()
+    if (nextQuery === searchParams.toString()) return
+    const href = nextQuery ? `${pathname}?${nextQuery}` : pathname
+    if (value === 'Mentees') router.push(href, { scroll: false })
+    else router.replace(href, { scroll: false })
+  }
   const navigateOperational = (target: string) => {
     if (target === 'orders') navigate('Orders')
     else if (target === 'sessions') navigate('Mentoring Sessions')

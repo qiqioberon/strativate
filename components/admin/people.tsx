@@ -1,6 +1,7 @@
 'use client'
 
 import { Eye, RefreshCw, Search, UsersRound, X } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { formError } from '@/lib/auth/errors'
@@ -14,6 +15,7 @@ import { AdminMenteeCommunityAnalytics } from './mentee-community-analytics'
 const PAGE_SIZE = 25
 const DATE = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' })
 
+type MenteeView = 'data' | 'analytics'
 type MenteeSortKey = 'name' | 'email' | 'whatsapp' | 'institution' | 'created_at'
 type MenteeRow = {
   total_count: number
@@ -52,6 +54,10 @@ function institutionLabel(row: MenteeRow) {
 }
 
 export function MenteeManagement() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const activeView: MenteeView = searchParams.get('view') === 'analytics' ? 'analytics' : 'data'
   const supabase = useMemo(() => createClient(), [])
   const rpcClient = useMemo(() => supabase as unknown as RpcClient, [supabase])
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -99,11 +105,22 @@ export function MenteeManagement() {
   }, [load])
 
   useEffect(() => {
+    if (activeView === 'analytics') setSelected(null)
+  }, [activeView])
+
+  useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
     if (selected && !dialog.open) dialog.showModal()
     if (!selected && dialog.open) dialog.close()
   }, [selected])
+
+  function changeView(nextView: MenteeView) {
+    if (nextView === activeView) return
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('view', nextView)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   function changeSort(key: string | null, direction: SortDirection) {
     setSortKey(key as MenteeSortKey | null)
@@ -121,9 +138,35 @@ export function MenteeManagement() {
       <span className={dataStyles.countPill}><UsersRound aria-hidden="true" />{totalPeople} mentee</span>
     </header>
 
-    <AdminMenteeCommunityAnalytics/>
+    <div className={dataStyles.viewSwitcher} role="tablist" aria-label="Tampilan mentee" data-testid="mentee-view-switcher">
+      <button
+        id="mentee-view-data"
+        type="button"
+        role="tab"
+        aria-selected={activeView === 'data'}
+        aria-controls="mentee-data-panel"
+        className={`${dataStyles.viewTab} ${activeView === 'data' ? dataStyles.viewTabActive : ''}`}
+        onClick={() => changeView('data')}
+      >
+        Data Mentee
+      </button>
+      <button
+        id="mentee-view-analytics"
+        type="button"
+        role="tab"
+        aria-selected={activeView === 'analytics'}
+        aria-controls="mentee-analytics-panel"
+        className={`${dataStyles.viewTab} ${activeView === 'analytics' ? dataStyles.viewTabActive : ''}`}
+        onClick={() => changeView('analytics')}
+      >
+        Analytics
+      </button>
+    </div>
 
-    <div className={dataStyles.surface}>
+    {activeView === 'analytics' ? <div id="mentee-analytics-panel" className={dataStyles.viewPanel} role="tabpanel" aria-labelledby="mentee-view-analytics">
+      <AdminMenteeCommunityAnalytics/>
+    </div> : <>
+    <div id="mentee-data-panel" className={dataStyles.surface} role="tabpanel" aria-labelledby="mentee-view-data">
       <div className={dataStyles.surfaceHeader}>
         <div className={dataStyles.surfaceHeaderCopy}>
           <p className="kicker">Akun mentee</p>
@@ -193,5 +236,6 @@ export function MenteeManagement() {
         <section className="ops-dialog__section"><h3>Minat kompetisi</h3><p>{selected.interests.length ? selected.interests.join(', ') : 'Belum ada minat yang dipilih.'}</p>{selected.other_interest_text ? <p className="muted">Lainnya: {selected.other_interest_text}</p> : null}</section>
       </div> : null}
     </dialog>
+    </>}
   </section>
 }
