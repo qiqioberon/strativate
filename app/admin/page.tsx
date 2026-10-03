@@ -144,14 +144,24 @@ export default function AdminDashboard() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const hasMenteeView = searchParams.has('view')
-  const [section, setSection] = useState<Section>(() => hasMenteeView ? 'Mentees' : 'Overview')
+  const menteeView = searchParams.get('view')
+  const hasMenteeView = menteeView === 'data' || menteeView === 'analytics'
+  const hasCartView = searchParams.has('cartView')
+  const [section, setSection] = useState<Section>(() => hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
   const [mobile, setMobile] = useState(false)
   const [relatedTarget, setRelatedTarget] = useState<{ entity: string | null; id: string | null } | null>(null)
 
   useEffect(() => {
-    if (hasMenteeView) setSection('Mentees')
-  }, [hasMenteeView])
+    if (hasCartView) {
+      setSection('Cart Links')
+      return
+    }
+    if (hasMenteeView) {
+      setSection('Mentees')
+      return
+    }
+    setSection(current => current === 'Cart Links' || current === 'Mentees' ? 'Overview' : current)
+  }, [hasCartView, hasMenteeView, searchParams])
 
   const navigate = (value: Section) => {
     setSection(value)
@@ -159,16 +169,22 @@ export default function AdminDashboard() {
 
     const params = new URLSearchParams(searchParams.toString())
     if (value === 'Mentees') {
+      params.delete('cartView')
       const view = params.get('view')
       if (view !== 'data' && view !== 'analytics') params.set('view', 'data')
+    } else if (value === 'Cart Links') {
+      params.delete('view')
+      const cartView = params.get('cartView')
+      if (cartView !== 'create' && cartView !== 'history' && cartView !== 'international') params.set('cartView', 'create')
     } else {
       params.delete('view')
+      params.delete('cartView')
     }
 
     const nextQuery = params.toString()
     if (nextQuery === searchParams.toString()) return
     const href = nextQuery ? `${pathname}?${nextQuery}` : pathname
-    if (value === 'Mentees') router.push(href, { scroll: false })
+    if (value === 'Mentees' || value === 'Cart Links') router.push(href, { scroll: false })
     else router.replace(href, { scroll: false })
   }
   const navigateOperational = (target: string) => {
