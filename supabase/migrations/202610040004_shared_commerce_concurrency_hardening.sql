@@ -184,7 +184,7 @@ returns uuid
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_uid uuid := public.current_completed_mentee_id();
   v_order_id uuid;
@@ -198,7 +198,7 @@ begin
 
   return v_order_id;
 end;
-$;
+$$;
 
 revoke all on function public.get_active_digital_product_order(uuid)
 from public, anon, authenticated;
@@ -895,7 +895,7 @@ returns public.payment_attempts
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_attempt public.payment_attempts;
   v_token text := btrim(p_snap_token);
@@ -952,7 +952,7 @@ begin
 
   return v_attempt;
 end;
-$;
+$$;
 
 create or replace function public.apply_midtrans_payment_status(
   p_attempt_id uuid,
