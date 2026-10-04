@@ -48,9 +48,9 @@ export function AddToCartButton({
     return (
       <div className={cn('digital-product-purchase-action', compact && 'digital-product-purchase-action--compact')}>
         <Link className={buttonVariants({ variant: 'primary', size })} href="/auth">
-          Sign in to purchase
+          <ShoppingCart aria-hidden="true" size={17} />
+          Add to cart
         </Link>
-        <p>{compact ? 'Sign in as a Mentee to purchase.' : 'Sign in as a Mentee with completed registration to add this product to your cart.'}</p>
       </div>
     )
   }
