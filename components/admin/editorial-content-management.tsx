@@ -4,6 +4,8 @@ import {
   ArrowDown,
   ArrowUp,
   CalendarDays,
+  Check,
+  ChevronDown,
   Crop,
   Eye,
   FileText,
@@ -20,6 +22,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
+import { Select } from '@base-ui/react/select'
 
 import { EditorialCoverCropper } from '@/components/admin/editorial-cover-cropper'
 import { PublicationCategoryManager } from '@/components/admin/publication-category-manager'
@@ -66,6 +69,11 @@ type Draft = {
 
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const maxCoverBytes = 5 * 1024 * 1024
+const statusFilterItems = {
+  all: 'All states',
+  published: 'Published',
+  draft: 'Draft',
+} as const
 
 function emptyDraft(): Draft {
   return {
@@ -735,14 +743,24 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
           <span className="sr-only">Search editorial content</span>
           <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${kind}`} />
         </label>
-        <label className="editorial-admin__state-filter">
-          <span className="sr-only">Publication state</span>
-          <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)}>
-            <option value="all">All states</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
-        </label>
+        <Select.Root items={statusFilterItems} value={statusFilter} onValueChange={value => setStatusFilter(value as StatusFilter)}>
+          <Select.Trigger className="editorial-admin__state-trigger" aria-label={`${singular} state`}>
+            <Select.Value />
+            <Select.Icon className="editorial-admin__state-trigger-icon"><ChevronDown aria-hidden="true" /></Select.Icon>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner className="editorial-admin__state-positioner" side="bottom" align="start" sideOffset={6} alignItemWithTrigger={false}>
+              <Select.Popup className="editorial-admin__state-popup">
+                <Select.List className="editorial-admin__state-list">
+                  {(Object.entries(statusFilterItems) as [StatusFilter, string][]).map(([value, label]) => <Select.Item className="editorial-admin__state-option" value={value} key={value}>
+                    <Select.ItemIndicator className="editorial-admin__state-indicator"><Check aria-hidden="true" /></Select.ItemIndicator>
+                    <Select.ItemText>{label}</Select.ItemText>
+                  </Select.Item>)}
+                </Select.List>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
       </div>
     </div>
 
@@ -919,9 +937,9 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
           <section className="editorial-editor-section">
             <div className="editorial-editor-section__heading"><span>04</span><div><h4>Publishing</h4><p>Drafts can stay incomplete. Published content must pass public-facing requirements.</p></div></div>
             <div className="editorial-publishing-grid">
-              <div className="editorial-status-control" aria-label="Publishing status">
-                <button type="button" className={!draft.isPublished ? 'active' : ''} aria-pressed={!draft.isPublished} onClick={() => choosePublishingState(false)}><span className="editorial-status-dot" /> Draft<small>Keep private while editing.</small></button>
-                <button type="button" className={draft.isPublished ? 'active editorial-status-published' : ''} aria-pressed={draft.isPublished} onClick={() => choosePublishingState(true)}><span className="editorial-status-dot" /> Published<small>Visible on the public website.</small></button>
+              <div className="editorial-status-control" role="group" aria-label="Publishing status">
+                <button type="button" className={!draft.isPublished ? 'active' : ''} aria-pressed={!draft.isPublished} onClick={() => choosePublishingState(false)}><span className="editorial-status-dot" /> Draft</button>
+                <button type="button" className={draft.isPublished ? 'active editorial-status-published' : ''} aria-pressed={draft.isPublished} onClick={() => choosePublishingState(true)}><span className="editorial-status-dot" /> Published</button>
               </div>
               {kind === 'publications' ? <label className="editorial-field"><span>Publication date</span><input type="date" value={draft.publishedAt} onChange={event => setDraft(current => ({ ...current, publishedAt: event.target.value }))} /></label> : null}
               {kind === 'competitions' ? <label className="editorial-field"><span>Competition status</span><select value={draft.status} onChange={event => setDraft(current => ({ ...current, status: event.target.value as Competition['status'] }))}><option value="upcoming">Upcoming</option><option value="open">Open</option><option value="closed">Closed</option><option value="archived">Archived</option></select><small>Open competitions require a Registration URL before publishing.</small></label> : null}
@@ -934,7 +952,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
         </div>
 
         <footer className="editorial-editor__footer">
-          <button className="button button-outline" type="button" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
+          <button className="button button-outline editorial-editor__cancel" type="button" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
           <button className="button button-outline" type="button" onClick={() => void openPreview()} disabled={busy}><Eye aria-hidden="true" /> Preview</button>
           <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
         </footer>
