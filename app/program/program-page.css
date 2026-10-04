@@ -4,22 +4,6 @@
   --program-deep: #251914;
 }
 
-.program-page .marketing-page-intro {
-  background:
-    radial-gradient(circle at 83% 40%, rgb(255 122 0 / .08), transparent 24%),
-    linear-gradient(rgb(127 83 55 / .035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(127 83 55 / .035) 1px, transparent 1px),
-    #fff;
-  background-size: auto, 44px 44px, 44px 44px, auto;
-}
-.program-page .marketing-page-intro__motif { opacity: .78; transform: scale(1.08); }
-.program-page .marketing-page-intro__motif span { animation: program-motif-drift 7s ease-in-out infinite alternate; }
-.program-page .marketing-page-intro__motif span:nth-child(2) { animation-delay: -2.1s; }
-.program-page .marketing-page-intro__motif span:nth-child(3) { animation-delay: -4.2s; }
-@keyframes program-motif-drift {
-  from { translate: 0 -4px; rotate: -.6deg; }
-  to { translate: 0 8px; rotate: .8deg; }
-}
 .program-intro-panel { display: grid; justify-items: start; gap: 22px; }
 .program-intro-facts { display: flex; flex-wrap: wrap; gap: 7px; }
 .program-intro-facts span {
@@ -299,8 +283,6 @@
   .program-consultation > div { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 620px) {
-  .program-page .marketing-page-intro { background-size: auto, 34px 34px, 34px 34px, auto; }
-  .program-page .marketing-page-intro__motif { opacity: .36; }
   .program-intro-facts { gap: 6px; }
   .program-intro-facts span { min-height: 29px; padding-inline: 8px; font-size: .56rem; }
   .program-page .marketing-service-card { transform: none !important; }
@@ -311,7 +293,6 @@
   .program-consultation > div::after { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .program-page .marketing-page-intro__motif span,
   .program-consultation > div::after { animation: none !important; }
   .program-page .marketing-service-card { transform: none !important; transition: border-color 180ms ease, box-shadow 180ms ease; }
   .program-page .marketing-service-card__icon,
