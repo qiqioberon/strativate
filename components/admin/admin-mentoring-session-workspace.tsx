@@ -4,7 +4,7 @@ import {PrivateMentoringSessionManagement} from './private-mentoring-enrollment-
 import {IntensiveMentoringSessionManagement} from './intensive-mentoring-session-management'
 
 type Mode='private'|'intensive'
-export function AdminMentoringSessionWorkspace({focusSessionId,focusEnrollmentId,focusEntity}:{focusSessionId?:string|null;focusEnrollmentId?:string|null;focusEntity?:string|null}){
+export function AdminMentoringSessionWorkspace({focusSessionId,focusEnrollmentId,focusEngagementId,focusEntity}:{focusSessionId?:string|null;focusEnrollmentId?:string|null;focusEngagementId?:string|null;focusEntity?:string|null}){
  const desired:Mode=focusEntity?.startsWith('intensive_')?'intensive':'private'
  const[mode,setMode]=useState<Mode>(desired)
  const privateRef=useRef<HTMLButtonElement>(null),intensiveRef=useRef<HTMLButtonElement>(null)
@@ -16,7 +16,7 @@ export function AdminMentoringSessionWorkspace({focusSessionId,focusEnrollmentId
    <button ref={privateRef} id="admin-mentoring-private-tab" type="button" role="tab" aria-selected={mode==='private'} aria-controls="admin-mentoring-private-panel" tabIndex={mode==='private'?0:-1} onKeyDown={event=>keydown(event,'private')} onClick={()=>select('private')}>Private Mentoring</button>
    <button ref={intensiveRef} id="admin-mentoring-intensive-tab" type="button" role="tab" aria-selected={mode==='intensive'} aria-controls="admin-mentoring-intensive-panel" tabIndex={mode==='intensive'?0:-1} onKeyDown={event=>keydown(event,'intensive')} onClick={()=>select('intensive')}>Intensive Mentoring</button>
   </div>
-  <section id="admin-mentoring-private-panel" role="tabpanel" aria-labelledby="admin-mentoring-private-tab" hidden={mode!=='private'}>{mode==='private'?<PrivateMentoringSessionManagement focusSessionId={focusSessionId} focusEnrollmentId={focusEnrollmentId}/>:null}</section>
-  <section id="admin-mentoring-intensive-panel" role="tabpanel" aria-labelledby="admin-mentoring-intensive-tab" hidden={mode!=='intensive'}>{mode==='intensive'?<IntensiveMentoringSessionManagement/>:null}</section>
+  <section id="admin-mentoring-private-panel" role="tabpanel" aria-labelledby="admin-mentoring-private-tab" hidden={mode!=='private'}>{mode==='private'?<PrivateMentoringSessionManagement focusSessionId={focusEntity?.startsWith('intensive_')?null:focusSessionId} focusEnrollmentId={focusEnrollmentId}/>:null}</section>
+  <section id="admin-mentoring-intensive-panel" role="tabpanel" aria-labelledby="admin-mentoring-intensive-tab" hidden={mode!=='intensive'}>{mode==='intensive'?<IntensiveMentoringSessionManagement focusSessionId={focusEntity==='intensive_mentoring_session'?focusSessionId:null} focusEngagementId={focusEngagementId}/>:null}</section>
  </div>
 }

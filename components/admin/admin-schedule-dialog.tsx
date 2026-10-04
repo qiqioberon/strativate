@@ -161,6 +161,6 @@ export function AdminScheduleDialog({sessionId,onClose,onScheduled,mentoringKind
 
       {error?<p className="form-error schedule-dialog__feedback" role="alert">{error}</p>:null}{notice?<p className="form-success schedule-dialog__feedback" role="status">{notice}</p>:null}
     </div>
-    <div className="calendar-dialog__actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="button" className="button button-primary" disabled={!selected||busy} onClick={()=>void confirm()}>{busy?<Loader2 className="spin"/>:<Check/>}{busy?'Menyimpan…':'Konfirmasi slot'}</button></div>
+    <div className="calendar-dialog__actions"><button type="button" className="button button-outline" disabled={busy} onClick={onClose}><X aria-hidden="true"/>Batal</button><button type="button" className="button button-primary" disabled={!selected||busy} onClick={()=>void confirm()}>{busy?<Loader2 className="spin"/>:<Check/>}{busy?'Menyimpan…':'Konfirmasi slot'}</button></div>
   </dialog>
 }

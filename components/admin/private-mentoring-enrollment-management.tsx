@@ -1,11 +1,13 @@
 'use client'
 
-import { AlertTriangle, CalendarDays, CheckCircle2, Eye, Pencil, RefreshCw, RotateCcw, Search, X } from 'lucide-react'
+import { AlertTriangle, Ban, CalendarDays, CheckCircle2, Eye, Pencil, RefreshCw, RotateCcw, Save, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
 import { MentoringSessionPreferences } from '@/components/mentoring/mentoring-session-preferences'
 import { MentoringCompetitionEditor } from '@/components/mentoring/mentoring-competition-editor'
+import { MentoringConfirmDialog } from '@/components/mentoring/mentoring-confirm-dialog'
+import { SearchableMentorPicker } from '@/components/mentoring/searchable-mentor-picker'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier, PrivateMentoringPackage } from '@/lib/supabase/database.types'
@@ -105,8 +107,6 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const supabase=useMemo(()=>createClient(),[])
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
   const dialogRef=useRef<HTMLDialogElement>(null)
-  const cancelDialogRef=useRef<HTMLDialogElement>(null)
-  const completeDialogRef=useRef<HTMLDialogElement>(null)
   const handledTargetRef=useRef<string|null>(null)
 
   const[query,setQuery]=useState('')
@@ -191,8 +191,6 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   useEffect(()=>{void loadCatalog()},[loadCatalog])
   useEffect(()=>{const timer=setTimeout(()=>void load(),220);return()=>clearTimeout(timer)},[load])
   useEffect(()=>{const dialog=dialogRef.current;if(!dialog)return;if(selected&&!dialog.open)dialog.showModal();if(!selected&&dialog.open)dialog.close()},[selected])
-  useEffect(()=>{const dialog=cancelDialogRef.current;if(!dialog)return;if(cancelTarget&&!dialog.open)dialog.showModal();if(!cancelTarget&&dialog.open)dialog.close()},[cancelTarget])
-  useEffect(()=>{const dialog=completeDialogRef.current;if(!dialog)return;if(completeTarget&&!dialog.open)dialog.showModal();if(!completeTarget&&dialog.open)dialog.close()},[completeTarget])
   useEffect(()=>{setMeetingState(null)},[activeSessionId])
   useEffect(()=>{
     if(!activeSessionId)return
@@ -278,11 +276,12 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
 
   async function completeSession(session:SessionRow){
     setBusyId(session.session_id);setError('');setMessage('')
-    const{error:e}=await rpc.rpc('admin_set_private_mentoring_session_status',{p_session_id:session.session_id,p_status:'completed'})
-    if(e)setError('Sesi belum dapat ditandai selesai. Coba lagi.')
+    const reopening=session.status==='completed'
+    const{error:e}=await rpc.rpc('admin_set_private_mentoring_session_status',{p_session_id:session.session_id,p_status:reopening?'scheduled':'completed'})
+    if(e)setError(reopening?'Tanda selesai belum dapat dibatalkan. Coba lagi.':'Sesi belum dapat ditandai selesai. Coba lagi.')
     else{
       setCompleteTarget(null)
-      setMessage('Sesi ditandai selesai dan progress enrollment diperbarui.')
+      setMessage(reopening?'Sesi kembali terjadwal dan progress enrollment diperbarui.':'Sesi ditandai selesai dan progress enrollment diperbarui.')
       await refresh()
     }
     setBusyId(null)
@@ -355,9 +354,9 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
             <MentoringCompetitionEditor kind="private" parentId={selected.enrollment_id} compact summary/>
           </div>
           {selected.purchased_sessions>=5&&editingPrimaryMentor?<div className="mentoring-summary-mentor-editor">
-            <label className="ops-field"><span>{currentPrimary?'Ganti mentor':'Set mentor utama'}</span><select value={primaryMentorId} onChange={event=>setPrimaryMentorId(event.target.value)}><option value="">Pilih mentor sesuai tier</option>{eligibleMentors.map(mentor=><option key={mentor.mentor_id} value={mentor.mentor_id}>{mentor.mentor_name}</option>)}</select></label>
+            <SearchableMentorPicker mentors={eligibleMentors.map(mentor=>({id:mentor.mentor_id,name:mentor.mentor_name}))} value={primaryMentorId} onChange={setPrimaryMentorId} label={currentPrimary?'Ganti mentor':'Set mentor utama'} placeholder="Cari mentor sesuai tier" selectedLabel={primaryMentorId===currentPrimary?currentPrimaryName:null} disabled={busyId==='mentor:'+selected.enrollment_id}/>
             {currentPrimary&&primaryMentorId&&primaryMentorId!==currentPrimary?<label className="ops-field"><span>Alasan perubahan (wajib)</span><textarea rows={2} value={mentorReason} onChange={event=>setMentorReason(event.target.value)} placeholder="Alasan operasional perubahan mentor"/></label>:null}
-            <div className="button-row"><button className="button button-primary" type="button" disabled={!primaryMentorId||busyId==='mentor:'+selected.enrollment_id} onClick={()=>void setPrimaryMentor()}>{currentPrimary?'Simpan pergantian mentor':'Simpan mentor utama'}</button><button className="button button-outline" type="button" onClick={()=>{setEditingPrimaryMentor(false);setPrimaryMentorId(currentPrimary??'');setMentorReason('')}}>Batal</button></div>
+            <div className="button-row"><button className="button button-primary" type="button" disabled={!primaryMentorId||primaryMentorId===currentPrimary||Boolean(currentPrimary&&!mentorReason.trim())||busyId==='mentor:'+selected.enrollment_id} onClick={()=>void setPrimaryMentor()}><Save aria-hidden="true"/>{currentPrimary?'Simpan pergantian mentor':'Simpan mentor utama'}</button><button className="button button-outline" type="button" disabled={busyId==='mentor:'+selected.enrollment_id} onClick={()=>{setEditingPrimaryMentor(false);setPrimaryMentorId(currentPrimary??'');setMentorReason('')}}><X aria-hidden="true"/>Batal</button></div>
           </div>:null}
         </section>
 
@@ -393,15 +392,16 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
                   <div className="mentoring-session-action-bar__primary">
                     {!selectedClosed?<button className="button button-outline" type="button" onClick={()=>setPreferenceEditRequest(value=>value+1)}><Pencil aria-hidden="true"/>{preferenceActionLabel(selectedSession.topic_status)}</button>:null}
                     {selectedCanSchedule?<button className={selectedSession.status==='scheduled'?'button button-outline':'button button-primary'} type="button" onClick={()=>setScheduleId(selectedSession.session_id)}><CalendarDays aria-hidden="true"/>{selectedSession.status==='scheduled'?'Ubah jadwal':'Jadwalkan sesi'}</button>:null}
-                    {selectedSession.status==='scheduled'?<button className="button button-primary mentoring-complete-trigger" type="button" onClick={()=>setCompleteTarget(selectedSession)}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
+                    {selectedSession.status==='scheduled'?<button className="button button-primary mentoring-complete-trigger" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
+                    {selectedSession.status==='completed'?<button className="button button-outline" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button>:null}
                     {selectedSession.status==='cancelled'&&selectedSession.google_sync_status==='failed'?<button className="button button-outline" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>void retryCancellation(selectedSession)}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button>:null}
                   </div>
-                  {selectedSession.status==='scheduled'?<button className="button button-outline mentoring-session-cancel-trigger" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>setCancelTarget(selectedSession)}><X aria-hidden="true"/>Batalkan sesi</button>:null}
+                  {selectedSession.status==='scheduled'?<button className="button button-outline mentoring-session-cancel-trigger" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>{setError('');setCancelTarget(selectedSession)}}><Ban aria-hidden="true"/>Batalkan sesi</button>:null}
                 </div>
               </div>
 
               <div className="mentoring-selected-session-scroll">
-                <MentoringSessionPreferences key={selectedSession.session_id} kind="private" sessionId={selectedSession.session_id} role="admin" title="Preferensi Sesi" showCompetitionContext={false} showReviewStatus={false} auditMode="request-only" hideEditButton editRequestKey={preferenceEditRequest} onChanged={refresh}/>
+                <MentoringSessionPreferences key={selectedSession.session_id+'-'+selectedSession.status} kind="private" sessionId={selectedSession.session_id} role="admin" title="Preferensi Sesi" showCompetitionContext={false} showReviewStatus={false} auditMode="request-only" hideEditButton editRequestKey={preferenceEditRequest} onChanged={refresh}/>
 
                 <AdminSessionOperations key={'operations-'+selectedSession.session_id} sessionId={selectedSession.session_id} status={selectedSession.status} menteeName={selected.mentee_name} sessionNumber={selectedSession.session_number} mentorName={selectedSession.mentor_name||selectedSession.primary_mentor_name} scheduledStartAt={selectedSession.scheduled_start_at} onChanged={refresh} showSessionReference={false} showCompletionActions={false} showContextSummary={false} onStateChange={handleMeetingState}/>
 
@@ -415,13 +415,17 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       </div>:null}
     </dialog>
 
-    <dialog ref={completeDialogRef} className="calendar-dialog compact-confirm-dialog mentoring-complete-dialog" onCancel={event=>{event.preventDefault();setCompleteTarget(null)}} onClose={()=>setCompleteTarget(null)} aria-labelledby="complete-private-session-title">
-      {completeTarget?<><div className="compact-confirm-dialog__header"><p className="kicker">Konfirmasi selesai</p><h3 id="complete-private-session-title">Tandai sesi {completeTarget.session_number} selesai?</h3></div><div className="compact-confirm-dialog__body"><p>Progress enrollment akan dihitung ulang dan sesi masuk ke riwayat selesai.</p><div className="button-row compact-confirm-dialog__actions"><button className="button button-outline" type="button" onClick={()=>setCompleteTarget(null)}>Kembali</button><button className="button button-primary" type="button" disabled={busyId===completeTarget.session_id} onClick={()=>void completeSession(completeTarget)}>Ya, tandai selesai</button></div></div></>:null}
-    </dialog>
+    <MentoringConfirmDialog open={Boolean(completeTarget)} eyebrow="Konfirmasi status sesi" title={completeTarget?.status==='completed'?'Batalkan tanda selesai sesi '+completeTarget.session_number+'?':'Tandai sesi '+(completeTarget?.session_number??'')+' selesai?'}
+      confirmLabel={completeTarget?.status==='completed'?'Ya, buka kembali':'Ya, tandai selesai'} confirmIcon={completeTarget?.status==='completed'?<RotateCcw aria-hidden="true"/>:<CheckCircle2 aria-hidden="true"/>} busy={Boolean(completeTarget&&busyId===completeTarget.session_id)} onClose={()=>setCompleteTarget(null)} onConfirm={()=>{if(completeTarget)void completeSession(completeTarget)}}>
+      <p>{completeTarget?.status==='completed'?'Sesi kembali terjadwal, Zoom room direservasi kembali sesuai ketersediaan, dan progress enrollment dihitung ulang.':'Progress enrollment akan dihitung ulang dan sesi masuk ke riwayat selesai.'}</p>
+      {error?<p className="form-error" role="alert">{error}</p>:null}
+    </MentoringConfirmDialog>
 
-    <dialog ref={cancelDialogRef} className="calendar-dialog mentoring-cancel-dialog compact-confirm-dialog" onCancel={event=>{event.preventDefault();setCancelTarget(null)}} onClose={()=>setCancelTarget(null)} aria-labelledby="cancel-private-session-title">
-      {cancelTarget?<><div className="calendar-dialog__head"><div><p className="kicker">Konfirmasi pembatalan</p><h3 id="cancel-private-session-title">Batalkan sesi {cancelTarget.session_number}?</h3></div><button type="button" className="icon-button dialog-close-button" onClick={()=>setCancelTarget(null)} aria-label="Tutup konfirmasi"><X aria-hidden="true"/></button></div><div className="compact-confirm-dialog__body"><p>Pembatalan akan menjalankan lifecycle berikut:</p><ul className="cancellation-consequences"><li>Sesi dibatalkan di Strativate.</li><li>Reservasi Zoom room dilepas.</li><li>Undangan Google Calendar terkait dibatalkan atau diperbarui.</li><li>Participant tidak dapat menggunakan sesi yang sudah dibatalkan.</li></ul><div className="button-row compact-confirm-dialog__actions"><button className="button button-outline" type="button" onClick={()=>setCancelTarget(null)}>Kembali</button><button className="button mentoring-session-cancel-confirm" type="button" disabled={busyId===cancelTarget.session_id} onClick={()=>void cancelSession(cancelTarget)}>Ya, batalkan sesi</button></div></div></>:null}
-    </dialog>
+    <MentoringConfirmDialog open={Boolean(cancelTarget)} eyebrow="Konfirmasi pembatalan" title={'Batalkan sesi '+(cancelTarget?.session_number??'')+'?'}
+      confirmLabel="Ya, batalkan sesi" confirmIcon={<Ban aria-hidden="true"/>} destructive busy={Boolean(cancelTarget&&busyId===cancelTarget.session_id)} onClose={()=>setCancelTarget(null)} onConfirm={()=>{if(cancelTarget)void cancelSession(cancelTarget)}}>
+      <p>Sesi dibatalkan, reservasi Zoom room dilepas, dan undangan Google Calendar terkait dibatalkan atau diperbarui.</p>
+      {error?<p className="form-error" role="alert">{error}</p>:null}
+    </MentoringConfirmDialog>
 
     <AdminScheduleDialog sessionId={scheduleId} onClose={()=>setScheduleId(null)} onScheduled={()=>{setScheduleId(null);void refresh()}}/>
   </div>

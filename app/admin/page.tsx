@@ -216,7 +216,7 @@ export default function AdminDashboard() {
         <div className="role-content">
           {section === 'Overview' ? <AdminCommerceOperations mode="overview" onNavigate={navigateOperational}/> : null}
           {section === 'Orders' ? <AdminCommerceOperations mode="orders" focusOrderId={relatedTarget?.entity === 'order' ? relatedTarget.id : null}/> : null}
-          {section === 'Mentoring Sessions' ? <AdminMentoringSessionWorkspace focusSessionId={relatedTarget?.entity === 'session' || relatedTarget?.entity === 'intensive_mentoring_session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null} focusEntity={relatedTarget?.entity}/> : null}
+          {section === 'Mentoring Sessions' ? <AdminMentoringSessionWorkspace focusSessionId={relatedTarget?.entity === 'session' || relatedTarget?.entity === 'intensive_mentoring_session' ? relatedTarget.id : null} focusEnrollmentId={relatedTarget?.entity === 'enrollment' ? relatedTarget.id : null} focusEngagementId={relatedTarget?.entity === 'intensive_mentoring_engagement' ? relatedTarget.id : null} focusEntity={relatedTarget?.entity}/> : null}
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
           {section === 'Zoom' ? <ZoomRoomManagement/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}

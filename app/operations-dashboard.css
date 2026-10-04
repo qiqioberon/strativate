@@ -420,3 +420,115 @@
   .cart-link-create-actions{align-items:stretch}
   .cart-link-create-actions .button-primary{width:100%}
 }
+
+/* Shared mentoring form primitives across admin, mentee, and mentor. */
+.mentoring-preference-card{min-width:0;gap:12px;border-radius:13px}
+.mentoring-preference-card .ops-form-stack{display:grid;gap:12px;margin:0}
+.mentoring-preference-card .ops-field{min-width:0;gap:6px}
+.mentoring-preference-card .ops-field>span,
+.mentoring-chip-field>label,
+.mentor-picker>label{font-size:.72rem;line-height:1.45;font-weight:650;letter-spacing:0;text-transform:none;color:#62554e}
+.mentoring-preference-edit-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.mentoring-preference-edit-grid.has-mentor-notes{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mentoring-preference-card .ops-field :is(input,select,textarea),
+.mentoring-material-row input{
+  width:100%;min-width:0;min-height:38px;padding:9px 11px;
+  border:1px solid #d8c9c1;border-radius:10px;background:#fff;color:#30251f;
+  font:inherit;font-size:.75rem;line-height:1.5;
+  transition:border-color .15s,box-shadow .15s;
+}
+:is(.mentoring-preference-card,.mentoring-session-workspace-dialog,.mentoring-confirm-dialog) .ops-field textarea{
+  display:block;width:100%;min-width:0;min-height:92px;padding:10px 11px;
+  border:1px solid #d8c9c1;border-radius:10px;background:#fff;color:#30251f;
+  font:inherit;font-size:.75rem;line-height:1.5;resize:vertical;
+}
+.mentoring-preference-card .ops-field :is(input,select,textarea):hover,
+.mentoring-material-row input:hover,
+:is(.mentoring-session-workspace-dialog,.mentoring-confirm-dialog) .ops-field textarea:hover{border-color:#b99d90}
+.mentoring-preference-card .ops-field :is(input,select,textarea):is(:focus,:focus-visible),
+.mentoring-material-row input:is(:focus,:focus-visible),
+:is(.mentoring-session-workspace-dialog,.mentoring-confirm-dialog) .ops-field textarea:is(:focus,:focus-visible){
+  border-color:#e7652c;outline:0;box-shadow:0 0 0 3px rgb(231 101 44 / .16);
+}
+.mentoring-preference-card__head>div>span,
+.mentoring-preference-grid>div>span,
+.mentoring-preference-review>span,
+.mentoring-session-note>span{color:#81756d;font-size:.7rem;font-weight:600;line-height:1.45}
+.mentoring-preference-card__head strong,
+.mentoring-preference-grid strong{font-size:.82rem;line-height:1.5;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
+.mentoring-preference-grid>div{min-width:0;align-content:start;padding:10px 11px;background:#faf8f6}
+.mentoring-preference-review{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 11px;border-radius:9px;background:#faf8f6}
+.mentoring-preference-review strong{font-size:.74rem;font-weight:600}
+.mentoring-session-note{display:grid;gap:5px;min-width:0;padding:10px 11px;border-left:3px solid #e4d8cf;background:#faf8f6}
+.mentoring-session-note p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78rem;line-height:1.55}
+.mentoring-preference-card>.mentoring-competition-card{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.mentoring-empty-value{color:#8b7b71!important;font-weight:500!important}
+.mentoring-chip{white-space:normal;overflow-wrap:anywhere}
+.mentoring-chip--category{border-color:#e4dcd6;background:#f5f2ef;color:#76675f;font-weight:500}
+.mentoring-material-editor{min-width:0;padding:12px;gap:9px;border:1px solid #e5d4ca;border-radius:11px;background:#fff}
+.mentoring-material-editor__head{display:grid;gap:3px;min-width:0}
+.mentoring-material-editor__head h5{margin:0;color:#62554e;font-size:.72rem;line-height:1.5;font-weight:650}
+.mentoring-material-editor__head p{margin:0;color:#81756d;font-size:.69rem;line-height:1.5}
+.mentoring-material-row{grid-template-columns:minmax(0,1fr) 36px;gap:8px}
+.mentoring-material-row input{min-height:36px;padding:7px 10px}
+.mentoring-material-row .ops-icon-button{width:36px;height:36px;border-radius:9px}
+.mentoring-material-row .ops-icon-button svg{width:15px;height:15px}
+.mentoring-material-row .ops-icon-button:hover{border-color:#e9b5b0;background:#fff1f0;color:#b42318}
+.mentoring-material-row .ops-icon-button:focus-visible{outline:3px solid rgb(231 101 44 / .16);outline-offset:2px}
+.mentoring-material-editor>.button{width:100%;justify-content:center}
+.mentoring-material-list{min-width:0;font-size:.76rem;line-height:1.5;overflow-wrap:anywhere}
+.mentoring-audit-details summary{font-size:.73rem;line-height:1.5;font-weight:600}
+.mentoring-audit-details :is(dd,code){min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.session-reference-row{min-width:0;flex-wrap:wrap}
+.session-reference-row :is(strong,code){min-width:0;max-width:100%;overflow-wrap:anywhere;white-space:normal}
+.mentoring-preference-card .button,
+.mentoring-session-workspace-dialog .button,
+.mentoring-confirm-dialog .button,
+.mentor-detail-dialog .mentor-detail-meeting-actions .button{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  width:fit-content;max-width:100%;min-width:0;min-height:36px;
+  padding:7px 11px;border-radius:9px;font-size:.7rem;line-height:1.4;font-weight:650;
+}
+.mentoring-preference-card .button svg,
+.mentoring-session-workspace-dialog .button svg,
+.mentoring-confirm-dialog .button svg{width:15px;height:15px;flex:0 0 auto}
+.mentoring-preference-card .button-row,
+.mentoring-session-workspace-dialog .button-row,
+.mentoring-confirm-dialog .button-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+.mentoring-preference-card .button-outline,
+.mentoring-confirm-dialog .button-outline{border:1px solid #d9cec6;background:#fff;color:#5e5149}
+.mentoring-preference-card .button-outline:hover,
+.mentoring-confirm-dialog .button-outline:hover{border-color:#efa469;background:#fff8f1}
+.mentoring-preference-card .button:focus-visible,
+.mentoring-confirm-dialog .button:focus-visible{outline:3px solid rgb(255 122 0 / .16);outline-offset:2px}
+.mentor-picker{position:relative;min-width:0;align-content:start}
+.mentor-picker .ops-input-with-icon{min-width:0;min-height:38px;transition:border-color .15s,box-shadow .15s}
+.mentor-picker .ops-input-with-icon:hover{border-color:#b99d90}
+.mentor-picker .ops-input-with-icon:focus-within{border-color:#e7652c;box-shadow:0 0 0 3px rgb(231 101 44 / .16)}
+.mentor-picker .ops-input-with-icon>svg{flex:0 0 auto;color:#8b7b71}
+.mentor-picker .ops-input-with-icon input{min-width:0;padding:8px 0;border:0;background:transparent;outline:0;font-size:.75rem}
+.mentor-picker .ops-combobox-options{position:static;margin:0;max-height:180px;box-shadow:none}
+.mentor-picker .ops-combobox-options button{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.75rem}
+.mentor-picker .ops-combobox-options button strong{min-width:0;overflow-wrap:anywhere;font-size:inherit;font-weight:600}
+.mentor-picker .ops-combobox-options button svg{flex:0 0 auto;color:#c45109}
+.mentor-picker .ops-combobox-options button.is-active{background:#fff4e8;outline:1px solid #f2ba8f;outline-offset:-1px}
+.mentor-picker .ops-combobox-options>p{padding:11px;font-size:.72rem;line-height:1.5}
+.mentor-picker__selected{min-width:0;color:#81756d;font-size:.66rem;line-height:1.45;overflow-wrap:anywhere}
+.mentoring-detail-dialog .ops-dialog__surface,.mentor-detail-dialog .ops-dialog__surface{gap:16px;padding:20px}
+.mentoring-detail-dialog .ops-dialog__header h2,.mentor-detail-dialog .ops-dialog__header h2{font-size:1.15rem;line-height:1.45;overflow-wrap:anywhere}
+.mentoring-detail-dialog .ops-dialog__header>div,.mentor-detail-dialog .ops-dialog__header>div{min-width:0}
+.mentoring-detail-dialog .ops-dialog__header code{overflow-wrap:anywhere}
+.mentoring-detail-dialog .session-detail-grid{gap:12px;margin:0}
+.mentoring-detail-dialog .session-detail-grid>div{min-width:0;display:grid;gap:4px}
+.mentoring-detail-dialog .session-detail-grid dt{font-size:.7rem;color:#81756d;font-weight:600}
+.mentoring-detail-dialog .session-detail-grid dd{margin:0;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
+.mentoring-detail-dialog .calendar-dialog__actions,.mentoring-detail-dialog .mentor-detail-meeting-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0;border:0;background:transparent}
+.mentoring-detail-dialog .calendar-dialog__actions .button,.mentoring-detail-dialog .mentor-detail-meeting-actions .button{min-width:0;min-height:36px;padding:7px 11px;font-size:.72rem}
+@media(max-width:680px){
+  .mentoring-preference-edit-grid.has-mentor-notes{grid-template-columns:minmax(0,1fr)}
+  .mentoring-preference-card__head{gap:10px}
+  .mentoring-preference-card__head>.button{align-self:flex-start}
+}
+@media(max-width:400px){
+  .mentoring-preference-card .button-row>.button{flex:1 1 140px;white-space:normal}
+}

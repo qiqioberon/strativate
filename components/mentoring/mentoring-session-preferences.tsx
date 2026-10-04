@@ -1,8 +1,9 @@
 'use client'
 
-import { ExternalLink, Pencil, Plus, Save, Trash2 } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, Save, Send, Trash2, UserRound, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { MentoringCompetitionEditor } from '@/components/mentoring/mentoring-competition-editor'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { createClient } from '@/lib/supabase/client'
 
@@ -68,6 +69,7 @@ export function MentoringSessionPreferences({
   const[busy,setBusy]=useState(false)
   const[message,setMessage]=useState('')
   const lastEditRequest=useRef(editRequestKey)
+  const loadSequence=useRef(0)
 
   const readOnly=role==='mentor'
   const closed=data?.status==='completed'||data?.status==='cancelled'
@@ -84,15 +86,18 @@ export function MentoringSessionPreferences({
   },[role])
 
   const load=useCallback(async()=>{
+    const sequence=++loadSequence.current
     const[result,catalog]=await Promise.all([
       rpc.rpc<Preference>('get_mentoring_session_preferences',{p_kind:kind,p_session_id:sessionId}),
       supabase.from('private_mentoring_session_focuses').select('id,name').eq('is_active',true).order('sort_order'),
     ])
+    if(sequence!==loadSequence.current)return
     if(!result.error&&result.data)hydrate(result.data)
     if(!catalog.error)setFocuses((catalog.data??[]) as Focus[])
   },[hydrate,kind,rpc,sessionId,supabase])
 
-  useEffect(()=>{void load()},[load])
+  useEffect(()=>{void load();return()=>{loadSequence.current+=1}},[load])
+  useEffect(()=>{setEditing(false);setMessage('')},[sessionId])
   useOperationalInvalidation(['mentoring','admin-overview'],()=>{void load()})
 
   useEffect(()=>{
@@ -132,20 +137,20 @@ export function MentoringSessionPreferences({
   const finalFocus=data?.focusName||data?.customFocus||null
   const requestedFocus=data?.requestedFocusName||data?.requestedCustomFocus||null
 
-  if(!data)return <section className="mentoring-preference-card"><p className="muted">Memuat preferensi sesi…</p></section>
+  if(!data||data.sessionId!==sessionId)return <section className="mentoring-preference-card"><p className="muted">Memuat preferensi sesi…</p></section>
 
-  if(!editing)return <section className="mentoring-preference-card">
+  if(!editing||closed)return <section className="mentoring-preference-card">
     {title?<div className="mentoring-preference-section-title"><h4>{title}</h4></div>:null}
     <div className="mentoring-preference-card__head">
       <div><span>Fokus sesi (opsional)</span><strong>{finalFocus||requestedFocus||'Belum ditentukan'}</strong></div>
       {!readOnly&&!closed&&!hideEditButton?<button className="button button-outline button-compact" type="button" onClick={()=>setEditing(true)}><Pencil aria-hidden="true"/>Edit preferensi</button>:null}
     </div>
-    {showCompetitionContext?<div><span>Nama lomba</span><div className="mentoring-chip-list">{data.competitionNames.length?data.competitionNames.map(item=><span className="mentoring-chip" key={item}>{item}</span>):<strong>Lengkapi nama lomba</strong>}</div></div>:null}
+    {showCompetitionContext?<MentoringCompetitionEditor key={data.parentId} kind={kind} parentId={data.parentId} readOnly compact/>:null}
     <div className="mentoring-preference-grid">
       <div><span>Topik / scope (opsional)</span><strong>{data.topic||data.requestedTopic||'Belum ditentukan'}</strong></div>
       <div><span>File pendukung (opsional)</span>{data.supportingMaterials.length?<ul className="mentoring-material-list">{data.supportingMaterials.map((item,index)=><li key={item+'-'+index}>{isUrl(item)?<a href={item} target="_blank" rel="noopener noreferrer">Buka file <ExternalLink aria-hidden="true"/></a>:item}</li>)}</ul>:<strong>Belum ada</strong>}</div>
     </div>
-    {data.mentorNotes?<div className="mentoring-session-note"><span>Catatan mentor</span><p>{data.mentorNotes}</p></div>:null}
+    {data.mentorNotes?<div className="mentoring-session-note"><span>Catatan untuk mentor</span><p>{data.mentorNotes}</p></div>:null}
     {showReviewStatus?<div className="mentoring-preference-review"><span>Status review</span><strong>{reviewLabel(data.topicStatus)}</strong></div>:null}
     {closed?<small className="muted">Sesi yang sudah selesai atau dibatalkan disimpan sebagai riwayat dan tidak dapat diubah.</small>:null}
     {role==='admin'&&auditMode==='request-only'?<details className="mentoring-audit-details"><summary>Permintaan awal</summary>{requestedFocus||data.requestedTopic?<dl><div><dt>Fokus yang diajukan</dt><dd>{requestedFocus||'Tidak ada'}</dd></div><div><dt>Topik / scope yang diajukan</dt><dd>{data.requestedTopic||'Tidak ada'}</dd></div></dl>:<p className="muted">Tidak ada preferensi awal yang diajukan.</p>}</details>:null}
@@ -155,14 +160,15 @@ export function MentoringSessionPreferences({
 
   return <section className="mentoring-preference-card is-editing">
     {title?<div className="mentoring-preference-section-title"><h4>{title}</h4></div>:null}
-    <div className="ops-form-stack">
-      <p className="muted">Fokus, topik/scope, dan file pendukung bersifat opsional. Nama lomba tetap dikelola pada level program/enrollment.</p>
+    <div className="ops-form-stack mentoring-preference-form">
       <label className="ops-field"><span>Fokus sesi (opsional)</span><select value={focusChoice} onChange={event=>setFocusChoice(event.target.value)}><option value="">Belum ditentukan</option>{focuses.map(focus=><option value={focus.id} key={focus.id}>{focus.name}</option>)}<option value="custom">Fokus lain</option></select></label>
       {focusChoice==='custom'?<label className="ops-field"><span>Fokus lain</span><input value={customFocus} maxLength={300} onChange={event=>setCustomFocus(event.target.value)} placeholder="Tulis fokus khusus untuk sesi ini"/></label>:null}
-      <label className="ops-field"><span>Topik / scope (opsional)</span><textarea rows={4} value={topic} maxLength={3000} onChange={event=>setTopic(event.target.value)} placeholder="Boleh dikosongkan; Admin tetap dapat meninjau dan melanjutkan sesi."/></label>
-      {role==='admin'?<label className="ops-field"><span>Catatan untuk mentor (opsional)</span><textarea rows={3} maxLength={3000} value={notes} onChange={event=>setNotes(event.target.value)}/></label>:null}
-      <fieldset className="mentoring-material-editor"><legend>File pendukung (opsional)</legend><p>Tambahkan link Guidebook, Working Paper, Google Drive/Docs, deck, atau materi lain yang relevan.</p>{materials.map((item,index)=><div className="mentoring-material-row" key={index}><input value={item} maxLength={1000} onChange={event=>patchMaterial(index,event.target.value)} placeholder="https://… atau catatan materi"/><button type="button" className="ops-icon-button" onClick={()=>setMaterials(current=>current.filter((_,itemIndex)=>itemIndex!==index))} aria-label={'Hapus file pendukung '+(index+1)}><Trash2 aria-hidden="true"/></button></div>)}<button className="button button-outline button-compact" type="button" disabled={materials.length>=20} onClick={()=>setMaterials(current=>[...current,''])}><Plus aria-hidden="true"/>Tambah file pendukung</button></fieldset>
-      <div className="button-row"><button className="button button-primary" type="button" disabled={busy} onClick={()=>void save()}><Save aria-hidden="true"/>{busy?'Menyimpan…':role==='admin'?'Simpan & tandai ditinjau':'Kirim preferensi'}</button>{role==='mentee'?<button className="button button-outline" type="button" disabled={busy} onClick={()=>void save({handOff:true})}>Serahkan ke Admin</button>:null}<button className="button button-outline" type="button" disabled={busy} onClick={()=>{hydrate(data);setEditing(false)}}>Batal</button></div>
+      <div className={'mentoring-preference-edit-grid'+(role==='admin'?' has-mentor-notes':'')}>
+        <label className="ops-field"><span>Topik / scope (opsional)</span><textarea rows={3} value={topic} maxLength={3000} onChange={event=>setTopic(event.target.value)} placeholder="Topik atau tujuan sesi"/></label>
+        {role==='admin'?<label className="ops-field"><span>Catatan untuk mentor (opsional)</span><textarea rows={3} maxLength={3000} value={notes} onChange={event=>setNotes(event.target.value)} placeholder="Konteks tambahan untuk mentor"/></label>:null}
+      </div>
+      <section className="mentoring-material-editor" aria-label="File pendukung (opsional)"><div className="mentoring-material-editor__head"><h5>File pendukung (opsional)</h5><p>Link dokumen, deck, atau materi sesi. Maksimal 20 file.</p></div>{materials.map((item,index)=><div className="mentoring-material-row" key={index}><input aria-label={'File pendukung '+(index+1)} value={item} maxLength={1000} onChange={event=>patchMaterial(index,event.target.value)} placeholder="https://… atau catatan materi"/><button type="button" className="ops-icon-button" onClick={()=>setMaterials(current=>current.filter((_,itemIndex)=>itemIndex!==index))} aria-label={'Hapus file pendukung '+(index+1)}><Trash2 aria-hidden="true"/></button></div>)}<button className="button button-outline button-compact" type="button" disabled={materials.length>=20} onClick={()=>setMaterials(current=>[...current,''])}><Plus aria-hidden="true"/>Tambah file pendukung</button></section>
+      <div className="button-row"><button className="button button-primary" type="button" disabled={busy} onClick={()=>void save()}>{role==='admin'?<Save aria-hidden="true"/>:<Send aria-hidden="true"/>}{busy?'Menyimpan…':role==='admin'?'Simpan & tandai ditinjau':'Kirim preferensi'}</button>{role==='mentee'?<button className="button button-outline" type="button" disabled={busy} onClick={()=>void save({handOff:true})}><UserRound aria-hidden="true"/>Serahkan ke Admin</button>:null}<button className="button button-outline" type="button" disabled={busy} onClick={()=>{hydrate(data);setEditing(false)}}><X aria-hidden="true"/>Batal</button></div>
       {role==='mentee'?<small className="muted">Pilih “Serahkan ke Admin” jika ingin melanjutkan tanpa fokus, topik, maupun file pendukung.</small>:null}
       {message?<small className="form-error" role="alert">{message}</small>:null}
     </div>

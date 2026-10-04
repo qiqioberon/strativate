@@ -1,6 +1,6 @@
 'use client'
 
-import { ExternalLink, Pencil, RefreshCw, RotateCcw, Save } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Pencil, RefreshCw, RotateCcw, Save, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CopyTextButton } from '@/components/dashboard/copy-text-button'
@@ -149,7 +149,7 @@ export function AdminSessionOperations({
     }
   },[mentoringKind,publishState,sessionId])
 
-  useEffect(()=>{void load()},[load])
+  useEffect(()=>{void load()},[load,status,scheduledStartAt])
   useOperationalInvalidation(['provider','calendar'],()=>void load())
 
   async function assignRoom(){
@@ -236,7 +236,7 @@ export function AdminSessionOperations({
 
     {state?.effectiveMeetingUrl?<div className="effective-meeting-row">
       <div><span>Meeting link efektif</span><code className="meeting-link-value">{state.effectiveMeetingUrl}</code></div>
-      {!isClosed?<div className="table-action-group"><a className="button button-primary button-compact" href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer">Buka Zoom <ExternalLink aria-hidden="true"/></a><CopyTextButton value={state.effectiveMeetingUrl} label="Salin link meeting" copiedLabel="Link disalin"/></div>:null}
+      {!isClosed?<div className="table-action-group"><a className="button button-primary button-compact" href={state.effectiveMeetingUrl} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true"/>Buka Zoom</a><CopyTextButton value={state.effectiveMeetingUrl} label="Salin link meeting" copiedLabel="Link disalin"/></div>:null}
     </div>:null}
 
     {status==='scheduled'?<div className="provider-action-stack">
@@ -246,13 +246,13 @@ export function AdminSessionOperations({
         {state?.manualMeetingUrl&&state.assignedZoomRoomId?<button className="button button-outline" type="button" disabled={busy==='restore'} onClick={()=>void restoreZoom()}><RotateCcw aria-hidden="true"/>Kembali ke link Zoom terkelola</button>:null}
         <button className="button button-outline" type="button" disabled={busy==='sync'} onClick={()=>void retrySync()}><RefreshCw aria-hidden="true"/>Sinkronkan ulang Kalender</button>
       </div>
-      {editingRoom?<div className="override-editor"><label className="ops-field"><span>Zoom room tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Pilih Zoom room</option>{state?.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select></label><p className="muted">Room lain yang sedang dipakai pada jam sesi ini tidak ditampilkan.</p><div className="button-row"><button className="button button-primary" type="button" disabled={!zoomRoomId||busy==='room'} onClick={()=>void assignRoom()}><Save aria-hidden="true"/>Simpan Zoom room</button><button className="button button-outline" type="button" onClick={()=>setEditingRoom(false)}>Batal</button></div></div>:null}
-      {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override mengubah link efektif di Calendar. Zoom room tetap terreservasi untuk sesi ini.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}>Batal</button></div></div>:null}
+      {editingRoom?<div className="override-editor"><label className="ops-field"><span>Zoom room tersedia</span><select value={zoomRoomId} onChange={event=>setZoomRoomId(event.target.value)}><option value="">Pilih Zoom room</option>{state?.availableZoomRooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}</select></label><p className="muted">Room lain yang sedang dipakai pada jam sesi ini tidak ditampilkan.</p><div className="button-row"><button className="button button-primary" type="button" disabled={!zoomRoomId||busy==='room'} onClick={()=>void assignRoom()}><Save aria-hidden="true"/>Simpan Zoom room</button><button className="button button-outline" type="button" onClick={()=>setEditingRoom(false)}><X aria-hidden="true"/>Batal</button></div></div>:null}
+      {editingOverride?<div className="override-editor"><label className="ops-field"><span>Manual meeting URL</span><input type="url" value={manualUrl} onChange={event=>setManualUrl(event.target.value)} placeholder="https://…"/></label><p className="muted">Override mengubah link efektif di Calendar. Zoom room tetap terreservasi untuk sesi ini.</p><div className="button-row"><button className="button button-primary" type="button" disabled={busy==='meeting'} onClick={()=>void saveOverride()}><Save aria-hidden="true"/>Simpan Override</button><button className="button button-outline" type="button" disabled={busy==='meeting'} onClick={()=>{setEditingOverride(false);setManualUrl(state?.manualMeetingUrl??'')}}><X aria-hidden="true"/>Batal</button></div></div>:null}
     </div>:null}
 
     {showCompletionActions?<div className="completion-actions">
       <span>Lifecycle</span>
-      {status==='scheduled'?<button className="button button-primary" type="button" onClick={()=>confirmRef.current?.showModal()}>Tandai selesai</button>:null}
+      {status==='scheduled'?<button className="button button-primary" type="button" onClick={()=>confirmRef.current?.showModal()}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
       {status==='completed'?<button className="button button-outline" type="button" disabled={busy==='scheduled'} onClick={()=>void setStatus('scheduled')}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button>:null}
     </div>:null}
 
@@ -260,7 +260,7 @@ export function AdminSessionOperations({
     {showCompletionActions?<dialog ref={confirmRef} className="calendar-dialog compact-confirm-dialog" aria-labelledby="complete-session-title">
       <div className="compact-confirm-dialog__header"><p className="kicker">Konfirmasi selesai</p><h3 id="complete-session-title">Tandai sesi {sessionNumber} selesai?</h3></div>
       <div className="compact-confirm-dialog__body"><p>{mentoringKind==='private'?'Progress enrollment akan dihitung ulang. Jika salah, admin masih dapat membatalkan tanda selesai dan transisi tetap diaudit.':'Status sesi akan dicatat ke audit Intensive Mentoring. Jika salah, admin masih dapat membatalkan tanda selesai sesuai lifecycle yang tersedia.'}</p></div>
-      <div className="compact-confirm-dialog__footer"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}>Kembali</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}>Ya, tandai selesai</button></div>
+      <div className="compact-confirm-dialog__footer"><button className="button button-outline" type="button" onClick={()=>confirmRef.current?.close()}><X aria-hidden="true"/>Kembali</button><button className="button button-primary" type="button" disabled={busy==='completed'} onClick={()=>void setStatus('completed')}><CheckCircle2 aria-hidden="true"/>Ya, tandai selesai</button></div>
     </dialog>:null}
   </section>
 }

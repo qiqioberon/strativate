@@ -29,7 +29,7 @@ export function SessionDetailDialog({ session, timezone, onClose }: { session: M
       {session.mentoring_type==='intensive'&&session.add_ons?.length?<section className="ops-dialog__section"><h3>Dukungan tambahan</h3><p>{session.add_ons.map(item=>item.name).join(', ')}</p></section>:null}
       {topicSession?.mentor_scope_notes?<section className="ops-dialog__section"><h3>Catatan scope dari admin</h3><p>{topicSession.mentor_scope_notes}</p></section>:null}
       <section className="ops-dialog__section"><h3>Peserta</h3><div className="mentor-dialog-contact"><div><span>Nama</span><strong>{session.mentee_name || 'Peserta Strativate'}</strong></div><div><span>Email</span><strong>{session.mentee_email || 'Tidak tersedia'}</strong></div><div><span>Timezone sesi</span><strong>{session.mentor_timezone || timezone}</strong></div><div><span>Google sync</span><strong>{session.google_sync_status || 'pending'}</strong></div></div></section>
-      {session.status === 'scheduled' && session.meeting_url ? <div className="mentor-detail-meeting-actions"><a className="button button-primary" href={session.meeting_url} target="_blank" rel="noopener noreferrer">Join Zoom <ExternalLink aria-hidden="true"/></a><CopyTextButton value={session.meeting_url} label="Salin link Zoom" copiedLabel="Link disalin"/></div> : null}
+      {session.status === 'scheduled' && session.meeting_url ? <div className="mentor-detail-meeting-actions"><a className="button button-primary" href={session.meeting_url} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true"/>Join Zoom</a><CopyTextButton value={session.meeting_url} label="Salin link Zoom" copiedLabel="Link disalin"/></div> : null}
     </div> : null}
   </dialog>
 }
