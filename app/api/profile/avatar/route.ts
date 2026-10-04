@@ -11,6 +11,11 @@ const BUCKET = 'profile-avatars'
 const MAX_BYTES = 8 * 1024 * 1024
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
+function isOwnedAvatarPath(path: string | null | undefined, userId: string, kind?: 'sources' | 'derivatives') {
+  if (!path) return false
+  return path.startsWith(kind ? `${userId}/${kind}/` : `${userId}/`)
+}
+
 export async function GET(request: Request) {
   const account = await getAccount()
   if (!account) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,8 +32,11 @@ export async function GET(request: Request) {
     })
   }
 
-  const path = url.searchParams.has('source') ? profile?.avatar_source_path : profile?.avatar_path
-  if (!path) return NextResponse.json({ error: 'Avatar not found' }, { status: 404 })
+  const sourceRequested = url.searchParams.has('source')
+  const path = sourceRequested ? profile?.avatar_source_path : profile?.avatar_path
+  if (!path || !isOwnedAvatarPath(path, account.user.id, sourceRequested ? 'sources' : undefined)) {
+    return NextResponse.json({ error: 'Avatar not found' }, { status: 404 })
+  }
   const { data, error: downloadError } = await admin.storage.from(BUCKET).download(path)
   if (downloadError || !data) return NextResponse.json({ error: 'Avatar not found' }, { status: 404 })
   return new Response(await data.arrayBuffer(), {
@@ -67,7 +75,9 @@ export async function POST(request: Request) {
     if (file) {
       source = Buffer.from(await file.arrayBuffer())
     } else {
-      if (!sourcePath) return NextResponse.json({ error: 'Sumber asli foto tidak tersedia. Unggah foto pengganti.' }, { status: 409 })
+      if (!sourcePath || !isOwnedAvatarPath(sourcePath, account.user.id, 'sources')) {
+        return NextResponse.json({ error: 'Sumber asli foto tidak tersedia. Unggah foto pengganti.' }, { status: 409 })
+      }
       const { data: storedSource, error: downloadError } = await admin.storage.from(BUCKET).download(sourcePath)
       if (downloadError || !storedSource) throw downloadError ?? new Error('Avatar source unavailable')
       source = Buffer.from(await storedSource.arrayBuffer())
@@ -104,7 +114,12 @@ export async function POST(request: Request) {
     const update = await admin.from('profiles').update({ avatar_path: uploadedDerivativePath, avatar_source_path: sourcePath, avatar_crop: crop as unknown as Json }).eq('id', account.user.id)
     if (update.error) throw update.error
 
-    const cleanupPaths = [profile.avatar_path, file ? profile.avatar_source_path : null].filter((path): path is string => Boolean(path && path !== uploadedDerivativePath && path !== sourcePath))
+    const cleanupPaths = [profile.avatar_path, file ? profile.avatar_source_path : null].filter((path): path is string => (
+      Boolean(path)
+      && isOwnedAvatarPath(path, account.user.id)
+      && path !== uploadedDerivativePath
+      && path !== sourcePath
+    ))
     const cleanup = cleanupPaths.length ? await admin.storage.from(BUCKET).remove(cleanupPaths) : { error: null }
     return NextResponse.json({
       path: uploadedDerivativePath,
@@ -139,7 +154,9 @@ export async function DELETE() {
   if (lookupError) return NextResponse.json({ error: 'Foto profil belum dapat dihapus karena file tersimpan belum dapat diperiksa.' }, { status: 400 })
   const { error } = await admin.from('profiles').update({ avatar_path: null, avatar_source_path: null, avatar_crop: null }).eq('id', account.user.id)
   if (error) return NextResponse.json({ error: 'Foto profil belum dapat dihapus.' }, { status: 400 })
-  const paths = [profile?.avatar_path, profile?.avatar_source_path].filter((path): path is string => Boolean(path))
+  const paths = [profile?.avatar_path, profile?.avatar_source_path].filter((path): path is string => (
+    Boolean(path) && isOwnedAvatarPath(path, account.user.id)
+  ))
   const cleanup = paths.length ? await admin.storage.from(BUCKET).remove(paths) : { error: null }
   return NextResponse.json({ ok: true, cleanupWarning: cleanup.error ? 'Foto dihapus, tetapi file lama masih perlu dibersihkan.' : null })
 }

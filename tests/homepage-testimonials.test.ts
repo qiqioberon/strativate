@@ -98,7 +98,9 @@ test('homepage cloud only masks the lower edge while the gallery stays full-widt
 
 test('admin testimonial manager uploads to Supabase Storage and controls publish/order state', () => {
   assert.match(admin, /TESTIMONIAL_IMAGE_BUCKET/)
-  assert.match(admin, /cropTestimonialImage\(selectedFile, crop\)/)
+  assert.match(admin, /DirectImageCropper/)
+  assert.match(admin, /image_source_path/)
+  assert.match(admin, /Adjust testimonial crop/)
   assert.match(admin, /File baru otomatis disimpan dalam format 5:4/)
   assert.match(admin, /TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4/)
   assert.match(admin, /contentType: 'image\/webp'/)

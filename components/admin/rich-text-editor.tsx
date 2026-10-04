@@ -39,6 +39,7 @@ type LinkDraft = {
   text: string
   url: string
   newTab: boolean
+  preservedMarks: { type: string; attrs?: Record<string, unknown> }[]
 }
 
 const allowedPasteTags = new Set(['p', 'h2', 'h3', 'h4', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote', 'a'])
@@ -191,33 +192,43 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
   })
 
   if (!editor) return <div className="rich-editor rich-editor--loading" aria-busy="true" />
+  const activeEditor = editor
 
-  const blockType = editor.isActive('heading', { level: 2 }) ? 'h2'
-    : editor.isActive('heading', { level: 3 }) ? 'h3'
-      : editor.isActive('heading', { level: 4 }) ? 'h4'
+  const textAlignment = activeEditor.isActive({ textAlign: 'center' }) ? 'center'
+    : activeEditor.isActive({ textAlign: 'right' }) ? 'right'
+      : 'left'
+
+  const blockType = activeEditor.isActive('heading', { level: 2 }) ? 'h2'
+    : activeEditor.isActive('heading', { level: 3 }) ? 'h3'
+      : activeEditor.isActive('heading', { level: 4 }) ? 'h4'
         : 'p'
 
   function changeBlock(value: string) {
-    if (value === 'p') editor.chain().focus().setParagraph().run()
-    else editor.chain().focus().toggleHeading({ level: Number(value.slice(1)) as 2 | 3 | 4 }).run()
+    if (value === 'p') activeEditor.chain().focus().setParagraph().run()
+    else activeEditor.chain().focus().toggleHeading({ level: Number(value.slice(1)) as 2 | 3 | 4 }).run()
   }
 
   function openLinkDialog() {
-    let { from, to } = editor.state.selection
-    const existing = editor.isActive('link')
+    let { from, to } = activeEditor.state.selection
+    const existing = activeEditor.isActive('link')
     if (existing) {
-      editor.chain().focus().extendMarkRange('link').run()
-      from = editor.state.selection.from
-      to = editor.state.selection.to
+      activeEditor.chain().focus().extendMarkRange('link').run()
+      from = activeEditor.state.selection.from
+      to = activeEditor.state.selection.to
     }
-    const attributes = existing ? editor.getAttributes('link') as { href?: string; target?: string } : {}
+    const attributes = existing ? activeEditor.getAttributes('link') as { href?: string; target?: string } : {}
+    const selectedNode = from < to ? activeEditor.state.doc.nodeAt(from) : null
+    const preservedMarks = selectedNode?.marks
+      .filter(mark => mark.type.name !== 'link')
+      .map(mark => ({ type: mark.type.name, attrs: { ...mark.attrs } })) ?? []
     setLinkDraft({
       from,
       to,
       existing,
-      text: editor.state.doc.textBetween(from, to, ' '),
+      text: activeEditor.state.doc.textBetween(from, to, ' '),
       url: attributes.href ?? '',
       newTab: attributes.target === '_blank' || !existing,
+      preservedMarks,
     })
     setLinkError('')
   }
@@ -234,21 +245,35 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
       setLinkError('Use a valid http:// or https:// URL.')
       return
     }
-    editor.chain().focus().insertContentAt(
-      { from: linkDraft.from, to: linkDraft.to },
-      {
-        type: 'text',
-        text: linkDraft.text,
-        marks: [{ type: 'link', attrs: { href, target: linkDraft.newTab ? '_blank' : null, rel: linkDraft.newTab ? 'noreferrer' : null } }],
-      },
-    ).run()
+    const linkAttrs = {
+      href,
+      target: linkDraft.newTab ? '_blank' : null,
+      rel: linkDraft.newTab ? 'noreferrer' : null,
+    }
+    const currentText = activeEditor.state.doc.textBetween(linkDraft.from, linkDraft.to, ' ')
+    if (linkDraft.from < linkDraft.to && currentText === linkDraft.text) {
+      activeEditor.chain()
+        .focus()
+        .setTextSelection({ from: linkDraft.from, to: linkDraft.to })
+        .setLink(linkAttrs)
+        .run()
+    } else {
+      activeEditor.chain().focus().insertContentAt(
+        { from: linkDraft.from, to: linkDraft.to },
+        {
+          type: 'text',
+          text: linkDraft.text,
+          marks: [...linkDraft.preservedMarks, { type: 'link', attrs: linkAttrs }],
+        },
+      ).run()
+    }
     setLinkDraft(null)
     setLinkError('')
   }
 
   function removeLink() {
     if (!linkDraft) return
-    editor.chain().focus().setTextSelection({ from: linkDraft.from, to: linkDraft.to }).unsetLink().run()
+    activeEditor.chain().focus().setTextSelection({ from: linkDraft.from, to: linkDraft.to }).unsetLink().run()
     setLinkDraft(null)
     setLinkError('')
   }
@@ -265,19 +290,19 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
         </select>
       </label>
       <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Bullet list" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Blockquote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Link" active={editor.isActive('link')} onClick={openLinkDialog}><Link2 aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Bold" active={activeEditor.isActive('bold')} onClick={() => activeEditor.chain().focus().toggleBold().run()}><Bold aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Italic" active={activeEditor.isActive('italic')} onClick={() => activeEditor.chain().focus().toggleItalic().run()}><Italic aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Bullet list" active={activeEditor.isActive('bulletList')} onClick={() => activeEditor.chain().focus().toggleBulletList().run()}><List aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Numbered list" active={activeEditor.isActive('orderedList')} onClick={() => activeEditor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Blockquote" active={activeEditor.isActive('blockquote')} onClick={() => activeEditor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Link" active={activeEditor.isActive('link')} onClick={openLinkDialog}><Link2 aria-hidden="true" /></ToolbarButton>
       <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Align left" active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Align center" active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Align right" active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Align left" active={textAlignment === 'left'} onClick={() => activeEditor.chain().focus().setTextAlign('left').run()}><AlignLeft aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Align center" active={textAlignment === 'center'} onClick={() => activeEditor.chain().focus().setTextAlign('center').run()}><AlignCenter aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Align right" active={textAlignment === 'right'} onClick={() => activeEditor.chain().focus().setTextAlign('right').run()}><AlignRight aria-hidden="true" /></ToolbarButton>
       <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Undo" disabled={!editor.can().chain().focus().undo().run()} onClick={() => editor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Redo" disabled={!editor.can().chain().focus().redo().run()} onClick={() => editor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Undo" disabled={!activeEditor.can().chain().focus().undo().run()} onClick={() => activeEditor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolbarButton>
+      <ToolbarButton label="Redo" disabled={!activeEditor.can().chain().focus().redo().run()} onClick={() => activeEditor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolbarButton>
     </div>
     {linkDraft ? <form className="rich-editor__link-popover" onSubmit={applyLink}>
       <label>Text to display<input autoFocus value={linkDraft.text} onChange={event => setLinkDraft(current => current ? { ...current, text: event.target.value } : current)} /></label>
@@ -290,6 +315,6 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
         <button type="submit" className="button button-primary button-compact">{linkDraft.existing ? 'Update link' : 'Apply link'}</button>
       </div>
     </form> : null}
-    <EditorContent editor={editor} />
+    <EditorContent editor={activeEditor} />
   </div>
 }
