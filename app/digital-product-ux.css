@@ -101,7 +101,7 @@
 }
 .digital-product-card__format {
   margin-bottom: 8px;
-  color: rgba(255,255,255,.78);
+  color: var(--marketing-orange);
   font-size: .6rem;
   font-weight: 800;
   letter-spacing: .14em;
@@ -125,6 +125,16 @@
 .digital-product-card__heading svg {
   flex: 0 0 auto;
   margin-bottom: 2px;
+}
+.digital-product-card__description-preview {
+  display: -webkit-box;
+  margin-top: 10px;
+  overflow: hidden;
+  color: rgba(255,255,255,.82);
+  font-size: .72rem;
+  line-height: 1.48;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 .digital-product-card__meta {
   display: flex;
