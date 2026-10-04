@@ -8,6 +8,9 @@ export function AdminDeleteConfirmation({
   title,
   description,
   busy,
+  cancelLabel = 'Cancel',
+  confirmLabel = 'Delete permanently',
+  busyLabel = 'Deleting…',
   onCancel,
   onConfirm,
 }: {
@@ -15,6 +18,9 @@ export function AdminDeleteConfirmation({
   title: string
   description: string
   busy: boolean
+  cancelLabel?: string
+  confirmLabel?: string
+  busyLabel?: string
   onCancel: () => void
   onConfirm: () => void
 }) {
@@ -32,8 +38,8 @@ export function AdminDeleteConfirmation({
     <h3 id={titleId}>{title}</h3>
     <p>{description}</p>
     <div>
-      <button type="button" className="button button-outline" onClick={onCancel} disabled={busy}>Cancel</button>
-      <button type="button" className="button button-danger" onClick={onConfirm} disabled={busy}><Trash2 aria-hidden="true" />{busy ? 'Deleting…' : 'Delete permanently'}</button>
+      <button type="button" className="button button-outline" onClick={onCancel} disabled={busy}>{cancelLabel}</button>
+      <button type="button" className="button button-danger" onClick={onConfirm} disabled={busy}><Trash2 aria-hidden="true" />{busy ? busyLabel : confirmLabel}</button>
     </div>
   </dialog>
 }
