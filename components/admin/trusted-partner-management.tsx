@@ -22,6 +22,7 @@ import {
 } from 'react'
 
 import { formError } from '@/lib/auth/errors'
+import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
 import {
   buildTrustedPartnerPayload,
   getNextTrustedPartnerOrder,
@@ -92,6 +93,7 @@ export function TrustedPartnerManagement() {
   const [partners, setPartners] = useState<TrustedPartner[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TrustedPartner | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -390,7 +392,7 @@ export function TrustedPartnerManagement() {
   }
 
   const remove = async (partner: TrustedPartner) => {
-    if (busy || !window.confirm(`Delete partner "${partner.organization_name}" and its logo?`)) return
+    if (busy) return
     setError('')
     setNotice('')
     setBusyAction('delete-' + partner.id)
@@ -419,6 +421,7 @@ export function TrustedPartnerManagement() {
       .remove([partner.logo_path])
     if (storageError) warning += ' The logo still needs manual Storage cleanup.'
     setNotice(`Deleted partner "${partner.organization_name}".` + warning)
+    setDeleteTarget(null)
     await load()
     setBusyAction(null)
   }
@@ -583,7 +586,7 @@ export function TrustedPartnerManagement() {
                         <button
                           type="button"
                           className={styles.deleteButton}
-                          onClick={() => void remove(partner)}
+                          onClick={() => setDeleteTarget(partner)}
                           disabled={busy}
                           data-testid={'trusted-partner-' + partner.id + '-delete-button'}
                           aria-label={'Delete ' + partner.organization_name}
@@ -796,6 +799,14 @@ export function TrustedPartnerManagement() {
           </div>
         </div>
       </dialog>
+      <AdminDeleteConfirmation
+        open={Boolean(deleteTarget)}
+        title={deleteTarget ? `Delete partner "${deleteTarget.organization_name}"?` : 'Delete partner?'}
+        description="The partner record and its stored logo will be deleted permanently."
+        busy={busy}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) void remove(deleteTarget) }}
+      />
     </section>
   )
 }

@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowUp,
   CalendarDays,
+  Crop,
   Eye,
   FileText,
   GripVertical,
@@ -31,6 +32,7 @@ import {
   type RichTextDocument,
 } from '@/lib/content/rich-text'
 import { createClient } from '@/lib/supabase/client'
+import { PHOTO_SOURCE_BUCKET, cropRectFromJson, sourceExtension, type CropOutput, type NormalizedCropRect } from '@/lib/media/image-crop'
 import type {
   Competition,
   CompetitionCategory,
@@ -48,6 +50,8 @@ type Draft = {
   summary: string
   bodyDocument: RichTextDocument
   coverPath: string
+  coverSourcePath: string
+  coverCrop: NormalizedCropRect | null
   coverAltText: string
   publicationCategoryId: string
   publishedAt: string
@@ -70,6 +74,8 @@ function emptyDraft(): Draft {
     summary: '',
     bodyDocument: emptyRichTextDocument(),
     coverPath: '',
+    coverSourcePath: '',
+    coverCrop: null,
     coverAltText: '',
     publicationCategoryId: '',
     publishedAt: '',
@@ -119,6 +125,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
   const supabase = useMemo(() => createClient(), [])
   const editorDialogRef = useRef<HTMLDialogElement>(null)
   const deleteDialogRef = useRef<HTMLDialogElement>(null)
+  const discardDialogRef = useRef<HTMLDialogElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
   const kind = initialKind
@@ -131,10 +138,15 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
   const [editorVersion, setEditorVersion] = useState(0)
   const [draft, setDraft] = useState<Draft>(() => emptyDraft())
   const [originalCoverPath, setOriginalCoverPath] = useState('')
+  const [originalCoverSourcePath, setOriginalCoverSourcePath] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverOriginalFile, setCoverOriginalFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState('')
   const [cropSourceFile, setCropSourceFile] = useState<File | null>(null)
+  const [cropInitial, setCropInitial] = useState<NormalizedCropRect | null>(null)
+  const [cropUsesStoredSource, setCropUsesStoredSource] = useState(false)
+  const [initialDraftSignature, setInitialDraftSignature] = useState('')
+  const [discardOpen, setDiscardOpen] = useState(false)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<EditorialRow | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -154,8 +166,8 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
   const load = useCallback(async () => {
     setLoading(true)
     const [publicationResult, competitionResult, publicationCategoryResult, competitionCategoryResult] = await Promise.all([
-      supabase.from('publications').select('*').order('sort_order').order('created_at'),
-      supabase.from('competitions').select('*').order('sort_order').order('created_at'),
+      supabase.rpc('admin_list_publications'),
+      supabase.rpc('admin_list_competitions'),
       supabase.from('publication_categories').select('*').order('sort_order').order('name'),
       supabase.from('competition_categories').select('*').eq('is_active', true).order('sort_order').order('name'),
     ])
@@ -196,6 +208,13 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     if (!deleteTarget && dialog.open) dialog.close()
   }, [deleteTarget])
 
+  useEffect(() => {
+    const dialog = discardDialogRef.current
+    if (!dialog) return
+    if (discardOpen && !dialog.open) dialog.showModal()
+    if (!discardOpen && dialog.open) dialog.close()
+  }, [discardOpen])
+
   useEffect(() => () => clearPreviewObjectUrl(), [clearPreviewObjectUrl])
 
   const rows = kind === 'publications' ? publications : competitions
@@ -225,20 +244,28 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     : '')
   const selectedPublicationCategory = publicationCategoryNames.get(draft.publicationCategoryId) ?? ''
   const selectedCompetitionCategory = competitionCategoryNames.get(draft.competitionCategoryId) ?? ''
+  const isDirty = Boolean(editingId) && (
+    JSON.stringify(draft) !== initialDraftSignature || Boolean(coverFile || coverOriginalFile)
+  )
 
   function resetCoverState() {
     clearPreviewObjectUrl()
     setCoverFile(null)
     setCoverOriginalFile(null)
     setCropSourceFile(null)
+    setCropInitial(null)
+    setCropUsesStoredSource(false)
     setCoverPreview('')
     setOriginalCoverPath('')
+    setOriginalCoverSourcePath('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function beginCreate() {
     resetCoverState()
-    setDraft(emptyDraft())
+    const nextDraft = emptyDraft()
+    setDraft(nextDraft)
+    setInitialDraftSignature(JSON.stringify(nextDraft))
     setEditorVersion(version => version + 1)
     setError('')
     setNotice('')
@@ -251,12 +278,14 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     const publication = kind === 'publications' ? item as Publication : null
     const competition = kind === 'competitions' ? item as Competition : null
     const coverPath = item.cover_path ?? ''
-    setDraft({
+    const nextDraft: Draft = {
       slug: item.slug,
       title: publication?.title ?? competition?.name ?? '',
       summary: publication?.excerpt ?? competition?.description ?? '',
       bodyDocument: publication ? parseRichTextDocument(publication.body_json, publication.body) : emptyRichTextDocument(),
       coverPath,
+      coverSourcePath: item.cover_source_path ?? '',
+      coverCrop: cropRectFromJson(item.cover_crop),
       coverAltText: item.cover_alt_text ?? '',
       publicationCategoryId: publication?.category_id ?? '',
       publishedAt: publication?.published_at ?? '',
@@ -267,8 +296,11 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       registrationUrl: competition?.registration_url ?? '',
       registrationDeadline: competition?.registration_deadline ?? '',
       status: competition?.status ?? 'upcoming',
-    })
+    }
+    setDraft(nextDraft)
+    setInitialDraftSignature(JSON.stringify(nextDraft))
     setOriginalCoverPath(coverPath)
+    setOriginalCoverSourcePath(item.cover_source_path ?? '')
     setEditorVersion(version => version + 1)
     setError('')
     setNotice('')
@@ -281,7 +313,15 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setDraft(emptyDraft())
     setPublishErrors([])
     setCategoryManagerOpen(false)
+    setDiscardOpen(false)
+    setInitialDraftSignature('')
     resetCoverState()
+  }
+
+  function requestCloseEditor() {
+    if (busy) return
+    if (isDirty) setDiscardOpen(true)
+    else closeEditor()
   }
 
   function validateCoverCandidate(file: File) {
@@ -298,6 +338,8 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       return
     }
     setError('')
+    setCropInitial(null)
+    setCropUsesStoredSource(false)
     setCropSourceFile(file)
   }
 
@@ -311,34 +353,40 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     startCoverCrop(event.dataTransfer.files?.[0] ?? null)
   }
 
-  function applyCrop(file: File) {
+  function applyCrop(result: CropOutput) {
     const source = cropSourceFile
     clearPreviewObjectUrl()
-    const preview = URL.createObjectURL(file)
+    const preview = URL.createObjectURL(result.file)
     previewObjectUrlRef.current = preview
-    setCoverFile(file)
-    setCoverOriginalFile(source)
+    setCoverFile(result.file)
+    if (!cropUsesStoredSource) setCoverOriginalFile(source)
     setCoverPreview(preview)
+    setDraft(current => ({ ...current, coverCrop: result.crop }))
     setCropSourceFile(null)
+    setCropInitial(null)
+    setCropUsesStoredSource(false)
     setError('')
   }
 
-  async function recropCover() {
+  async function adjustCoverCrop() {
     if (coverOriginalFile) {
+      setCropInitial(draft.coverCrop)
+      setCropUsesStoredSource(false)
       setCropSourceFile(coverOriginalFile)
       return
     }
-    if (!currentCoverUrl) return
+    if (!draft.coverSourcePath) return
     setBusy(true)
     setError('')
     try {
-      const response = await fetch(currentCoverUrl)
-      if (!response.ok) throw new Error('Current cover could not be loaded for re-cropping.')
-      const blob = await response.blob()
+      const { data: blob, error: downloadError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).download(draft.coverSourcePath)
+      if (downloadError || !blob) throw downloadError ?? new Error('Original cover source is unavailable.')
       const type = allowedImageTypes.has(blob.type) ? blob.type : 'image/webp'
-      setCropSourceFile(new File([blob], 'existing-cover.webp', { type }))
+      setCropInitial(draft.coverCrop)
+      setCropUsesStoredSource(true)
+      setCropSourceFile(new File([blob], `cover-source.${sourceExtension(blob)}`, { type }))
     } catch (cropError) {
-      setError(cropError instanceof Error ? cropError.message : 'Current cover could not be loaded for re-cropping.')
+      setError(cropError instanceof Error ? cropError.message : 'Original cover source could not be loaded.')
     } finally {
       setBusy(false)
     }
@@ -349,7 +397,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setCoverFile(null)
     setCoverOriginalFile(null)
     setCoverPreview('')
-    setDraft(current => ({ ...current, coverPath: '', coverAltText: '' }))
+    setDraft(current => ({ ...current, coverPath: '', coverSourcePath: '', coverCrop: null, coverAltText: '' }))
   }
 
   function validatePublished(candidate: Draft) {
@@ -390,17 +438,6 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setPublishErrors([])
   }
 
-  async function uploadCover() {
-    if (!coverFile) return draft.coverPath || null
-    const path = `${kind}/${crypto.randomUUID()}.webp`
-    const result = await supabase.storage.from('marketing-editorial').upload(path, coverFile, {
-      contentType: 'image/webp',
-      upsert: false,
-    })
-    if (result.error) throw new Error(result.error.message)
-    return path
-  }
-
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!editingId) return
@@ -417,14 +454,36 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     setError('')
     setNotice('')
     let uploadedPath: string | null = null
+    let uploadedSourcePath: string | null = null
 
     try {
-      uploadedPath = await uploadCover()
+      let nextCoverPath = draft.coverPath || null
+      let nextSourcePath = draft.coverSourcePath || null
+      if (coverOriginalFile) {
+        uploadedSourcePath = `${kind}/${crypto.randomUUID()}.${sourceExtension(coverOriginalFile)}`
+        const sourceUpload = await supabase.storage.from(PHOTO_SOURCE_BUCKET).upload(uploadedSourcePath, coverOriginalFile, {
+          contentType: coverOriginalFile.type,
+          upsert: false,
+        })
+        if (sourceUpload.error) throw new Error(sourceUpload.error.message)
+        nextSourcePath = uploadedSourcePath
+      }
+      if (coverFile) {
+        uploadedPath = `${kind}/${crypto.randomUUID()}.webp`
+        const derivativeUpload = await supabase.storage.from('marketing-editorial').upload(uploadedPath, coverFile, {
+          contentType: 'image/webp',
+          upsert: false,
+        })
+        if (derivativeUpload.error) throw new Error(derivativeUpload.error.message)
+        nextCoverPath = uploadedPath
+      }
       const nextSortOrder = rows.length + 1
       const common = {
         slug: editingId === 'new' ? '' : draft.slug.trim(),
-        cover_path: uploadedPath,
-        cover_alt_text: uploadedPath ? draft.coverAltText.trim() || null : null,
+        cover_path: nextCoverPath,
+        cover_source_path: nextCoverPath ? nextSourcePath : null,
+        cover_crop: nextCoverPath ? draft.coverCrop as unknown as Json : null,
+        cover_alt_text: nextCoverPath ? draft.coverAltText.trim() || null : null,
         is_published: draft.isPublished,
         is_featured: draft.isFeatured,
         ...(editingId === 'new' ? { sort_order: nextSortOrder } : {}),
@@ -477,19 +536,49 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       if (result.error) throw new Error(result.error.message)
 
       let savedNotice = `${kind === 'publications' ? 'Publication' : 'Competition'} saved.`
-      if (originalCoverPath && originalCoverPath !== uploadedPath && originalCoverPath.startsWith(`${kind}/`)) {
+      if (originalCoverPath && originalCoverPath !== nextCoverPath && originalCoverPath.startsWith(`${kind}/`)) {
         const cleanup = await supabase.storage.from('marketing-editorial').remove([originalCoverPath])
         if (cleanup.error) savedNotice += ` Old cover cleanup needs attention: ${cleanup.error.message}`
+      }
+      if (originalCoverSourcePath && originalCoverSourcePath !== nextSourcePath && originalCoverSourcePath.startsWith(`${kind}/`)) {
+        const cleanup = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([originalCoverSourcePath])
+        if (cleanup.error) savedNotice += ` Old original cleanup needs attention: ${cleanup.error.message}`
       }
 
       setNotice(savedNotice)
       closeEditor()
       await load()
     } catch (saveError) {
-      if (coverFile && uploadedPath && uploadedPath !== originalCoverPath) {
-        await supabase.storage.from('marketing-editorial').remove([uploadedPath])
+      let cleanupWarning = ''
+      let persisted: { cover_path: string | null; cover_source_path: string | null } | null = null
+      let reconciliationError: { message: string } | null = null
+      if (uploadedPath || uploadedSourcePath) {
+        const reconciliation = kind === 'publications'
+          ? await supabase.rpc('admin_list_publications')
+          : await supabase.rpc('admin_list_competitions')
+        persisted = (reconciliation.data ?? []).find(item => (
+          (uploadedPath && item.cover_path === uploadedPath)
+          || (uploadedSourcePath && item.cover_source_path === uploadedSourcePath)
+        )) ?? null
+        reconciliationError = reconciliation.error
       }
-      setError(saveError instanceof Error ? saveError.message : 'Content could not be saved.')
+      const savedDespiteResponse = Boolean(persisted) && (
+        (!uploadedPath || persisted?.cover_path === uploadedPath)
+        && (!uploadedSourcePath || persisted?.cover_source_path === uploadedSourcePath)
+      )
+      if (savedDespiteResponse) {
+        setNotice(`${kind === 'publications' ? 'Publication' : 'Competition'} saved. Refreshing the list confirmed the stored record.`)
+        closeEditor()
+        await load()
+        return
+      }
+      if (reconciliationError) {
+        cleanupWarning = ' New files were preserved because database status could not be confirmed. Review Storage before retrying.'
+      } else {
+        if (coverFile && uploadedPath && uploadedPath !== originalCoverPath) await supabase.storage.from('marketing-editorial').remove([uploadedPath])
+        if (uploadedSourcePath && uploadedSourcePath !== originalCoverSourcePath) await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([uploadedSourcePath])
+      }
+      setError((saveError instanceof Error ? saveError.message : 'Content could not be saved.') + cleanupWarning)
     } finally {
       setBusy(false)
     }
@@ -550,15 +639,20 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       return
     }
 
+    let cleanupWarning = ''
     if (target.cover_path?.startsWith(`${kind}/`)) {
       const cleanup = await supabase.storage.from('marketing-editorial').remove([target.cover_path])
-      if (cleanup.error) setError(`Item deleted, but the cover file could not be removed: ${cleanup.error.message}`)
+      if (cleanup.error) cleanupWarning = ` Cover cleanup needs attention: ${cleanup.error.message}`
+    }
+    if (target.cover_source_path?.startsWith(`${kind}/`)) {
+      const cleanup = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([target.cover_source_path])
+      if (cleanup.error) cleanupWarning += ` Original source cleanup needs attention: ${cleanup.error.message}`
     }
 
     const remaining = (rows as EditorialRow[]).filter(item => item.id !== target.id)
     setDeleteTarget(null)
     await persistOrder(remaining)
-    setNotice(`${kind === 'publications' ? 'Publication' : 'Competition'} deleted permanently.`)
+    setNotice(`${kind === 'publications' ? 'Publication' : 'Competition'} deleted permanently.${cleanupWarning}`)
     setBusy(false)
   }
 
@@ -722,7 +816,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       </div> : null}
     </div> : null}
 
-    <dialog ref={editorDialogRef} className="editorial-admin__dialog" data-testid="editorial-content-dialog" onCancel={event => { event.preventDefault(); closeEditor() }}>
+    <dialog ref={editorDialogRef} className="editorial-admin__dialog" data-testid="editorial-content-dialog" onCancel={event => { event.preventDefault(); requestCloseEditor() }}>
       <form onSubmit={save} className="editorial-editor">
         <header className="editorial-editor__header">
           <div>
@@ -730,7 +824,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
             <h3>{editingId === 'new' ? `Create ${singular}` : `Edit ${singular}`}</h3>
             {editingId !== 'new' && draft.title ? <p>{draft.title}</p> : null}
           </div>
-          <button className="editorial-icon-button" type="button" onClick={closeEditor} aria-label="Close editor"><X aria-hidden="true" /></button>
+          <button className="editorial-icon-button" type="button" onClick={requestCloseEditor} aria-label="Close editor" title="Close"><X aria-hidden="true" /></button>
         </header>
 
         <div className="editorial-editor__body">
@@ -791,9 +885,10 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
                 <img src={currentCoverUrl} alt={draft.coverAltText || 'Cover preview'} data-testid="editorial-cover-preview" />
                 <div className="editorial-cover-preview__actions">
                   <label className="button button-outline button-compact" htmlFor={`editorial-cover-file-${kind}`}><ImagePlus aria-hidden="true" /> Replace</label>
-                  <button className="button button-outline button-compact" type="button" onClick={() => void recropCover()} disabled={busy}><span aria-hidden="true">↔</span> Re-crop</button>
+                  <button className="button button-outline button-compact" type="button" onClick={() => void adjustCoverCrop()} disabled={busy || (!coverOriginalFile && !draft.coverSourcePath)} title={draft.coverSourcePath || coverOriginalFile ? 'Adjust crop' : 'Original source unavailable'}><Crop aria-hidden="true" /> Adjust crop</button>
                   <button className="button button-danger button-compact" type="button" onClick={removeCover}><Trash2 aria-hidden="true" /> Remove</button>
                 </div>
+                {!coverOriginalFile && draft.coverPath && !draft.coverSourcePath ? <p className="editorial-cover-legacy-note">Original source is unavailable for this existing image. Replace the image once to enable future crop adjustments.</p> : null}
               </div> : <label
                 className="editorial-cover-dropzone"
                 htmlFor={`editorial-cover-file-${kind}`}
@@ -839,14 +934,14 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
         </div>
 
         <footer className="editorial-editor__footer">
-          <button className="button button-outline" type="button" onClick={closeEditor} disabled={busy}>Cancel</button>
+          <button className="button button-outline" type="button" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
           <button className="button button-outline" type="button" onClick={() => void openPreview()} disabled={busy}><Eye aria-hidden="true" /> Preview</button>
           <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
         </footer>
       </form>
     </dialog>
 
-    <EditorialCoverCropper sourceFile={cropSourceFile} onCancel={() => setCropSourceFile(null)} onApply={applyCrop} />
+    <EditorialCoverCropper sourceFile={cropSourceFile} initialCrop={cropInitial} onCancel={() => { setCropSourceFile(null); setCropInitial(null); setCropUsesStoredSource(false) }} onApply={applyCrop} />
 
     {kind === 'publications' ? <PublicationCategoryManager
       open={categoryManagerOpen}
@@ -855,6 +950,15 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       onClose={() => setCategoryManagerOpen(false)}
       onChanged={load}
     /> : null}
+
+    <dialog ref={discardDialogRef} className="editorial-discard-dialog" aria-labelledby="editorial-discard-title" onCancel={event => { event.preventDefault(); setDiscardOpen(false) }}>
+      <h3 id="editorial-discard-title">Discard unsaved changes?</h3>
+      <p>Perubahan yang belum disimpan akan hilang.</p>
+      <div>
+        <button type="button" className="button button-outline button-compact" onClick={() => setDiscardOpen(false)}>Keep editing</button>
+        <button type="button" className="button button-danger button-compact" onClick={closeEditor}>Discard changes</button>
+      </div>
+    </dialog>
 
     <dialog ref={deleteDialogRef} className="editorial-delete-dialog" aria-labelledby="editorial-delete-title" onCancel={event => { event.preventDefault(); setDeleteTarget(null) }}>
       {deleteTarget ? <>

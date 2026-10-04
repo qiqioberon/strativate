@@ -4,13 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import type { Competition, Publication } from '@/lib/supabase/database.types'
 import { parseRichTextDocument, type RichTextDocument } from '@/lib/content/rich-text'
 
-export type PublicPublication = Publication & {
+export type PublicPublication = Omit<Publication, 'cover_source_path' | 'cover_crop'> & {
   coverUrl: string | null
   categoryName: string | null
   bodyDocument: RichTextDocument
 }
 
-export type PublicCompetition = Competition & {
+export type PublicCompetition = Omit<Competition, 'cover_source_path' | 'cover_crop'> & {
   coverUrl: string | null
   categoryName: string | null
 }
@@ -23,7 +23,7 @@ export async function listPublishedPublications(): Promise<PublicPublication[]> 
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('publications')
-    .select('*')
+    .select('id,slug,title,excerpt,body,body_json,category,category_id,cover_path,cover_alt_text,published_at,is_published,is_featured,sort_order,created_at,updated_at')
     .eq('is_published', true)
     .order('published_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
@@ -55,7 +55,7 @@ export async function listPublishedCompetitions(): Promise<PublicCompetition[]> 
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('competitions')
-    .select('*')
+    .select('id,slug,name,category_id,description,rules_url,registration_url,registration_deadline,cover_path,cover_alt_text,status,is_published,is_featured,sort_order,created_at,updated_at')
     .eq('is_published', true)
     .order('registration_deadline', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })

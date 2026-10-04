@@ -4,6 +4,7 @@ import Image from 'next/image'
 import {
   ArrowDown,
   ArrowUp,
+  Crop,
   ImagePlus,
   MessageSquareQuote,
   Plus,
@@ -15,6 +16,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { formError } from '@/lib/auth/errors'
+import { DirectImageCropper } from '@/components/admin/direct-image-cropper'
 import {
   buildTestimonialAltText,
   buildTestimonialPayload,
@@ -26,25 +28,19 @@ import {
   type TestimonialDraftErrors,
 } from '@/lib/marketing/testimonial-admin'
 import {
-  TESTIMONIAL_CROP_MAX_ZOOM,
-  TESTIMONIAL_CROP_MIN_ZOOM,
   TESTIMONIAL_IMAGE_BUCKET,
   TESTIMONIAL_IMAGE_HEIGHT,
   TESTIMONIAL_IMAGE_WIDTH,
 } from '@/lib/marketing/testimonial-config'
-import {
-  cropTestimonialImage,
-  DEFAULT_TESTIMONIAL_CROP,
-  type TestimonialCrop,
-} from '@/lib/marketing/testimonial-image'
+import { PHOTO_SOURCE_BUCKET, cropRectFromJson, sourceExtension, type CropOutput, type NormalizedCropRect } from '@/lib/media/image-crop'
 import { createClient } from '@/lib/supabase/client'
-import type { MarketingTestimonial } from '@/lib/supabase/database.types'
+import type { Json, MarketingTestimonial } from '@/lib/supabase/database.types'
 
 import dataStyles from './data-management.module.css'
 import dialogStyles from './digital-product-dialog.module.css'
 import styles from './testimonial-management.module.css'
 
-const migrationName = '202609200002_marketing_testimonials.sql'
+const migrationName = '202610040009_photo_crop_sources.sql'
 
 type Draft = {
   slug: string
@@ -75,13 +71,19 @@ function draftFromItem(item: MarketingTestimonial): Draft {
 export function TestimonialManagement() {
   const supabase = useMemo(() => createClient(), [])
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const deleteDialogRef = useRef<HTMLDialogElement>(null)
   const [items, setItems] = useState<MarketingTestimonial[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [crop, setCrop] = useState<TestimonialCrop>({ ...DEFAULT_TESTIMONIAL_CROP })
+  const [processedFile, setProcessedFile] = useState<File | null>(null)
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null)
+  const [cropUsesStoredSource, setCropUsesStoredSource] = useState(false)
+  const [crop, setCrop] = useState<NormalizedCropRect | null>(null)
+  const [cropInitial, setCropInitial] = useState<NormalizedCropRect | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<MarketingTestimonial | null>(null)
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -101,11 +103,7 @@ export function TestimonialManagement() {
     setError('')
     setLoadFailed(false)
     setSetupRequired(false)
-    const { data, error: loadError } = await supabase
-      .from('marketing_testimonials')
-      .select('*')
-      .order('sort_order')
-      .order('created_at')
+    const { data, error: loadError } = await supabase.rpc('admin_list_marketing_testimonials')
 
     if (loadError) {
       setItems([])
@@ -123,14 +121,14 @@ export function TestimonialManagement() {
   useEffect(() => { void load() }, [load])
 
   useEffect(() => {
-    if (!selectedFile) {
+    if (!processedFile) {
       setLocalPreviewUrl(null)
       return
     }
-    const objectUrl = URL.createObjectURL(selectedFile)
+    const objectUrl = URL.createObjectURL(processedFile)
     setLocalPreviewUrl(objectUrl)
     return () => URL.revokeObjectURL(objectUrl)
-  }, [selectedFile])
+  }, [processedFile])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -138,6 +136,13 @@ export function TestimonialManagement() {
     if (editorOpen && !dialog.open) dialog.showModal()
     if (!editorOpen && dialog.open) dialog.close()
   }, [editorOpen])
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current
+    if (!dialog) return
+    if (deleteTarget && !dialog.open) dialog.showModal()
+    if (!deleteTarget && dialog.open) dialog.close()
+  }, [deleteTarget])
 
   const publicImageUrl = useCallback((path: string) => (
     supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl
@@ -149,7 +154,11 @@ export function TestimonialManagement() {
     setDraft(emptyDraft)
     setSlugManuallyEdited(false)
     setSelectedFile(null)
-    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
+    setProcessedFile(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setCrop(null)
+    setCropInitial(null)
     setFieldErrors({})
   }
 
@@ -159,7 +168,11 @@ export function TestimonialManagement() {
     setDraft(emptyDraft)
     setSlugManuallyEdited(false)
     setSelectedFile(null)
-    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
+    setProcessedFile(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setCrop(null)
+    setCropInitial(null)
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -171,7 +184,11 @@ export function TestimonialManagement() {
     setDraft(draftFromItem(item))
     setSlugManuallyEdited(true)
     setSelectedFile(null)
-    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
+    setProcessedFile(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setCrop(cropRectFromJson(item.image_crop))
+    setCropInitial(null)
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -184,6 +201,51 @@ export function TestimonialManagement() {
       slug: slugManuallyEdited ? current.slug : normalizeTestimonialSlug(value),
     }))
     setFieldErrors(current => ({ ...current, competitionName: undefined, slug: undefined }))
+  }
+
+  function chooseImage(file: File | null) {
+    if (!file) return
+    const validation = validateTestimonialDraft({
+      slug: draft.slug || 'temporary-slug',
+      competitionName: draft.competitionName || 'Temporary',
+      achievement: draft.achievement || 'Temporary',
+      testimonial: draft.testimonial || 'Temporary',
+      file,
+    })
+    if (validation.file) {
+      setFieldErrors(current => ({ ...current, file: validation.file }))
+      return
+    }
+    setCropUsesStoredSource(false)
+    setCropInitial(null)
+    setCropSourceFile(file)
+    setFieldErrors(current => ({ ...current, file: undefined }))
+  }
+
+  function applyImageCrop(result: CropOutput) {
+    if (!cropUsesStoredSource) setSelectedFile(cropSourceFile)
+    setProcessedFile(result.file)
+    setCrop(result.crop)
+    setCropInitial(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+  }
+
+  async function adjustStoredCrop() {
+    if (!selected?.image_source_path) return
+    setBusyAction('source')
+    setError('')
+    try {
+      const { data, error: downloadError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).download(selected.image_source_path)
+      if (downloadError || !data) throw downloadError ?? new Error('Original source is unavailable.')
+      setCropUsesStoredSource(true)
+      setCropInitial(cropRectFromJson(selected.image_crop))
+      setCropSourceFile(new File([data], `testimonial-source.${data.type === 'image/png' ? 'png' : data.type === 'image/webp' ? 'webp' : 'jpg'}`, { type: data.type || 'image/jpeg' }))
+    } catch (caught) {
+      setError(formError(caught, 'Original source could not be loaded.'))
+    } finally {
+      setBusyAction(null)
+    }
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -201,17 +263,30 @@ export function TestimonialManagement() {
     setError('')
     setNotice('')
     if (Object.keys(validation).length > 0) return
+    if (selectedFile && (!processedFile || !crop)) {
+      setFieldErrors(current => ({ ...current, file: 'Apply the crop before saving.' }))
+      return
+    }
 
     setBusyAction('save')
     let uploadedPath: string | null = null
+    let uploadedSourcePath: string | null = null
 
     try {
+      let nextSourcePath = selected?.image_source_path ?? null
       if (selectedFile) {
-        const croppedImage = await cropTestimonialImage(selectedFile, crop)
+        uploadedSourcePath = `testimonials/${crypto.randomUUID()}.${sourceExtension(selectedFile)}`
+        const { error: sourceUploadError } = await supabase.storage
+          .from(PHOTO_SOURCE_BUCKET)
+          .upload(uploadedSourcePath, selectedFile, { cacheControl: '3600', contentType: selectedFile.type, upsert: false })
+        if (sourceUploadError) throw sourceUploadError
+        nextSourcePath = uploadedSourcePath
+      }
+      if (processedFile) {
         uploadedPath = `testimonials/${crypto.randomUUID()}-${draft.slug || 'testimonial'}.webp`
         const { error: uploadError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
-          .upload(uploadedPath, croppedImage, {
+          .upload(uploadedPath, processedFile, {
             cacheControl: '3600',
             contentType: 'image/webp',
             upsert: false,
@@ -228,11 +303,16 @@ export function TestimonialManagement() {
         storedImagePath: selected?.image_path ?? null,
         isPublished: draft.isPublished,
       })
+      const imagePayload = {
+        ...payload,
+        image_source_path: payload.image_path ? nextSourcePath : null,
+        image_crop: payload.image_path ? crop as unknown as Json : null,
+      }
 
       const result = selected
-        ? await supabase.from('marketing_testimonials').update(payload).eq('id', selected.id)
+        ? await supabase.from('marketing_testimonials').update(imagePayload).eq('id', selected.id)
         : await supabase.from('marketing_testimonials').insert({
-          ...payload,
+          ...imagePayload,
           sort_order: getNextTestimonialSortOrder(items),
         })
       if (result.error) throw result.error
@@ -244,21 +324,30 @@ export function TestimonialManagement() {
           .remove([selected.image_path])
         if (cleanupError) cleanupWarning = ' Gambar lama masih perlu ditinjau manual di Storage.'
       }
+      if (selected?.image_source_path && uploadedSourcePath && selected.image_source_path !== uploadedSourcePath) {
+        const { error: cleanupError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([selected.image_source_path])
+        if (cleanupError) cleanupWarning += ' Sumber asli lama masih perlu ditinjau manual di Storage.'
+      }
 
       const wasEditing = Boolean(selected)
       resetEditor()
       setNotice(`${wasEditing ? 'Testimoni berhasil diperbarui.' : 'Testimoni berhasil ditambahkan.'}${cleanupWarning}`)
       await load()
     } catch (caught) {
-      if (uploadedPath) {
-        const { data: persisted } = await supabase
-          .from('marketing_testimonials')
-          .select('id')
-          .eq('image_path', uploadedPath)
-          .maybeSingle()
-        if (!persisted) await supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).remove([uploadedPath])
+      let cleanupWarning = ''
+      if (uploadedPath || uploadedSourcePath) {
+        const { data: persistedRows, error: reconciliationError } = await supabase.rpc('admin_list_marketing_testimonials')
+        if (reconciliationError) cleanupWarning = ' Berkas baru dipertahankan karena status database belum dapat dipastikan.'
+        else {
+          if (uploadedPath && !persistedRows?.some(row => row.image_path === uploadedPath)) {
+            await supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).remove([uploadedPath])
+          }
+          if (uploadedSourcePath && !persistedRows?.some(row => row.image_source_path === uploadedSourcePath)) {
+            await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([uploadedSourcePath])
+          }
+        }
       }
-      setError(formError(caught, 'Testimoni belum dapat disimpan.'))
+      setError(`${formError(caught, 'Testimoni belum dapat disimpan.')}${cleanupWarning}`)
     } finally {
       setBusyAction(null)
     }
@@ -304,7 +393,7 @@ export function TestimonialManagement() {
   }
 
   async function remove(item: MarketingTestimonial) {
-    if (busy || !window.confirm(`Hapus testimoni “${item.competition_name}”?`)) return
+    if (busy) return
     setBusyAction(`delete-${item.id}`)
     setError('')
     setNotice('')
@@ -319,6 +408,10 @@ export function TestimonialManagement() {
           .remove([item.image_path])
         if (storageError) warning = ' Gambar Storage perlu ditinjau manual.'
       }
+      if (item.image_source_path) {
+        const { error: storageError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([item.image_source_path])
+        if (storageError) warning += ' Sumber asli Storage perlu ditinjau manual.'
+      }
 
       const remainingIds = items.filter(candidate => candidate.id !== item.id).map(candidate => candidate.id)
       if (remainingIds.length) {
@@ -327,6 +420,7 @@ export function TestimonialManagement() {
       }
 
       if (selectedId === item.id) resetEditor()
+      setDeleteTarget(null)
       setNotice(`Testimoni berhasil dihapus.${warning}`)
       await load()
     } catch (caught) {
@@ -429,7 +523,7 @@ export function TestimonialManagement() {
                     <button type="button" onClick={() => void move(sourceIndex, 1)} disabled={busy || sourceIndex === items.length - 1} aria-label={`Turunkan ${item.competition_name}`}><ArrowDown aria-hidden="true" size={15} /></button>
                     <button type="button" onClick={() => void togglePublished(item)} disabled={busy}>{item.is_published ? 'Draft' : 'Publish'}</button>
                     <button type="button" onClick={() => beginEdit(item)} disabled={busy}>Kelola</button>
-                    <button type="button" className={styles.deleteButton} onClick={() => void remove(item)} disabled={busy} aria-label={`Hapus ${item.competition_name}`}><Trash2 aria-hidden="true" size={15} /></button>
+                    <button type="button" className={styles.deleteButton} onClick={() => setDeleteTarget(item)} disabled={busy} aria-label={`Hapus ${item.competition_name}`}><Trash2 aria-hidden="true" size={15} /></button>
                   </div>
                 </article>
               )
@@ -471,41 +565,15 @@ export function TestimonialManagement() {
 
               <section className={styles.mediaSection}>
                 <div>
-                  <label>Gambar testimonial<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => {
-                    const file = event.target.files?.[0] ?? null
-                    setSelectedFile(file)
-                    setCrop({ ...DEFAULT_TESTIMONIAL_CROP })
-                    setFieldErrors(current => ({ ...current, file: undefined }))
-                  }} /></label>
+                  <label>Gambar testimonial<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { chooseImage(event.target.files?.[0] ?? null); event.target.value = '' }} /></label>
                   <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB. File baru otomatis disimpan dalam format 5:4.</small>
                   {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
-                  {selectedFile ? (
-                    <div className={styles.cropControls} data-testid="testimonial-crop-controls">
-                      <div className={styles.cropMeta}>
-                        <span>Crop standar</span>
-                        <strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4</strong>
-                      </div>
-                      <label>
-                        Posisi horizontal
-                        <input type="range" min="0" max="100" value={crop.x} onChange={event => setCrop(current => ({ ...current, x: Number(event.target.value) }))} />
-                      </label>
-                      <label>
-                        Posisi vertikal
-                        <input type="range" min="0" max="100" value={crop.y} onChange={event => setCrop(current => ({ ...current, y: Number(event.target.value) }))} />
-                      </label>
-                      <label>
-                        Zoom
-                        <input
-                          type="range"
-                          min={TESTIMONIAL_CROP_MIN_ZOOM}
-                          max={TESTIMONIAL_CROP_MAX_ZOOM}
-                          step=".05"
-                          value={crop.zoom}
-                          onChange={event => setCrop(current => ({ ...current, zoom: Number(event.target.value) }))}
-                        />
-                      </label>
-                    </div>
-                  ) : null}
+                  <div className={styles.cropControls} data-testid="testimonial-crop-controls">
+                    <div className={styles.cropMeta}><span>Direct crop</span><strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4</strong></div>
+                    {selectedFile ? <button type="button" className="button button-outline button-compact" onClick={() => { setCropUsesStoredSource(false); setCropInitial(crop); setCropSourceFile(selectedFile) }}><Crop aria-hidden="true" /> Adjust crop</button> : null}
+                    {!selectedFile && selected?.image_source_path ? <button type="button" className="button button-outline button-compact" onClick={() => void adjustStoredCrop()} disabled={busy}><Crop aria-hidden="true" /> Adjust crop</button> : null}
+                    {selected?.image_path && !selected.image_source_path ? <small>Original source is unavailable for this existing image. Replace the image once to enable future crop adjustments.</small> : null}
+                  </div>
                 </div>
                 <div className={styles.preview}>
                   {editorPreviewUrl
@@ -515,11 +583,6 @@ export function TestimonialManagement() {
                         fill
                         sizes="280px"
                         unoptimized
-                        style={selectedFile ? {
-                          objectPosition: `${crop.x}% ${crop.y}%`,
-                          transform: `scale(${crop.zoom})`,
-                          transformOrigin: `${crop.x}% ${crop.y}%`,
-                        } : undefined}
                       />
                     : <div><ImagePlus aria-hidden="true" /><span>Seed belum memiliki gambar. Upload foto kompetisi di sini.</span></div>}
                 </div>
@@ -537,6 +600,20 @@ export function TestimonialManagement() {
             </form>
           </div>
         </div>
+      </dialog>
+      <DirectImageCropper
+        sourceFile={cropSourceFile}
+        initialCrop={cropInitial}
+        aspectRatio={5 / 4}
+        outputWidth={TESTIMONIAL_IMAGE_WIDTH}
+        outputHeight={TESTIMONIAL_IMAGE_HEIGHT}
+        title="Adjust testimonial crop"
+        description="Drag the 5:4 crop rectangle or its corner handles."
+        onCancel={() => { setCropSourceFile(null); setCropInitial(null); setCropUsesStoredSource(false) }}
+        onApply={applyImageCrop}
+      />
+      <dialog ref={deleteDialogRef} className="editorial-delete-dialog" aria-labelledby="testimonial-delete-title" onCancel={event => { event.preventDefault(); setDeleteTarget(null) }}>
+        {deleteTarget ? <><div className="editorial-delete-dialog__icon"><Trash2 aria-hidden="true" /></div><h3 id="testimonial-delete-title">Hapus “{deleteTarget.competition_name}”?</h3><p>Testimoni dan file foto miliknya akan dihapus permanen.</p><div><button type="button" className="button button-outline" onClick={() => setDeleteTarget(null)} disabled={busy}>Batal</button><button type="button" className="button button-danger" onClick={() => void remove(deleteTarget)} disabled={busy}><Trash2 aria-hidden="true" />{busy ? 'Menghapus…' : 'Hapus permanen'}</button></div></> : null}
       </dialog>
     </section>
   )

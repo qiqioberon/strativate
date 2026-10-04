@@ -1,9 +1,10 @@
 'use client'
 
-import { CircleAlert, ImageIcon, Images, RefreshCw, X } from 'lucide-react'
+import { CircleAlert, Crop, ImageIcon, Images, RefreshCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { formError } from '@/lib/auth/errors'
+import { DirectImageCropper } from '@/components/admin/direct-image-cropper'
 import {
   buildWhoWeArePhotoPayload,
   isWhoWeArePhotoSetupRequired,
@@ -12,28 +13,20 @@ import {
 } from '@/lib/marketing/who-we-are-photo-admin'
 import {
   WHO_WE_ARE_PHOTO_BUCKET,
-  WHO_WE_ARE_PHOTO_MAX_ZOOM,
-  WHO_WE_ARE_PHOTO_MIN_ZOOM,
   WHO_WE_ARE_PHOTO_ROLES,
   WHO_WE_ARE_PHOTO_TARGETS,
   whoWeArePhotoPathPrefix,
   type WhoWeArePhotoRole,
 } from '@/lib/marketing/who-we-are-photo-config'
-import {
-  calculateWhoWeArePreviewPlacement,
-  cropWhoWeArePhoto,
-  DEFAULT_WHO_WE_ARE_CROP,
-  normalizeWhoWeAreCrop,
-  type WhoWeArePhotoCrop,
-} from '@/lib/marketing/who-we-are-photo-image'
+import { PHOTO_SOURCE_BUCKET, cropRectFromJson, sourceExtension, type CropOutput, type NormalizedCropRect } from '@/lib/media/image-crop'
 import { createClient } from '@/lib/supabase/client'
-import type { HomepageWhoWeArePhoto } from '@/lib/supabase/database.types'
+import type { HomepageWhoWeArePhoto, Json } from '@/lib/supabase/database.types'
 
 import dataStyles from './data-management.module.css'
 import dialogStyles from './digital-product-dialog.module.css'
 import styles from './who-we-are-photo-management.module.css'
 
-const migrationName = '202609280001_homepage_who_we_are_photos.sql'
+const migrationName = '202610040009_photo_crop_sources.sql'
 
 type Draft = { altText: string; badgeText: string; removeImage: boolean }
 const emptyDraft: Draft = { altText: '', badgeText: '', removeImage: false }
@@ -45,9 +38,12 @@ export function WhoWeArePhotoManagement() {
   const [activeRole, setActiveRole] = useState<WhoWeArePhotoRole | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [processedFile, setProcessedFile] = useState<File | null>(null)
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null)
+  const [cropUsesStoredSource, setCropUsesStoredSource] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [sourceDimensions, setSourceDimensions] = useState<{ width: number; height: number } | null>(null)
-  const [crop, setCrop] = useState<WhoWeArePhotoCrop>({ ...DEFAULT_WHO_WE_ARE_CROP })
+  const [crop, setCrop] = useState<NormalizedCropRect | null>(null)
+  const [cropInitial, setCropInitial] = useState<NormalizedCropRect | null>(null)
   const [fieldErrors, setFieldErrors] = useState<WhoWeArePhotoDraftErrors>({})
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -70,9 +66,7 @@ export function WhoWeArePhotoManagement() {
     setError('')
     setSetupRequired(false)
     setLoadFailed(false)
-    const { data, error: loadError } = await supabase
-      .from('homepage_who_we_are_photos')
-      .select('*')
+    const { data, error: loadError } = await supabase.rpc('admin_list_homepage_who_we_are_photos')
 
     if (loadError) {
       setPhotos([])
@@ -88,14 +82,14 @@ export function WhoWeArePhotoManagement() {
   useEffect(() => { void load() }, [load])
 
   useEffect(() => {
-    if (!selectedFile) {
+    if (!processedFile) {
       setPreviewUrl(null)
       return
     }
-    const objectUrl = URL.createObjectURL(selectedFile)
+    const objectUrl = URL.createObjectURL(processedFile)
     setPreviewUrl(objectUrl)
     return () => URL.revokeObjectURL(objectUrl)
-  }, [selectedFile])
+  }, [processedFile])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -108,8 +102,11 @@ export function WhoWeArePhotoManagement() {
     setActiveRole(null)
     setDraft(emptyDraft)
     setSelectedFile(null)
-    setSourceDimensions(null)
-    setCrop({ ...DEFAULT_WHO_WE_ARE_CROP })
+    setProcessedFile(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setCrop(null)
+    setCropInitial(null)
     setFieldErrors({})
   }
 
@@ -121,39 +118,56 @@ export function WhoWeArePhotoManagement() {
       removeImage: false,
     })
     setSelectedFile(null)
-    setSourceDimensions(null)
-    setCrop({ ...DEFAULT_WHO_WE_ARE_CROP })
+    setProcessedFile(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setCrop(cropRectFromJson(photo?.image_crop))
+    setCropInitial(null)
     setFieldErrors({})
     setError('')
     setNotice('')
     setActiveRole(role)
   }
 
-  function updateCrop(next: Partial<WhoWeArePhotoCrop>) {
-    setCrop(current => normalizeWhoWeAreCrop({ ...current, ...next }))
+
+  function choosePhoto(file: File | null) {
+    if (!file) return
+    const validation = validateWhoWeArePhotoDraft({ altText: draft.altText || 'Temporary', file, hasStoredImage: true, removeImage: false })
+    if (validation.file) {
+      setFieldErrors(current => ({ ...current, file: validation.file }))
+      return
+    }
+    setCropUsesStoredSource(false)
+    setCropInitial(null)
+    setCropSourceFile(file)
+    setFieldErrors(current => ({ ...current, file: undefined }))
   }
 
-  const previewPlacement = useMemo(() => {
-    if (!selectedFile || !sourceDimensions || !activeRole) return null
-    return calculateWhoWeArePreviewPlacement(
-      sourceDimensions.width,
-      sourceDimensions.height,
-      activeRole,
-      crop,
-    )
-  }, [activeRole, crop, selectedFile, sourceDimensions])
+  function applyPhotoCrop(result: CropOutput) {
+    if (!cropUsesStoredSource) setSelectedFile(cropSourceFile)
+    setProcessedFile(result.file)
+    setCrop(result.crop)
+    setCropInitial(null)
+    setCropSourceFile(null)
+    setCropUsesStoredSource(false)
+    setDraft(current => ({ ...current, removeImage: false }))
+  }
 
-  async function completePersistedSave(storedPath: string | null, nextPath: string | null) {
-    let warning = ''
-    if (storedPath && storedPath !== nextPath) {
-      const { error: cleanupError } = await supabase.storage
-        .from(WHO_WE_ARE_PHOTO_BUCKET)
-        .remove([storedPath])
-      if (cleanupError) warning = ' The old photo still needs manual Storage cleanup.'
+  async function adjustStoredCrop() {
+    if (!selected?.source_image_path) return
+    setBusy(true)
+    setError('')
+    try {
+      const { data, error: downloadError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).download(selected.source_image_path)
+      if (downloadError || !data) throw downloadError ?? new Error('Original source is unavailable.')
+      setCropUsesStoredSource(true)
+      setCropInitial(cropRectFromJson(selected.image_crop))
+      setCropSourceFile(new File([data], 'who-we-are-source', { type: data.type || 'image/jpeg' }))
+    } catch (caught) {
+      setError(formError(caught, 'Original source could not be loaded.'))
+    } finally {
+      setBusy(false)
     }
-    closeEditor()
-    setNotice('Who We Are photo slot updated.' + warning)
-    await load()
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -172,17 +186,31 @@ export function WhoWeArePhotoManagement() {
     setNotice('')
     if (Object.keys(validation).length) return
 
+    if (selectedFile && (!processedFile || !crop)) {
+      setFieldErrors(current => ({ ...current, file: 'Apply the crop before saving.' }))
+      return
+    }
+
     let uploadedPath: string | null = null
-    let intendedPayload: ReturnType<typeof buildWhoWeArePhotoPayload> | null = null
-    let persistAttempted = false
+    let uploadedSourcePath: string | null = null
     setBusy(true)
     try {
+      let nextSourcePath = selected?.source_image_path ?? null
       if (selectedFile) {
-        const normalizedPhoto = await cropWhoWeArePhoto(selectedFile, activeRole, crop)
+        uploadedSourcePath = `who-we-are/${activeRole}/${crypto.randomUUID()}.${sourceExtension(selectedFile)}`
+        const { error: sourceUploadError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).upload(uploadedSourcePath, selectedFile, {
+          cacheControl: '3600',
+          contentType: selectedFile.type,
+          upsert: false,
+        })
+        if (sourceUploadError) throw sourceUploadError
+        nextSourcePath = uploadedSourcePath
+      }
+      if (processedFile) {
         uploadedPath = whoWeArePhotoPathPrefix(activeRole) + crypto.randomUUID() + '.webp'
         const { error: uploadError } = await supabase.storage
           .from(WHO_WE_ARE_PHOTO_BUCKET)
-          .upload(uploadedPath, normalizedPhoto, {
+          .upload(uploadedPath, processedFile, {
             cacheControl: '3600',
             contentType: 'image/webp',
             upsert: false,
@@ -197,50 +225,47 @@ export function WhoWeArePhotoManagement() {
         storedImagePath: storedPath,
         removeImage: draft.removeImage,
       })
-      intendedPayload = payload
-      persistAttempted = true
+      const imagePayload = {
+        ...payload,
+        source_image_path: payload.image_path ? nextSourcePath : null,
+        image_crop: payload.image_path ? crop as unknown as Json : null,
+      }
       const persistResult = selected
         ? await supabase
             .from('homepage_who_we_are_photos')
-            .update(payload)
+            .update(imagePayload)
             .eq('role', activeRole)
         : await supabase
             .from('homepage_who_we_are_photos')
-            .insert({ role: activeRole, ...payload })
+            .insert({ role: activeRole, ...imagePayload })
       if (persistResult.error) throw persistResult.error
 
-      await completePersistedSave(storedPath, payload.image_path)
+      let warning = ''
+      if (storedPath && storedPath !== imagePayload.image_path) {
+        const { error: cleanupError } = await supabase.storage.from(WHO_WE_ARE_PHOTO_BUCKET).remove([storedPath])
+        if (cleanupError) warning = ' The old derivative still needs manual Storage cleanup.'
+      }
+      if (selected?.source_image_path && selected.source_image_path !== imagePayload.source_image_path) {
+        const { error: cleanupError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([selected.source_image_path])
+        if (cleanupError) warning += ' The old original still needs manual Storage cleanup.'
+      }
+      closeEditor()
+      setNotice('Who We Are photo slot updated.' + warning)
+      await load()
     } catch (caught) {
       let cleanupWarning = ''
-      let databaseStatusUnknown = false
-      if (persistAttempted && intendedPayload) {
-        const { data: persisted, error: reconciliationError } = await supabase
-          .from('homepage_who_we_are_photos')
-          .select('image_path,alt_text,badge_text')
-          .eq('role', activeRole)
-          .maybeSingle()
-
-        const persistedMatchesPayload = Boolean(persisted)
-          && persisted?.image_path === intendedPayload.image_path
-          && persisted.alt_text === intendedPayload.alt_text
-          && persisted.badge_text === intendedPayload.badge_text
-        if (persistedMatchesPayload) {
-          await completePersistedSave(storedPath, intendedPayload.image_path)
-          return
+      const { data: persistedRows, error: reconciliationError } = await supabase.rpc('admin_list_homepage_who_we_are_photos')
+      const persisted = persistedRows?.find(row => row.role === activeRole) ?? null
+      if (reconciliationError) {
+        cleanupWarning = ' New files were preserved because database status could not be confirmed. Review Storage before retrying.'
+      } else {
+        if (uploadedPath && persisted?.image_path !== uploadedPath) {
+          const { error: cleanupError } = await supabase.storage.from(WHO_WE_ARE_PHOTO_BUCKET).remove([uploadedPath])
+          if (cleanupError) cleanupWarning = ' The new derivative also needs manual Storage cleanup.'
         }
-        if (reconciliationError) {
-          databaseStatusUnknown = true
-          cleanupWarning = uploadedPath
-            ? ' The new file was not removed because its database status could not be confirmed. Review the slot list and Storage before retrying.'
-            : ' The database status could not be confirmed. Review the slot list before retrying.'
-        }
-      }
-      if (uploadedPath && !databaseStatusUnknown) {
-        const { error: cleanupError } = await supabase.storage
-          .from(WHO_WE_ARE_PHOTO_BUCKET)
-          .remove([uploadedPath])
-        if (cleanupError) {
-          cleanupWarning = ' The new file also needs manual Storage cleanup.'
+        if (uploadedSourcePath && persisted?.source_image_path !== uploadedSourcePath) {
+          const { error: cleanupError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([uploadedSourcePath])
+          if (cleanupError) cleanupWarning += ' The new original also needs manual Storage cleanup.'
         }
       }
       setError(formError(caught, 'Who We Are photo could not be saved.') + cleanupWarning)
@@ -347,22 +372,19 @@ export function WhoWeArePhotoManagement() {
                     disabled={draft.removeImage}
                     aria-invalid={Boolean(fieldErrors.file)}
                     aria-describedby={fieldErrors.file ? 'who-we-are-file-help who-we-are-file-error' : 'who-we-are-file-help'}
-                    onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setSourceDimensions(null); setCrop({ ...DEFAULT_WHO_WE_ARE_CROP }); setFieldErrors(current => ({ ...current, file: undefined })) }}
+                    onChange={event => { choosePhoto(event.target.files?.[0] ?? null); event.target.value = '' }}
                   />
                 </label>
                 <p id="who-we-are-file-help" className={styles.help}>{selected?.image_path ? 'Leave empty to keep the existing photo. ' : ''}JPG, PNG, or WebP · maximum 8 MB. Replacements are normalized to the role’s WebP frame.</p>
                 {fieldErrors.file ? <small id="who-we-are-file-error" className="form-error">{fieldErrors.file}</small> : null}
 
-                {selectedFile ? (
-                  <div className={styles.cropControls}>
-                    <label>Horizontal position<input type="range" min="0" max="100" value={crop.x} onChange={event => updateCrop({ x: Number(event.target.value) })} /></label>
-                    <label>Vertical position<input type="range" min="0" max="100" value={crop.y} onChange={event => updateCrop({ y: Number(event.target.value) })} /></label>
-                    <label>Zoom<input type="range" min={WHO_WE_ARE_PHOTO_MIN_ZOOM} max={WHO_WE_ARE_PHOTO_MAX_ZOOM} step=".05" value={crop.zoom} onChange={event => updateCrop({ zoom: Number(event.target.value) })} /></label>
-                    <button type="button" className="button button-outline" onClick={() => setCrop({ ...DEFAULT_WHO_WE_ARE_CROP })}>Reset crop</button>
-                  </div>
-                ) : null}
+                <div className={styles.cropControls}>
+                  {selectedFile ? <button type="button" className="button button-outline button-compact" onClick={() => { setCropUsesStoredSource(false); setCropInitial(crop); setCropSourceFile(selectedFile) }}><Crop aria-hidden="true" /> Adjust crop</button> : null}
+                  {!selectedFile && selected?.source_image_path ? <button type="button" className="button button-outline button-compact" onClick={() => void adjustStoredCrop()} disabled={busy}><Crop aria-hidden="true" /> Adjust crop</button> : null}
+                  {selected?.image_path && !selected.source_image_path ? <small>Original source is unavailable for this existing image. Replace the image once to enable future crop adjustments.</small> : null}
+                </div>
 
-                {selected?.image_path ? <button type="button" className={styles.removeButton} aria-pressed={draft.removeImage} onClick={() => { setDraft(current => ({ ...current, removeImage: !current.removeImage })); setSelectedFile(null); setFieldErrors({}) }}>{draft.removeImage ? 'Keep current photo' : 'Remove photo'}</button> : null}
+                {selected?.image_path ? <button type="button" className={styles.removeButton} aria-pressed={draft.removeImage} onClick={() => { const removing = !draft.removeImage; setDraft(current => ({ ...current, removeImage: removing })); setSelectedFile(null); setProcessedFile(null); setCrop(removing ? null : cropRectFromJson(selected.image_crop)); setFieldErrors({}) }}>{draft.removeImage ? 'Keep current photo' : 'Remove photo'}</button> : null}
               </div>
 
               <div className={styles.previewColumn}>
@@ -373,19 +395,6 @@ export function WhoWeArePhotoManagement() {
                       src={previewUrl ?? publicUrl(selected!.image_path!)}
                       alt=""
                       draggable={false}
-                      onLoad={event => {
-                        if (!selectedFile) return
-                        const image = event.currentTarget
-                        setSourceDimensions({ width: image.naturalWidth, height: image.naturalHeight })
-                      }}
-                      style={selectedFile && previewPlacement ? {
-                        position: 'absolute',
-                        left: previewPlacement.left + '%',
-                        top: previewPlacement.top + '%',
-                        width: previewPlacement.width + '%',
-                        height: previewPlacement.height + '%',
-                        maxWidth: 'none',
-                      } : undefined}
                     />
                   ) : <span><ImageIcon aria-hidden="true" />No photo selected</span>}
                 </div>
@@ -400,6 +409,17 @@ export function WhoWeArePhotoManagement() {
           </div>
         </div>
       </dialog>
+      {activeRole ? <DirectImageCropper
+        sourceFile={cropSourceFile}
+        initialCrop={cropInitial}
+        aspectRatio={WHO_WE_ARE_PHOTO_TARGETS[activeRole].width / WHO_WE_ARE_PHOTO_TARGETS[activeRole].height}
+        outputWidth={WHO_WE_ARE_PHOTO_TARGETS[activeRole].width}
+        outputHeight={WHO_WE_ARE_PHOTO_TARGETS[activeRole].height}
+        title={`Adjust ${WHO_WE_ARE_PHOTO_TARGETS[activeRole].label.toLowerCase()} crop`}
+        description="Drag the crop rectangle or its corner handles. The slot aspect ratio stays locked."
+        onCancel={() => { setCropSourceFile(null); setCropInitial(null); setCropUsesStoredSource(false) }}
+        onApply={applyPhotoCrop}
+      /> : null}
     </section>
   )
 }

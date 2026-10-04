@@ -5,19 +5,19 @@ export type ApprovalStatus = "approved" | "pending" | "rejected" | "archived"
 export type RegistrationMethod = "email" | "google" | "invitation"
 export type DigitalProductContentType = "pdf" | "video"
 
-export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; avatar_path?:string|null; calendar_color?:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
+export type Profile = { id:string; role:AppRole; first_name:string|null; last_name:string|null; username:string|null; avatar_url:string|null; avatar_path?:string|null; avatar_source_path?:string|null; avatar_crop?:Json|null; calendar_color?:string|null; registration_method:RegistrationMethod; mentor_setup_completed_at:string|null; password_set_at:string|null; created_at:string; updated_at:string }
 export type MenteeProfile = { user_id:string; institution_id:string|null; major_or_faculty:string|null; cohort_year:number|null; referral_source_id:string|null; referral_other_text:string|null; other_interest_text:string|null; onboarding_step:number; onboarding_completed_at:string|null; created_at:string; updated_at:string }
 export type Institution = { id:string; name:string; normalized_name:string; type:InstitutionType; province:string|null; city:string|null; external_id:string|null; source:string; source_url:string|null; approval_status:ApprovalStatus; institution_status:string|null; submitted_by:string|null; created_at:string; updated_at:string }
 export type MasterOption = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type MarketingHeroPoster = { id:string; image_path:string; alt_text:string; title:string|null; url:string|null; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; image_path:string|null; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
-export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; body_json:Json; category:string|null; category_id:string|null; cover_path:string|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
+export type MarketingTestimonial = { id:string; slug:string; competition_name:string; achievement:string; testimonial:string; image_path:string|null; image_source_path:string|null; image_crop:Json|null; sort_order:number; is_published:boolean; created_at:string; updated_at:string }
+export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; body_json:Json; category:string|null; category_id:string|null; cover_path:string|null; cover_source_path:string|null; cover_crop:Json|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type PublicationCategory = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
+export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_source_path:string|null; cover_crop:Json|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
-export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
+export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; created_at:string; updated_at:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
 export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
@@ -150,6 +150,10 @@ export type Database = {
       merge_institutions: { Args:{p_from:string;p_into:string}; Returns:undefined }
       reorder_marketing_hero_posters: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_marketing_testimonials: { Args:{p_ids:string[]}; Returns:undefined }
+      admin_list_publications: { Args:Record<PropertyKey,never>; Returns:Publication[] }
+      admin_list_competitions: { Args:Record<PropertyKey,never>; Returns:Competition[] }
+      admin_list_marketing_testimonials: { Args:Record<PropertyKey,never>; Returns:MarketingTestimonial[] }
+      admin_list_homepage_who_we_are_photos: { Args:Record<PropertyKey,never>; Returns:HomepageWhoWeArePhoto[] }
       reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_trusted_partners: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }

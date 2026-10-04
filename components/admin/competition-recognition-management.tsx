@@ -22,6 +22,7 @@ import {
 } from 'react'
 
 import { formError } from '@/lib/auth/errors'
+import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
 import {
   buildCompetitionRecognitionPayload,
   getNextCompetitionRecognitionOrder,
@@ -91,6 +92,7 @@ export function CompetitionRecognitionManagement() {
   const [recognitions, setRecognitions] = useState<CompetitionRecognition[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<CompetitionRecognition | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -372,7 +374,7 @@ export function CompetitionRecognitionManagement() {
   }
 
   async function remove(recognition: CompetitionRecognition) {
-    if (busy || !window.confirm('Delete recognition “' + recognition.competition_name + '” and its logo?')) return
+    if (busy) return
     setBusyAction('delete-' + recognition.id)
     setError('')
     setNotice('')
@@ -402,6 +404,7 @@ export function CompetitionRecognitionManagement() {
 
       if (selectedId === recognition.id) resetEditor()
       setNotice('Recognition deleted.' + warning)
+      setDeleteTarget(null)
       await load()
     }
     setBusyAction(null)
@@ -563,7 +566,7 @@ export function CompetitionRecognitionManagement() {
                         <button
                           type="button"
                           className={styles.deleteButton}
-                          onClick={() => void remove(recognition)}
+                          onClick={() => setDeleteTarget(recognition)}
                           disabled={busy}
                           data-testid={'competition-recognition-' + recognition.id + '-delete-button'}
                           aria-label={'Delete ' + recognition.competition_name}
@@ -775,6 +778,14 @@ export function CompetitionRecognitionManagement() {
           </div>
         </div>
       </dialog>
+      <AdminDeleteConfirmation
+        open={Boolean(deleteTarget)}
+        title={deleteTarget ? `Delete recognition “${deleteTarget.competition_name}”?` : 'Delete recognition?'}
+        description="The recognition record and its stored logo will be deleted permanently."
+        busy={busy}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) void remove(deleteTarget) }}
+      />
     </section>
   )
 }

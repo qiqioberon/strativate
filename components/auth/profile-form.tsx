@@ -76,7 +76,7 @@ export function ProfileForm() {
 
   return <><section className="workspace-card account-profile">
     <div className="profile-avatar-edit-row"><button type="button" className="profile-avatar-edit-trigger" onClick={()=>setAvatarOpen(true)} aria-label="Ubah foto profil"><ProfileAvatar account={account} srcOverride={avatarOverride}/><span><Camera aria-hidden="true"/></span></button><div><strong>Foto profil</strong><p>Foto tampil konsisten di dashboard dan menu akun.</p></div></div>
-    <ProfileAvatarEditor open={avatarOpen} onClose={()=>setAvatarOpen(false)} onSaved={url=>{setAvatarOverride(url);setSaved(true);router.refresh()}}/>
+    <ProfileAvatarEditor open={avatarOpen} onClose={()=>setAvatarOpen(false)} onSaved={(url, cleanupWarning)=>{setAvatarOverride(url);setSaved(true);setError(cleanupWarning ?? '');router.refresh()}}/>
     <div className="account-profile__header">
       <div><p className="kicker">Akun</p><h2>Profil akun</h2><p>Informasi profil ditampilkan read-only sampai Anda memilih mode edit.</p></div>
       {!editing ? <button type="button" className="profile-edit-button" onClick={() => { setEditing(true); setError(''); setSaved(false) }} aria-label="Edit profil" title="Edit profil"><Pencil aria-hidden="true" /></button> : <button type="button" className="profile-edit-button" onClick={() => { if (!busy) setEditing(false) }} aria-label="Batal edit profil" title="Batal edit"><X aria-hidden="true" /></button>}
@@ -99,5 +99,6 @@ export function ProfileForm() {
       <div><dt>WhatsApp</dt><dd>{displayValue(whatsapp)}</dd></div>
     </dl>}
     {saved && !editing ? <p className="account-profile__saved" role="status">Profil tersimpan.</p> : null}
+    {error && !editing ? <p className="form-error" role="alert">{error}</p> : null}
   </section>{account.role === 'admin' ? <AdminAccountSecurity/> : account.role === 'mentor' ? <AccountPasswordSecurity role="mentor" /> : account.role === 'mentee' ? <AccountPasswordSecurity role="mentee" /> : null}</>
 }

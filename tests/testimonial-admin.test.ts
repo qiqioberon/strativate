@@ -29,6 +29,8 @@ function item(id: string, sortOrder: number): MarketingTestimonial {
     achievement: '1st Place',
     testimonial: 'Testimoni peserta.',
     image_path: null,
+    image_source_path: null,
+    image_crop: null,
     sort_order: sortOrder,
     is_published: true,
     created_at: '2026-09-20T00:00:00.000Z',
