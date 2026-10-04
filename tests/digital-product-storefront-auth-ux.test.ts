@@ -54,7 +54,7 @@ test('public product list is image-first and reveals a compact preview on hover 
   assert.match(styles, /\.digital-product-card__cover img\s*\{[\s\S]*object-fit:\s*cover/)
   assert.match(styles, /width:\s*min\(100%,\s*320px\)/)
   assert.match(styles, /\.digital-product-card__format\s*\{[\s\S]*color:\s*var\(--marketing-orange\)/)
-  assert.match(styles, /\.digital-product-card__description-preview\s*\{[\s\S]*-webkit-line-clamp:\s*3/)
+  assert.match(styles, /\.digital-product-card__description-preview\s*\{[\s\S]*color:\s*#fff[\s\S]*text-shadow:[\s\S]*-webkit-line-clamp:\s*3/)
   assert.match(styles, /\.digital-product-card__overlay\s*\{[\s\S]*opacity:\s*0/)
   assert.match(styles, /\.digital-product-card:hover \.digital-product-card__overlay,[\s\S]*\.digital-product-card:focus-within \.digital-product-card__overlay\s*\{[\s\S]*opacity:\s*1/)
 })
