@@ -126,7 +126,7 @@
   flex: 0 0 auto;
   margin-bottom: 2px;
 }
-.digital-product-card__description-preview {
+.marketing-products-directory .digital-product-card__description-preview {
   display: -webkit-box;
   margin-top: 10px;
   overflow: hidden;
