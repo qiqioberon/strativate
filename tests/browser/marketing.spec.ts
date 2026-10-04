@@ -395,10 +395,12 @@ test('current public contact surfaces use source-backed English consultation mes
 
 test('public page titles stay inside every required viewport', async ({ page }) => {
   const pages = [
-    ['/program', '[data-testid="marketing-page-title"]', 'Build skills for'],
-    ['/mentor', '[data-testid="marketing-page-title"]', 'Meet Our'],
-    ['/tentang-kami', '[data-testid="about-story-section"] h1', 'Empowering Future'],
-    ['/tanya-jawab', '[data-testid="faq-reference-hero"] h1', 'Have Questions?'],
+    ['/program', '[data-testid="marketing-page-title"]', 'Our Programs'],
+    ['/mentor', '[data-testid="marketing-page-title"]', 'Meet Our Mentors'],
+    ['/publications', '[data-testid="marketing-page-title"]', 'Publications & News'],
+    ['/competitions', '[data-testid="marketing-page-title"]', 'Discover Top Competitions'],
+    ['/tentang-kami', '[data-testid="marketing-page-title"]', 'About Us'],
+    ['/tanya-jawab', '[data-testid="marketing-page-title"]', 'FAQ'],
   ] as const
   const viewports = [
     { width: 1440, height: 900 },
@@ -526,13 +528,12 @@ test('desktop header uses ReactBits-style pill motion only for navigation and th
   await expect(page.getByTestId('desktop-start-learning-link').locator('.marketing-pill-link__circle')).toHaveCount(1)
 })
 
-test('page intro motif is decorative and absent from the accessibility tree', async ({ page }) => {
+test('page intro reuses the decorative homepage Shape Grid', async ({ page }) => {
   await page.goto('/program')
 
-  const motif = page.getByTestId('marketing-page-intro-motif')
-  await expect(motif).toHaveAttribute('aria-hidden', 'true')
-  await expect(motif).toHaveAttribute('data-motif', 'program')
-  await expect(page.getByRole('img', { name: /program/i })).toHaveCount(0)
+  const shapeGrid = page.getByTestId('hero-shape-grid')
+  await expect(shapeGrid).toHaveAttribute('aria-hidden', 'true')
+  await expect(shapeGrid).toHaveAttribute('data-react-bits', 'shape-grid')
 })
 
 test('marketing footer spans the viewport and stacks its content rows', async ({ page }) => {

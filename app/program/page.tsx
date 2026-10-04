@@ -41,10 +41,8 @@ export default function ProgramPage() {
     <MarketingShell>
       <main className="program-page">
         <PageIntro
-          eyebrow="Our Programs"
-          title={<>Build skills for<br /><em>competition success.</em></>}
+          title="Our Programs"
           description="Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills."
-          motif="program"
           aside={<a className={buttonVariants({ variant: 'whatsapp', size: 'marketing' })} href={buildWhatsAppHref('Hello Strativate, I would like help choosing the right Strativate program.')} target="_blank" rel="noreferrer" data-testid="program-page-intro-whatsapp-link">Consultation Now <MessageCircle aria-hidden="true" size={17} /></a>}
         />
 

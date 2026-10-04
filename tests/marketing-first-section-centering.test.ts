@@ -12,25 +12,36 @@ const competitions = readFileSync(new URL('../app/competitions/page.tsx', import
 const about = readFileSync(new URL('../app/tentang-kami/page.tsx', import.meta.url), 'utf8')
 const faq = readFileSync(new URL('../app/tanya-jawab/page.tsx', import.meta.url), 'utf8')
 
-test('shared PageIntro renders the hero hierarchy as one centered content column', () => {
-  assert.match(intro, /marketing-page-eyebrow[\s\S]*marketing-page-title[\s\S]*marketing-page-intro__aside/)
-  assert.match(marketing, /\.marketing-page-intro__grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(marketing, /\.marketing-page-intro__aside\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(program, /<PageIntro/)
-  assert.match(mentor, /<PageIntro/)
-  assert.match(products, /<PageIntro/)
+test('shared PageIntro mirrors the homepage hero surface and centered hierarchy', () => {
+  assert.match(intro, /HeroShapeGrid/)
+  assert.match(intro, /marketing-page-title[\s\S]*marketing-page-description/)
+  assert.doesNotMatch(intro, /marketing-page-intro-motif/)
+  assert.match(marketing, /linear-gradient\(154deg, #e84a00 0%, #f65f05 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%\)/)
+  assert.match(marketing, /\.marketing-page-intro__grid\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
+  assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-weight:\s*760/)
 })
 
-test('editorial and FAQ landing heroes center their existing primary copy', () => {
-  assert.match(publications, /editorial-hero editorial-hero--publications/)
-  assert.match(competitions, /editorial-hero editorial-hero--competition/)
-  assert.match(faq, /faq-reference-hero/)
-  assert.match(marketing, /\.editorial-hero \.marketing-container\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(marketing, /\.faq-reference-hero \.marketing-container\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
+test('requested landing pages use the shared first section with revised headline copy', () => {
+  for (const source of [program, mentor, products, publications, competitions, about, faq]) assert.match(source, /<PageIntro/)
+
+  assert.match(program, /title="Our Programs"/)
+  assert.doesNotMatch(program, /Build skills for/)
+  assert.match(mentor, /title="Meet Our Mentors"/)
+  assert.doesNotMatch(mentor, /Strativate Mentors|Mentors\./)
+  assert.match(products, /title="Digital Products"/)
+  assert.doesNotMatch(products, /Keep learning/)
+  assert.match(publications, /title="Publications & News"/)
+  assert.doesNotMatch(publications, /Insights & Updates/)
+  assert.match(competitions, /title="Discover Top Competitions"/)
+  assert.doesNotMatch(competitions, /Competition Directory/)
+  assert.match(about, /title="About Us"/)
+  assert.match(faq, /title="FAQ"/)
+  assert.doesNotMatch(faq, /Have Questions\?|We Have Answers/)
 })
 
-test('About Us hero is a centered single column with its visual below the copy', () => {
-  assert.match(about, /about-reference-hero__grid[\s\S]*about-reference-visual/)
-  assert.match(marketing, /\.about-reference-hero__grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(marketing, /\.about-reference-visual\s*\{[^}]*width:\s*min\(100%,\s*880px\)/)
+test('About Us moves the former hero story into its own following section', () => {
+  assert.match(about, /<PageIntro[\s\S]*<section className="marketing-section about-reference-story"/)
+  assert.match(about, /<h2>Empowering Future<br \/><em>Business Leaders<\/em><\/h2>/)
+  assert.doesNotMatch(about, /Business Leaders\./)
+  assert.match(marketing, /\.about-reference-story h2/)
 })
