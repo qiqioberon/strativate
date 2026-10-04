@@ -31,6 +31,7 @@ type CreatedSession = {
 }
 type RpcClient = { rpc<T = unknown>(name: string, args?: Record<string, unknown>): Promise<{ data: T | null; error: { message: string } | null }> }
 type Confirmation = { action: 'complete' | 'reopen' | 'cancel'; session: AdminSession }
+type ProgramTray = 'mentor' | 'program' | 'support'
 const STAGES = Object.entries(intensiveStageLabels) as [IntensiveProgramStage, string][]
 const PAGE_SIZE = 10
 const STATUS_LABELS: Record<string, string> = { active: 'Aktif', completed: 'Selesai', cancelled: 'Dibatalkan', scheduled: 'Terjadwal', awaiting_focus: 'Menunggu preferensi', awaiting_scheduling: 'Belum dijadwalkan' }
@@ -79,11 +80,9 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [page, setPage] = useState(0)
-  const [editingDedicatedMentor, setEditingDedicatedMentor] = useState(false)
-  const [editingProgramProgress, setEditingProgramProgress] = useState(false)
+  const [programTray, setProgramTray] = useState<ProgramTray | null>(null)
   const [editingSessionMentor, setEditingSessionMentor] = useState(false)
   const [addingSession, setAddingSession] = useState(false)
-  const [supportOpen, setSupportOpen] = useState(false)
   const [preferenceEditRequest, setPreferenceEditRequest] = useState(0)
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
   const [meetingState, setMeetingState] = useState<AdminMeetingState | null>(null)
@@ -104,6 +103,8 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
   const handledTargetRef = useRef<string | null>(null)
   const loadSequenceRef = useRef(0)
   const selected = rows.find(row => row.engagement_id === selectedId) ?? null
+  const attachedSupport = selected?.add_ons.filter(item => item.supportType !== 'benefit') ?? []
+  const customBenefits = selected?.add_ons.filter(item => item.supportType === 'benefit') ?? []
   const sessions = useMemo(() => [...(selected?.sessions ?? [])].sort((a, b) => a.sessionNumber - b.sessionNumber), [selected])
   const session = sessions.find(item => item.sessionId === activeSessionId) ?? null
   const closed = session?.status === 'completed' || session?.status === 'cancelled'
@@ -164,8 +165,8 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
   const openWorkspace = useCallback((row: Engagement, preferredSessionId?: string | null) => {
     setSelectedId(row.engagement_id)
     setActiveSessionId(selectInitialSession([...row.sessions].sort((a, b) => a.sessionNumber - b.sessionNumber), preferredSessionId))
-    setEditingDedicatedMentor(false); setEditingProgramProgress(false); setEditingSessionMentor(false)
-    setSupportOpen(false); setMeetingState(null); setError(''); setMessage('')
+    setProgramTray(null); setEditingSessionMentor(false)
+    setMeetingState(null); setError(''); setMessage('')
   }, [])
   const focusTarget = focusSessionId ?? focusEngagementId
   useEffect(() => {
@@ -178,7 +179,7 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
 
   function closeWorkspace() {
     if (busy) return
-    setSelectedId(null); setActiveSessionId(null); setEditingDedicatedMentor(false); setEditingProgramProgress(false)
+    setSelectedId(null); setActiveSessionId(null); setProgramTray(null)
     setEditingSessionMentor(false); setAddingSession(false); setConfirmation(null); setScheduleId(null)
   }
   async function run<T = unknown>(key: string, name: string, args: Record<string, unknown>, success: string) {
@@ -197,12 +198,12 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
   async function savePrimary() {
     if (!selected || !primaryMentor) return
     const result = await run('primary', 'admin_set_intensive_primary_mentor', { p_engagement_id: selected.engagement_id, p_mentor_id: primaryMentor, p_reason: mentorReason.trim() || null }, 'Dedicated Mentor diperbarui.')
-    if (result) setEditingDedicatedMentor(false)
+    if (result) setProgramTray(null)
   }
   async function saveStage() {
     if (!selected) return
     const result = await run('stage', 'admin_set_intensive_program_stage', { p_engagement_id: selected.engagement_id, p_stage: stage, p_progress_summary: progress.trim() || null, p_current_activity: currentActivity.trim() || null }, 'Progres program diperbarui.')
-    if (result) setEditingProgramProgress(false)
+    if (result) setProgramTray(null)
   }
   async function addSession() {
     if (!selected) return
@@ -313,31 +314,30 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
           <div className="mentoring-enrollment-summary-grid intensive-program-summary-grid">
             <div><span>Program</span><strong>{selected.program_name}</strong><small>{typeLabel(selected.base_kind)}</small></div>
             <div><span>Baseline</span><strong>{selected.baseline_sessions_per_month ? selected.baseline_sessions_per_month + ' sesi/bulan' : 'Fleksibel'}</strong></div>
-            <div><span>Dedicated Mentor</span><div className="mentoring-summary-inline-value"><strong>{selected.primary_mentor_name || 'Belum ditetapkan'}</strong><button type="button" className="mentoring-summary-icon-action" disabled={Boolean(busy)} onClick={() => { setPrimaryMentor(selected.primary_mentor_id ?? ''); setMentorReason(''); setEditingDedicatedMentor(value => !value) }} aria-label="Edit Dedicated Mentor"><Pencil aria-hidden="true"/></button></div></div>
+            <div><span>Dedicated Mentor</span><div className="mentoring-summary-inline-value"><strong>{selected.primary_mentor_name || 'Belum ditetapkan'}</strong><button type="button" className="mentoring-summary-icon-action" disabled={Boolean(busy)} onClick={() => { setPrimaryMentor(selected.primary_mentor_id ?? ''); setMentorReason(''); setProgramTray(value => value === 'mentor' ? null : 'mentor') }} aria-label="Edit Dedicated Mentor" aria-expanded={programTray === 'mentor'} aria-controls="intensive-mentor-editor"><Pencil aria-hidden="true"/></button></div></div>
             <div><span>Tahap Program</span><strong>{intensiveStageLabels[selected.program_stage]}</strong></div>
             <MentoringCompetitionEditor key={selected.engagement_id} kind="intensive" parentId={selected.engagement_id} compact summary/>
           </div>
-          <div className="intensive-program-actions"><button type="button" className="button button-outline" disabled={Boolean(busy)} aria-expanded={editingProgramProgress} aria-controls="intensive-program-editor" onClick={() => { setStage(selected.program_stage); setCurrentActivity(selected.current_activity ?? ''); setProgress(selected.progress_summary ?? ''); setEditingProgramProgress(value => !value) }}><Settings2 aria-hidden="true"/>Kelola program</button>
-            {selected.unassigned_add_ons.length ? <button type="button" className="intensive-support-warning" onClick={() => setSupportOpen(true)}><ShieldAlert aria-hidden="true"/>{selected.unassigned_add_ons.length} add-on perlu ditautkan</button> : null}
+          <div className="intensive-program-actions"><button type="button" className="button button-outline" disabled={Boolean(busy)} aria-expanded={programTray === 'program'} aria-controls="intensive-program-editor" onClick={() => { setStage(selected.program_stage); setCurrentActivity(selected.current_activity ?? ''); setProgress(selected.progress_summary ?? ''); setProgramTray(value => value === 'program' ? null : 'program') }}><Settings2 aria-hidden="true"/>Kelola program</button>
+            <button type="button" className="button button-outline" disabled={Boolean(busy) || (programTray !== 'support' && !selected.add_ons.length && !selected.unassigned_add_ons.length)} aria-expanded={programTray === 'support'} aria-controls="intensive-support-tray" onClick={() => setProgramTray(value => value === 'support' ? null : 'support')}><Link2 aria-hidden="true"/>Support &amp; benefit{selected.add_ons.length ? ' · ' + selected.add_ons.length : ''}</button>
+            {selected.unassigned_add_ons.length ? <button type="button" className="intensive-support-warning" disabled={Boolean(busy)} aria-expanded={programTray === 'support'} aria-controls="intensive-support-tray" onClick={() => setProgramTray(value => value === 'support' ? null : 'support')}><ShieldAlert aria-hidden="true"/>{selected.unassigned_add_ons.length} perlu ditautkan</button> : null}
           </div>
-          {editingDedicatedMentor ? <div className="mentoring-summary-mentor-editor intensive-inline-editor">
+          {programTray === 'mentor' ? <div id="intensive-mentor-editor" className="mentoring-summary-mentor-editor intensive-inline-editor intensive-program-tray">
             <SearchableMentorPicker mentors={mentors} value={primaryMentor} onChange={setPrimaryMentor} label="Dedicated Mentor" selectedLabel={primaryMentor === selected.primary_mentor_id ? selected.primary_mentor_name : null} disabled={Boolean(busy)}/>
             <label className="ops-field"><span>Alasan perubahan (opsional)</span><input value={mentorReason} onChange={event => setMentorReason(event.target.value)} placeholder="Konteks perubahan mentor"/></label>
-            <div className="button-row"><button type="button" className="button button-primary" disabled={Boolean(busy) || !primaryMentor || primaryMentor === selected.primary_mentor_id} onClick={() => void savePrimary()}><Save aria-hidden="true"/>Simpan mentor</button><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setEditingDedicatedMentor(false)}><X aria-hidden="true"/>Batal</button></div>
+            <div className="button-row"><button type="button" className="button button-primary" disabled={Boolean(busy) || !primaryMentor || primaryMentor === selected.primary_mentor_id} onClick={() => void savePrimary()}><Save aria-hidden="true"/>Simpan mentor</button><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setProgramTray(null)}><X aria-hidden="true"/>Batal</button></div>
           </div> : null}
-          {editingProgramProgress ? <div id="intensive-program-editor" className="intensive-inline-editor intensive-program-editor">
+          {programTray === 'program' ? <div id="intensive-program-editor" className="intensive-inline-editor intensive-program-editor intensive-program-tray">
             <label className="ops-field"><span>Tahap Program</span><select value={stage} onChange={event => setStage(event.target.value as IntensiveProgramStage)}>{STAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label className="ops-field"><span>Aktivitas saat ini (opsional)</span><input maxLength={500} value={currentActivity} onChange={event => setCurrentActivity(event.target.value)} placeholder="Aktivitas program saat ini"/></label>
             <label className="ops-field intensive-program-editor__progress"><span>Ringkasan progres (opsional)</span><textarea rows={3} maxLength={3000} value={progress} onChange={event => setProgress(event.target.value)}/></label>
-            <div className="button-row"><button type="button" className="button button-primary" disabled={Boolean(busy) || (stage === selected.program_stage && currentActivity.trim() === (selected.current_activity ?? '') && progress.trim() === (selected.progress_summary ?? ''))} onClick={() => void saveStage()}><Save aria-hidden="true"/>Simpan progres</button><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setEditingProgramProgress(false)}><X aria-hidden="true"/>Batal</button></div>
+            <div className="button-row"><button type="button" className="button button-primary" disabled={Boolean(busy) || (stage === selected.program_stage && currentActivity.trim() === (selected.current_activity ?? '') && progress.trim() === (selected.progress_summary ?? ''))} onClick={() => void saveStage()}><Save aria-hidden="true"/>Simpan progres</button><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setProgramTray(null)}><X aria-hidden="true"/>Batal</button></div>
           </div> : null}
-          <details className="mentoring-audit-details intensive-program-progress"><summary>Aktivitas &amp; progres</summary><dl><div><dt>Aktivitas saat ini</dt><dd>{selected.current_activity || 'Belum dicatat'}</dd></div><div><dt>Ringkasan progres</dt><dd>{selected.progress_summary || 'Belum ada ringkasan'}</dd></div></dl></details>
-          <details className="mentoring-audit-details intensive-program-support" open={supportOpen} onToggle={event => setSupportOpen(event.currentTarget.open)}><summary>Support &amp; benefit{selected.unassigned_add_ons.length ? <span className="ops-status ops-status--warning">{selected.unassigned_add_ons.length} perlu ditautkan</span> : null}</summary>
-            <div className="intensive-program-support__body"><h4>Add-on terpasang</h4><div className="intensive-config-chips">{selected.add_ons.filter(item => item.supportType !== 'benefit').length ? selected.add_ons.filter(item => item.supportType !== 'benefit').map(addon => <span className="intensive-addon-chip" key={addon.entitlementId ?? addon.code + addon.name}>{addon.name}</span>) : <p className="muted">Belum ada add-on terpasang.</p>}</div>
-              {selected.add_ons.some(item => item.supportType === 'benefit') ? <><h4>Benefit custom</h4><div className="intensive-config-chips">{selected.add_ons.filter(item => item.supportType === 'benefit').map(addon => <span className="intensive-addon-chip" key={addon.code + addon.name}>{addon.name}</span>)}</div></> : null}
-              {selected.unassigned_add_ons.length ? <div className="intensive-unassigned-addons"><ShieldAlert aria-hidden="true"/><div><strong>Add-on belum terasosiasi</strong><p>Tautkan hanya jika add-on memang milik engagement ini.</p><div className="button-row">{selected.unassigned_add_ons.map(addon => <button type="button" className="button button-outline" disabled={Boolean(busy) || !addon.entitlementId} onClick={() => { if (addon.entitlementId) void attachAddOn(addon.entitlementId) }} key={addon.entitlementId ?? addon.code}><Link2 aria-hidden="true"/>Tautkan {addon.name}</button>)}</div></div></div> : null}
-            </div>
-          </details>
+          {programTray === 'support' ? <section id="intensive-support-tray" className="intensive-inline-editor intensive-program-tray intensive-support-tray" aria-label="Support dan benefit program">
+            {attachedSupport.length ? <div className="intensive-support-row"><h4>Support terpasang</h4><div className="intensive-config-chips">{attachedSupport.map(addon => <span className="intensive-addon-chip" key={addon.entitlementId ?? addon.code + addon.name}>{addon.name}</span>)}</div></div> : null}
+            {customBenefits.length ? <div className="intensive-support-row"><h4>Benefit custom</h4><div className="intensive-config-chips">{customBenefits.map(addon => <span className="intensive-addon-chip" key={addon.code + addon.name}>{addon.name}</span>)}</div></div> : null}
+            {selected.unassigned_add_ons.length ? <div className="intensive-unassigned-addons"><ShieldAlert aria-hidden="true"/><div><strong>Add-on belum terasosiasi</strong><p>Tautkan hanya jika add-on memang milik engagement ini.</p><div className="button-row">{selected.unassigned_add_ons.map(addon => <button type="button" className="button button-outline" disabled={Boolean(busy) || !addon.entitlementId} onClick={() => { if (addon.entitlementId) void attachAddOn(addon.entitlementId) }} key={addon.entitlementId ?? addon.code}><Link2 aria-hidden="true"/>Tautkan {addon.name}</button>)}</div></div></div> : null}
+          </section> : null}
           {error ? <p className="form-error mentoring-workspace-feedback" role="alert">{error}</p> : null}
           {message ? <p className="form-success mentoring-workspace-feedback" role="status">{message}</p> : null}
         </section>
@@ -355,15 +355,17 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
           <section id="intensive-selected-session-panel" role="tabpanel" aria-labelledby={session ? 'intensive-session-tab-' + session.sessionId : undefined} className={'mentoring-selected-session-workspace' + (session?.status === 'completed' ? ' is-completed' : '') + (session?.status === 'cancelled' ? ' is-cancelled' : '')}>
             {session ? <div className="mentoring-selected-session-inner">
               <div className="mentoring-selected-session-sticky">
-                <div className="mentoring-selected-session-header"><div className="mentoring-selected-session-header__copy"><p className="kicker">Sesi {session.sessionNumber} · {session.durationMinutes} menit</p><h3>{sessionHeadline(session)}</h3><p>{session.mentorName || selected.primary_mentor_name || 'Mentor belum ditetapkan'} · {scheduleLabel(session)}</p></div><div className="mentoring-selected-session-header__badges"><span className={'ops-status ' + reviewClass(session.topicStatus)}>{reviewLabel(session.topicStatus)}</span><span className={'ops-status ' + statusClass(session.status)}>{statusLabel(session.status)}</span>{meetingState?.manualMeetingUrl ? <span className="ops-status mentoring-manual-override-badge"><Pencil aria-hidden="true"/>Manual override</span> : null}</div></div>
-                <div className="mentoring-selected-session-meta">{meetingState?.assignedZoomRoomName ? <span className="mentoring-session-meta-chip">{meetingState.assignedZoomRoomName}</span> : null}{calendarIssue ? <span className="mentoring-session-meta-chip is-warning"><AlertTriangle aria-hidden="true"/>Calendar perlu perhatian</span> : null}<div className="mentoring-session-id-meta"><span>Session ID</span><code>{session.sessionId}</code><CopyTextButton value={session.sessionId} label="Salin ID" copiedLabel="ID disalin"/></div></div>
-                <div className="mentoring-session-action-bar"><div className="mentoring-session-action-bar__primary">
-                  {!closed ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setPreferenceEditRequest(value => value + 1)}><Pencil aria-hidden="true"/>{session.topicStatus === 'pending_review' ? 'Review preferensi' : 'Edit preferensi'}</button> : null}
-                  {canSchedule ? <button type="button" className={'button ' + (session.status === 'scheduled' ? 'button-outline' : 'button-primary')} disabled={Boolean(busy)} onClick={() => setScheduleId(session.sessionId)}><CalendarDays aria-hidden="true"/>{session.status === 'scheduled' ? 'Ubah jadwal' : 'Jadwalkan sesi'}</button> : null}
-                  {session.status === 'scheduled' ? <button type="button" className="button button-primary" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'complete', session }) }}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button> : null}
-                  {session.status === 'completed' ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'reopen', session }) }}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button> : null}
-                  {session.status === 'cancelled' && calendarIssue ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void retryCancellation()}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button> : null}
-                </div>{!closed ? <button type="button" className="button button-outline mentoring-session-cancel-trigger" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'cancel', session }) }}><Ban aria-hidden="true"/>Batalkan sesi</button> : null}</div>
+                <div className="mentoring-selected-session-header"><div className="mentoring-selected-session-header__copy"><p className="kicker">Sesi {session.sessionNumber} · {session.durationMinutes} menit</p><h3>{sessionHeadline(session)}</h3><p>{session.mentorName || selected.primary_mentor_name || 'Mentor belum ditetapkan'} · {scheduleLabel(session)}</p></div><div className="mentoring-selected-session-header__badges"><span className={'ops-status ' + reviewClass(session.topicStatus)}>{reviewLabel(session.topicStatus)}</span><span className={'ops-status ' + statusClass(session.status)}>{statusLabel(session.status)}</span>{meetingState?.manualMeetingUrl ? <span className="ops-status mentoring-manual-override-badge"><Pencil aria-hidden="true"/>Manual override</span> : null}{meetingState?.assignedZoomRoomName ? <span className="mentoring-session-meta-chip">{meetingState.assignedZoomRoomName}</span> : null}{calendarIssue ? <span className="mentoring-session-meta-chip is-warning"><AlertTriangle aria-hidden="true"/>Calendar perlu perhatian</span> : null}</div></div>
+                <div className="intensive-selected-session-toolbar">
+                  <div className="mentoring-session-id-meta"><span>Session ID</span><code>{session.sessionId}</code><CopyTextButton value={session.sessionId} label="Salin ID" copiedLabel="ID disalin"/></div>
+                  <div className="mentoring-session-action-bar"><div className="mentoring-session-action-bar__primary">
+                    {!closed ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => setPreferenceEditRequest(value => value + 1)}><Pencil aria-hidden="true"/>{session.topicStatus === 'pending_review' ? 'Review preferensi' : 'Edit preferensi'}</button> : null}
+                    {canSchedule ? <button type="button" className={'button ' + (session.status === 'scheduled' ? 'button-outline' : 'button-primary')} disabled={Boolean(busy)} onClick={() => setScheduleId(session.sessionId)}><CalendarDays aria-hidden="true"/>{session.status === 'scheduled' ? 'Ubah jadwal' : 'Jadwalkan sesi'}</button> : null}
+                    {session.status === 'scheduled' ? <button type="button" className="button button-primary" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'complete', session }) }}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button> : null}
+                    {session.status === 'completed' ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'reopen', session }) }}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button> : null}
+                    {session.status === 'cancelled' && calendarIssue ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void retryCancellation()}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button> : null}
+                  </div>{!closed ? <button type="button" className="button button-outline mentoring-session-cancel-trigger" disabled={Boolean(busy)} onClick={() => { setError(''); setConfirmation({ action: 'cancel', session }) }}><Ban aria-hidden="true"/>Batalkan sesi</button> : null}</div>
+                </div>
               </div>
               <div className="mentoring-selected-session-scroll">
                 <MentoringSessionPreferences key={session.sessionId+'-'+session.status} kind="intensive" sessionId={session.sessionId} role="admin" title="Preferensi Sesi" showCompetitionContext={false} showReviewStatus={false} auditMode="request-only" hideEditButton editRequestKey={preferenceEditRequest} onChanged={load}/>
