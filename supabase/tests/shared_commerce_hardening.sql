@@ -398,7 +398,16 @@ where order_id = current_setting('test.hardening.discount_order')::uuid;
 set local role service_role;
 select public.apply_midtrans_payment_status(
   current_setting('test.hardening.discount_attempt')::uuid,
-  'paid', 'settlement', 'late-paid-transaction', null, 'bank_transfer'
+  'paid',
+  'settlement',
+  'late-paid-transaction',
+  null,
+  'bank_transfer',
+  (
+    select reserved_until + interval '5 seconds'
+    from public.commerce_discount_redemptions
+    where order_id = current_setting('test.hardening.discount_order')::uuid
+  )
 );
 
 select test_commerce_hardening.assert(
@@ -502,7 +511,12 @@ select public.apply_midtrans_payment_status(
   (select id from public.payment_attempts
    where order_id = current_setting('test.hardening.discount_retry_order')::uuid
    order by created_at desc, id desc limit 1),
-  'paid', 'settlement', 'successful-voucher-redemption', null, 'bank_transfer'
+  'paid',
+  'settlement',
+  'successful-voucher-redemption',
+  null,
+  'bank_transfer',
+  now()
 );
 reset role;
 

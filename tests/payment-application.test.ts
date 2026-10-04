@@ -32,12 +32,14 @@ test('status and webhook share the trusted payment transition application layer'
   assert.match(application, /apply_midtrans_payment_status/)
   assert.match(application, /parseIdrGrossAmount/)
   assert.match(application, /provider_order_id/)
-  assert.match(application, /status\.normalizedStatus === 'paid' && data\.status === 'paid'/)
+  assert.match(application, /p_provider_success_at: status\.providerSuccessAt/)
+  assert.match(application, /status\.normalizedStatus === 'paid' && data\.status === 'paid' && attempt\.status !== 'paid'/)
   assert.match(application, /orderStatus: orderStatusFromAttempt\(applied\.status\)/)
 })
 
-test('webhook is sessionless and verifies Midtrans before applying state', () => {
+test('webhook is sessionless, verifies Midtrans, and rechecks paid provider truth before applying state', () => {
   assert.match(application, /parseAndVerifyMidtransNotification/)
+  assert.match(application, /notificationStatus\.normalizedStatus === 'paid'[\s\S]*getMidtransTransactionStatus\(notificationStatus\.orderId\)/)
   assert.doesNotMatch(webhookRoute, /getAccount|requiredAccount|auth\.getUser/)
 })
 

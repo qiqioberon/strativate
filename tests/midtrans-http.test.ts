@@ -4,7 +4,9 @@ import { afterEach, test } from 'node:test'
 import {
   createMidtransSnapTransaction,
   getMidtransTransactionStatus,
+  parseAndVerifyMidtransNotification,
 } from '../lib/payments/midtrans-server'
+import { createMidtransSignature } from '../lib/payments/midtrans-model'
 
 const originalFetch = globalThis.fetch
 const originalEnvironment = process.env.MIDTRANS_ENV
@@ -186,7 +188,7 @@ test('create Snap rejects provider 4xx, 5xx, malformed JSON, blank token, and ne
   })
 })
 
-test('Get Status validates provider shape and uses the same trusted status mapping', async () => {
+test('Get Status validates provider shape and uses settlement_time as trusted settlement success timing', async () => {
   configure('sandbox')
   const requests: CapturedRequest[] = []
   globalThis.fetch = (async (fetchInput, init) => {
@@ -198,6 +200,8 @@ test('Get Status validates provider shape and uses the same trusted status mappi
       transaction_status: 'settlement',
       transaction_id: 'provider-tx-1',
       payment_type: 'bank_transfer',
+      transaction_time: '2026-10-04 10:15:00',
+      settlement_time: '2026-10-04 10:20:30',
     }), { status: 200 })
   }) as typeof fetch
 
@@ -209,6 +213,89 @@ test('Get Status validates provider shape and uses the same trusted status mappi
   assert.ok(request.init?.signal instanceof AbortSignal)
   assert.equal(status.normalizedStatus, 'paid')
   assert.equal(status.transactionId, 'provider-tx-1')
+  assert.equal(status.transactionTime, '2026-10-04T03:15:00.000Z')
+  assert.equal(status.settlementTime, '2026-10-04T03:20:30.000Z')
+  assert.equal(status.providerSuccessAt, '2026-10-04T03:20:30.000Z')
+})
+
+test('successful capture uses provider transaction_time because Core API exposes no separate capture timestamp', async () => {
+  configure('sandbox')
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    order_id: 'STV-CAPTURE-1',
+    status_code: '200',
+    gross_amount: '125000.00',
+    transaction_status: 'capture',
+    transaction_id: 'provider-capture-1',
+    payment_type: 'credit_card',
+    fraud_status: 'accept',
+    transaction_time: '2026-10-04 10:59:58',
+  }), { status: 200 })) as typeof fetch
+
+  const status = await getMidtransTransactionStatus('STV-CAPTURE-1')
+  assert.equal(status.normalizedStatus, 'paid')
+  assert.equal(status.providerSuccessAt, '2026-10-04T03:59:58.000Z')
+  assert.equal(status.settlementTime, null)
+})
+
+test('paid provider records with missing success timestamp remain paid status but expose no timing fallback', async () => {
+  configure('sandbox')
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    order_id: 'STV-MISSING-TIME',
+    status_code: '200',
+    gross_amount: '125000.00',
+    transaction_status: 'settlement',
+    transaction_id: 'provider-missing-time',
+    payment_type: 'bank_transfer',
+    transaction_time: '2026-10-04 10:00:00',
+  }), { status: 200 })) as typeof fetch
+
+  const status = await getMidtransTransactionStatus('STV-MISSING-TIME')
+  assert.equal(status.normalizedStatus, 'paid')
+  assert.equal(status.providerSuccessAt, null)
+})
+
+test('malformed provider success timestamps fail closed before payment application', async () => {
+  configure('sandbox')
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    order_id: 'STV-BAD-TIME',
+    status_code: '200',
+    gross_amount: '125000.00',
+    transaction_status: 'settlement',
+    transaction_id: 'provider-bad-time',
+    payment_type: 'bank_transfer',
+    transaction_time: '2026-10-04 10:00:00',
+    settlement_time: '2026-02-31 10:00:00',
+  }), { status: 200 })) as typeof fetch
+
+  await assert.rejects(
+    () => getMidtransTransactionStatus('STV-BAD-TIME'),
+    /invalid settlement_time/,
+  )
+})
+
+test('verified webhook and status parsing share the same trusted settlement timing model', () => {
+  configure('sandbox')
+  const payload = {
+    order_id: 'STV-WEBHOOK-1',
+    status_code: '200',
+    gross_amount: '125000.00',
+    transaction_status: 'settlement',
+    transaction_id: 'provider-webhook-1',
+    payment_type: 'bank_transfer',
+    transaction_time: '2026-10-04 10:55:00',
+    settlement_time: '2026-10-04 10:59:58',
+    fraud_status: 'accept',
+  }
+  const signature_key = createMidtransSignature(
+    payload.order_id,
+    payload.status_code,
+    payload.gross_amount,
+    'server-secret',
+  )
+
+  const status = parseAndVerifyMidtransNotification({ ...payload, signature_key })
+  assert.equal(status.normalizedStatus, 'paid')
+  assert.equal(status.providerSuccessAt, '2026-10-04T03:59:58.000Z')
 })
 
 test('Get Status rejects malformed provider responses', async () => {

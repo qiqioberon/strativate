@@ -30,6 +30,9 @@ export type MidtransStatus = {
   fraudStatus: string | null
   paymentType: string | null
   signatureKey: string | null
+  transactionTime: string | null
+  settlementTime: string | null
+  providerSuccessAt: string | null
   normalizedStatus: NormalizedPaymentStatus
 }
 
@@ -52,6 +55,60 @@ function optionalString(value: unknown, field: string): string | null {
   if (value === undefined || value === null || value === '') return null
   if (typeof value !== 'string') throw new Error(`Midtrans response has invalid ${field}.`)
   return value
+}
+
+function validateCalendarParts(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  field: string,
+) {
+  if (
+    month < 1 || month > 12
+    || day < 1 || day > 31
+    || hour < 0 || hour > 23
+    || minute < 0 || minute > 59
+    || second < 0 || second > 59
+  ) throw new Error(`Midtrans response has invalid ${field}.`)
+
+  const check = new Date(Date.UTC(year, month - 1, day, hour, minute, second))
+  if (
+    check.getUTCFullYear() !== year
+    || check.getUTCMonth() !== month - 1
+    || check.getUTCDate() !== day
+    || check.getUTCHours() !== hour
+    || check.getUTCMinutes() !== minute
+    || check.getUTCSeconds() !== second
+  ) throw new Error(`Midtrans response has invalid ${field}.`)
+}
+
+function parseMidtransTimestamp(value: unknown, field: string): string | null {
+  if (value === undefined || value === null || value === '') return null
+  if (typeof value !== 'string') throw new Error(`Midtrans response has invalid ${field}.`)
+
+  const jakarta = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value)
+  if (jakarta) {
+    const [year, month, day, hour, minute, second] = jakarta.slice(1).map(Number)
+    validateCalendarParts(year, month, day, hour, minute, second, field)
+    const utcMillis = Date.UTC(year, month - 1, day, hour, minute, second) - 7 * 60 * 60 * 1000
+    return new Date(utcMillis).toISOString()
+  }
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-]\d{2}:?\d{2})$/.exec(value)
+  if (!iso) throw new Error(`Midtrans response has invalid ${field}.`)
+
+  const [year, month, day, hour, minute, second] = iso.slice(1, 7).map(Number)
+  validateCalendarParts(year, month, day, hour, minute, second, field)
+  const zone = iso[8] === 'Z' || iso[8].includes(':')
+    ? iso[8]
+    : `${iso[8].slice(0, 3)}:${iso[8].slice(3)}`
+  const normalized = `${iso[1]}-${iso[2]}-${iso[3]}T${iso[4]}:${iso[5]}:${iso[6]}${iso[7] ? `.${iso[7]}` : ''}${zone}`
+  const millis = Date.parse(normalized)
+  if (!Number.isFinite(millis)) throw new Error(`Midtrans response has invalid ${field}.`)
+  return new Date(millis).toISOString()
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -225,7 +282,23 @@ function parseStatusRecord(payload: Record<string, unknown>): MidtransStatus {
   const grossAmount = requiredString(payload.gross_amount, 'gross_amount')
   const transactionStatus = requiredString(payload.transaction_status, 'transaction_status')
   const fraudStatus = optionalString(payload.fraud_status, 'fraud_status')
+  const transactionTime = parseMidtransTimestamp(payload.transaction_time, 'transaction_time')
+  const settlementTime = parseMidtransTimestamp(payload.settlement_time, 'settlement_time')
+  const normalizedStatus = normalizeMidtransStatus(statusCode, transactionStatus, fraudStatus)
   parseIdrGrossAmount(grossAmount)
+
+  // Midtrans documents settlement_time as the moment a transaction becomes
+  // settlement. A successful capture has no separate capture_time in the Core
+  // API, so its transaction_time is the provider timestamp for that successful
+  // capture record. Never substitute webhook receipt time for either value.
+  const providerSuccessAt = normalizedStatus === 'paid'
+    ? transactionStatus === 'settlement'
+      ? settlementTime
+      : transactionStatus === 'capture'
+        ? transactionTime
+        : null
+    : null
+
   return {
     orderId,
     statusCode,
@@ -235,7 +308,10 @@ function parseStatusRecord(payload: Record<string, unknown>): MidtransStatus {
     fraudStatus,
     paymentType: optionalString(payload.payment_type, 'payment_type'),
     signatureKey: optionalString(payload.signature_key, 'signature_key'),
-    normalizedStatus: normalizeMidtransStatus(statusCode, transactionStatus, fraudStatus),
+    transactionTime,
+    settlementTime,
+    providerSuccessAt,
+    normalizedStatus,
   }
 }
 
