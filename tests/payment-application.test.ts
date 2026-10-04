@@ -32,6 +32,8 @@ test('status and webhook share the trusted payment transition application layer'
   assert.match(application, /apply_midtrans_payment_status/)
   assert.match(application, /parseIdrGrossAmount/)
   assert.match(application, /provider_order_id/)
+  assert.match(application, /status\.normalizedStatus === 'paid' && data\.status === 'paid'/)
+  assert.match(application, /orderStatus: orderStatusFromAttempt\(applied\.status\)/)
 })
 
 test('webhook is sessionless and verifies Midtrans before applying state', () => {

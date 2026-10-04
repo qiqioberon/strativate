@@ -27,7 +27,7 @@ test('paid invoice email escapes database-controlled values and renders trusted 
 
 test('paid delivery is a non-blocking consequence of verified Midtrans paid application', () => {
   const source = readFileSync('lib/payments/application.ts', 'utf8')
-  assert.match(source, /status\.normalizedStatus === 'paid'/)
+  assert.match(source, /status\.normalizedStatus === 'paid' && data\.status === 'paid'/)
   assert.match(source, /deliverPaidInvoiceForOrder\(attempt\.order_id\)/)
   assert.match(source, /Paid invoice delivery could not be started/)
 })
