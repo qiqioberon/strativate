@@ -23,11 +23,16 @@ export type RichTextDocument = {
   blocks: RichTextBlock[]
 }
 
+export type StructuredEditorMark = {
+  type: string
+  attrs?: Record<string, unknown>
+}
+
 export type StructuredEditorNode = {
   type?: string
   text?: string
   attrs?: Record<string, unknown>
-  marks?: { type?: string; attrs?: Record<string, unknown> }[]
+  marks?: StructuredEditorMark[]
   content?: StructuredEditorNode[]
 }
 
@@ -134,11 +139,18 @@ export function richTextHasContent(document: RichTextDocument) {
 function inlineToEditorNodes(content: RichTextInline[] | undefined): StructuredEditorNode[] {
   return (content ?? []).flatMap(item => {
     if (!item.text) return []
-    const marks = (item.marks ?? []).flatMap(mark => {
-      if (mark.type === 'bold' || mark.type === 'italic') return [{ type: mark.type }]
+    const marks: StructuredEditorMark[] = []
+    for (const mark of item.marks ?? []) {
+      if (mark.type === 'bold' || mark.type === 'italic') {
+        marks.push({ type: mark.type })
+        continue
+      }
       const href = sanitizeRichTextUrl(mark.href)
-      return href ? [{ type: 'link', attrs: { href, target: mark.newTab ? '_blank' : null, rel: mark.newTab ? 'noreferrer' : null } }] : []
-    })
+      if (href) marks.push({
+        type: 'link',
+        attrs: { href, target: mark.newTab ? '_blank' : null, rel: mark.newTab ? 'noreferrer' : null },
+      })
+    }
     return [{ type: 'text', text: item.text, ...(marks.length ? { marks } : {}) }]
   })
 }

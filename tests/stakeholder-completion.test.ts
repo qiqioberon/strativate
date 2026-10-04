@@ -26,7 +26,9 @@ test('editorial admin provides upload, competition category selection, and secti
   assert.match(editor,/type="file"/)
   assert.match(editor,/image\/jpeg,image\/png,image\/webp/)
   assert.match(editor,/editorial-competition-category-select/)
-  assert.match(editor,/onClose={closeEditor}/)
+  assert.match(editor,/Discard unsaved changes\?/)
+  assert.match(editor,/requestCloseEditor/)
+  assert.match(editor,/onCancel=\{event => \{ event\.preventDefault\(\); requestCloseEditor\(\) \}\}/)
 })
 
 test('digital product catalogue exposes a real content-format filter and detail sales proof',async()=>{

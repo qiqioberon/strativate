@@ -398,7 +398,7 @@ export function WhoWeArePhotoManagement() {
                     />
                   ) : <span><ImageIcon aria-hidden="true" />No photo selected</span>}
                 </div>
-                <p className={styles.help}>Preview uses the saved role aspect ratio. Crop controls appear only for a new replacement file.</p>
+                <p className={styles.help}>Preview uses the saved role aspect ratio. You can adjust a new replacement or any image that still has its private original source.</p>
               </div>
 
               <div className={styles.formActions}>
