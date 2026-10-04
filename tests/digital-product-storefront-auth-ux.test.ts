@@ -40,13 +40,18 @@ test('anonymous and authenticated header actions are mutually exclusive and role
   assert.match(header, /ShoppingCart/)
 })
 
-test('public product list is purchase-aware and uses compact reusable add-to-cart UI', () => {
-  assert.match(listPage, /resolveDigitalPurchaseMode\(account\)/)
-  assert.match(directory, /<AddToCartButton/)
-  assert.match(directory, /compact/)
-  assert.match(directory, /digital-product-card__description/)
+test('public product list is image-first and reveals a compact preview on hover or focus', () => {
+  assert.doesNotMatch(listPage, /resolveDigitalPurchaseMode|getAccount/)
+  assert.doesNotMatch(directory, /<AddToCartButton|digital-product-card__description/)
+  assert.match(directory, /digital-product-card__cover/)
+  assert.match(directory, /digital-product-card__overlay/)
+  assert.match(directory, /formatRupiah\(product\.price_amount\)/)
+  assert.match(directory, /View details/)
   assert.match(styles, /grid-template-columns: repeat\(auto-fill, minmax\(260px, 320px\)\)/)
-  assert.match(styles, /object-fit: contain/)
+  assert.match(styles, /\.digital-product-card\s*\{[\s\S]*aspect-ratio:\s*5 \/ 4/)
+  assert.match(styles, /\.digital-product-card__cover img\s*\{[\s\S]*object-fit:\s*cover/)
+  assert.match(styles, /\.digital-product-card__overlay\s*\{[\s\S]*opacity:\s*0/)
+  assert.match(styles, /\.digital-product-card:hover \.digital-product-card__overlay,[\s\S]*\.digital-product-card:focus-within \.digital-product-card__overlay\s*\{[\s\S]*opacity:\s*1/)
 })
 
 test('product detail keeps purchase actions contextual and reports cart state through global toast feedback', () => {
