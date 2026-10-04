@@ -231,7 +231,7 @@
   max-width: 940px;
   margin: 0 auto;
   color: #fff4e8;
-  font-size: clamp(2.9rem, 5.45vw, 5.6rem);
+  font-size: clamp(2.7rem, 4.8vw, 5rem);
   font-weight: 760;
   letter-spacing: -.045em;
   line-height: 1.02;
@@ -239,7 +239,7 @@
 }
 .marketing-page-intro__description {
   max-width: 720px;
-  margin-top: clamp(28px, 3vw, 38px);
+  margin-top: clamp(40px, 4vw, 54px);
   color: #fff;
   font-size: clamp(.98rem, 1.35vw, 1.12rem);
   line-height: 1.72;

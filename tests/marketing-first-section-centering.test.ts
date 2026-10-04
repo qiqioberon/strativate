@@ -19,8 +19,8 @@ test('shared PageIntro mirrors the homepage hero surface and centered hierarchy'
   assert.doesNotMatch(intro, /marketing-page-intro-motif/)
   assert.match(marketing, /linear-gradient\(154deg, #e84a00 0%, #f65f05 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%\)/)
   assert.match(marketing, /\.marketing-page-intro__grid\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-size:\s*clamp\(2\.9rem,\s*5\.45vw,\s*5\.6rem\)[^}]*font-weight:\s*760/)
-  assert.match(marketing, /\.marketing-page-intro__description\s*\{[^}]*margin-top:\s*clamp\(28px,\s*3vw,\s*38px\)/)
+  assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-size:\s*clamp\(2\.7rem,\s*4\.8vw,\s*5rem\)[^}]*font-weight:\s*760/)
+  assert.match(marketing, /\.marketing-page-intro__description\s*\{[^}]*margin-top:\s*clamp\(40px,\s*4vw,\s*54px\)/)
   assert.doesNotMatch(programStyles, /\.program-page \.marketing-page-intro\s*\{/)
 })
 
