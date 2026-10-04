@@ -28,12 +28,12 @@ test('shared typography loads Poppins once and exposes it through every CSS font
   }
 })
 
-test('PageIntro provides an inaccessible decorative motif hook', async () => {
+test('PageIntro reuses the homepage Shape Grid without the old decorative motif', async () => {
   const pageIntro = await readProjectFile('components/marketing/page-intro.tsx')
 
-  assert.match(pageIntro, /motif\??:\s*['\"]program['\"]\s*\|\s*['\"]mentor['\"]\s*\|\s*['\"]about['\"]\s*\|\s*['\"]faq['\"]/)
-  assert.match(pageIntro, /data-testid=['\"]marketing-page-intro-motif['\"]/)
-  assert.match(pageIntro, /aria-hidden=['\"]true['\"]/)
+  assert.match(pageIntro, /HeroShapeGrid/)
+  assert.match(pageIntro, /data-testid="marketing-page-intro"/)
+  assert.doesNotMatch(pageIntro, /marketing-page-intro-motif/)
 })
 
 test('marketing navigation exposes the approved dedicated routes', async () => {

@@ -12,11 +12,10 @@ test('program, about, FAQ, publications, and competitions expose the requested s
   ])
   for(const heading of ['Choose Your Mentoring Path','Perfect for you if','Our Services for Schools & Organizations','Ready Start Your Journey']) assert.match(program,new RegExp(heading))
   for(const heading of ['Empowering Future','Our Vision','Our Mission','What We']) assert.match(about,new RegExp(heading))
-  assert.match(faq,/Have Questions\?/)
-  assert.match(faq,/We Have Answers/)
+  assert.match(faq,/title="FAQ"/)
   assert.match(faq,/Curious about Strativate\?/)
-  assert.match(publications,/Publications <em>& News/)
-  assert.match(competitions,/Discover Top/)
+  assert.match(publications,/title="Publications & News"/)
+  assert.match(competitions,/title="Discover Top Competitions"/)
 })
 
 test('editorial admin provides upload, competition category selection, and section-controlled initial state',async()=>{
