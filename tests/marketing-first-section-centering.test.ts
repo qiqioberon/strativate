@@ -5,6 +5,7 @@ import test from 'node:test'
 const intro = readFileSync(new URL('../components/marketing/page-intro.tsx', import.meta.url), 'utf8')
 const marketing = readFileSync(new URL('../app/marketing.css', import.meta.url), 'utf8')
 const program = readFileSync(new URL('../app/program/page.tsx', import.meta.url), 'utf8')
+const programStyles = readFileSync(new URL('../app/program/program-page.css', import.meta.url), 'utf8')
 const mentor = readFileSync(new URL('../app/mentor/page.tsx', import.meta.url), 'utf8')
 const products = readFileSync(new URL('../app/produk-digital/page.tsx', import.meta.url), 'utf8')
 const publications = readFileSync(new URL('../app/publications/page.tsx', import.meta.url), 'utf8')
@@ -18,7 +19,9 @@ test('shared PageIntro mirrors the homepage hero surface and centered hierarchy'
   assert.doesNotMatch(intro, /marketing-page-intro-motif/)
   assert.match(marketing, /linear-gradient\(154deg, #e84a00 0%, #f65f05 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%\)/)
   assert.match(marketing, /\.marketing-page-intro__grid\s*\{[^}]*justify-items:\s*center[^}]*text-align:\s*center/)
-  assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-weight:\s*760/)
+  assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-size:\s*clamp\(2\.9rem,\s*5\.45vw,\s*5\.6rem\)[^}]*font-weight:\s*760/)
+  assert.match(marketing, /\.marketing-page-intro__description\s*\{[^}]*margin-top:\s*clamp\(28px,\s*3vw,\s*38px\)/)
+  assert.doesNotMatch(programStyles, /\.program-page \.marketing-page-intro\s*\{/)
 })
 
 test('requested landing pages use the shared first section with revised headline copy', () => {
