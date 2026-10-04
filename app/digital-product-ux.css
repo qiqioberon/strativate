@@ -26,7 +26,7 @@
   position: relative;
   min-width: 0;
   overflow: hidden;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 4 / 5;
   border: 1px solid rgba(104, 72, 52, .16);
   border-radius: 18px;
   background: #f5ebe3;
@@ -404,7 +404,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .digital-product-card {
-    width: min(100%, 430px);
+    width: min(100%, 320px);
     justify-self: center;
   }
   .digital-product-detail { padding-top: 38px; }
