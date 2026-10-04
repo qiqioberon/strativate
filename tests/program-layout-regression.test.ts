@@ -23,11 +23,12 @@ test('feature and compact cards keep readable proportions across the bento', () 
   assert.match(css, /marketing-service-card--compact \.marketing-service-card__copy > p\s*\{[\s\S]*font-size:\s*\.68rem/)
 })
 
-test('program hero stays balanced and keeps the motif away from the copy', () => {
-  assert.match(css, /marketing-page-intro__grid[\s\S]*grid-template-columns:\s*minmax\(0,\s*1\.1fr\)\s+minmax\(360px,\s*\.9fr\)/)
+test('program hero stays centered and keeps the motif ambient', () => {
+  assert.match(css, /marketing-page-intro__grid[\s\S]*max-width:\s*960px/)
+  assert.doesNotMatch(css, /grid-template-columns:\s*minmax\(0,\s*1\.1fr\)\s+minmax\(360px,\s*\.9fr\)/)
   assert.match(css, /marketing-page-intro h1[\s\S]*font-size:\s*clamp\(3\.55rem,\s*4\.8vw,\s*5\.1rem\)/)
-  assert.match(css, /marketing-page-intro__motif[\s\S]*bottom:\s*28px/)
-  assert.match(css, /marketing-page-intro__motif[\s\S]*width:\s*min\(18vw,\s*210px\)/)
+  assert.match(css, /marketing-page-intro__motif[\s\S]*left:\s*50%/)
+  assert.match(css, /marketing-page-intro__motif[\s\S]*opacity:\s*\.08/)
 })
 
 test('program intro and directory do not stack oversized vertical spacing', () => {
