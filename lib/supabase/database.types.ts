@@ -138,6 +138,7 @@ export type Database = {
       admin_reorder_mentor_expertise: { Args:{p_ids:string[]}; Returns:MentorExpertise[] }
       admin_delete_mentor_expertise: { Args:{p_id:string}; Returns:string }
       admin_delete_master_option: { Args:{p_table:'referral_sources'|'interests';p_id:string}; Returns:string }
+      admin_upsert_master_option: { Args:{p_table:'referral_sources'|'interests';p_name:string;p_id?:string|null;p_is_active?:boolean;p_sort_order?:number|null}; Returns:undefined }
       admin_reorder_master_options: { Args:{p_table:'referral_sources'|'interests';p_ids:string[]}; Returns:undefined }
       admin_ensure_mentor_public_profile: { Args:{p_mentor_id:string}; Returns:MentorPublicProfile }
       admin_set_mentor_publication: { Args:{p_mentor_id:string;p_status:MentorPublicationStatus}; Returns:MentorPublicProfile }

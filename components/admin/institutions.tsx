@@ -201,7 +201,7 @@ export function InstitutionManagement() {
       <button type="button" className={`button button-primary ${dataStyles.pageAction}`} onClick={() => openEditor('new')}><Plus aria-hidden="true" size={16} />Tambah institusi</button>
     </header>
 
-    <section className={dataStyles.surface}>
+    <section className={`${dataStyles.surface} ${dataStyles.masterSurface}`}>
       <div className={dataStyles.surfaceHeader}><div className={dataStyles.surfaceHeaderCopy}><h3>Daftar institusi</h3><p>{total} institusi</p></div></div>
       <div className={dataStyles.toolbar}>
         <label className={dataStyles.searchField}>Cari institusi<span className={dataStyles.searchControl}><Search aria-hidden="true" /><input type="search" value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Nama institusi" /></span></label>
@@ -214,15 +214,16 @@ export function InstitutionManagement() {
       {message ? <p className={`${dataStyles.feedback} ${dataStyles.successFeedback}`} role="status">{message}</p> : null}
 
       <div className={dataStyles.tableScroll}>
-        <table className={`${dataStyles.table} ${dataStyles.institutionTable}`}>
-          <thead><tr><SortableTableHeader label="Institusi" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Tipe" sortKey="type" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Lokasi" sortKey="location" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Sumber" sortKey="source" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th className={dataStyles.actionCell}>Aksi</th></tr></thead>
+        <table className={`${dataStyles.table} ${dataStyles.institutionTable} ${dataStyles.compactMasterTable}`}>
+          <colgroup><col /><col className={dataStyles.institutionTypeColumn} /><col className={dataStyles.institutionLocationColumn} /><col className={dataStyles.institutionStatusColumn} /><col className={dataStyles.institutionSourceColumn} /><col className={dataStyles.institutionActionColumn} /></colgroup>
+          <thead><tr><SortableTableHeader label="Institusi" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Tipe" sortKey="type" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Lokasi" sortKey="location" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Sumber" sortKey="source" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th className={dataStyles.masterActionCell}>Aksi</th></tr></thead>
           <tbody>{loading ? <tr><td colSpan={6}><div className={dataStyles.empty}>Memuat institusi…</div></td></tr> : records.length === 0 ? <tr><td colSpan={6}><div className={dataStyles.empty}>Institusi tidak ditemukan.</div></td></tr> : records.map(record => <tr key={record.id}>
             <td><span className={dataStyles.primaryName}>{record.name}</span></td>
             <td>{types.find(item => item.value === record.type)?.label}</td>
             <td>{[record.city, record.province].filter(Boolean).join(', ') || '—'}</td>
             <td><span className={`${dataStyles.badge} ${statusClass(record.approval_status)}`}>{statusLabel(record.approval_status)}</span></td>
             <td>{displayLabel(record.source)}</td>
-            <td className={dataStyles.actionCell}><div className={dataStyles.actionGroup}>
+            <td className={dataStyles.masterActionCell}><div className={dataStyles.masterActionGroup}>
               <button type="button" className={`button button-outline ${dataStyles.actionButton}`} disabled={busy} onClick={() => openEditor(record)}><Pencil aria-hidden="true" size={14} />Ubah</button>
               {record.approval_status === 'pending' ? <><button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.positiveAction}`} disabled={busy} onClick={() => void moderate(record, 'approved')}><Check aria-hidden="true" size={14} />Setujui</button><button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.dangerAction}`} disabled={busy} onClick={() => void moderate(record, 'rejected')}><XCircle aria-hidden="true" size={14} />Tolak</button></> : null}
               {record.approval_status !== 'archived' ? <button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.warningAction}`} disabled={busy} onClick={() => void moderate(record, 'archived')}><Archive aria-hidden="true" size={14} />Arsipkan</button> : null}

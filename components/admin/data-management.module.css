@@ -319,6 +319,39 @@
 .dangerAction { color: #a33439 !important; border-color: #eccdce !important; background: #fff8f8 !important; }
 .primaryName { color: #1f2932; font-weight: 800; }
 
+.masterSurface { padding: 16px; }
+.masterSurface .surfaceHeader { margin-bottom: 12px; }
+.masterSurface .toolbar { margin-bottom: 10px; padding: 9px 10px; gap: 8px; }
+.compactMasterTable { table-layout: fixed; }
+.compactMasterTable th,
+.compactMasterTable td { padding: 8px 10px; }
+.compactMasterTable .primaryName { display: block; overflow-wrap: anywhere; }
+.compactMasterTable .orderControls { flex-wrap: nowrap; white-space: nowrap; }
+.masterOrderColumn { width: 130px; }
+.masterStatusColumn { width: 100px; }
+.masterActionColumn { width: 310px; }
+.institutionTypeColumn { width: 100px; }
+.institutionLocationColumn { width: 145px; }
+.institutionStatusColumn { width: 105px; }
+.institutionSourceColumn { width: 135px; }
+.institutionActionColumn { width: 435px; }
+.compactMasterTable.institutionTable { min-width: 1160px; }
+.compactMasterTable.institutionTable td { overflow-wrap: anywhere; }
+.masterActionCell { text-align: right; white-space: nowrap; }
+.masterActionGroup {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+.masterActionGroup .actionButton {
+  min-height: 32px !important;
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 6px 9px !important;
+}
+
 .pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .pagination :global(.button) { min-height: 34px; padding: 7px 11px; font-size: 9px; }
 .reload { display: inline-flex; align-items: center; gap: 5px; margin-left: 2px; font-size: 9px; }
@@ -490,6 +523,9 @@
   .filterField { flex: 1 1 100%; }
   .table th,
   .table td { padding: 11px 12px; }
+  .masterSurface { padding: 12px; }
+  .compactMasterTable th,
+  .compactMasterTable td { padding: 8px 10px; }
   .dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); border-radius: 14px; }
   .dialogPanel { max-height: calc(100dvh - 16px); border-radius: 14px; }
   .dialogHeader,

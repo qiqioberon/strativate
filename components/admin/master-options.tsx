@@ -105,14 +105,20 @@ export function MasterOptions({ table }: { table: MasterOptionTable }) {
     const form = event.currentTarget
     const data = new FormData(form)
     const values = { name: String(data.get('name')).trim(), sort_order: Number(data.get('sort_order')), is_active: data.get('is_active') === 'on' }
-    if (!values.name || !Number.isInteger(values.sort_order)) {
+    if (!values.name || !Number.isInteger(values.sort_order) || values.sort_order < 1) {
       setError('Isi nama dan urutan yang valid.')
       setBusy(false)
       return
     }
     try {
       const db = createClient()
-      const { error: saveError } = editing && editing !== 'new' ? await db.from(table).update(values).eq('id', editing.id) : await db.from(table).insert(values)
+      const { error: saveError } = await db.rpc('admin_upsert_master_option', {
+        p_table: table,
+        p_name: values.name,
+        p_id: editing && editing !== 'new' ? editing.id : null,
+        p_sort_order: values.sort_order,
+        p_is_active: values.is_active,
+      })
       if (saveError) throw saveError
       setEditing(null)
       setMessage(editing === 'new' ? `${content.title} berhasil ditambahkan.` : `${content.title} berhasil diperbarui.`)
@@ -153,7 +159,7 @@ export function MasterOptions({ table }: { table: MasterOptionTable }) {
     try {
       const { error: reorderError } = await createClient().rpc('admin_reorder_master_options', { p_table: table, p_ids: nextOptions.map(item => item.id) })
       if (reorderError) throw reorderError
-      setOptions(nextOptions.map((item, index) => ({ ...item, sort_order: (index + 1) * 10 })))
+      setOptions(nextOptions.map((item, index) => ({ ...item, sort_order: index + 1 })))
       setMessage(`Urutan ${content.title.toLocaleLowerCase('id-ID')} berhasil diperbarui.`)
     } catch (caught) {
       setError(formError(caught, `Urutan ${content.title.toLocaleLowerCase('id-ID')} belum dapat diperbarui.`))
@@ -175,8 +181,8 @@ export function MasterOptions({ table }: { table: MasterOptionTable }) {
       if (data === 'deactivate_required') {
         setMessage(`${target.name} sudah digunakan oleh mentee. Nonaktifkan opsi ini agar riwayat tetap tersimpan.`)
       } else if (data === 'deleted') {
-        setOptions(current => current.filter(item => item.id !== target.id))
         setMessage(`${target.name} berhasil dihapus.`)
+        await load()
       } else {
         setMessage(`${target.name} sudah tidak ditemukan.`)
         await load()
@@ -194,23 +200,24 @@ export function MasterOptions({ table }: { table: MasterOptionTable }) {
   return <section className={dataStyles.page}>
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}><p className="kicker">Data master</p><h2>{content.title}</h2><p>{content.description}</p></div>
-      <button type="button" className={`button button-primary ${dataStyles.pageAction}`} onClick={openCreate}><Plus aria-hidden="true" size={16} />{content.addLabel}</button>
+      <button type="button" className={`button button-primary ${dataStyles.pageAction}`} onClick={openCreate} disabled={loading || busy}><Plus aria-hidden="true" size={16} />{content.addLabel}</button>
     </header>
 
-    <section className={dataStyles.surface}>
+    <section className={`${dataStyles.surface} ${dataStyles.masterSurface}`}>
       <div className={dataStyles.surfaceHeader}><div className={dataStyles.surfaceHeaderCopy}><h3>{content.listTitle}</h3><p>{options.length} {content.countLabel}</p></div></div>
       {!editing && error ? <p className={`${dataStyles.feedback} ${dataStyles.errorFeedback}`} role="alert">{error}</p> : null}
       {message ? <p className={`${dataStyles.feedback} ${dataStyles.successFeedback}`} role="status">{message}</p> : null}
       <div className={dataStyles.tableScroll}>
-        <table className={`${dataStyles.table} ${dataStyles.masterTable}`}>
-          <thead><tr><SortableTableHeader label="Nama" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Urutan" sortKey="sort_order" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th className={dataStyles.actionCell}>Aksi</th></tr></thead>
+        <table className={`${dataStyles.table} ${dataStyles.masterTable} ${dataStyles.compactMasterTable}`}>
+          <colgroup><col /><col className={dataStyles.masterOrderColumn} /><col className={dataStyles.masterStatusColumn} /><col className={dataStyles.masterActionColumn} /></colgroup>
+          <thead><tr><SortableTableHeader label="Nama" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Urutan" sortKey="sort_order" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th className={dataStyles.masterActionCell}>Aksi</th></tr></thead>
           <tbody>{loading ? <tr><td colSpan={4}><div className={dataStyles.empty}>Memuat {content.title.toLocaleLowerCase('id-ID')}…</div></td></tr> : sortedOptions.length ? sortedOptions.map(option => {
             const canonicalIndex = options.findIndex(item => item.id === option.id)
             return <tr key={option.id}>
               <td><span className={dataStyles.primaryName}>{option.name}</span></td>
               <td><div className={dataStyles.orderControls}><span>{option.sort_order}</span><button type="button" className={dataStyles.iconButton} onClick={() => void move(option, -1)} disabled={busy || canonicalIndex <= 0} aria-label={`Naikkan ${option.name}`}><ArrowUp aria-hidden="true" size={14} /></button><button type="button" className={dataStyles.iconButton} onClick={() => void move(option, 1)} disabled={busy || canonicalIndex === options.length - 1} aria-label={`Turunkan ${option.name}`}><ArrowDown aria-hidden="true" size={14} /></button></div></td>
               <td><span className={`${dataStyles.badge} ${option.is_active ? dataStyles.successBadge : dataStyles.mutedBadge}`}>{option.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
-              <td className={dataStyles.actionCell}><div className={dataStyles.actionGroup}>
+              <td className={dataStyles.masterActionCell}><div className={dataStyles.masterActionGroup}>
                 <button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => openEdit(option)} disabled={busy}><Pencil aria-hidden="true" size={14} />Ubah</button>
                 <button type="button" className={`button button-outline ${dataStyles.actionButton} ${option.is_active ? dataStyles.warningAction : dataStyles.positiveAction}`} onClick={() => void setActive(option)} disabled={busy}><Power aria-hidden="true" size={14} />{option.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
                 <button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.dangerAction}`} onClick={() => setDeleteTarget(option)} disabled={busy}><Trash2 aria-hidden="true" size={14} />Hapus</button>
@@ -228,7 +235,7 @@ export function MasterOptions({ table }: { table: MasterOptionTable }) {
           {error ? <p className={`${dataStyles.feedback} ${dataStyles.errorFeedback}`} role="alert">{error}</p> : null}
           <div className={dataStyles.formGrid}>
             <label className={`${dataStyles.field} ${dataStyles.fullField}`}>Nama<input name="name" autoFocus required maxLength={100} defaultValue={draft?.name || ''} /></label>
-            <label className={dataStyles.field}>Urutan<input name="sort_order" type="number" required min={-10000} max={10000} defaultValue={draft?.sort_order ?? 0} /></label>
+            <label className={dataStyles.field}>Urutan<input name="sort_order" type="number" required min={1} step={1} defaultValue={draft?.sort_order ?? options.length + 1} /></label>
             <label className={dataStyles.switchField}><span>Aktif</span><span className={dataStyles.switchControl}><input name="is_active" type="checkbox" defaultChecked={draft?.is_active ?? true} /><span className={dataStyles.switchTrack} aria-hidden="true" /></span></label>
           </div>
         </div>

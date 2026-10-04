@@ -71,7 +71,7 @@ export function MentorExpertiseManagement() {
   }, [query, rows, statusFilter])
 
   function openCreate() {
-    setEditor(emptyEditor)
+    setEditor({ ...emptyEditor, sortOrder: rows.length + 1 })
     setError('')
     setMessage('')
     setEditorOpen(true)
@@ -93,6 +93,10 @@ export function MentorExpertiseManagement() {
     event.preventDefault()
     const name = editor.name.trim()
     if (!name) { setError('Nama expertise wajib diisi.'); return }
+    if (editor.sortOrder === null || !Number.isInteger(editor.sortOrder) || editor.sortOrder < 1) {
+      setError('Urutan harus berupa bilangan bulat minimal 1.')
+      return
+    }
     setBusyId(editor.id || 'new')
     setError('')
     setMessage('')
@@ -124,7 +128,6 @@ export function MentorExpertiseManagement() {
         p_name: row.name,
         p_id: row.id,
         p_is_active: isActive,
-        p_sort_order: row.sort_order,
       })
       if (saveError) throw saveError
       setRows(current => current.map(item => item.id === row.id ? { ...item, is_active: isActive } : item))
@@ -150,7 +153,7 @@ export function MentorExpertiseManagement() {
         p_ids: nextRows.map(item => item.id),
       })
       if (reorderError) throw reorderError
-      setRows(data || nextRows.map((item, index) => ({ ...item, sort_order: (index + 1) * 10 })))
+      setRows(data || nextRows.map((item, index) => ({ ...item, sort_order: index + 1 })))
       setMessage('Urutan expertise berhasil diperbarui.')
     } catch (caught) {
       setError(formError(caught, 'Urutan expertise belum dapat diperbarui.'))
@@ -172,8 +175,8 @@ export function MentorExpertiseManagement() {
       if (data === 'deactivate_required') {
         setMessage(`${target.name} masih digunakan profil mentor. Nonaktifkan expertise ini bila tidak ingin dipilih lagi.`)
       } else {
-        setRows(current => current.filter(item => item.id !== target.id))
         setMessage(`${target.name} berhasil dihapus.`)
+        await load()
       }
       setDeleteTarget(null)
     } catch (caught) {
@@ -191,10 +194,10 @@ export function MentorExpertiseManagement() {
           <h2>Mentor Expertise</h2>
           <p>Kelola label expertise yang dapat dipilih mentor untuk profil publiknya.</p>
         </div>
-        <button type="button" className={`button button-primary ${dataStyles.pageAction}`} onClick={openCreate}><Plus aria-hidden="true" size={16} />Tambah expertise</button>
+        <button type="button" className={`button button-primary ${dataStyles.pageAction}`} onClick={openCreate} disabled={loading || busyId !== null}><Plus aria-hidden="true" size={16} />Tambah expertise</button>
       </header>
 
-      <section className={dataStyles.surface}>
+      <section className={`${dataStyles.surface} ${dataStyles.masterSurface}`}>
         <div className={dataStyles.surfaceHeader}>
           <div className={dataStyles.surfaceHeaderCopy}>
             <h3>Daftar expertise</h3>
@@ -211,17 +214,18 @@ export function MentorExpertiseManagement() {
         {message ? <p className={`${dataStyles.feedback} ${dataStyles.successFeedback}`} role="status">{message}</p> : null}
 
         <div className={dataStyles.tableScroll}>
-          <table className={`${dataStyles.table} ${dataStyles.masterTable}`}>
-            <thead><tr><th>Expertise</th><th>Urutan</th><th>Status</th><th className={dataStyles.actionCell}>Aksi</th></tr></thead>
+          <table className={`${dataStyles.table} ${dataStyles.masterTable} ${dataStyles.compactMasterTable}`}>
+            <colgroup><col /><col className={dataStyles.masterOrderColumn} /><col className={dataStyles.masterStatusColumn} /><col className={dataStyles.masterActionColumn} /></colgroup>
+            <thead><tr><th>Expertise</th><th>Urutan</th><th>Status</th><th className={dataStyles.masterActionCell}>Aksi</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan={4}><div className={dataStyles.empty}>Memuat mentor expertise…</div></td></tr> : visibleRows.length === 0 ? <tr><td colSpan={4}><div className={dataStyles.empty}>{rows.length === 0 ? 'Belum ada expertise yang dikonfigurasi.' : 'Tidak ada expertise yang cocok dengan filter ini.'}</div></td></tr> : visibleRows.map(row => {
                 const canonicalIndex = rows.findIndex(item => item.id === row.id)
-                const busy = busyId === row.id
+                const busy = busyId !== null
                 return <tr key={row.id} data-testid={`mentor-expertise-row-${row.slug}`}>
                   <td><span className={dataStyles.primaryName}>{row.name}</span></td>
                   <td><div className={dataStyles.orderControls}><span>{row.sort_order}</span><button type="button" className={dataStyles.iconButton} onClick={() => void move(row, -1)} disabled={busy || canonicalIndex <= 0} aria-label={`Naikkan ${row.name}`}><ArrowUp aria-hidden="true" size={14} /></button><button type="button" className={dataStyles.iconButton} onClick={() => void move(row, 1)} disabled={busy || canonicalIndex === rows.length - 1} aria-label={`Turunkan ${row.name}`}><ArrowDown aria-hidden="true" size={14} /></button></div></td>
                   <td><span className={`${dataStyles.badge} ${row.is_active ? dataStyles.successBadge : dataStyles.mutedBadge}`}>{row.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
-                  <td className={dataStyles.actionCell}><div className={dataStyles.actionGroup}>
+                  <td className={dataStyles.masterActionCell}><div className={dataStyles.masterActionGroup}>
                     <button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => openEdit(row)} disabled={busy}><Pencil aria-hidden="true" size={14} />Edit</button>
                     <button type="button" className={`button button-outline ${dataStyles.actionButton} ${row.is_active ? dataStyles.warningAction : dataStyles.positiveAction}`} onClick={() => void setActive(row, !row.is_active)} disabled={busy}><Power aria-hidden="true" size={14} />{row.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
                     <button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.dangerAction}`} onClick={() => setDeleteTarget(row)} disabled={busy}><Trash2 aria-hidden="true" size={14} />Hapus</button>
@@ -239,6 +243,7 @@ export function MentorExpertiseManagement() {
           <div className={dataStyles.dialogBody}>
             {error ? <p className={`${dataStyles.feedback} ${dataStyles.errorFeedback}`} role="alert">{error}</p> : null}
             <label className={`${dataStyles.field} ${dataStyles.fullField}`}>Nama expertise<input autoFocus required maxLength={100} value={editor.name} onChange={event => setEditor(current => ({ ...current, name: event.target.value }))} /></label>
+            <label className={dataStyles.field}>Urutan<input type="number" required min={1} step={1} value={editor.sortOrder ?? ''} onChange={event => setEditor(current => ({ ...current, sortOrder: event.target.value === '' ? null : Number(event.target.value) }))} /></label>
             <label className={dataStyles.switchField}><span>Aktif</span><span className={dataStyles.switchControl}><input type="checkbox" checked={editor.isActive} onChange={event => setEditor(current => ({ ...current, isActive: event.target.checked }))} /><span className={dataStyles.switchTrack} aria-hidden="true" /></span></label>
           </div>
           <footer className={dataStyles.dialogFooter}><button type="button" className="button button-outline" onClick={closeEditor} disabled={busyId !== null}>Batal</button><button className="button button-primary" disabled={busyId !== null}>{busyId ? 'Menyimpan…' : 'Simpan'}</button></footer>
