@@ -80,9 +80,10 @@ async function applyProviderStatus(attempt: PaymentAttempt, status: MidtransStat
     p_provider_transaction_id: status.transactionId,
     p_fraud_status: status.fraudStatus,
     p_payment_type: status.paymentType,
+    p_provider_success_at: status.providerSuccessAt,
   })
   if (error || !data) throw new Error('Payment status could not be applied.')
-  if (status.normalizedStatus === 'paid' && data.status === 'paid') {
+  if (status.normalizedStatus === 'paid' && data.status === 'paid' && attempt.status !== 'paid') {
     try {
       await deliverPaidInvoiceForOrder(attempt.order_id)
     } catch (error) {
@@ -207,13 +208,13 @@ export async function reconcileOwnedOrderPayment(orderId: string): Promise<Sanit
 }
 
 export async function reconcileMidtransWebhook(payload: unknown) {
-  const providerStatus = parseAndVerifyMidtransNotification(payload)
+  const notificationStatus = parseAndVerifyMidtransNotification(payload)
   const admin = createAdminClient()
 
   const { data: attempt, error: attemptError } = await admin
     .from('payment_attempts')
     .select('*')
-    .eq('provider_order_id', providerStatus.orderId)
+    .eq('provider_order_id', notificationStatus.orderId)
     .maybeSingle()
   if (attemptError || !attempt) throw new Error('Unknown Midtrans provider_order_id.')
 
@@ -224,8 +225,16 @@ export async function reconcileMidtransWebhook(payload: unknown) {
     .maybeSingle()
   if (orderError || !order) throw new Error('Order for Payment Attempt was not found.')
 
-  assertAmountMatches(order.total_amount, providerStatus.grossAmount)
+  assertAmountMatches(order.total_amount, notificationStatus.grossAmount)
   if (attempt.gross_amount !== order.total_amount) throw new Error('Payment Attempt amount does not match Order total.')
+
+  // A paid notification can arrive after the local voucher deadline. Verify the
+  // latest provider record directly before using its success timestamp for the
+  // financial transition; this also gives webhook and explicit status polling
+  // the exact same provider-timing source of truth.
+  const providerStatus = notificationStatus.normalizedStatus === 'paid'
+    ? await getMidtransTransactionStatus(notificationStatus.orderId)
+    : notificationStatus
 
   const applied = await applyProviderStatus(attempt, providerStatus)
   return {

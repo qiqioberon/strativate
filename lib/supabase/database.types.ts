@@ -169,7 +169,7 @@ export type Database = {
       claim_midtrans_snap_creation: { Args:{p_attempt_id:string;p_claim_token:string}; Returns:boolean }
       store_midtrans_snap_token: { Args:{p_attempt_id:string;p_claim_token:string;p_snap_token:string}; Returns:PaymentAttempt }
       release_midtrans_snap_creation: { Args:{p_attempt_id:string;p_claim_token:string}; Returns:boolean }
-      apply_midtrans_payment_status: { Args:{p_attempt_id:string;p_normalized_status:string;p_provider_status:string;p_provider_transaction_id:string|null;p_fraud_status:string|null;p_payment_type:string|null}; Returns:PaymentAttempt }
+      apply_midtrans_payment_status: { Args:{p_attempt_id:string;p_normalized_status:string;p_provider_status:string;p_provider_transaction_id:string|null;p_fraud_status:string|null;p_payment_type:string|null;p_provider_success_at:string|null}; Returns:PaymentAttempt }
       list_cart_link_mentees: { Args:{p_query?:string}; Returns:CartLinkMentee[] }
       list_purchasable_commerce_items: { Args:{p_query?:string}; Returns:PurchasableCommerceItem[] }
       create_commerce_cart_link: { Args:{p_mentee_id:string;p_token_hash:string;p_commerce_item_ids:string[]}; Returns:string }
