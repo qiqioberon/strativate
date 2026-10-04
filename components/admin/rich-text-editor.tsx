@@ -19,6 +19,7 @@ import {
   parseRichTextDocument,
   sanitizeRichTextUrl,
   type RichTextAlignment,
+  type RichTextBlock,
   type RichTextDocument,
   type RichTextInline,
   type RichTextMark,
@@ -100,7 +101,7 @@ function readAlignment(element: HTMLElement): RichTextAlignment {
 }
 
 function serializeEditor(element: HTMLElement): RichTextDocument {
-  const blocks = Array.from(element.childNodes).flatMap(node => {
+  const blocks = Array.from(element.childNodes).flatMap<RichTextBlock>(node => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim() ?? ''
       return text ? [{ type: 'paragraph' as const, align: 'left' as const, content: [{ text }] }] : []
