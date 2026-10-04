@@ -93,7 +93,7 @@
   justify-content: flex-end;
   padding: 22px;
   color: #fff;
-  background: linear-gradient(180deg, rgba(28,14,7,0) 24%, rgba(28,14,7,.2) 48%, rgba(28,14,7,.92) 100%);
+  background: rgba(28,28,28,.62);
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 220ms ease, transform 300ms cubic-bezier(.22,.78,.22,1);
@@ -132,7 +132,8 @@
   overflow: hidden;
   color: #fff;
   font-size: .72rem;
-  text-shadow: 0 1px 2px rgba(0,0,0,.28);
+  font-weight: 550;
+  text-shadow: 0 1px 2px rgba(0,0,0,.32);
   line-height: 1.48;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -175,7 +176,7 @@
 }
 .digital-product-card:hover .digital-product-card__cover img,
 .digital-product-card:focus-within .digital-product-card__cover img {
-  filter: saturate(.94) brightness(.82);
+  filter: saturate(.92) brightness(.96);
   transform: scale(1.045);
 }
 .digital-product-card:hover .digital-product-card__overlay,
