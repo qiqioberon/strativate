@@ -158,6 +158,12 @@ export function buildDigitalProductImagePath(fileName: string) {
   return `${DIGITAL_PRODUCT_IMAGE_NAMESPACE}/${crypto.randomUUID()}-${safeDigitalProductFileName(fileName)}`
 }
 
+export function buildDigitalProductNormalizedImagePath(fileName: string) {
+  const safeName = safeDigitalProductFileName(fileName)
+  const baseName = safeName.replace(/\.(jpe?g|png|webp)$/i, '') || 'cover'
+  return `${DIGITAL_PRODUCT_IMAGE_NAMESPACE}/${crypto.randomUUID()}-${baseName}.webp`
+}
+
 export function buildDigitalProductContentPath(fileName: string) {
   return `${DIGITAL_PRODUCT_CONTENT_NAMESPACE}/${crypto.randomUUID()}/${safeDigitalProductFileName(fileName) || 'content'}`
 }

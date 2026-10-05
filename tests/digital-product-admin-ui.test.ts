@@ -5,6 +5,9 @@ import test from 'node:test'
 const adminPage = readFileSync('app/admin/page.tsx', 'utf8')
 const featureFlags = readFileSync('lib/features.ts', 'utf8')
 const manager = readFileSync('components/admin/digital-product-management.tsx', 'utf8')
+const imageFitEditor = readFileSync('components/admin/image-fit-editor.tsx', 'utf8')
+const imageFitStyles = readFileSync('components/admin/image-fit-editor.module.css', 'utf8')
+const productConfig = readFileSync('lib/digital-products/config.ts', 'utf8')
 
 test('admin navigation exposes Digital Products independently from the public feature flag', () => {
   assert.match(adminPage, /import \{ DigitalProductManagement \} from '@\/components\/admin\/digital-product-management'/)
@@ -48,6 +51,22 @@ test('Digital Product create and edit flows open in a native modal dialog', () =
   assert.match(manager, /digital-product-edit-mode/)
   assert.doesNotMatch(manager, /<div className=\{styles\.singleEditor\}>\{editor\}<\/div>/)
   assert.equal(existsSync('components/admin/digital-product-dialog.module.css'), true)
+})
+
+test('Digital Product cover editor crops new uploads to the public 4:5 card frame', () => {
+  assert.match(manager, /<ImageFitEditor/)
+  assert.match(manager, /data-testid="digital-product-cover-preview"/)
+  assert.match(manager, /fitImageToWebP\(selectedFile/)
+  assert.match(manager, /buildDigitalProductNormalizedImagePath\(selectedFile\.name\)/)
+  assert.match(manager, /contentType:'image\/webp'/)
+  assert.match(manager, /editable=\{Boolean\(selectedFile && localPreviewUrl\)\}/)
+  assert.match(imageFitEditor, /Drag to reposition/)
+  assert.match(imageFitEditor, /Posisi horizontal/)
+  assert.match(imageFitEditor, /Posisi vertikal/)
+  assert.match(imageFitEditor, /Reset to Fit/)
+  assert.match(imageFitStyles, /touch-action:\s*none/)
+  assert.match(productConfig, /DIGITAL_PRODUCT_COVER_WIDTH\s*=\s*1000/)
+  assert.match(productConfig, /DIGITAL_PRODUCT_COVER_HEIGHT\s*=\s*1250/)
 })
 
 test('Digital Product CRUD and both Storage asset reconciliation paths remain owned by the controller', () => {
