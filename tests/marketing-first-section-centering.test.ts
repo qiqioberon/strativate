@@ -22,7 +22,10 @@ test('shared PageIntro mirrors the homepage hero surface and centered hierarchy'
   assert.match(marketing, /\.homepage-hero \.marketing-hero__headline\s*\{[^}]*font-size:\s*clamp\(3\.1rem,\s*6\.1vw,\s*6\.2rem\)[^}]*line-height:\s*1\.02/)
   assert.match(marketing, /\.marketing-page-intro h1\s*\{[^}]*color:\s*#fff4e8[^}]*font-size:\s*clamp\(3\.1rem,\s*6\.1vw,\s*6\.2rem\)[^}]*font-weight:\s*760[^}]*line-height:\s*1\.02/)
   assert.match(marketing, /\.homepage-hero \.marketing-hero__lede\s*\{[^}]*margin-top:\s*clamp\(22px,\s*2\.4vw,\s*30px\)/)
-  assert.match(marketing, /\.marketing-page-intro__description\s*\{[^}]*margin-top:\s*clamp\(22px,\s*2\.4vw,\s*30px\)/)
+  assert.match(marketing, /\.marketing-site h1, \.marketing-site h2, \.marketing-site h3, \.marketing-site p, \.marketing-site figure \{ margin: 0; \}/)
+  assert.match(marketing, /\.marketing-page-intro \.marketing-page-intro__description\s*\{[^}]*margin-top:\s*clamp\(22px,\s*2\.4vw,\s*30px\)/)
+  assert.match(marketing, /@media \(max-width: 760px\)[\s\S]*\.marketing-page-intro \.marketing-page-intro__description\s*\{[^}]*margin-top:\s*20px/)
+  assert.doesNotMatch(marketing, /(?<!\.marketing-page-intro )\.marketing-page-intro__description\s*\{/)
   assert.doesNotMatch(programStyles, /marketing-page-intro/)
 })
 
