@@ -31,6 +31,12 @@ async function getPublicSalesCounts(supabase: Awaited<ReturnType<typeof createCl
   return new Map((data ?? []).map(row => [row.product_id, row.sales_count]))
 }
 
+async function getPublicRatings(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data, error } = await supabase.rpc('list_public_digital_product_ratings')
+  if (error) return new Map<string, { averageRating: number; ratingCount: number }>()
+  return new Map((data ?? []).map(row => [row.product_id, { averageRating: Number(row.average_rating), ratingCount: Number(row.rating_count) }]))
+}
+
 export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -40,8 +46,8 @@ export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[
     .order('created_at', { ascending: false })
     .order('id')
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
-  const sales = await getPublicSalesCounts(supabase)
-  return (data ?? []).map(product => withPublicCover(supabase, product, product.show_sales_count ? sales.get(product.id) ?? 0 : null))
+  const [sales, ratings] = await Promise.all([getPublicSalesCounts(supabase), getPublicRatings(supabase)])
+  return (data ?? []).map(product => withPublicCover(supabase, product, product.show_sales_count ? sales.get(product.id) ?? 0 : null, ratings.get(product.id)))
 }
 
 export async function listHomepageDigitalProducts(limit = 5): Promise<PublicDigitalProduct[]> {
@@ -59,8 +65,8 @@ export async function listHomepageDigitalProducts(limit = 5): Promise<PublicDigi
   // Keep the homepage deploy-safe while the additive migration is being applied.
   if (error?.code === '42703') return (await listPublicDigitalProducts()).slice(0, limit)
   if (error) throw commerceError('Showcase Produk Digital belum dapat dimuat.', error.code)
-  const sales = await getPublicSalesCounts(supabase)
-  return (data ?? []).map(product => withPublicCover(supabase, product, product.show_sales_count ? sales.get(product.id) ?? 0 : null))
+  const [sales, ratings] = await Promise.all([getPublicSalesCounts(supabase), getPublicRatings(supabase)])
+  return (data ?? []).map(product => withPublicCover(supabase, product, product.show_sales_count ? sales.get(product.id) ?? 0 : null, ratings.get(product.id)))
 }
 
 export async function getPublicDigitalProduct(slug: string): Promise<PublicDigitalProduct | null> {
@@ -72,14 +78,15 @@ export async function getPublicDigitalProduct(slug: string): Promise<PublicDigit
     .eq('slug', slug)
     .maybeSingle()
   if (error) throw commerceError('Produk Digital belum dapat dimuat.', error.code)
-  const sales = data ? await getPublicSalesCounts(supabase) : new Map<string, number>()
-  return data ? withPublicCover(supabase, data, data.show_sales_count ? sales.get(data.id) ?? 0 : null) : null
+  const [sales, ratings] = data ? await Promise.all([getPublicSalesCounts(supabase), getPublicRatings(supabase)]) : [new Map<string, number>(), new Map<string, { averageRating: number; ratingCount: number }>()]
+  return data ? withPublicCover(supabase, data, data.show_sales_count ? sales.get(data.id) ?? 0 : null, ratings.get(data.id)) : null
 }
 
 function withPublicCover(
   supabase: Awaited<ReturnType<typeof createClient>>,
   product: DigitalProduct,
   salesCount: number | null,
+  rating: { averageRating: number; ratingCount: number } | undefined,
 ): PublicDigitalProduct {
   return {
     ...product,
@@ -87,6 +94,8 @@ function withPublicCover(
       .from(DIGITAL_PRODUCT_IMAGE_BUCKET)
       .getPublicUrl(product.image_path).data.publicUrl,
     salesCount,
+    averageRating: rating?.averageRating ?? null,
+    ratingCount: rating?.ratingCount ?? 0,
   }
 }
 

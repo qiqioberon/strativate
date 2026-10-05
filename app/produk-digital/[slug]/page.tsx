@@ -47,6 +47,7 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
               <p className="marketing-kicker">Digital Product</p>
               <h1>{product.name}</h1>
               <p className="digital-product-detail__description">{product.description}</p>
+              {(product.ratingCount ?? 0) > 0 ? <p className="digital-product-rating-aggregate digital-product-rating-aggregate--detail">★ {product.averageRating?.toFixed(1)} · {product.ratingCount} ratings</p> : null}
             </div>
             <div className="digital-product-detail__purchase">
               <div className="digital-product-detail__price">

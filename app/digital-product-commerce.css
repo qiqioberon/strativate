@@ -208,6 +208,34 @@
 .protected-content-state h2 { font-size: 1.2rem; }
 .protected-content-state p { max-width: 600px; color: #776b63; font-size: .76rem; line-height: 1.6; }
 .protected-content-state .is-spinning { animation: protected-spin 900ms linear infinite; }
+
+.peek-rating { display: inline-flex; font-family: inherit; }
+.peek-rating__row { display: inline-flex; align-items: flex-end; padding-top: 14px; touch-action: pan-y; user-select: none; -webkit-tap-highlight-color: transparent; }
+.peek-rating__star { display: grid; width: calc(var(--peek-size) + 6px); height: calc(var(--peek-size) + 8px); place-items: center; padding: 0; border: 0; color: inherit; background: none; cursor: pointer; touch-action: manipulation; }
+.peek-rating__star:disabled { cursor: default; }
+.peek-rating__star:focus-visible { outline: 2px solid #ff7a00; outline-offset: 2px; border-radius: 6px; }
+.peek-rating__lift { display: block; transform-origin: 50% 100%; transition: transform 320ms cubic-bezier(.23,1,.32,1); }
+.peek-rating__glyph { display: block; width: var(--peek-size); height: var(--peek-size); color: #d5c7bc; transition: color 160ms ease; }
+.peek-rating__glyph svg { display: block; width: 100%; height: 100%; }
+.peek-rating__glyph[data-lit='true'] { color: #f5b400; }
+.digital-product-rating-card { display: grid; width: min(100%, 1180px); gap: 22px; margin: 36px auto 0; padding: clamp(20px, 3vw, 32px); border: 1px solid #dfd2c8; border-radius: 18px; background: #fffdfa; box-shadow: 0 14px 36px rgba(76, 24, 3, .06); }
+.digital-product-rating-card__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.digital-product-rating-card__heading h2 { margin-top: 6px; font-size: clamp(1.3rem, 3vw, 2rem); letter-spacing: -.05em; }
+.digital-product-rating-card__heading p { max-width: 600px; margin-top: 8px; color: var(--marketing-muted); font-size: .72rem; line-height: 1.6; }
+.digital-product-rating-card__heading > svg { flex: 0 0 auto; color: var(--marketing-orange); }
+.digital-product-rating-form { display: grid; max-width: 650px; gap: 18px; }
+.digital-product-rating-form__label, .digital-product-rating-form__comment { display: grid; gap: 8px; color: var(--marketing-ink); font-size: .72rem; font-weight: 750; }
+.digital-product-rating-form__comment span { color: var(--marketing-muted); font-weight: 500; }
+.digital-product-rating-form textarea { width: 100%; padding: 12px; border: 1px solid #e1d6ce; border-radius: 10px; color: inherit; background: #fff; font: inherit; font-size: .75rem; line-height: 1.55; resize: vertical; }
+.digital-product-rating-form textarea:focus { outline: 2px solid #ff7a0033; border-color: #ffab70; }
+.digital-product-rating-form small { color: var(--marketing-muted); font-size: .62rem; font-weight: 500; }
+.digital-product-rating-form__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.digital-product-feedback-success, .digital-product-feedback-error { display: inline-flex; align-items: center; gap: 6px; font-size: .68rem; line-height: 1.5; }
+.digital-product-feedback-success { color: #257346; }
+.digital-product-feedback-error { color: #b42318; }
+.digital-product-rating-aggregate { color: #ffd27c; font-size: .66rem; font-weight: 800; }
+.digital-product-rating-aggregate--detail { margin-top: 14px; color: var(--marketing-orange-dark); font-size: .78rem; }
+.is-spinning { animation: protected-spin 900ms linear infinite; }
 @keyframes protected-spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -234,6 +262,9 @@
   .digital-product-carousel__arrows button { width: 36px; height: 36px; }
   .protected-watermark-layer span,
   .protected-watermark-moving { max-width: 52%; font-size: .52rem; }
+  .digital-product-rating-card { margin-top: 24px; }
+  .digital-product-rating-card__heading { gap: 10px; }
+  .digital-product-rating-form__actions > .button { width: 100%; }
 }
 
 

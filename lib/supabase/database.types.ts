@@ -18,7 +18,9 @@ export type CompetitionRecognition = { id:string; competition_name:string; logo_
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
-export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; created_at:string; updated_at:string }
+export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
+export type DigitalProductReview = { id:string; product_id:string; user_id:string; rating:number; comment:string|null; created_at:string; updated_at:string }
+export type AdminDigitalProductReview = DigitalProductReview & { customer_name:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
 export type DigitalProductAccessGrant = { session_id:string; product_id:string; content_type:DigitalProductContentType; content_path:string; content_mime_type:string; content_file_name:string|null; order_id:string|null; order_item_id:string|null; expires_at:string }
 export type CommerceItem = { id:string; item_kind:string; is_available:boolean; created_at:string; updated_at:string }
@@ -88,7 +90,8 @@ export type Database = {
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
-      digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
+       digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
+       digital_product_reviews: Table<DigitalProductReview, never, never>
       commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
       commerce_discount_code_categories: Table<{discount_code_id:string;category:DiscountCategory;created_at:string},{discount_code_id:string;category:DiscountCategory;created_at?:string}>
       commerce_discount_code_products: Table<{discount_code_id:string;product_id:string;created_at:string},{discount_code_id:string;product_id:string;created_at?:string}>
@@ -172,6 +175,11 @@ export type Database = {
       list_public_digital_product_sales: { Args:Record<PropertyKey,never>; Returns:{product_id:string;sales_count:number}[] }
       list_owned_digital_products: { Args:Record<PropertyKey,never>; Returns:OwnedDigitalProduct[] }
       create_digital_product_access_session: { Args:{p_product_id:string}; Returns:DigitalProductAccessGrant[] }
+      get_my_digital_product_review: { Args:{p_product_id:string}; Returns:DigitalProductReview[] }
+      submit_digital_product_review: { Args:{p_product_id:string;p_rating:number;p_comment?:string|null}; Returns:DigitalProductReview }
+      list_public_digital_product_ratings: { Args:Record<PropertyKey,never>; Returns:{product_id:string;average_rating:number;rating_count:number}[] }
+      list_admin_digital_product_reviews: { Args:{p_product_id:string}; Returns:AdminDigitalProductReview[] }
+      set_digital_product_rating_visibility: { Args:{p_product_id:string;p_show_rating:boolean}; Returns:DigitalProduct }
       reserve_midtrans_payment_attempt: { Args:{p_order_id:string}; Returns:PaymentAttempt }
       claim_midtrans_snap_creation: { Args:{p_attempt_id:string;p_claim_token:string}; Returns:boolean }
       store_midtrans_snap_token: { Args:{p_attempt_id:string;p_claim_token:string;p_snap_token:string}; Returns:PaymentAttempt }
