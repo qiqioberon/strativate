@@ -4,11 +4,12 @@ import Image from 'next/image'
 import { FileText, ImagePlus, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
+import { ImageFitEditor } from '@/components/admin/image-fit-editor'
 import { formError } from '@/lib/auth/errors'
 import {
   buildDigitalProductContentPath,
   buildDigitalProductContentPayload,
-  buildDigitalProductImagePath,
+  buildDigitalProductNormalizedImagePath,
   buildDigitalProductPayload,
   digitalProductMutationError,
   formatDigitalProductPrice,
@@ -20,7 +21,17 @@ import {
   type DigitalProductContentType,
   type DigitalProductDraftErrors,
 } from '@/lib/digital-products/admin'
-import { DIGITAL_PRODUCT_CONTENT_BUCKET, DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
+import {
+  DIGITAL_PRODUCT_CONTENT_BUCKET,
+  DIGITAL_PRODUCT_COVER_HEIGHT,
+  DIGITAL_PRODUCT_COVER_MAX_DECODED_PIXELS,
+  DIGITAL_PRODUCT_COVER_MAX_ZOOM,
+  DIGITAL_PRODUCT_COVER_MIN_ZOOM,
+  DIGITAL_PRODUCT_COVER_WEBP_QUALITY,
+  DIGITAL_PRODUCT_COVER_WIDTH,
+  DIGITAL_PRODUCT_IMAGE_BUCKET,
+} from '@/lib/digital-products/config'
+import { DEFAULT_IMAGE_FIT, fitImageToWebP, type ImageFit } from '@/lib/media/image-fit'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
 import dataStyles from './data-management.module.css'
@@ -49,6 +60,7 @@ export function DigitalProductManagement() {
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [coverFit, setCoverFit] = useState<ImageFit>({ ...DEFAULT_IMAGE_FIT })
   const [selectedContentFile, setSelectedContentFile] = useState<File | null>(null)
   const [contentError, setContentError] = useState('')
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
@@ -107,7 +119,7 @@ export function DigitalProductManagement() {
   useEffect(() => {
     if (creating || !selected) return
     setDraft({ name:selected.name, slug:selected.slug, description:selected.description, price:String(selected.price_amount), referencePrice:selected.reference_price_amount == null ? '' : String(selected.reference_price_amount), contentType:selected.content_type ?? '', isPublished:selected.is_published, homepageFeatured:selected.homepage_featured, homepageOrder:String(selected.homepage_featured_order), showSalesCount:selected.show_sales_count ?? false })
-    setSlugManuallyEdited(true); setSelectedFile(null); setSelectedContentFile(null); setContentError(''); setFieldErrors({})
+    setSlugManuallyEdited(true); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({})
   }, [creating, selected])
   useEffect(() => {
     if (!selectedFile) { setLocalPreviewUrl(null); return }
@@ -134,10 +146,10 @@ export function DigitalProductManagement() {
   }, [editorOpen])
 
   function changeSort(key: string | null, direction: SortDirection) { setSortKey(key as ProductSortKey | null); setSortDirection(direction); setProductPage(0) }
-  function beginCreate() { setCreating(true); setSelectedId(null); setDraft(emptyDraft); setSlugManuallyEdited(false); setSelectedFile(null); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
-  function beginEdit(id: string) { setCreating(false); setSelectedId(id); setSlugManuallyEdited(true); setSelectedFile(null); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
+  function beginCreate() { setCreating(true); setSelectedId(null); setDraft(emptyDraft); setSlugManuallyEdited(false); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
+  function beginEdit(id: string) { setCreating(false); setSelectedId(id); setSlugManuallyEdited(true); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
   function closeEditor() { if (busy) return; dialogRef.current?.close() }
-  function resetEditorState() { setCreating(false); setSelectedId(null); setSelectedFile(null); setSelectedContentFile(null); setContentError(''); setStoredPreviewUrl(null); setFieldErrors({}); setError('') }
+  function resetEditorState() { setCreating(false); setSelectedId(null); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setStoredPreviewUrl(null); setFieldErrors({}); setError('') }
   function updateName(name: string) { setDraft(current => ({ ...current, name, slug:creating && !slugManuallyEdited ? normalizeDigitalProductSlug(name) : current.slug })); setFieldErrors(current => ({ ...current, name:undefined, ...(creating && !slugManuallyEdited ? { slug:undefined } : {}) })) }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -153,7 +165,19 @@ export function DigitalProductManagement() {
     let uploadedImagePath: string | null = null, uploadedContentPath: string | null = null, databaseAttempted = false
     setBusy(true)
     try {
-      if (selectedFile) { uploadedImagePath = buildDigitalProductImagePath(selectedFile.name); const { error: uploadError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).upload(uploadedImagePath, selectedFile, { cacheControl:'3600', upsert:false }); if (uploadError) throw uploadError }
+      if (selectedFile) {
+        const normalizedCover = await fitImageToWebP(selectedFile, {
+          width: DIGITAL_PRODUCT_COVER_WIDTH,
+          height: DIGITAL_PRODUCT_COVER_HEIGHT,
+          minZoom: DIGITAL_PRODUCT_COVER_MIN_ZOOM,
+          maxZoom: DIGITAL_PRODUCT_COVER_MAX_ZOOM,
+          quality: DIGITAL_PRODUCT_COVER_WEBP_QUALITY,
+          maxDecodedPixels: DIGITAL_PRODUCT_COVER_MAX_DECODED_PIXELS,
+        }, coverFit)
+        uploadedImagePath = buildDigitalProductNormalizedImagePath(selectedFile.name)
+        const { error: uploadError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).upload(uploadedImagePath, normalizedCover, { cacheControl:'3600', contentType:'image/webp', upsert:false })
+        if (uploadError) throw uploadError
+      }
       if (selectedContentFile) { uploadedContentPath = buildDigitalProductContentPath(selectedContentFile.name); const { error: contentUploadError } = await supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).upload(uploadedContentPath, selectedContentFile, { cacheControl:'3600', upsert:false }); if (contentUploadError) throw contentUploadError }
       const payload = {
         ...buildDigitalProductPayload({ name:draft.name, slug:draft.slug, description:draft.description, priceInput:draft.price, referencePriceInput:draft.referencePrice, imagePath:uploadedImagePath, storedImagePath:oldImagePath }),
@@ -200,7 +224,56 @@ export function DigitalProductManagement() {
   const editor = (creating || selected) ? <form className={styles.form} onSubmit={save} noValidate aria-busy={busy} data-testid={creating ? 'digital-product-create-mode' : 'digital-product-edit-mode'}>
     <section className={styles.formSection} aria-labelledby="digital-product-information-heading"><div className={styles.sectionHeading}><h3 id="digital-product-information-heading">Informasi produk</h3><p>Atur nama dan deskripsi yang tampil pada katalog Digital Product.</p></div><div className={styles.formGrid}><label className={styles.field}>Nama<input data-testid="digital-product-name-input" value={draft.name} onChange={event => updateName(event.target.value)} maxLength={160} aria-invalid={Boolean(fieldErrors.name)} />{fieldErrors.name ? <small className="form-error">{fieldErrors.name}</small> : null}</label><label className={styles.wideField}>Deskripsi<textarea data-testid="digital-product-description-input" value={draft.description} onChange={event => { setDraft(current => ({ ...current, description:event.target.value })); setFieldErrors(current => ({ ...current, description:undefined })) }} rows={6} maxLength={5000} aria-invalid={Boolean(fieldErrors.description)} />{fieldErrors.description ? <small className="form-error">{fieldErrors.description}</small> : null}</label></div></section>
     <section className={styles.formSection} aria-labelledby="digital-product-price-heading"><div className={styles.sectionHeading}><h3 id="digital-product-price-heading">Harga</h3><p>Harga jual adalah nilai transaksi. Harga referensi opsional hanya tampil sebagai harga coret dan harus setidaknya sebesar harga jual.</p></div><div className={styles.formGrid}><label className={styles.field}>Harga jual<span className={styles.priceControl}><span className={styles.pricePrefix} aria-hidden="true">Rp</span><input data-testid="digital-product-price-input" type="text" inputMode="numeric" value={draft.price} onChange={event => { setDraft(current => ({ ...current, price:event.target.value })); setFieldErrors(current => ({ ...current, price:undefined, referencePrice:undefined })) }} placeholder="100000" aria-invalid={Boolean(fieldErrors.price)} /></span>{parsedPrice === null ? <small className={styles.helper}>Gunakan angka Rupiah bulat tanpa simbol atau pemisah ribuan.</small> : <small className={styles.pricePreview}>Preview: {formatDigitalProductPrice(parsedPrice)}</small>}{fieldErrors.price ? <small className="form-error">{fieldErrors.price}</small> : null}</label><label className={styles.field}>Harga referensi (opsional)<span className={styles.priceControl}><span className={styles.pricePrefix} aria-hidden="true">Rp</span><input data-testid="digital-product-reference-price-input" type="text" inputMode="numeric" value={draft.referencePrice} onChange={event => { setDraft(current => ({ ...current, referencePrice:event.target.value })); setFieldErrors(current => ({ ...current, referencePrice:undefined })) }} placeholder="150000" aria-invalid={Boolean(fieldErrors.referencePrice)} /></span>{!draft.referencePrice.trim() ? <small className={styles.helper}>Kosongkan jika produk tidak memiliki harga referensi.</small> : parsedReferencePrice === null ? <small className={styles.helper}>Gunakan angka Rupiah bulat tanpa simbol atau pemisah ribuan.</small> : <small className={styles.pricePreview}>Preview: {formatDigitalProductPrice(parsedReferencePrice)}</small>}{fieldErrors.referencePrice ? <small className="form-error">{fieldErrors.referencePrice}</small> : null}</label></div></section>
-    <section className={styles.formSection} aria-labelledby="digital-product-cover-heading"><div className={styles.sectionHeading}><h3 id="digital-product-cover-heading">Cover / poster</h3><p>Cover adalah asset pemasaran publik. File PDF/Video berbayar dikelola terpisah di storage private.</p></div><div className={styles.coverLayout}><div className={styles.coverInput}><label>{selected ? 'Ganti cover' : 'Pilih cover produk'}<input data-testid="digital-product-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setSelectedFile(event.target.files?.[0] ?? null); setFieldErrors(current => ({ ...current, file:undefined })) }} /></label><small className={styles.helper}>{selected ? 'Cover tersimpan tetap digunakan jika tidak memilih file baru. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB.</small>{fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}</div><div className={styles.coverPreview} data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product"><div className={styles.coverPreviewCanvas}>{editorPreviewUrl ? <Image src={editorPreviewUrl} alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'} fill sizes="(max-width: 768px) 80vw, 280px" unoptimized /> : <div className={styles.coverPreviewEmpty}><ImagePlus aria-hidden="true" /><span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span></div>}</div><p>{localPreviewUrl ? 'Preview cover baru.' : selected ? 'Cover tersimpan saat ini.' : 'Preview akan muncul di sini sebelum data disimpan.'}</p></div></div></section>
+    <section className={styles.formSection} aria-labelledby="digital-product-cover-heading">
+      <div className={styles.sectionHeading}>
+        <h3 id="digital-product-cover-heading">Cover / poster</h3>
+        <p>Cover publik dinormalisasi ke frame 4:5 yang sama dengan card storefront. File PDF/Video berbayar tetap dikelola terpisah di storage private.</p>
+      </div>
+      <div className={styles.coverLayout}>
+        <div className={styles.coverInput}>
+          <label>
+            {selected ? 'Ganti cover' : 'Pilih cover produk'}
+            <input
+              data-testid="digital-product-file-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={event => {
+                setSelectedFile(event.target.files?.[0] ?? null)
+                setCoverFit({ ...DEFAULT_IMAGE_FIT })
+                setFieldErrors(current => ({ ...current, file:undefined }))
+              }}
+            />
+          </label>
+          <small className={styles.helper}>
+            {selected ? 'Cover tersimpan tetap digunakan jika tidak memilih file baru. ' : ''}
+            JPG, PNG, atau WebP · maksimal 5 MB. Cover baru disimpan sebagai WebP 1000 × 1250 px.
+          </small>
+          {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
+        </div>
+        <div className={styles.coverPreview} data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Preview cover Digital Product">
+          {editorPreviewUrl ? (
+            <ImageFitEditor
+              src={editorPreviewUrl}
+              alt={draft.name ? `Cover ${draft.name}` : 'Preview cover Digital Product'}
+              fit={coverFit}
+              onFitChange={setCoverFit}
+              targetWidth={DIGITAL_PRODUCT_COVER_WIDTH}
+              targetHeight={DIGITAL_PRODUCT_COVER_HEIGHT}
+              minZoom={DIGITAL_PRODUCT_COVER_MIN_ZOOM}
+              maxZoom={DIGITAL_PRODUCT_COVER_MAX_ZOOM}
+              editable={Boolean(selectedFile && localPreviewUrl)}
+              testId="digital-product-cover-fit-editor"
+            />
+          ) : (
+            <div className={styles.coverPreviewEmpty}>
+              <ImagePlus aria-hidden="true" />
+              <span>{previewLoading ? 'Memuat cover tersimpan…' : 'Pilih cover untuk melihat preview.'}</span>
+            </div>
+          )}
+          <p>{localPreviewUrl ? 'Preview ini sama dengan crop 4:5 yang akan disimpan dan digunakan card storefront.' : selected ? 'Cover tersimpan saat ini.' : 'Preview akan muncul di sini sebelum data disimpan.'}</p>
+        </div>
+      </div>
+    </section>
     <section className={styles.formSection} aria-labelledby="digital-product-content-heading"><div className={styles.sectionHeading}><h3 id="digital-product-content-heading">Materi terlindungi</h3><p>Pilih Jenis Produk dan upload source berbayar. Asset ini tidak menggunakan public URL permanen.</p></div><fieldset className={styles.contentTypeFieldset}><legend>Jenis Produk</legend><div className={styles.typeOptions}><label className={draft.contentType === 'pdf' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="pdf" checked={draft.contentType === 'pdf'} onChange={() => { setDraft(current => ({ ...current, contentType:'pdf' })); setSelectedContentFile(null); setContentError('') }} /><FileText aria-hidden="true" /> PDF</label><label className={draft.contentType === 'video' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="video" checked={draft.contentType === 'video'} onChange={() => { setDraft(current => ({ ...current, contentType:'video' })); setSelectedContentFile(null); setContentError('') }} /><PlayCircle aria-hidden="true" /> Video</label></div></fieldset>{draft.contentType ? <label className={styles.field}>{draft.contentType === 'pdf' ? 'PDF source' : 'Video source'}<input data-testid="digital-product-content-input" type="file" accept={draft.contentType === 'pdf' ? 'application/pdf,.pdf' : 'video/mp4,video/webm,.mp4,.webm'} onChange={event => { setSelectedContentFile(event.target.files?.[0] ?? null); setContentError('') }} /><small className={styles.helper}>{storedContentCompatible ? `Materi tersimpan: ${selected?.content_file_name ?? 'file terlindungi'}${formatFileSize(selected?.content_size_bytes ?? null) ? ` · ${formatFileSize(selected?.content_size_bytes ?? null)}` : ''}. Pilih file baru hanya untuk mengganti.` : draft.contentType === 'pdf' ? 'PDF · maksimal 500 MB.' : 'MP4 atau WebM · maksimal 500 MB.'}</small></label> : null}{selectedContentFile ? <div className={styles.protectedFileSummary}><ShieldCheck aria-hidden="true" /><span><strong>{selectedContentFile.name}</strong>{formatFileSize(selectedContentFile.size)} · {selectedContentFile.type}</span></div> : null}{contentError ? <small className="form-error" data-testid="digital-product-content-error">{contentError}</small> : null}<label className={styles.publishToggle}><input type="checkbox" checked={draft.isPublished} onChange={event => { setDraft(current => ({ ...current, isPublished:event.target.checked })); setContentError('') }} /><span><strong>Publikasikan di storefront</strong><small>Produk draft tetap dapat dikelola admin. Publikasi memerlukan jenis dan file materi terlindungi.</small></span></label></section>
     <section className={styles.formSection} aria-labelledby="digital-product-homepage-heading"><div className={styles.sectionHeading}><h3 id="digital-product-homepage-heading">Showcase beranda</h3><p>Pilih produk yang masuk ke animasi Card Swap pada beranda. Maksimal 5 produk Published dengan urutan terendah akan tampil ke pengunjung.</p></div><label className={styles.publishToggle}><input data-testid="digital-product-homepage-featured" type="checkbox" checked={draft.homepageFeatured} onChange={event => setDraft(current => ({ ...current, homepageFeatured:event.target.checked }))} /><span><strong>Show in homepage Card Swap</strong><small>Admin can change the selection without changing website code.</small></span></label><label className={styles.field}>Card Swap order<input data-testid="digital-product-homepage-order" type="number" min={0} max={9999} step={1} value={draft.homepageOrder} disabled={!draft.homepageFeatured} onChange={event => setDraft(current => ({ ...current, homepageOrder:event.target.value }))} /><small className={styles.helper}>Lower numbers appear first. 0 is the highest priority.</small></label><label className={styles.publishToggle}><input data-testid="digital-product-show-sales-count" type="checkbox" checked={draft.showSalesCount} onChange={event => setDraft(current => ({ ...current, showSalesCount:event.target.checked }))} /><span><strong>Show paid sales count publicly</strong><small>Sales counts remain hidden unless this explicit product-level flag is enabled.</small></span></label></section>
     <div className={styles.formActions}><button data-testid="digital-product-save-button" className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : creating ? 'Buat Digital Product' : 'Simpan perubahan'}</button><button type="button" className="button button-outline" onClick={closeEditor} disabled={busy}>Batal</button>{!creating && selected ? <button type="button" className={`button button-outline ${styles.deleteButton}`} onClick={() => void removeProduct(selected)} disabled={busy} data-testid="digital-product-delete-button"><Trash2 aria-hidden="true" /> Hapus</button> : null}</div>{error ? <p className={`${styles.feedback} ${styles.errorFeedback}`} role="alert" data-testid="digital-product-error">{error}</p> : null}{notice ? <p className={`${styles.feedback} ${styles.successFeedback}`} role="status" data-testid="digital-product-notice">{notice}</p> : null}

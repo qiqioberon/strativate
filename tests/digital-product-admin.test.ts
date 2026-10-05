@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   buildDigitalProductImagePath,
+  buildDigitalProductNormalizedImagePath,
   buildDigitalProductPayload,
   digitalProductMutationError,
   formatDigitalProductPrice,
@@ -89,6 +90,9 @@ test('cover filenames and generated object paths stay inside the products namesp
   const path = buildDigitalProductImagePath('../../My Cover.PNG')
   assert.match(path, /^products\/[0-9a-f-]+-my-cover\.png$/)
   assert.equal(path.includes('..'), false)
+  const normalizedPath = buildDigitalProductNormalizedImagePath('../../My Cover.PNG')
+  assert.match(normalizedPath, /^products\/[0-9a-f-]+-my-cover\.webp$/)
+  assert.equal(normalizedPath.includes('..'), false)
 })
 
 test('payload trims text, stores integer Rupiah, and preserves the stored cover when no replacement is selected', () => {
