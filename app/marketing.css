@@ -231,7 +231,7 @@
   max-width: 940px;
   margin: 0 auto;
   color: #fff4e8;
-  font-size: clamp(2.7rem, 4.8vw, 5rem);
+  font-size: clamp(3.1rem, 6.1vw, 6.2rem);
   font-weight: 760;
   letter-spacing: -.045em;
   line-height: 1.02;
@@ -239,7 +239,7 @@
 }
 .marketing-page-intro__description {
   max-width: 720px;
-  margin-top: clamp(56px, 5vw, 72px);
+  margin-top: clamp(22px, 2.4vw, 30px);
   color: #fff;
   font-size: clamp(.98rem, 1.35vw, 1.12rem);
   line-height: 1.72;
@@ -271,6 +271,21 @@
   outline-offset: 4px;
   box-shadow: 0 0 0 2px rgba(117,40,0,.35);
 }
+@media (max-width: 760px) {
+  .marketing-page-intro h1 {
+    max-width: 610px;
+    font-size: clamp(2.55rem, 11.8vw, 4.2rem);
+    letter-spacing: -.04em;
+    line-height: 1.04;
+  }
+  .marketing-page-intro__description {
+    max-width: 560px;
+    margin-top: 20px;
+    font-size: .95rem;
+    line-height: 1.64;
+  }
+}
+
 .marketing-page-section { padding: clamp(70px, 8vw, 120px) 0; }
 .marketing-content-notice { display: flex; align-items: flex-start; gap: 14px; max-width: 630px; margin: 0 0 38px auto; padding: 18px 20px; border-left: dashed 3px var(--marketing-orange); color: #604e42; background: #fff0e5; }
 .marketing-content-notice > svg { flex: 0 0 auto; color: var(--marketing-orange-dark); }
@@ -450,7 +465,7 @@
   .marketing-footer__note { grid-column: auto; }
   .marketing-footer__bottom { flex-direction: column; gap: 7px; }
   .marketing-page-intro { padding-top: 70px; }
-  .marketing-page-intro h1 { font-size: clamp(2.75rem, 11.5vw, 3.25rem); overflow-wrap: anywhere; }
+  .marketing-page-intro h1 { font-size: clamp(2.55rem, 11.8vw, 4.2rem); overflow-wrap: anywhere; }
   .marketing-products-directory { grid-template-columns: 1fr; }
   .marketing-about-page__statement { padding-block: 75px; }
   .marketing-about-page__principles { grid-template-columns: 1fr; }
