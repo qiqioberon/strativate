@@ -14,7 +14,9 @@ test('marketing display headings use the relaxed shared rhythm', () => {
   assert.match(marketing, /\.about-reference-hero h1[\s\S]*line-height:\s*1\.02/)
   assert.match(marketing, /\.faq-reference-hero h1[\s\S]*line-height:\s*1\.02/)
   assert.match(marketing, /\.homepage-hero \.marketing-hero__headline[\s\S]*letter-spacing:\s*-\.045em[\s\S]*line-height:\s*1\.02/)
-  assert.match(program, /\.program-page \.marketing-page-intro h1[\s\S]*letter-spacing:\s*-\.045em[\s\S]*line-height:\s*1\.02/)
+  assert.doesNotMatch(program, /marketing-page-intro/)
+  assert.match(marketing, /\.marketing-page-intro h1[\s\S]*font-size:\s*clamp\(3\.1rem,\s*6\.1vw,\s*6\.2rem\)/)
+  assert.match(marketing, /\.marketing-page-intro__description[\s\S]*margin-top:\s*clamp\(22px,\s*2\.4vw,\s*30px\)/)
 })
 
 test('landing page surfaces, filters, and empty states stay compact and polished', () => {

@@ -1,40 +1,3 @@
-.program-page .marketing-page-intro {
-  padding: clamp(74px, 7vw, 104px) 0 clamp(46px, 4vw, 60px);
-}
-
-.program-page .marketing-page-intro__grid {
-  max-width: 960px;
-}
-
-.program-page .marketing-page-intro h1 {
-  max-width: 850px;
-  font-size: clamp(3.55rem, 4.8vw, 5.1rem);
-  font-weight: 650;
-  letter-spacing: -.045em;
-  line-height: 1.02;
-  text-wrap: balance;
-}
-
-.program-page .marketing-page-intro__aside {
-  position: relative;
-  z-index: 2;
-  max-width: 620px;
-}
-
-.program-page .marketing-page-intro__aside > p {
-  max-width: 600px;
-}
-
-.program-page .marketing-page-intro__motif {
-  top: 50%;
-  right: auto;
-  bottom: auto;
-  left: 50%;
-  width: min(22vw, 210px);
-  opacity: .08;
-  transform: translate(-50%, -50%) rotate(-6deg);
-}
-
 .program-page .program-intro-panel {
   max-width: 520px;
   gap: 18px;
@@ -185,33 +148,11 @@
 }
 
 @media (max-width: 1080px) {
-  .program-page .marketing-page-intro h1 {
-    font-size: clamp(3.3rem, 6vw, 4.5rem);
-  }
-
-  .program-page .marketing-page-intro__motif {
-    width: 160px;
-    opacity: .2;
-  }
-
   .program-page .marketing-services-supporting > .marketing-service-card {
     flex-basis: calc((100% - 12px) / 2);
   }
 }
 
-@media (max-width: 880px) {
-  .program-page .marketing-page-intro {
-    padding-bottom: 44px;
-  }
-
-  .program-page .marketing-page-intro h1 {
-    max-width: 720px;
-  }
-
-  .program-page .marketing-page-intro__motif {
-    display: none;
-  }
-}
 
 @media (max-width: 760px) {
   .program-page .program-directory {
