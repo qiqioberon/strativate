@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 
 import { AddToCartButton } from '@/components/digital-products/add-to-cart-button'
+import { AggregateRating } from '@/components/digital-products/aggregate-rating'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { buttonVariants } from '@/components/ui/button'
 import { getAccount } from '@/lib/auth/server'
@@ -22,6 +23,8 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
   if (!product) notFound()
 
   const purchaseMode = resolveDigitalPurchaseMode(account)
+  const ratingCount = product.ratingCount ?? 0
+  const averageRating = product.averageRating
 
   return (
     <MarketingShell digitalProductsEnabled>
@@ -47,7 +50,7 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
               <p className="marketing-kicker">Digital Product</p>
               <h1>{product.name}</h1>
               <p className="digital-product-detail__description">{product.description}</p>
-              {(product.ratingCount ?? 0) > 0 ? <p className="digital-product-rating-aggregate digital-product-rating-aggregate--detail">★ {product.averageRating?.toFixed(1)} · {product.ratingCount} ratings</p> : null}
+              {ratingCount > 0 && averageRating != null ? <AggregateRating averageRating={averageRating} ratingCount={ratingCount} variant="detail" /> : null}
             </div>
             <div className="digital-product-detail__purchase">
               <div className="digital-product-detail__price">

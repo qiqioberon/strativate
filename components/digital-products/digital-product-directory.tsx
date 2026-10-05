@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 
 import { formatRupiah } from '@/lib/commerce/money'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
+import { AggregateRating } from './aggregate-rating'
 
 type Sort = 'newest' | 'name' | 'price-low' | 'price-high'
 type FormatFilter = 'all' | 'pdf' | 'video'
@@ -44,8 +45,11 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
       </div>
     ) : (
       <div className="marketing-products-directory digital-products-directory">
-        {filtered.map(product => (
-          <article key={product.id} className="digital-product-card">
+        {filtered.map(product => {
+          const ratingCount = product.ratingCount ?? 0
+          const averageRating = product.averageRating
+
+          return <article key={product.id} className="digital-product-card">
             <Link
               className="digital-product-card__link"
               href={`/produk-digital/${product.slug}`}
@@ -71,7 +75,7 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
                   <ArrowUpRight size={20} strokeWidth={2} />
                 </div>
                 <p className="digital-product-card__description-preview">{product.description}</p>
-                {(product.ratingCount ?? 0) > 0 ? <p className="digital-product-rating-aggregate">★ {product.averageRating?.toFixed(1)} · {product.ratingCount} ratings</p> : null}
+                {ratingCount > 0 && averageRating != null ? <AggregateRating averageRating={averageRating} ratingCount={ratingCount} /> : null}
                 <div className="digital-product-card__meta">
                   <div className="digital-product-card__price-preview">
                     {product.reference_price_amount != null ? <del>{formatRupiah(product.reference_price_amount)}</del> : null}
@@ -82,7 +86,7 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
               </div>
             </Link>
           </article>
-        ))}
+        })}
       </div>
     )}
   </div>

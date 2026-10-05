@@ -220,7 +220,7 @@
 .peek-rating__glyph[data-lit='true'] { color: #f5b400; }
 .digital-product-rating-card { display: grid; width: min(100%, 1180px); gap: 22px; margin: 36px auto 0; padding: clamp(20px, 3vw, 32px); border: 1px solid #dfd2c8; border-radius: 18px; background: #fffdfa; box-shadow: 0 14px 36px rgba(76, 24, 3, .06); }
 .digital-product-rating-card__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.digital-product-rating-card__heading h2 { margin-top: 6px; font-size: clamp(1.3rem, 3vw, 2rem); letter-spacing: -.05em; }
+.digital-product-rating-card__heading h2 { font-size: clamp(1.3rem, 3vw, 2rem); letter-spacing: -.05em; }
 .digital-product-rating-card__heading p { max-width: 600px; margin-top: 8px; color: var(--marketing-muted); font-size: .72rem; line-height: 1.6; }
 .digital-product-rating-card__heading > svg { flex: 0 0 auto; color: var(--marketing-orange); }
 .digital-product-rating-form { display: grid; max-width: 650px; gap: 18px; }
@@ -233,8 +233,14 @@
 .digital-product-feedback-success, .digital-product-feedback-error { display: inline-flex; align-items: center; gap: 6px; font-size: .68rem; line-height: 1.5; }
 .digital-product-feedback-success { color: #257346; }
 .digital-product-feedback-error { color: #b42318; }
-.digital-product-rating-aggregate { color: #ffd27c; font-size: .66rem; font-weight: 800; }
-.digital-product-rating-aggregate--detail { margin-top: 14px; color: var(--marketing-orange-dark); font-size: .78rem; }
+.digital-product-rating-aggregate { display: inline-flex; align-items: center; gap: 4px; font-size: .66rem; font-weight: 800; line-height: 1.3; }
+.digital-product-rating-aggregate--catalogue { color: #fff; }
+.digital-product-rating-aggregate--catalogue svg, .digital-product-rating-aggregate--admin svg { color: #f5b400; }
+.digital-product-rating-aggregate--detail { gap: 7px; margin-top: 14px; color: #171311; font-size: 1rem; font-weight: 700; }
+.digital-product-rating-aggregate--detail strong { font-size: 1.15rem; letter-spacing: -.03em; }
+.digital-product-rating-aggregate--detail > span:last-child { color: var(--marketing-muted); font-size: .78rem; font-weight: 600; }
+.digital-product-rating-aggregate__stars { display: inline-flex; gap: 2px; color: #d5c7bc; font-size: 1.25rem; letter-spacing: 0; line-height: 1; }
+.digital-product-rating-aggregate__star { background: linear-gradient(90deg, #f5b400 var(--aggregate-star-fill), #d5c7bc var(--aggregate-star-fill)); background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 .is-spinning { animation: protected-spin 900ms linear infinite; }
 @keyframes protected-spin { to { transform: rotate(360deg); } }
 

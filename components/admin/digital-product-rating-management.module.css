@@ -10,6 +10,7 @@
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .metric { display: grid; min-width: 0; min-height: 78px; align-content: center; gap: 7px; padding: 14px; border: 1px solid #e5e8eb; border-radius: 12px; background: #fafbfc; }
 .metric strong { overflow-wrap: anywhere; color: #27313a; font-size: 21px; letter-spacing: -.04em; line-height: 1; }
+.metric strong :global(.digital-product-rating-aggregate) { font-size: 21px; }
 .metric span { color: #78828b; font-size: 9px; font-weight: 750; }
 .overview { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 14px; margin-top: 16px; }
 .section { min-width: 0; padding: 18px; border: 1px solid #e5e8eb; border-radius: 13px; background: #fff; }
