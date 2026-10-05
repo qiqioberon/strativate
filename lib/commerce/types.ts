@@ -13,6 +13,8 @@ export type CommerceItemKind = 'digital_product' | (string & {})
 export type PublicDigitalProduct = DigitalProduct & {
   imageUrl: string
   salesCount: number | null
+  averageRating?: number | null
+  ratingCount?: number
 }
 
 export type ResolvedCartItem = CartItemView & {

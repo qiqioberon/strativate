@@ -71,6 +71,7 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
                   <ArrowUpRight size={20} strokeWidth={2} />
                 </div>
                 <p className="digital-product-card__description-preview">{product.description}</p>
+                {(product.ratingCount ?? 0) > 0 ? <p className="digital-product-rating-aggregate">★ {product.averageRating?.toFixed(1)} · {product.ratingCount} ratings</p> : null}
                 <div className="digital-product-card__meta">
                   <div className="digital-product-card__price-preview">
                     {product.reference_price_amount != null ? <del>{formatRupiah(product.reference_price_amount)}</del> : null}

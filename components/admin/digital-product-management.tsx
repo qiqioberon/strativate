@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { FileText, ImagePlus, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Trash2, X } from 'lucide-react'
+import { FileText, ImagePlus, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Star, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { ImageFitEditor } from '@/components/admin/image-fit-editor'
@@ -39,6 +39,7 @@ import dialogStyles from './digital-product-dialog.module.css'
 import styles from './digital-product-management.module.css'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
 import { TablePagination } from './table-pagination'
+import { DigitalProductRatingManagement } from './digital-product-rating-management'
 
 const migrationName = '202610040002_digital_product_reference_pricing.sql'
 const PRODUCT_PAGE_SIZE = 10
@@ -73,9 +74,11 @@ export function DigitalProductManagement() {
   const [fieldErrors, setFieldErrors] = useState<DigitalProductDraftErrors>({})
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [ratingProductId, setRatingProductId] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   const selected = useMemo(() => products.find(product => product.id === selectedId) ?? null, [products, selectedId])
+  const ratingProduct = useMemo(() => products.find(product => product.id === ratingProductId) ?? null, [products, ratingProductId])
   const selectedImagePath = selected?.image_path ?? null
   const filteredProducts = useMemo(() => {
     const term = query.trim().toLocaleLowerCase('id-ID')
@@ -104,7 +107,7 @@ export function DigitalProductManagement() {
 
   const load = useCallback(async () => {
     setLoading(true); setError(''); setSetupRequired(false); setLoadFailed(false)
-    const { data, error: loadError } = await supabase.from('digital_products').select('id,name,slug,description,image_path,price_amount,reference_price_amount,content_type,content_path,content_mime_type,content_file_name,content_size_bytes,page_count,duration_seconds,is_published,homepage_featured,homepage_featured_order,show_sales_count,created_at,updated_at').order('name', { ascending: true }).order('id', { ascending: true })
+    const { data, error: loadError } = await supabase.from('digital_products').select('id,name,slug,description,image_path,price_amount,reference_price_amount,content_type,content_path,content_mime_type,content_file_name,content_size_bytes,page_count,duration_seconds,is_published,homepage_featured,homepage_featured_order,show_sales_count,show_rating,created_at,updated_at').order('name', { ascending: true }).order('id', { ascending: true })
     if (loadError) {
       setProducts([])
       if (isDigitalProductSetupRequired(loadError)) setSetupRequired(true)
@@ -294,10 +297,10 @@ export function DigitalProductManagement() {
       {filteredProducts.length === 0 ? <div className={dataStyles.empty}>Tidak ada Digital Product yang sesuai dengan pencarian.</div> : <div className={dataStyles.tableScroll} data-testid="digital-product-table-scroll"><table className={`${dataStyles.table} ${dataStyles.productTable}`} data-testid="digital-product-table"><thead><tr><SortableTableHeader label="Produk" sortKey="product" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Jenis" sortKey="type" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Harga" sortKey="price" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Beranda" sortKey="homepage" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Materi terlindungi" sortKey="content" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Diperbarui" sortKey="updated_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead><tbody>{pagedProducts.map(product => {
         const coverUrl = supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(product.image_path).data.publicUrl
         const contentReady = Boolean(product.content_type && product.content_path && product.content_mime_type)
-        return <tr key={product.id} data-testid="digital-product-row"><td><div className={styles.tableProductIdentity}><div className={styles.tableThumbnail}><Image src={coverUrl} alt="" fill sizes="54px" unoptimized /></div><div className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{product.name}</strong></div></div></td><td><span className={`${dataStyles.badge} ${product.content_type ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.content_type ? product.content_type.toUpperCase() : 'Belum diatur'}</span></td><td>{product.reference_price_amount != null ? <><del>{formatDigitalProductPrice(product.reference_price_amount)}</del><br /></> : null}<strong className={dataStyles.primaryText}>{formatDigitalProductPrice(product.price_amount)}</strong></td><td><span className={`${dataStyles.badge} ${product.is_published ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.is_published ? 'Published' : 'Draft'}</span></td><td><span className={`${dataStyles.badge} ${product.homepage_featured ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.homepage_featured ? `Card Swap #${product.homepage_featured_order}` : 'Tidak'}</span></td><td><span className={`${dataStyles.badge} ${contentReady ? dataStyles.successBadge : dataStyles.warningBadge}`}>{contentReady ? 'Siap' : 'Belum ada'}</span></td><td><time className={dataStyles.dateCell} dateTime={product.updated_at}>{formatUpdatedAt(product.updated_at)}</time></td><td className={dataStyles.actionCell}><div className={styles.tableActions}>{product.is_published ? <a className={`button button-outline ${dataStyles.actionButton}`} href={`/produk-digital/${product.slug}`} target="_blank" rel="noreferrer">Preview</a> : null}<button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => beginEdit(product.id)} data-testid={`digital-product-manage-${product.id}`}>Kelola</button></div></td></tr>
+         return <tr key={product.id} data-testid="digital-product-row"><td><div className={styles.tableProductIdentity}><div className={styles.tableThumbnail}><Image src={coverUrl} alt="" fill sizes="54px" unoptimized /></div><div className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{product.name}</strong></div></div></td><td><span className={`${dataStyles.badge} ${product.content_type ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.content_type ? product.content_type.toUpperCase() : 'Belum diatur'}</span></td><td>{product.reference_price_amount != null ? <><del>{formatDigitalProductPrice(product.reference_price_amount)}</del><br /></> : null}<strong className={dataStyles.primaryText}>{formatDigitalProductPrice(product.price_amount)}</strong></td><td><span className={`${dataStyles.badge} ${product.is_published ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.is_published ? 'Published' : 'Draft'}</span></td><td><span className={`${dataStyles.badge} ${product.homepage_featured ? dataStyles.successBadge : dataStyles.warningBadge}`}>{product.homepage_featured ? `Card Swap #${product.homepage_featured_order}` : 'Tidak'}</span></td><td><span className={`${dataStyles.badge} ${contentReady ? dataStyles.successBadge : dataStyles.warningBadge}`}>{contentReady ? 'Siap' : 'Belum ada'}</span></td><td><time className={dataStyles.dateCell} dateTime={product.updated_at}>{formatUpdatedAt(product.updated_at)}</time></td><td className={dataStyles.actionCell}><div className={styles.tableActions}>{product.is_published ? <a className={`button button-outline ${dataStyles.actionButton}`} href={`/produk-digital/${product.slug}`} target="_blank" rel="noreferrer">Preview</a> : null}<button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => beginEdit(product.id)} data-testid={`digital-product-manage-${product.id}`}>Kelola</button><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => setRatingProductId(product.id)}><Star aria-hidden="true" size={14}/> Rating &amp; Review</button></div></td></tr>
       })}</tbody></table></div>}
       <TablePagination page={productPage} pageSize={PRODUCT_PAGE_SIZE} totalItems={filteredProducts.length} onPageChange={setProductPage} disabled={busy} label="Pagination Digital Product" />
     </div>
-    {productDialog}
+     {productDialog}{ratingProduct ? <DigitalProductRatingManagement product={ratingProduct} onClose={() => setRatingProductId(null)} onVisibilityChange={value => setProducts(current => current.map(item => item.id === ratingProduct.id ? { ...item, show_rating: value } : item))} /> : null}
   </section>
 }

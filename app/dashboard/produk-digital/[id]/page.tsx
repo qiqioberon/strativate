@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
 import { ProtectedContentViewer } from '@/components/digital-products/protected-content-viewer'
+import { RatingFeedback } from '@/components/digital-products/rating-feedback'
 import { getOwnedDigitalProduct } from '@/lib/commerce/server'
 import { isDigitalProductsEnabled } from '@/lib/features'
 
@@ -31,6 +32,7 @@ export default async function ProtectedDigitalProductPage({ params }: { params: 
           <p>Pembelian Anda sudah tercatat, tetapi file materi belum tersedia untuk dibuka. Silakan coba lagi setelah administrator menyelesaikan kontennya.</p>
         </section>
       )}
+      <RatingFeedback productId={product.product_id} productName={product.name_snapshot} />
     </main>
   )
 }
