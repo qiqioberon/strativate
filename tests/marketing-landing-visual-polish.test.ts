@@ -33,6 +33,6 @@ test('program card spacing and homepage product navigation stay intentionally ti
   assert.match(program, /marketing-service-card--primary \.marketing-service-card__copy,[\s\S]*marketing-service-card--secondary \.marketing-service-card__copy \{\s*margin-top:\s*24px/)
   assert.match(commerce, /digital-product-card-swap__arrow--previous \{ left:\s*18px/)
   assert.match(commerce, /digital-product-card-swap__arrow--next \{ right:\s*18px/)
-  assert.match(commerce, /digital-product-card-swap__dots \{[\s\S]*bottom:\s*28px/)
-  assert.match(commerce, /data-product-count='5'[^}]*\.rb-card-swap \{ left:\s*calc\(50% - 39px\)/)
+  assert.match(commerce, /digital-product-card-swap__dots \{[^}]*display:\s*flex[^}]*justify-content:\s*center/)
+  assert.match(commerce, /data-product-count='5'[^}]*\{[^}]*--swap-center-offset:\s*39px/)
 })

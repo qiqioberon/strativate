@@ -276,30 +276,45 @@
 
 /* Homepage Digital Product showcase: React Bits Card Swap adaptation. */
 .digital-product-card-swap {
+  --swap-scale: .82;
+  --swap-stack-rise: 0px;
+  --swap-center-offset: 0px;
+  --swap-pagination-gap: 22px;
   position: relative;
+  display: grid;
   width: 100%;
-  min-height: 760px;
+  min-width: 0;
+  gap: var(--swap-pagination-gap);
+  padding-bottom: 6px;
   overflow: visible;
 }
+.digital-product-card-swap[data-product-count='2'] { --swap-stack-rise: 34px; --swap-center-offset: 10px; }
+.digital-product-card-swap[data-product-count='3'] { --swap-stack-rise: 68px; --swap-center-offset: 20px; }
+.digital-product-card-swap[data-product-count='4'] { --swap-stack-rise: 102px; --swap-center-offset: 30px; }
+.digital-product-card-swap[data-product-count='5'] { --swap-stack-rise: 136px; --swap-center-offset: 39px; }
+.digital-product-card-swap__stage {
+  position: relative;
+  min-width: 0;
+  /* Reserve the rear cards' 34px rise per slot before the front-card scene. */
+  padding-top: calc(var(--swap-stack-rise) * var(--swap-scale));
+}
 .digital-product-card-swap__scene {
-  position: absolute;
-  inset: 0 0 110px;
+  position: relative;
+  /* 570px card height + 34px for the 480px-wide card's 4deg skew.
+     The stage scale mirrors the existing Card Swap transforms below. */
+  height: calc((570px + 34px) * var(--swap-scale));
   min-width: 0;
   overflow: visible;
 }
 .rb-card-swap {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: calc(50% - var(--swap-center-offset));
   perspective: 900px;
   overflow: visible;
   transform: translate(-50%, -50%) scale(.82);
   transform-origin: center center;
 }
-.digital-product-card-swap[data-product-count='2'] .rb-card-swap { left: calc(50% - 10px); }
-.digital-product-card-swap[data-product-count='3'] .rb-card-swap { left: calc(50% - 20px); }
-.digital-product-card-swap[data-product-count='4'] .rb-card-swap { left: calc(50% - 30px); }
-.digital-product-card-swap[data-product-count='5'] .rb-card-swap { left: calc(50% - 39px); }
 .rb-card-swap__card {
   position: absolute;
   top: 50%;
@@ -386,19 +401,16 @@
   border-radius: 28px;
 }
 .digital-product-card-swap__dots {
-  position: absolute;
-  right: 0;
-  bottom: 28px;
-  left: 0;
-  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* Match the front card's optical center without transforming navigation. */
+  padding-right: calc(var(--swap-center-offset) * 2);
 }
 .digital-product-card-swap__navigation {
   position: absolute;
-  inset: 0 0 110px;
+  inset: calc(var(--swap-stack-rise) * var(--swap-scale)) 0 0;
   z-index: 25;
   pointer-events: none;
 }
@@ -458,43 +470,39 @@
 }
 
 @media (max-width: 1080px) {
-  .digital-product-card-swap { min-height: 700px; }
-  .digital-product-card-swap__scene,
-  .digital-product-card-swap__navigation { bottom: 96px; }
+  .digital-product-card-swap { --swap-scale: .72; }
   .rb-card-swap { transform: translate(-50%, -50%) scale(.72); }
-  .digital-product-card-swap[data-product-count='2'] .rb-card-swap { left: calc(50% - 9px); }
-  .digital-product-card-swap[data-product-count='3'] .rb-card-swap { left: calc(50% - 17px); }
-  .digital-product-card-swap[data-product-count='4'] .rb-card-swap { left: calc(50% - 26px); }
-  .digital-product-card-swap[data-product-count='5'] .rb-card-swap { left: calc(50% - 35px); }
+  .digital-product-card-swap[data-product-count='2'] { --swap-center-offset: 9px; }
+  .digital-product-card-swap[data-product-count='3'] { --swap-center-offset: 17px; }
+  .digital-product-card-swap[data-product-count='4'] { --swap-center-offset: 26px; }
+  .digital-product-card-swap[data-product-count='5'] { --swap-center-offset: 35px; }
   .digital-product-card-swap__arrow--previous { left: 6px; }
   .digital-product-card-swap__arrow--next { right: 6px; }
-  .digital-product-card-swap__dots { bottom: 24px; }
 }
 
 @media (max-width: 900px) {
   .digital-product-card-swap {
+    --swap-scale: .82;
     width: min(100%, 620px);
-    min-height: 720px;
     margin-inline: auto;
   }
-  .digital-product-card-swap__scene,
-  .digital-product-card-swap__navigation { bottom: 100px; }
   .rb-card-swap { transform: translate(-50%, -50%) scale(.82); }
-  .digital-product-card-swap[data-product-count='2'] .rb-card-swap { left: calc(50% - 10px); }
-  .digital-product-card-swap[data-product-count='3'] .rb-card-swap { left: calc(50% - 20px); }
-  .digital-product-card-swap[data-product-count='4'] .rb-card-swap { left: calc(50% - 30px); }
-  .digital-product-card-swap[data-product-count='5'] .rb-card-swap { left: calc(50% - 39px); }
+  .digital-product-card-swap[data-product-count='2'] { --swap-center-offset: 10px; }
+  .digital-product-card-swap[data-product-count='3'] { --swap-center-offset: 20px; }
+  .digital-product-card-swap[data-product-count='4'] { --swap-center-offset: 30px; }
+  .digital-product-card-swap[data-product-count='5'] { --swap-center-offset: 39px; }
   .digital-product-card-swap__arrow--previous { left: 10px; }
   .digital-product-card-swap__arrow--next { right: 10px; }
 }
 
 @media (max-width: 560px) {
   .digital-product-card-swap {
-    min-height: 500px;
+    --swap-scale: .54;
+    --swap-pagination-gap: 20px;
   }
   .rb-card-swap { transform: translate(-50%, -50%) scale(.54); }
+  .digital-product-card-swap[data-product-count='2'] { --swap-center-offset: 7px; }
   .digital-product-card-swap[data-product-count='2'] .rb-card-swap {
-    left: calc(50% - 7px);
     transform: translate(-50%, -50%) scale(.54);
   }
   .digital-product-card-swap__arrow {
@@ -503,29 +511,27 @@
   }
   .digital-product-card-swap__arrow--previous { left: 0; }
   .digital-product-card-swap__arrow--next { right: 0; }
-  .digital-product-card-swap__dots { bottom: 22px; }
 }
 
 @media (max-width: 390px) {
-  .digital-product-card-swap { min-height: 470px; }
+  .digital-product-card-swap { --swap-scale: .5; }
   .rb-card-swap { transform: translate(-50%, -50%) scale(.5); }
   .digital-product-card-swap[data-product-count='2'] .rb-card-swap {
-    left: calc(50% - 7px);
     transform: translate(-50%, -50%) scale(.5);
   }
 }
 
 @media (max-width: 560px) {
+  .digital-product-card-swap[data-product-count='3'] { --swap-scale: .46; --swap-center-offset: 13px; }
+  .digital-product-card-swap[data-product-count='4'] { --swap-scale: .42; --swap-center-offset: 18px; }
+  .digital-product-card-swap[data-product-count='5'] { --swap-scale: .39; --swap-center-offset: 23px; }
   .digital-product-card-swap[data-product-count='3'] .rb-card-swap {
-    left: calc(50% - 13px);
     transform: translate(-50%, -50%) scale(.46);
   }
   .digital-product-card-swap[data-product-count='4'] .rb-card-swap {
-    left: calc(50% - 18px);
     transform: translate(-50%, -50%) scale(.42);
   }
   .digital-product-card-swap[data-product-count='5'] .rb-card-swap {
-    left: calc(50% - 23px);
     transform: translate(-50%, -50%) scale(.39);
   }
 }
