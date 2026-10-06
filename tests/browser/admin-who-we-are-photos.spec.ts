@@ -7,6 +7,8 @@ type Photo = {
   badge_text: string | null
   created_at: string
   updated_at: string
+  source_image_path?: string | null
+  image_crop?: unknown
 }
 
 async function json(route: Route, body: unknown, status = 200) {
@@ -23,6 +25,7 @@ async function mockBackend(
   rows: Photo[],
   mutations: Array<{ method: string; body: unknown }> = [],
 ) {
+  await page.route('**/rest/v1/rpc/admin_list_homepage_who_we_are_photos', route => json(route, rows))
   await page.route('**/rest/v1/homepage_who_we_are_photos*', async route => {
     if (route.request().method() === 'GET') return json(route, rows)
     mutations.push({
@@ -92,13 +95,19 @@ test('extreme replacement aspect ratio stays clipped to the crop preview', async
   const dialog = page.getByTestId('who-we-are-photo-editor-dialog')
   const fileInput = dialog.locator('input[type="file"]')
   await fileInput.setInputFiles({
-    name: 'extreme-wide.svg',
-    mimeType: 'image/svg+xml',
-    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="300"><rect width="2000" height="300" fill="black"/></svg>'),
+    name: 'extreme-wide.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(await page.evaluate(() => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 2000
+      canvas.height = 300
+      return canvas.toDataURL('image/png').split(',')[1]
+    }), 'base64'),
   })
 
-  await expect(dialog.getByText('Horizontal position')).toBeVisible()
-  const previewImage = dialog.locator('img[draggable="false"]')
+  const cropper = page.locator('.direct-crop-dialog[open]')
+  await expect(cropper.getByLabel('Movable crop selection')).toBeVisible()
+  const previewImage = cropper.locator('img[draggable="false"]')
   await expect(previewImage).toBeVisible()
 
   const previewContract = await previewImage.evaluate(image => {
@@ -116,7 +125,8 @@ test('extreme replacement aspect ratio stays clipped to the crop preview', async
   })
 
   expect(previewContract.position).toBe('relative')
-  expect(previewContract.overflow).toBe('hidden')
+  // The direct crop stage fits the full source rather than zooming a preview.
+  expect(['visible', 'hidden']).toContain(previewContract.overflow)
   expect(previewContract.leaksOutsideFrame).toBe(false)
 })
 
@@ -150,6 +160,8 @@ test('editing an existing slot PATCHes mutable fields without resending its fixe
     image_path: storedPath,
     alt_text: 'Students preparing a competition presentation',
     badge_text: 'Updated achievement',
+    source_image_path: null,
+    image_crop: null,
   })
   expect(mutations.some(mutation => mutation.method === 'POST')).toBe(false)
 })

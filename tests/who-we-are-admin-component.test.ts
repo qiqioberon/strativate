@@ -32,15 +32,13 @@ test('slot editor keeps media work inside an accessible focused dialog', async (
   assert.match(manager, /<dialog/)
   assert.match(manager, /showModal\(\)/)
   assert.match(manager, /aria-labelledby="who-we-are-photo-editor-heading"/)
-  assert.match(manager, /type="file"/)
   assert.match(manager, /Alt text/)
   assert.match(manager, /Badge text \(optional\)/)
-  assert.match(manager, /DirectImageCropper/)
-  assert.match(manager, /Adjust crop/)
-  assert.match(manager, /aspectRatio=\{WHO_WE_ARE_PHOTO_TARGETS\[activeRole\]\.width \/ WHO_WE_ARE_PHOTO_TARGETS\[activeRole\]\.height\}/)
+  assert.match(manager, /AdminImageUploadField/)
+  assert.match(manager, /useAdminImageUpload/)
+  assert.match(manager, /WHO_WE_ARE_PHOTO_TARGETS\[activeRole \?\? 'primary'\]/)
   assert.doesNotMatch(manager, /Horizontal position|Vertical position|Reset crop/)
   assert.match(manager, /Remove photo/)
-  assert.match(manager, /selectedFile \?/)
   assert.match(manager, /<form className=\{styles\.form\} key=\{activeRole \?\? 'idle'\}/)
 })
 
@@ -74,7 +72,6 @@ test('metadata-only edits preserve the stored path without invoking crop or uplo
   assert.match(manager, /const storedPath = selected\?\.image_path \?\? null/)
   assert.match(manager, /aria-invalid=\{Boolean\(fieldErrors\.altText\)\}/)
   assert.match(manager, /aria-describedby=\{fieldErrors\.altText \? 'who-we-are-alt-error'/)
-  assert.match(manager, /aria-invalid=\{Boolean\(fieldErrors\.file\)\}/)
 })
 
 

@@ -4,7 +4,6 @@ import {
   ArrowDown,
   ArrowUp,
   CircleAlert,
-  ImagePlus,
   Plus,
   RefreshCw,
   Trash2,
@@ -18,34 +17,27 @@ import {
   useRef,
   useState,
   type FormEvent,
-  type PointerEvent as ReactPointerEvent,
 } from 'react'
 
 import { formError } from '@/lib/auth/errors'
 import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
+import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
+import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
+import { cropRectFromJson, PHOTO_SOURCE_BUCKET } from '@/lib/media/image-crop'
+import { persistAdminImage } from '@/lib/media/admin-image-storage'
 import {
   buildCompetitionRecognitionPayload,
   getNextCompetitionRecognitionOrder,
   isCompetitionRecognitionSetupRequired,
   reorderCompetitionRecognitionIds,
-  safeCompetitionLogoFileName,
   validateCompetitionRecognitionDraft,
   type CompetitionRecognitionDraftErrors,
 } from '@/lib/marketing/competition-recognition-admin'
 import {
   COMPETITION_RECOGNITION_LOGO_BUCKET,
   COMPETITION_RECOGNITION_LOGO_HEIGHT,
-  COMPETITION_RECOGNITION_LOGO_MAX_ZOOM,
-  COMPETITION_RECOGNITION_LOGO_MIN_ZOOM,
   COMPETITION_RECOGNITION_LOGO_WIDTH,
 } from '@/lib/marketing/competition-recognition-config'
-import {
-  calculateCompetitionRecognitionLogoPlacement,
-  DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT,
-  fitCompetitionRecognitionLogo,
-  normalizeCompetitionRecognitionLogoFit,
-  type CompetitionRecognitionLogoFit,
-} from '@/lib/marketing/competition-recognition-image'
 import { createClient } from '@/lib/supabase/client'
 import type { CompetitionRecognition } from '@/lib/supabase/database.types'
 
@@ -53,7 +45,13 @@ import dataStyles from './data-management.module.css'
 import dialogStyles from './digital-product-dialog.module.css'
 import styles from './competition-recognition-management.module.css'
 
-const migrationName = '202609270001_competition_recognitions.sql'
+const migrationName = '202610070001_marketing_logo_crop_sources.sql'
+const imageTarget = {
+  width: COMPETITION_RECOGNITION_LOGO_WIDTH,
+  height: COMPETITION_RECOGNITION_LOGO_HEIGHT,
+  maxBytes: 5 * 1024 * 1024,
+  title: 'Adjust recognition image crop',
+}
 
 type Draft = {
   competitionName: string
@@ -72,32 +70,15 @@ function draftFromRecognition(recognition: CompetitionRecognition): Draft {
   }
 }
 
-function outputFileBase(file: File) {
-  return safeCompetitionLogoFileName(file.name, file.type)
-    .replace(/\.(jpe?g|png|webp)$/i, '')
-    .slice(0, 80) || 'logo'
-}
-
 export function CompetitionRecognitionManagement() {
   const supabase = useMemo(() => createClient(), [])
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const dragRef = useRef<{
-    pointerId: number
-    clientX: number
-    clientY: number
-    startX: number
-    startY: number
-  } | null>(null)
 
   const [recognitions, setRecognitions] = useState<CompetitionRecognition[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<CompetitionRecognition | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [sourceDimensions, setSourceDimensions] = useState<{ width: number; height: number } | null>(null)
-  const [fit, setFit] = useState<CompetitionRecognitionLogoFit>({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })
   const [loading, setLoading] = useState(true)
   const [busyAction, setBusyAction] = useState<string | null>(null)
   const [setupRequired, setSetupRequired] = useState(false)
@@ -105,12 +86,13 @@ export function CompetitionRecognitionManagement() {
   const [fieldErrors, setFieldErrors] = useState<CompetitionRecognitionDraftErrors>({})
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const image = useAdminImageUpload({ supabase, target: imageTarget, onError: setError })
 
   const selected = useMemo(
     () => recognitions.find(recognition => recognition.id === selectedId) ?? null,
     [recognitions, selectedId],
   )
-  const busy = busyAction !== null
+  const busy = busyAction !== null || image.loadingSource
   const editorOpen = creating || Boolean(selected)
 
   const load = useCallback(async () => {
@@ -118,11 +100,7 @@ export function CompetitionRecognitionManagement() {
     setError('')
     setSetupRequired(false)
     setLoadFailed(false)
-    const { data, error: loadError } = await supabase
-      .from('competition_recognitions')
-      .select('*')
-      .order('display_order')
-      .order('created_at')
+    const { data, error: loadError } = await supabase.rpc('admin_list_competition_recognitions')
 
     if (loadError) {
       setRecognitions([])
@@ -140,17 +118,6 @@ export function CompetitionRecognitionManagement() {
   useEffect(() => { void load() }, [load])
 
   useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl(null)
-      setSourceDimensions(null)
-      return
-    }
-    const objectUrl = URL.createObjectURL(selectedFile)
-    setPreviewUrl(objectUrl)
-    return () => URL.revokeObjectURL(objectUrl)
-  }, [selectedFile])
-
-  useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
     if (editorOpen && !dialog.open) dialog.showModal()
@@ -161,34 +128,19 @@ export function CompetitionRecognitionManagement() {
     supabase.storage.from(COMPETITION_RECOGNITION_LOGO_BUCKET).getPublicUrl(path).data.publicUrl
   ), [supabase])
 
-  const editorPreviewUrl = previewUrl ?? (selected ? publicUrl(selected.logo_path) : null)
-  const placement = useMemo(() => {
-    if (!selectedFile || !sourceDimensions) return null
-    return calculateCompetitionRecognitionLogoPlacement(
-      sourceDimensions.width,
-      sourceDimensions.height,
-      fit,
-    )
-  }, [fit, selectedFile, sourceDimensions])
-
   function resetEditor() {
     setCreating(false)
     setSelectedId(null)
     setDraft(emptyDraft)
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })
+    image.reset()
     setFieldErrors({})
-    dragRef.current = null
   }
 
   function beginCreate() {
     setCreating(true)
     setSelectedId(null)
     setDraft(emptyDraft)
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })
+    image.reset()
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -198,47 +150,10 @@ export function CompetitionRecognitionManagement() {
     setCreating(false)
     setSelectedId(recognition.id)
     setDraft(draftFromRecognition(recognition))
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })
+    image.reset(cropRectFromJson(recognition.logo_crop))
     setFieldErrors({})
     setError('')
     setNotice('')
-  }
-
-  function updateFit(next: Partial<CompetitionRecognitionLogoFit>) {
-    setFit(current => normalizeCompetitionRecognitionLogoFit({ ...current, ...next }))
-  }
-
-  function handlePreviewPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!selectedFile) return
-    event.currentTarget.setPointerCapture(event.pointerId)
-    dragRef.current = {
-      pointerId: event.pointerId,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      startX: fit.x,
-      startY: fit.y,
-    }
-  }
-
-  function handlePreviewPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current
-    if (!selectedFile || !drag || drag.pointerId !== event.pointerId) return
-    const bounds = event.currentTarget.getBoundingClientRect()
-    if (!bounds.width || !bounds.height) return
-    updateFit({
-      x: drag.startX + ((event.clientX - drag.clientX) / bounds.width) * 100,
-      y: drag.startY + ((event.clientY - drag.clientY) / bounds.height) * 100,
-    })
-  }
-
-  function handlePreviewPointerEnd(event: ReactPointerEvent<HTMLDivElement>) {
-    if (dragRef.current?.pointerId !== event.pointerId) return
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-    dragRef.current = null
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -247,92 +162,55 @@ export function CompetitionRecognitionManagement() {
 
     const validation = validateCompetitionRecognitionDraft({
       competitionName: draft.competitionName,
-      file: selectedFile,
-      hasStoredLogo: Boolean(selected?.logo_path),
+      file: image.originalFile,
+      hasStoredLogo: Boolean(image.processedFile || selected?.logo_path),
     })
     setFieldErrors(validation)
     setError('')
     setNotice('')
     if (Object.keys(validation).length) return
 
-    let uploadedPath: string | null = null
-    setBusyAction(selectedFile ? 'processing' : 'save')
+    setBusyAction('save')
 
     try {
-      if (selectedFile) {
-        const normalizedLogo = await fitCompetitionRecognitionLogo(selectedFile, fit)
-        setBusyAction('save')
-        uploadedPath = 'recognition-logos/' + crypto.randomUUID() + '-' + outputFileBase(selectedFile) + '.webp'
-        const { error: uploadError } = await supabase.storage
-          .from(COMPETITION_RECOGNITION_LOGO_BUCKET)
-          .upload(uploadedPath, normalizedLogo, {
-            cacheControl: '3600',
-            contentType: 'image/webp',
-            upsert: false,
-          })
-        if (uploadError) throw uploadError
-      }
-
-      const payload = buildCompetitionRecognitionPayload({
-        competitionName: draft.competitionName,
-        logoPath: uploadedPath,
-        storedLogoPath: selected?.logo_path ?? null,
-        isActive: draft.isActive,
+      const saved = await persistAdminImage({
+        original: image.originalFile,
+        derivative: image.processedFile,
+        sourcePrefix: 'competition-recognitions/',
+        derivativePrefix: 'recognition-logos/',
+        previous: { path: selected?.logo_path ?? null, sourcePath: selected?.logo_source_path ?? null },
+        upload: async (bucket, path, file) => {
+          const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: '3600', upsert: false })
+          if (error) throw new Error(error.message)
+        },
+        remove: async (bucket, path) => {
+          const { error } = await supabase.storage.from(bucket).remove([path])
+          if (error) throw new Error(error.message)
+        },
+        persist: async refs => {
+          const payload = {
+            ...buildCompetitionRecognitionPayload({ competitionName: draft.competitionName, logoPath: refs.path, storedLogoPath: selected?.logo_path ?? null, isActive: draft.isActive }),
+            logo_source_path: refs.sourcePath,
+            logo_crop: image.crop,
+          }
+          const result = selected
+            ? await supabase.from('competition_recognitions').update(payload).eq('id', selected.id)
+            : await supabase.from('competition_recognitions').insert({ ...payload, display_order: getNextCompetitionRecognitionOrder(recognitions) })
+          if (result.error) throw new Error(result.error.message)
+        },
+        reconcile: async () => {
+          const { data, error } = await supabase.rpc('admin_list_competition_recognitions')
+          if (error) throw new Error(error.message)
+          return (data ?? []).map(row => ({ path: row.logo_path, sourcePath: row.logo_source_path }))
+        },
       })
-      const result = selected
-        ? await supabase.from('competition_recognitions').update(payload).eq('id', selected.id)
-        : await supabase.from('competition_recognitions').insert({
-          ...payload,
-          display_order: getNextCompetitionRecognitionOrder(recognitions),
-        })
-      if (result.error) throw result.error
-
-      let warning = ''
-      if (selected && uploadedPath && selected.logo_path !== uploadedPath) {
-        const { error: cleanupError } = await supabase.storage
-          .from(COMPETITION_RECOGNITION_LOGO_BUCKET)
-          .remove([selected.logo_path])
-        if (cleanupError) warning = ' The old logo still needs manual Storage cleanup.'
-      }
 
       const wasEditing = Boolean(selected)
       resetEditor()
-      setNotice((wasEditing ? 'Recognition updated.' : 'Recognition added.') + warning)
+      setNotice((wasEditing ? 'Recognition updated.' : 'Recognition added.') + saved.warning)
       await load()
     } catch (caught) {
-      let cleanupWarning = ''
-      if (uploadedPath) {
-        const { data: persisted, error: reconciliationError } = await supabase
-          .from('competition_recognitions')
-          .select('id,logo_path')
-          .eq('logo_path', uploadedPath)
-          .maybeSingle()
-
-        if (persisted) {
-          let warning = ''
-          if (selected && selected.logo_path !== uploadedPath) {
-            const { error: cleanupError } = await supabase.storage
-              .from(COMPETITION_RECOGNITION_LOGO_BUCKET)
-              .remove([selected.logo_path])
-            if (cleanupError) warning = ' The old logo still needs manual Storage cleanup.'
-          }
-          const wasEditing = Boolean(selected)
-          resetEditor()
-          setNotice((wasEditing ? 'Recognition updated.' : 'Recognition added.') + warning)
-          await load()
-          return
-        }
-
-        if (reconciliationError) {
-          cleanupWarning = ' The new file was not removed because its database status could not be confirmed. Review the recognition list and Storage before retrying.'
-        } else {
-          const { error: cleanupError } = await supabase.storage
-            .from(COMPETITION_RECOGNITION_LOGO_BUCKET)
-            .remove([uploadedPath])
-          if (cleanupError) cleanupWarning = ' The new file also needs manual Storage cleanup.'
-        }
-      }
-      setError(formError(caught, 'Recognition could not be saved.') + cleanupWarning)
+      setError(formError(caught, 'Recognition could not be saved.'))
     } finally {
       setBusyAction(null)
     }
@@ -401,6 +279,10 @@ export function CompetitionRecognitionManagement() {
         .from(COMPETITION_RECOGNITION_LOGO_BUCKET)
         .remove([recognition.logo_path])
       if (storageError) warning += ' The logo still needs manual Storage cleanup.'
+      if (recognition.logo_source_path) {
+        const { error: sourceError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([recognition.logo_source_path])
+        if (sourceError) warning += ' The original still needs manual Storage cleanup.'
+      }
 
       if (selectedId === recognition.id) resetEditor()
       setNotice('Recognition deleted.' + warning)
@@ -646,120 +528,11 @@ export function CompetitionRecognitionManagement() {
               </div>
 
               <section className={styles.mediaSection}>
-                <div className={styles.mediaCopy}>
-                  <label>
-                    Logo
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={event => {
-                        const file = event.target.files?.[0] ?? null
-                        setSelectedFile(file)
-                        setSourceDimensions(null)
-                        setFit({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })
-                        setFieldErrors(current => ({ ...current, file: undefined }))
-                      }}
-                    />
-                  </label>
-                  <p className={styles.help}>
-                    {selected?.logo_path ? 'Leave empty to keep the existing logo. ' : ''}
-                    JPG, PNG, or WebP · maximum 5 MB. New files are saved as a transparent 5:2 WebP canvas.
-                  </p>
-                  {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
-
-                  {selectedFile ? (
-                    <div className={styles.fitControls} data-testid="competition-recognition-fit-controls">
-                      <div className={styles.fitMeta}>
-                        <span>Fit the complete logo inside the homepage frame. Drag the preview or use the sliders.</span>
-                        <strong>{COMPETITION_RECOGNITION_LOGO_WIDTH} × {COMPETITION_RECOGNITION_LOGO_HEIGHT} px · 5:2</strong>
-                      </div>
-                      <label>
-                        Horizontal position
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={fit.x}
-                          onChange={event => updateFit({ x: Number(event.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Vertical position
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={fit.y}
-                          onChange={event => updateFit({ y: Number(event.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Zoom
-                        <input
-                          type="range"
-                          min={COMPETITION_RECOGNITION_LOGO_MIN_ZOOM}
-                          max={COMPETITION_RECOGNITION_LOGO_MAX_ZOOM}
-                          step=".05"
-                          value={fit.zoom}
-                          onChange={event => updateFit({ zoom: Number(event.target.value) })}
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        className={'button button-outline ' + styles.resetFit}
-                        onClick={() => setFit({ ...DEFAULT_COMPETITION_RECOGNITION_LOGO_FIT })}
-                      >
-                        Reset to Fit
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className={styles.previewColumn}>
-                  <div
-                    className={styles.previewFrame}
-                    data-testid="competition-recognition-fit-preview"
-                    data-draggable={selectedFile ? 'true' : 'false'}
-                    onPointerDown={handlePreviewPointerDown}
-                    onPointerMove={handlePreviewPointerMove}
-                    onPointerUp={handlePreviewPointerEnd}
-                    onPointerCancel={handlePreviewPointerEnd}
-                  >
-                    {editorPreviewUrl ? (
-                      <img
-                        src={editorPreviewUrl}
-                        alt={draft.competitionName ? draft.competitionName + ' preview' : 'Competition logo preview'}
-                        draggable={false}
-                        onLoad={event => {
-                          if (!selectedFile) return
-                          const image = event.currentTarget
-                          setSourceDimensions({ width: image.naturalWidth, height: image.naturalHeight })
-                        }}
-                        style={selectedFile && placement ? {
-                          position: 'absolute',
-                          left: (placement.x / COMPETITION_RECOGNITION_LOGO_WIDTH) * 100 + '%',
-                          top: (placement.y / COMPETITION_RECOGNITION_LOGO_HEIGHT) * 100 + '%',
-                          width: (placement.width / COMPETITION_RECOGNITION_LOGO_WIDTH) * 100 + '%',
-                          height: (placement.height / COMPETITION_RECOGNITION_LOGO_HEIGHT) * 100 + '%',
-                          objectFit: 'contain',
-                        } : {
-                          width: '100%',
-                          height: '100%',
-                          padding: '8%',
-                          objectFit: 'contain',
-                        }}
-                      />
-                    ) : (
-                      <div className={styles.previewPlaceholder}>
-                        <ImagePlus aria-hidden="true" />
-                        <span>Select a logo to preview its homepage frame.</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className={styles.previewCaption}>
-                    Transparent surrounding space is preserved in the saved file. The white frame mirrors the homepage background.
-                  </p>
-                </div>
+                <AdminImageUploadField image={image} target={imageTarget}
+                  storedUrl={selected ? publicUrl(selected.logo_path) : null}
+                  sourcePath={selected?.logo_source_path} alt={draft.competitionName || 'Recognition image preview'}
+                  disabled={busy} onApplied={() => setFieldErrors(current => ({ ...current, file: undefined }))} />
+                {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
               </section>
 
               <div className={styles.formActions}>
