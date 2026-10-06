@@ -86,7 +86,7 @@ test('recognition presentation separates a warm statement from the white logo mo
   assert.match(scoped, /\.homepage-recognition__logos\s*\{[^}]*pointer-events:\s*none/)
   assert.match(scoped, /object-fit:\s*contain/)
   assert.match(scoped, /\.homepage-recognition h2\s*\{[^}]*max-width:\s*1180px/)
-  assert.match(scoped, /\.homepage-recognition__logo\s*\{[^}]*width:\s*clamp\(92px,\s*7vw,\s*120px\)[^}]*aspect-ratio:\s*5\s*\/\s*2/)
+  assert.match(scoped, /\.homepage-recognition__logo\s*\{[^}]*width:\s*clamp\(92px,\s*7vw,\s*120px\)[^}]*aspect-ratio:\s*5\s*\/\s*4/)
   assert.match(scoped, /\.homepage-recognition__logo img\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*contain/)
   assert.doesNotMatch(scoped.slice(0, scoped.indexOf('@media (max-width', 1)), /background:\s*(?:linear-gradient|radial-gradient)|box-shadow/)
   assert.doesNotMatch(scoped, /homepage-recognition[^\n]*:(hover|focus)|carousel/i)

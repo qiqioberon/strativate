@@ -101,11 +101,11 @@ test('recognition admin uses structured modal management and normalized WebP upl
   assert.doesNotMatch(component, /name="position"|type="number"/)
   assert.doesNotMatch(component, /\.from\('competitions'\)/)
 
-  assert.match(styles, /aspect-ratio:\s*5\s*\/\s*2/)
+  assert.match(styles, /aspect-ratio:\s*5\s*\/\s*4/)
   assert.match(styles, /@media \(max-width:\s*760px\)/)
   assert.match(styles, /data-label/)
   assert.match(config, /COMPETITION_RECOGNITION_LOGO_WIDTH\s*=\s*1000/)
-  assert.match(config, /COMPETITION_RECOGNITION_LOGO_HEIGHT\s*=\s*400/)
+  assert.match(config, /COMPETITION_RECOGNITION_LOGO_HEIGHT\s*=\s*800/)
   assert.match(admin, /Competition Recognition/)
   assert.match(admin, /<CompetitionRecognitionManagement\/>/)
 })

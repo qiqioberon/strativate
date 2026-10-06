@@ -1,4 +1,5 @@
 import type { TrustedPartnerView } from '@/lib/marketing/trusted-partners'
+import { TRUSTED_PARTNER_LOGO_HEIGHT, TRUSTED_PARTNER_LOGO_WIDTH } from '@/lib/marketing/trusted-partner-config'
 
 type PartnerWallProps = {
   className: string
@@ -23,7 +24,7 @@ function PartnerCard({ partner }: { partner: TrustedPartnerView }) {
     <article className="homepage-partners__card">
       {/* Supabase owns these admin-uploaded public assets, so native images accept the configured project hostname. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={partner.logoUrl} alt="" width={800} height={400} loading="lazy" />
+      <img src={partner.logoUrl} alt="" width={TRUSTED_PARTNER_LOGO_WIDTH} height={TRUSTED_PARTNER_LOGO_HEIGHT} loading="lazy" />
     </article>
   )
 }
@@ -82,8 +83,8 @@ export function TrustedPartnersSection({ partners }: { partners: TrustedPartnerV
                 <img
                   src={partner.logoUrl}
                   alt={partner.organization_name}
-                  width={800}
-                  height={400}
+                  width={TRUSTED_PARTNER_LOGO_WIDTH}
+                  height={TRUSTED_PARTNER_LOGO_HEIGHT}
                   loading="lazy"
                 />
               </li>

@@ -46,12 +46,16 @@ owned by the database-backed mentor public-profile domain introduced by
 - Admin image uploads for Publications, Competitions, Competition Recognition,
   Trusted Partners, and Who We Are share the direct crop workflow. Originals stay
   private in `marketing-photo-sources`; only processed WebP derivatives are public.
-  Recognition outputs remain 1000×400, partners 800×400, editorial covers 1600×900,
+  Recognition outputs are 1000×800 (5:4), partners 800×640 (5:4), editorial covers 1600×900,
   and Who We Are 1200×1600 (primary) / 1000×1000 (supporting). Apply
   `202610070001_marketing_logo_crop_sources.sql` before deploying the refactor.
   Existing derivative-only logos remain valid with null source/crop metadata;
   replacement is required to enable future crop adjustments. No new stakeholder
   assets or content approvals are introduced by this refactor.
+  Recognition homepage frames use 5:4 with the existing responsive item widths.
+  Partner frames use 5:4 with auto-height cards, unchanged horizontal widths,
+  4/3/2 columns, and the same vertical scroll behavior. Legacy derivatives are
+  not resized or migrated; they remain contained until an admin replaces them.
 
 - `ready` means the supplied file or approved text is integrated and visible.
 - `missing` means the UI must use a clear fallback or omit the section.
