@@ -30,8 +30,8 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
         <CardSwap
           width={480}
           height={570}
-          cardDistance={46}
-          verticalDistance={50}
+          cardDistance={24}
+          verticalDistance={34}
           delay={3200}
           skewAmount={4}
           easing="elastic"

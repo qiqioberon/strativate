@@ -31,6 +31,8 @@ test('landing page surfaces, filters, and empty states stay compact and polished
 
 test('program card spacing and homepage product navigation stay intentionally tight', () => {
   assert.match(program, /marketing-service-card--primary \.marketing-service-card__copy,[\s\S]*marketing-service-card--secondary \.marketing-service-card__copy \{\s*margin-top:\s*24px/)
-  assert.match(commerce, /digital-product-card-swap__arrow--previous \{ left:\s*max\(8px, calc\(50% - 248px\)\)/)
-  assert.match(commerce, /digital-product-card-swap__arrow--next \{ right:\s*max\(8px, calc\(50% - 248px\)\)/)
+  assert.match(commerce, /digital-product-card-swap__arrow--previous \{ left:\s*18px/)
+  assert.match(commerce, /digital-product-card-swap__arrow--next \{ right:\s*18px/)
+  assert.match(commerce, /digital-product-card-swap__dots \{[\s\S]*bottom:\s*28px/)
+  assert.match(commerce, /data-product-count='5'[^}]*\.rb-card-swap \{ left:\s*calc\(50% - 39px\)/)
 })
