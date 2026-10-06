@@ -28,11 +28,12 @@ test('Digital Product Card Swap rotates the front product and opens product deta
   expect(pageWidth).toBeLessThanOrEqual(390)
 
   const dots = page.locator('.digital-product-card-swap__dots')
-  const firstCard = cards.first()
-  const [dotsBox, firstCardBox] = await Promise.all([dots.boundingBox(), firstCard.boundingBox()])
+  const scene = page.locator('.digital-product-card-swap__scene')
+  const [dotsBox, sceneBox] = await Promise.all([dots.boundingBox(), scene.boundingBox()])
   expect(dotsBox).not.toBeNull()
-  expect(firstCardBox).not.toBeNull()
-  expect(dotsBox!.y - (firstCardBox!.y + firstCardBox!.height)).toBeGreaterThanOrEqual(24)
+  expect(sceneBox).not.toBeNull()
+  expect(dotsBox!.y - (sceneBox!.y + sceneBox!.height)).toBeGreaterThanOrEqual(20)
+  await expect(dots).toHaveCSS('position', 'relative')
 
   const frontTitle = async () => cards.evaluateAll(nodes => {
     const ordered = nodes.map(node => ({
@@ -144,8 +145,10 @@ test('Digital Product Card Swap controls stay outside the five-card stack on des
       .map(card => card.getBoundingClientRect().toJSON())
     const arrows = [...element.querySelectorAll<HTMLElement>('.digital-product-card-swap__arrow')]
       .map(arrow => arrow.getBoundingClientRect().toJSON())
-    const dots = element.querySelector<HTMLElement>('.digital-product-card-swap__dots')?.getBoundingClientRect().toJSON() ?? null
-    return { cards, arrows, dots }
+    const scene = element.querySelector<HTMLElement>('.digital-product-card-swap__scene')?.getBoundingClientRect().toJSON() ?? null
+    const dotsElement = element.querySelector<HTMLElement>('.digital-product-card-swap__dots')
+    const dots = dotsElement?.getBoundingClientRect().toJSON() ?? null
+    return { cards, arrows, scene, dots, dotsPosition: dotsElement ? getComputedStyle(dotsElement).position : null }
   })
 
   const overlaps = (
@@ -153,7 +156,10 @@ test('Digital Product Card Swap controls stay outside the five-card stack on des
     b: { left: number; right: number; top: number; bottom: number },
   ) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
 
+  expect(geometry.scene).not.toBeNull()
   expect(geometry.dots).not.toBeNull()
+  expect(geometry.dotsPosition).toBe('relative')
+  expect(geometry.dots!.top).toBeGreaterThanOrEqual(geometry.scene!.bottom + 20)
   for (const card of geometry.cards) {
     expect(overlaps(geometry.dots!, card)).toBe(false)
     for (const arrow of geometry.arrows) expect(overlaps(arrow, card)).toBe(false)
@@ -171,8 +177,17 @@ test('Digital Product Card Swap keeps mobile controls clear at the original card
       .map(card => card.getBoundingClientRect().toJSON())
     const arrows = [...element.querySelectorAll<HTMLElement>('.digital-product-card-swap__arrow')]
       .map(arrow => arrow.getBoundingClientRect().toJSON())
-    const dots = element.querySelector<HTMLElement>('.digital-product-card-swap__dots')?.getBoundingClientRect().toJSON() ?? null
-    return { cards, arrows, dots, stage: element.getBoundingClientRect().toJSON() }
+    const scene = element.querySelector<HTMLElement>('.digital-product-card-swap__scene')?.getBoundingClientRect().toJSON() ?? null
+    const dotsElement = element.querySelector<HTMLElement>('.digital-product-card-swap__dots')
+    const dots = dotsElement?.getBoundingClientRect().toJSON() ?? null
+    return {
+      cards,
+      arrows,
+      scene,
+      dots,
+      dotsPosition: dotsElement ? getComputedStyle(dotsElement).position : null,
+      stage: element.getBoundingClientRect().toJSON(),
+    }
   })
 
   const overlaps = (
@@ -180,7 +195,10 @@ test('Digital Product Card Swap keeps mobile controls clear at the original card
     b: { left: number; right: number; top: number; bottom: number },
   ) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
 
+  expect(geometry.scene).not.toBeNull()
   expect(geometry.dots).not.toBeNull()
+  expect(geometry.dotsPosition).toBe('relative')
+  expect(geometry.dots!.top).toBeGreaterThanOrEqual(geometry.scene!.bottom + 20)
   for (const card of geometry.cards) {
     expect(overlaps(geometry.dots!, card)).toBe(false)
     for (const arrow of geometry.arrows) expect(overlaps(arrow, card)).toBe(false)
