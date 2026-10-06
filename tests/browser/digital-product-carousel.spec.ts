@@ -160,7 +160,7 @@ test('Digital Product Card Swap controls stay outside the five-card stack on des
   }
 })
 
-test('Digital Product Card Swap is larger on mobile while controls keep clear of the stack', async ({ page }) => {
+test('Digital Product Card Swap keeps mobile controls clear at the original card scale', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('http://localhost:3001/produk-carousel?count=5')
@@ -181,7 +181,6 @@ test('Digital Product Card Swap is larger on mobile while controls keep clear of
   ) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
 
   expect(geometry.dots).not.toBeNull()
-  expect(Math.max(...geometry.cards.map(card => card.width))).toBeGreaterThanOrEqual(220)
   for (const card of geometry.cards) {
     expect(overlaps(geometry.dots!, card)).toBe(false)
     for (const arrow of geometry.arrows) expect(overlaps(arrow, card)).toBe(false)
