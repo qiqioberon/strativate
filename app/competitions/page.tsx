@@ -11,7 +11,7 @@ export default async function CompetitionsPage() {
 
   return (
     <MarketingShell>
-      <main className="editorial-page">
+      <main className="editorial-page editorial-page--competitions">
         <PageIntro
           title="Discover Top Competitions"
           description="Find approved competition opportunities and prepare for the challenge with a clearer plan."

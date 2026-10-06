@@ -1,8 +1,9 @@
-import { ArrowLeft, ArrowRight, CalendarDays, Tag, UserRound } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarDays, FileText, Tag, UserRound } from 'lucide-react'
 import Link from 'next/link'
 
 import type { RichTextDocument } from '@/lib/content/rich-text'
 
+import { CompetitionBadges, competitionStatusIcons } from './competition-badges'
 import { RichTextRenderer } from './rich-text-renderer'
 
 export type PublicationDetailViewModel = {
@@ -88,24 +89,34 @@ export function CompetitionDetailView({
 }) {
   const deadline = formatDate(item.registrationDeadline)
   const canRegister = item.status === 'open' && Boolean(item.registrationUrl)
+  const StatusIcon = competitionStatusIcons[item.status]
   return <main className="editorial-detail editorial-detail--competition">
     {preview ? <div className="editorial-preview-banner">Admin preview · unsaved changes are visible only in this browser.</div> : null}
     <article className="marketing-container editorial-competition-detail">
       <Link className="editorial-back-link" href="/competitions"><ArrowLeft aria-hidden="true" /> Back to Competitions</Link>
       <div className="editorial-competition-detail__grid">
         <div className="editorial-competition-detail__copy">
-          <div className="editorial-card__badges"><span>{item.status}</span>{item.category ? <span>{item.category}</span> : null}</div>
           <p className="marketing-kicker">Competition</p>
+          <CompetitionBadges status={item.status} category={item.category} />
           <h1>{item.name}</h1>
           <p className="editorial-detail__excerpt">{item.description}</p>
-          <div className="editorial-detail__facts">
-            <span>Status<strong>{item.status.replace('_', ' ')}</strong></span>
-            {item.category ? <span>Category<strong>{item.category}</strong></span> : null}
-            {deadline ? <span>Registration deadline<strong>{deadline}</strong></span> : null}
-          </div>
-          <div className="editorial-detail__actions">
+          <dl className="editorial-competition-detail__facts">
+            <div>
+              <dt><StatusIcon aria-hidden="true" size={16} /> Status</dt>
+              <dd className="editorial-competition-detail__status">{item.status.replace('_', ' ')}</dd>
+            </div>
+            {item.category ? <div>
+              <dt><Tag aria-hidden="true" size={16} /> Category</dt>
+              <dd>{item.category}</dd>
+            </div> : null}
+            {deadline ? <div>
+              <dt><CalendarDays aria-hidden="true" size={16} /> Registration deadline</dt>
+              <dd><time dateTime={item.registrationDeadline!}>{deadline}</time></dd>
+            </div> : null}
+          </dl>
+          <div className="editorial-detail__actions editorial-competition-detail__actions">
             {canRegister ? <a className="button button-primary" href={item.registrationUrl!} target="_blank" rel="noreferrer">Register <ArrowRight aria-hidden="true" /></a> : null}
-            {item.rulesUrl ? <a className="button button-outline" href={item.rulesUrl} target="_blank" rel="noreferrer">Read rules</a> : null}
+            {item.rulesUrl ? <a className="button button-outline" href={item.rulesUrl} target="_blank" rel="noreferrer">Read rules <FileText aria-hidden="true" /></a> : null}
           </div>
         </div>
         <div className="editorial-competition-detail__media">

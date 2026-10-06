@@ -1,11 +1,12 @@
 'use client'
 
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { ArrowRight, CalendarDays, Search, SlidersHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
 import type { PublicCompetition } from '@/lib/content/editorial'
 import { filterCompetitions, type CompetitionSort } from '@/lib/content/editorial-filters'
+import { CompetitionBadges } from './competition-badges'
 
 export function CompetitionDirectory({ competitions }: { competitions: PublicCompetition[] }) {
   const [query, setQuery] = useState('')
@@ -71,11 +72,17 @@ export function CompetitionDirectory({ competitions }: { competitions: PublicCom
               : <div className="editorial-card__cover-fallback" aria-hidden="true">Strativate</div>}
           </div>
           <div className="editorial-card__content">
-            <div className="editorial-card__badges"><span>{item.status.replace('_', ' ')}</span>{item.categoryName ? <span>{item.categoryName}</span> : null}</div>
+            <CompetitionBadges status={item.status} category={item.categoryName} />
             <h2>{item.name}</h2>
             <p>{item.description}</p>
-            {item.registration_deadline ? <small>Registration deadline: {new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(`${item.registration_deadline}T00:00:00`))}</small> : null}
-            <span className="marketing-text-link">View competition <span aria-hidden="true">→</span></span>
+            {item.registration_deadline ? <div className="editorial-competition-card__deadline">
+              <CalendarDays aria-hidden="true" size={16} />
+              <div>
+                <span>Registration deadline</span>
+                <time dateTime={item.registration_deadline}>{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(`${item.registration_deadline}T00:00:00`))}</time>
+              </div>
+            </div> : null}
+            <span className="editorial-competition-card__action">View competition <ArrowRight aria-hidden="true" size={16} /></span>
           </div>
         </Link>)}
       </div>
