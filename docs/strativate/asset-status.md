@@ -1,6 +1,6 @@
 # Strativate asset and content status registry
 
-Current as of 2 October 2026. Runtime asset metadata lives in
+Current as of 7 October 2026. Runtime asset metadata lives in
 `lib/content/asset-registry.ts`; public mentor profile/content runtime data is
 owned by the database-backed mentor public-profile domain introduced by
 `202609170001_mentor_public_profiles_expertise.sql`. The full source receipt is in
@@ -42,6 +42,16 @@ owned by the database-backed mentor public-profile domain introduced by
 | Default user avatar | Developer-owned | Initials/neutral authenticated UI behavior | None |
 
 ## Status rules
+
+- Admin image uploads for Publications, Competitions, Competition Recognition,
+  Trusted Partners, and Who We Are share the direct crop workflow. Originals stay
+  private in `marketing-photo-sources`; only processed WebP derivatives are public.
+  Recognition outputs remain 1000×400, partners 800×400, editorial covers 1600×900,
+  and Who We Are 1200×1600 (primary) / 1000×1000 (supporting). Apply
+  `202610070001_marketing_logo_crop_sources.sql` before deploying the refactor.
+  Existing derivative-only logos remain valid with null source/crop metadata;
+  replacement is required to enable future crop adjustments. No new stakeholder
+  assets or content approvals are introduced by this refactor.
 
 - `ready` means the supplied file or approved text is integrated and visible.
 - `missing` means the UI must use a clear fallback or omit the section.

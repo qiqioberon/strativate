@@ -1,5 +1,6 @@
 import '../../../../app/globals.css'
 import '../../../../app/marketing.css'
+import '../../../../app/editorial.css'
 import '../../../../app/digital-product-commerce.css'
 import '../../../../app/operations-dashboard.css'
 import '../../../../app/admin-layout-fixes.css'

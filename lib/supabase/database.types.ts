@@ -14,8 +14,8 @@ export type MarketingTestimonial = { id:string; slug:string; competition_name:st
 export type Publication = { id:string; slug:string; title:string; excerpt:string; body:string; body_json:Json; category:string|null; category_id:string|null; cover_path:string|null; cover_source_path:string|null; cover_crop:Json|null; cover_alt_text:string|null; published_at:string|null; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type PublicationCategory = { id:string; name:string; sort_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_source_path:string|null; cover_crop:Json|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
-export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
-export type TrustedPartner = { id:string; organization_name:string; logo_path:string; display_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type TrustedPartner = { id:string; organization_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
@@ -157,6 +157,8 @@ export type Database = {
       reorder_marketing_hero_posters: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_marketing_testimonials: { Args:{p_ids:string[]}; Returns:undefined }
       admin_list_publications: { Args:Record<PropertyKey,never>; Returns:Publication[] }
+      admin_list_competition_recognitions: { Args:Record<PropertyKey,never>; Returns:CompetitionRecognition[] }
+      admin_list_trusted_partners: { Args:Record<PropertyKey,never>; Returns:TrustedPartner[] }
       admin_list_competitions: { Args:Record<PropertyKey,never>; Returns:Competition[] }
       admin_list_marketing_testimonials: { Args:Record<PropertyKey,never>; Returns:MarketingTestimonial[] }
       admin_list_homepage_who_we_are_photos: { Args:Record<PropertyKey,never>; Returns:HomepageWhoWeArePhoto[] }

@@ -5,7 +5,6 @@ import {
   ArrowUp,
   CircleAlert,
   Handshake,
-  ImagePlus,
   Plus,
   RefreshCw,
   Trash2,
@@ -18,35 +17,28 @@ import {
   useRef,
   useState,
   type FormEvent,
-  type PointerEvent as ReactPointerEvent,
 } from 'react'
 
 import { formError } from '@/lib/auth/errors'
 import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
+import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
+import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
+import { cropRectFromJson, PHOTO_SOURCE_BUCKET } from '@/lib/media/image-crop'
+import { persistAdminImage } from '@/lib/media/admin-image-storage'
 import {
   buildTrustedPartnerPayload,
   getNextTrustedPartnerOrder,
   isTrustedPartnerSetupRequired,
   reorderTrustedPartnerIds,
-  safePartnerLogoFileName,
   validateTrustedPartnerDraft,
   type TrustedPartnerDraftErrors,
 } from '@/lib/marketing/trusted-partner-admin'
 import {
   TRUSTED_PARTNER_LOGO_BUCKET,
   TRUSTED_PARTNER_LOGO_HEIGHT,
-  TRUSTED_PARTNER_LOGO_MAX_ZOOM,
-  TRUSTED_PARTNER_LOGO_MIN_ZOOM,
   TRUSTED_PARTNER_LOGO_PREFIX,
   TRUSTED_PARTNER_LOGO_WIDTH,
 } from '@/lib/marketing/trusted-partner-config'
-import {
-  calculateTrustedPartnerLogoPlacement,
-  DEFAULT_TRUSTED_PARTNER_LOGO_FIT,
-  fitTrustedPartnerLogo,
-  normalizeTrustedPartnerLogoFit,
-  type TrustedPartnerLogoFit,
-} from '@/lib/marketing/trusted-partner-image'
 import { createClient } from '@/lib/supabase/client'
 import type { TrustedPartner } from '@/lib/supabase/database.types'
 
@@ -54,7 +46,13 @@ import dataStyles from './data-management.module.css'
 import dialogStyles from './digital-product-dialog.module.css'
 import styles from './trusted-partner-management.module.css'
 
-const migrationName = '202610020001_trusted_partners.sql'
+const migrationName = '202610070001_marketing_logo_crop_sources.sql'
+const imageTarget = {
+  width: TRUSTED_PARTNER_LOGO_WIDTH,
+  height: TRUSTED_PARTNER_LOGO_HEIGHT,
+  maxBytes: 5 * 1024 * 1024,
+  title: 'Adjust partner image crop',
+}
 
 type Draft = {
   organizationName: string
@@ -73,32 +71,15 @@ function draftFromPartner(partner: TrustedPartner): Draft {
   }
 }
 
-function outputFileBase(file: File) {
-  return safePartnerLogoFileName(file.name, file.type)
-    .replace(/\.(jpe?g|png|webp)$/i, '')
-    .slice(0, 80) || 'logo'
-}
-
 export function TrustedPartnerManagement() {
   const supabase = useMemo(() => createClient(), [])
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const dragRef = useRef<{
-    pointerId: number
-    clientX: number
-    clientY: number
-    startX: number
-    startY: number
-  } | null>(null)
 
   const [partners, setPartners] = useState<TrustedPartner[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TrustedPartner | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [sourceDimensions, setSourceDimensions] = useState<{ width: number; height: number } | null>(null)
-  const [fit, setFit] = useState<TrustedPartnerLogoFit>({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })
   const [loading, setLoading] = useState(true)
   const [busyAction, setBusyAction] = useState<string | null>(null)
   const [setupRequired, setSetupRequired] = useState(false)
@@ -106,12 +87,13 @@ export function TrustedPartnerManagement() {
   const [fieldErrors, setFieldErrors] = useState<TrustedPartnerDraftErrors>({})
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const image = useAdminImageUpload({ supabase, target: imageTarget, onError: setError })
 
   const selected = useMemo(
     () => partners.find(partner => partner.id === selectedId) ?? null,
     [partners, selectedId],
   )
-  const busy = busyAction !== null
+  const busy = busyAction !== null || image.loadingSource
   const editorOpen = creating || Boolean(selected)
 
   const load = useCallback(async () => {
@@ -119,11 +101,7 @@ export function TrustedPartnerManagement() {
     setError('')
     setSetupRequired(false)
     setLoadFailed(false)
-    const { data, error: loadError } = await supabase
-      .from('trusted_partners')
-      .select('*')
-      .order('display_order')
-      .order('created_at')
+    const { data, error: loadError } = await supabase.rpc('admin_list_trusted_partners')
 
     if (loadError) {
       if (isTrustedPartnerSetupRequired(loadError)) {
@@ -146,17 +124,6 @@ export function TrustedPartnerManagement() {
   }, [load])
 
   useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl(null)
-      setSourceDimensions(null)
-      return undefined
-    }
-    const nextUrl = URL.createObjectURL(selectedFile)
-    setPreviewUrl(nextUrl)
-    return () => URL.revokeObjectURL(nextUrl)
-  }, [selectedFile])
-
-  useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
     if (editorOpen && !dialog.open) {
@@ -170,31 +137,10 @@ export function TrustedPartnerManagement() {
     return supabase.storage.from(TRUSTED_PARTNER_LOGO_BUCKET).getPublicUrl(path).data.publicUrl
   }, [supabase])
 
-  const editorPreviewUrl = useMemo(() => {
-    if (previewUrl) return previewUrl
-    if (selected?.logo_path) return publicUrl(selected.logo_path)
-    return null
-  }, [previewUrl, publicUrl, selected])
-
-  const updateFit = useCallback((partial: Partial<TrustedPartnerLogoFit>) => {
-    setFit(current => normalizeTrustedPartnerLogoFit({ ...current, ...partial }))
-  }, [])
-
-  const placement = useMemo(() => {
-    if (!sourceDimensions) return null
-    return calculateTrustedPartnerLogoPlacement(
-      sourceDimensions.width,
-      sourceDimensions.height,
-      fit,
-    )
-  }, [fit, sourceDimensions])
-
   const beginCreate = () => {
     setSelectedId(null)
     setDraft(emptyDraft)
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })
+    image.reset()
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -205,9 +151,7 @@ export function TrustedPartnerManagement() {
     setCreating(false)
     setSelectedId(partner.id)
     setDraft(draftFromPartner(partner))
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })
+    image.reset(cropRectFromJson(partner.logo_crop))
     setFieldErrors({})
     setError('')
     setNotice('')
@@ -217,46 +161,8 @@ export function TrustedPartnerManagement() {
     setCreating(false)
     setSelectedId(null)
     setDraft(emptyDraft)
-    setSelectedFile(null)
-    setSourceDimensions(null)
-    setFit({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })
+    image.reset()
     setFieldErrors({})
-    dragRef.current = null
-  }
-
-  const handlePreviewPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!selectedFile) return
-    event.currentTarget.setPointerCapture(event.pointerId)
-    dragRef.current = {
-      pointerId: event.pointerId,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      startX: fit.x,
-      startY: fit.y,
-    }
-  }
-
-  const handlePreviewPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current
-    if (!drag || drag.pointerId !== event.pointerId) return
-    const rect = event.currentTarget.getBoundingClientRect()
-    if (!rect.width || !rect.height) return
-    const deltaX = ((event.clientX - drag.clientX) / rect.width) * 100
-    const deltaY = ((event.clientY - drag.clientY) / rect.height) * 100
-    updateFit({
-      x: drag.startX + deltaX,
-      y: drag.startY + deltaY,
-    })
-  }
-
-  const handlePreviewPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current
-    if (drag && drag.pointerId === event.pointerId) {
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
-      }
-      dragRef.current = null
-    }
   }
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
@@ -267,85 +173,52 @@ export function TrustedPartnerManagement() {
 
     const errors = validateTrustedPartnerDraft({
       organizationName: draft.organizationName,
-      file: selectedFile,
-      hasStoredLogo: Boolean(selected?.logo_path),
+      file: image.originalFile,
+      hasStoredLogo: Boolean(image.processedFile || selected?.logo_path),
     })
     setFieldErrors(errors)
     if (Object.keys(errors).length) return
 
-    let finalPath: string | null = null
-    setBusyAction(selectedFile ? 'processing' : 'save')
+    setBusyAction('save')
     try {
-      if (selectedFile) {
-        const processedBlob = await fitTrustedPartnerLogo(selectedFile, fit)
-        setBusyAction('save')
-        finalPath = `${TRUSTED_PARTNER_LOGO_PREFIX}${crypto.randomUUID()}-${outputFileBase(selectedFile)}.webp`
-        const { error: uploadError } = await supabase.storage
-          .from(TRUSTED_PARTNER_LOGO_BUCKET)
-          .upload(finalPath, processedBlob, { cacheControl: '3600', contentType: 'image/webp', upsert: false })
-        if (uploadError) throw uploadError
-      }
-
-      const payload = buildTrustedPartnerPayload({
-        organizationName: draft.organizationName,
-        logoPath: finalPath,
-        storedLogoPath: selected?.logo_path ?? null,
-        isActive: draft.isActive,
+      const saved = await persistAdminImage({
+        original: image.originalFile,
+        derivative: image.processedFile,
+        sourcePrefix: 'trusted-partners/',
+        derivativePrefix: TRUSTED_PARTNER_LOGO_PREFIX,
+        previous: { path: selected?.logo_path ?? null, sourcePath: selected?.logo_source_path ?? null },
+        upload: async (bucket, path, file) => {
+          const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: '3600', upsert: false })
+          if (error) throw new Error(error.message)
+        },
+        remove: async (bucket, path) => {
+          const { error } = await supabase.storage.from(bucket).remove([path])
+          if (error) throw new Error(error.message)
+        },
+        persist: async refs => {
+          const payload = {
+            ...buildTrustedPartnerPayload({ organizationName: draft.organizationName, logoPath: refs.path, storedLogoPath: selected?.logo_path ?? null, isActive: draft.isActive }),
+            logo_source_path: refs.sourcePath,
+            logo_crop: image.crop,
+          }
+          const result = selected
+            ? await supabase.from('trusted_partners').update(payload).eq('id', selected.id)
+            : await supabase.from('trusted_partners').insert({ ...payload, display_order: getNextTrustedPartnerOrder(partners) })
+          if (result.error) throw new Error(result.error.message)
+        },
+        reconcile: async () => {
+          const { data, error } = await supabase.rpc('admin_list_trusted_partners')
+          if (error) throw new Error(error.message)
+          return (data ?? []).map(row => ({ path: row.logo_path, sourcePath: row.logo_source_path }))
+        },
       })
-
-      const result = selected
-        ? await supabase.from('trusted_partners').update(payload).eq('id', selected.id)
-        : await supabase.from('trusted_partners').insert({
-            ...payload,
-            display_order: getNextTrustedPartnerOrder(partners),
-          })
-      if (result.error) throw result.error
-
-      let cleanupWarning = ''
-      if (selected && finalPath && selected.logo_path !== finalPath) {
-        const { error: cleanupError } = await supabase.storage
-          .from(TRUSTED_PARTNER_LOGO_BUCKET)
-          .remove([selected.logo_path])
-        if (cleanupError) cleanupWarning = ' The old logo still needs manual Storage cleanup.'
-      }
 
       const wasEditing = Boolean(selected)
       resetEditor()
-      setNotice((wasEditing ? 'Partner updated.' : 'Partner added.') + cleanupWarning)
+      setNotice((wasEditing ? 'Partner updated.' : 'Partner added.') + saved.warning)
       await load()
     } catch (saveError) {
-      let cleanupWarning = ''
-      if (finalPath) {
-        const { data: persisted, error: reconciliationError } = await supabase
-          .from('trusted_partners')
-          .select('id,logo_path')
-          .eq('logo_path', finalPath)
-          .maybeSingle()
-
-        if (persisted) {
-          let cleanupWarning = ''
-          if (selected && selected.logo_path !== finalPath) {
-            const { error: cleanupError } = await supabase.storage
-              .from(TRUSTED_PARTNER_LOGO_BUCKET)
-              .remove([selected.logo_path])
-            if (cleanupError) cleanupWarning = ' The old logo still needs manual Storage cleanup.'
-          }
-          resetEditor()
-          setNotice((selected ? 'Partner updated.' : 'Partner added.') + cleanupWarning)
-          await load()
-          return
-        }
-
-        if (reconciliationError) {
-          cleanupWarning = ' The new file was not removed because its database status could not be confirmed. Review the partner list and Storage before retrying.'
-        } else {
-          const { error: cleanupError } = await supabase.storage
-            .from(TRUSTED_PARTNER_LOGO_BUCKET)
-            .remove([finalPath])
-          if (cleanupError) cleanupWarning = ' The new file also needs manual Storage cleanup.'
-        }
-      }
-      setError(formError(saveError, 'The trusted partner could not be saved.') + cleanupWarning)
+      setError(formError(saveError, 'The trusted partner could not be saved.'))
     } finally {
       setBusyAction(null)
     }
@@ -420,6 +293,10 @@ export function TrustedPartnerManagement() {
       .from(TRUSTED_PARTNER_LOGO_BUCKET)
       .remove([partner.logo_path])
     if (storageError) warning += ' The logo still needs manual Storage cleanup.'
+    if (partner.logo_source_path) {
+      const { error: sourceError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([partner.logo_source_path])
+      if (sourceError) warning += ' The original still needs manual Storage cleanup.'
+    }
     setNotice(`Deleted partner "${partner.organization_name}".` + warning)
     setDeleteTarget(null)
     await load()
@@ -666,121 +543,11 @@ export function TrustedPartnerManagement() {
               </div>
 
               <section className={styles.mediaSection}>
-                <div className={styles.mediaCopy}>
-                  <label>
-                    Logo
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={event => {
-                        const file = event.target.files?.[0] ?? null
-                        setSelectedFile(file)
-                        setSourceDimensions(null)
-                        setFit({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })
-                        setFieldErrors(current => ({ ...current, file: undefined }))
-                      }}
-                    />
-                  </label>
-                  <p className={styles.help}>
-                    {selected?.logo_path ? 'Leave empty to keep the existing logo. ' : ''}
-                    JPG, PNG, or WebP · maximum 5 MB. New files are saved as a transparent 2:1 WebP canvas.
-                  </p>
-                  {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
-
-                  {selectedFile ? (
-                    <div className={styles.fitControls} data-testid="trusted-partner-fit-controls">
-                      <div className={styles.fitMeta}>
-                        <span>Fit the complete logo inside the card frame. Drag the preview or use the sliders.</span>
-                        <strong>{TRUSTED_PARTNER_LOGO_WIDTH} × {TRUSTED_PARTNER_LOGO_HEIGHT} px · 2:1</strong>
-                      </div>
-                      <label>
-                        Horizontal position
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={fit.x}
-                          onChange={event => updateFit({ x: Number(event.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Vertical position
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={fit.y}
-                          onChange={event => updateFit({ y: Number(event.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Zoom
-                        <input
-                          type="range"
-                          min={TRUSTED_PARTNER_LOGO_MIN_ZOOM}
-                          max={TRUSTED_PARTNER_LOGO_MAX_ZOOM}
-                          step=".05"
-                          value={fit.zoom}
-                          onChange={event => updateFit({ zoom: Number(event.target.value) })}
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        className={'button button-outline ' + styles.resetFit}
-                        onClick={() => setFit({ ...DEFAULT_TRUSTED_PARTNER_LOGO_FIT })}
-                      >
-                        Reset to Fit
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className={styles.previewColumn}>
-                  <div
-                    className={styles.previewFrame}
-                    data-testid="trusted-partner-fit-preview"
-                    data-draggable={selectedFile ? 'true' : 'false'}
-                    onPointerDown={handlePreviewPointerDown}
-                    onPointerMove={handlePreviewPointerMove}
-                    onPointerUp={handlePreviewPointerEnd}
-                    onPointerCancel={handlePreviewPointerEnd}
-                  >
-                    {editorPreviewUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={editorPreviewUrl}
-                        alt={draft.organizationName ? draft.organizationName + ' preview' : 'Partner logo preview'}
-                        draggable={false}
-                        onLoad={event => {
-                          if (!selectedFile) return
-                          const image = event.currentTarget
-                          setSourceDimensions({ width: image.naturalWidth, height: image.naturalHeight })
-                        }}
-                        style={selectedFile && placement ? {
-                          position: 'absolute',
-                          left: (placement.x / TRUSTED_PARTNER_LOGO_WIDTH) * 100 + '%',
-                          top: (placement.y / TRUSTED_PARTNER_LOGO_HEIGHT) * 100 + '%',
-                          width: (placement.width / TRUSTED_PARTNER_LOGO_WIDTH) * 100 + '%',
-                          height: (placement.height / TRUSTED_PARTNER_LOGO_HEIGHT) * 100 + '%',
-                          objectFit: 'contain',
-                        } : {
-                          width: '100%',
-                          height: '100%',
-                          padding: '8%',
-                          objectFit: 'contain',
-                        }}
-                      />
-                    ) : (
-                      <div className={styles.previewPlaceholder}>
-                        <ImagePlus aria-hidden="true" />
-                        <span>Select a logo to preview its card frame.</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className={styles.previewCaption}>
-                    Transparent surrounding space is preserved in the saved file. The white frame mirrors the homepage card background.
-                  </p>
-                </div>
+                <AdminImageUploadField image={image} target={imageTarget}
+                  storedUrl={selected ? publicUrl(selected.logo_path) : null}
+                  sourcePath={selected?.logo_source_path} alt={draft.organizationName || 'Partner image preview'}
+                  disabled={busy} onApplied={() => setFieldErrors(current => ({ ...current, file: undefined }))} />
+                {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
               </section>
 
               <div className={styles.formActions}>

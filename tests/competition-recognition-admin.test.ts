@@ -22,6 +22,8 @@ const recognition = (id: string, displayOrder: number): CompetitionRecognition =
   id,
   competition_name: `Competition ${id}`,
   logo_path: `recognition-logos/${id}.webp`,
+  logo_source_path: null,
+  logo_crop: null,
   display_order: displayOrder,
   is_active: true,
   created_at: '2026-09-27T00:00:00.000Z',
@@ -76,29 +78,26 @@ test('recognition filenames are safe and setup detection is limited to missing-s
 })
 
 test('recognition admin uses structured modal management and normalized WebP uploads', async () => {
-  const [component, styles, admin, config, image] = await Promise.all([
+  const [component, styles, admin, config] = await Promise.all([
     read('components/admin/competition-recognition-management.tsx'),
     read('components/admin/competition-recognition-management.module.css'),
     read('app/admin/page.tsx'),
     read('lib/marketing/competition-recognition-config.ts'),
-    read('lib/marketing/competition-recognition-image.ts'),
   ])
 
   assert.match(component, /<table className=\{styles\.table\}>/)
   assert.match(component, /data-testid="competition-recognition-editor-dialog"/)
   assert.match(component, /data-testid="competition-recognition-add-button"/)
-  assert.match(component, /data-testid="competition-recognition-fit-preview"/)
-  assert.match(component, /data-testid="competition-recognition-fit-controls"/)
-  assert.match(component, /fitCompetitionRecognitionLogo\(selectedFile, fit\)/)
-  assert.match(component, /contentType:\s*'image\/webp'/)
-  assert.match(component, /uploadedPath = 'recognition-logos\/' \+ crypto\.randomUUID\(\)/)
+  assert.match(component, /AdminImageUploadField/)
+  assert.match(component, /useAdminImageUpload/)
+  assert.match(component, /persistAdminImage/)
+  assert.match(component, /derivativePrefix: 'recognition-logos\/'/)
   assert.match(component, /role="switch"/)
   assert.match(component, /move-up-button/)
   assert.match(component, /move-down-button/)
   assert.match(component, /delete-button/)
-  assert.match(component, /\.eq\('logo_path', uploadedPath\)[\s\S]*\.maybeSingle\(\)/)
-  assert.match(component, /status could not be confirmed[\s\S]*remove\(\[uploadedPath\]\)/)
-  assert.match(component, /selected && uploadedPath && selected\.logo_path !== uploadedPath[\s\S]*remove\(\[selected\.logo_path\]\)/)
+  assert.match(component, /admin_list_competition_recognitions/)
+  assert.doesNotMatch(component, /fitCompetitionRecognitionLogo|Horizontal position|Vertical position|Reset to Fit/)
   assert.doesNotMatch(component, /name="position"|type="number"/)
   assert.doesNotMatch(component, /\.from\('competitions'\)/)
 
@@ -107,9 +106,6 @@ test('recognition admin uses structured modal management and normalized WebP upl
   assert.match(styles, /data-label/)
   assert.match(config, /COMPETITION_RECOGNITION_LOGO_WIDTH\s*=\s*1000/)
   assert.match(config, /COMPETITION_RECOGNITION_LOGO_HEIGHT\s*=\s*400/)
-  assert.match(image, /context\.clearRect/)
-  assert.match(image, /canvas\.toBlob/)
-  assert.match(image, /'image\/webp'/)
   assert.match(admin, /Competition Recognition/)
   assert.match(admin, /<CompetitionRecognitionManagement\/>/)
 })

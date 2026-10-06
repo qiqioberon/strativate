@@ -204,11 +204,12 @@ export function DirectImageCropper({
     ref={dialogRef}
     className="direct-crop-dialog"
     aria-labelledby={titleId}
-    onCancel={event => { event.preventDefault(); if (!busy) onCancel() }}
+    onCancel={event => { event.preventDefault(); event.stopPropagation(); if (!busy) onCancel() }}
+    onClose={event => event.stopPropagation()}
   >
     <div className="direct-crop-dialog__header">
       <div>
-        <p className="kicker">Photo crop</p>
+        <p className="kicker">Image crop</p>
         <h3 id={titleId}>{title}</h3>
         <p>{description ?? `Drag the crop or its corners. Final output: ${outputWidth} × ${outputHeight}.`}</p>
       </div>
@@ -224,7 +225,7 @@ export function DirectImageCropper({
           onPointerCancel={endInteraction}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={imageRef} src={sourceUrl} alt="Full original image to crop" onLoad={loadImage} draggable={false} />
+          {sourceUrl ? <img ref={imageRef} src={sourceUrl} alt="Full original image to crop" onLoad={loadImage} onError={() => setError('The selected image could not be decoded. Choose another JPG, PNG, or WebP image.')} draggable={false} /> : null}
           {sourceSize.width ? <>
             <span className="direct-crop-shade direct-crop-shade--top" style={{ height: `${crop.y * 100}%` }} />
             <span className="direct-crop-shade direct-crop-shade--bottom" style={{ top: `${(crop.y + crop.height) * 100}%` }} />
