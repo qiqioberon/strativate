@@ -351,7 +351,7 @@ export function CompetitionRecognitionManagement() {
           <div className={dataStyles.surfaceHeaderCopy}>
             <p className="kicker">Homepage order</p>
             <h3>{recognitions.length} recognitions</h3>
-            <p>New and replacement logos are normalized to the homepage 5:2 frame before upload.</p>
+            <p>New and replacement images are cropped to the homepage 5:4 frame before upload.</p>
           </div>
           <button
             type="button"

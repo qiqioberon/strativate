@@ -1717,7 +1717,6 @@
 }
 .homepage-partners__card {
   display: grid;
-  height: clamp(118px, 11vw, 136px);
   place-items: center;
   padding: clamp(20px, 2.3vw, 30px);
   border: 1px solid rgba(142, 105, 80, .14);
@@ -1730,7 +1729,8 @@
   display: block;
   width: 100%;
   max-width: 184px;
-  height: 64px;
+  height: auto;
+  aspect-ratio: 5 / 4;
   object-fit: contain;
   filter: saturate(.92) contrast(.98);
   transition: filter 220ms ease;
@@ -1875,11 +1875,9 @@
   }
   .homepage-partners__group { gap: 12px; padding-block: 6px; }
   .homepage-partners__card {
-    height: 104px;
     padding: 17px;
     border-radius: 18px;
   }
-  .homepage-partners__card img { height: 54px; }
   .homepage-partners__column { --partner-wall-duration: 34s; }
   .homepage-partners__column:nth-child(2) { --partner-wall-duration: 38s; }
 }
@@ -2606,7 +2604,7 @@
 .homepage-recognition__logo {
   display: grid;
   width: clamp(92px, 7vw, 120px);
-  aspect-ratio: 5 / 2;
+  aspect-ratio: 5 / 4;
   flex: 0 0 auto;
   place-items: center;
 }

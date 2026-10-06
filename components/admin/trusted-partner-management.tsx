@@ -365,7 +365,7 @@ export function TrustedPartnerManagement() {
           <div className={dataStyles.surfaceHeaderCopy}>
             <p className="kicker">Homepage constellation</p>
             <h3>{partners.length} partners</h3>
-            <p>New and replacement logos are normalized to the 2:1 frame before upload.</p>
+            <p>New and replacement images are cropped to the homepage 5:4 frame before upload.</p>
           </div>
           <button
             type="button"
