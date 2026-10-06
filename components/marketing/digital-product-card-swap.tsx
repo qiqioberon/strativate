@@ -68,28 +68,28 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
             </Card>
           ))}
         </CardSwap>
-      </div>
 
-      {products.length > 1 ? (
-        <div className="digital-product-card-swap__navigation" role="group" aria-label="Digital product navigation">
-          <button
-            type="button"
-            className="digital-product-card-swap__arrow digital-product-card-swap__arrow--previous"
-            aria-label="Previous digital product"
-            onClick={() => setRequestedIndex(previousIndex)}
-          >
-            <ChevronLeft aria-hidden="true" size={22} />
-          </button>
-          <button
-            type="button"
-            className="digital-product-card-swap__arrow digital-product-card-swap__arrow--next"
-            aria-label="Next digital product"
-            onClick={() => setRequestedIndex(nextIndex)}
-          >
-            <ChevronRight aria-hidden="true" size={22} />
-          </button>
-        </div>
-      ) : null}
+        {products.length > 1 ? (
+          <div className="digital-product-card-swap__navigation" role="group" aria-label="Digital product navigation">
+            <button
+              type="button"
+              className="digital-product-card-swap__arrow digital-product-card-swap__arrow--previous"
+              aria-label="Previous digital product"
+              onClick={() => setRequestedIndex(previousIndex)}
+            >
+              <ChevronLeft aria-hidden="true" size={22} />
+            </button>
+            <button
+              type="button"
+              className="digital-product-card-swap__arrow digital-product-card-swap__arrow--next"
+              aria-label="Next digital product"
+              onClick={() => setRequestedIndex(nextIndex)}
+            >
+              <ChevronRight aria-hidden="true" size={22} />
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       {products.length > 1 ? (
         <div className="digital-product-card-swap__dots" role="group" aria-label="Choose a featured digital product">
