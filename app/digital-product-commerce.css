@@ -490,28 +490,12 @@
 
 @media (max-width: 560px) {
   .digital-product-card-swap {
-    width: calc(100% + 32px);
-    min-height: 580px;
-    margin-inline: -16px;
+    min-height: 500px;
   }
-  .digital-product-card-swap__scene,
-  .digital-product-card-swap__navigation { bottom: 92px; }
-  .rb-card-swap { transform: translate(-50%, -50%) scale(.55); }
+  .rb-card-swap { transform: translate(-50%, -50%) scale(.54); }
   .digital-product-card-swap[data-product-count='2'] .rb-card-swap {
     left: calc(50% - 7px);
-    transform: translate(-50%, -50%) scale(.55);
-  }
-  .digital-product-card-swap[data-product-count='3'] .rb-card-swap {
-    left: calc(50% - 13px);
-    transform: translate(-50%, -50%) scale(.52);
-  }
-  .digital-product-card-swap[data-product-count='4'] .rb-card-swap {
-    left: calc(50% - 18px);
-    transform: translate(-50%, -50%) scale(.49);
-  }
-  .digital-product-card-swap[data-product-count='5'] .rb-card-swap {
-    left: calc(50% - 23px);
-    transform: translate(-50%, -50%) scale(.47);
+    transform: translate(-50%, -50%) scale(.54);
   }
   .digital-product-card-swap__arrow {
     width: 40px;
@@ -522,23 +506,27 @@
   .digital-product-card-swap__dots { bottom: 22px; }
 }
 
-@media (max-width: 340px) {
-  .digital-product-card-swap { min-height: 540px; }
+@media (max-width: 390px) {
+  .digital-product-card-swap { min-height: 470px; }
+  .rb-card-swap { transform: translate(-50%, -50%) scale(.5); }
   .digital-product-card-swap[data-product-count='2'] .rb-card-swap {
-    left: calc(50% - 6px);
-    transform: translate(-50%, -50%) scale(.47);
+    left: calc(50% - 7px);
+    transform: translate(-50%, -50%) scale(.5);
   }
+}
+
+@media (max-width: 560px) {
   .digital-product-card-swap[data-product-count='3'] .rb-card-swap {
-    left: calc(50% - 11px);
-    transform: translate(-50%, -50%) scale(.45);
+    left: calc(50% - 13px);
+    transform: translate(-50%, -50%) scale(.46);
   }
   .digital-product-card-swap[data-product-count='4'] .rb-card-swap {
-    left: calc(50% - 16px);
-    transform: translate(-50%, -50%) scale(.43);
+    left: calc(50% - 18px);
+    transform: translate(-50%, -50%) scale(.42);
   }
   .digital-product-card-swap[data-product-count='5'] .rb-card-swap {
-    left: calc(50% - 20px);
-    transform: translate(-50%, -50%) scale(.41);
+    left: calc(50% - 23px);
+    transform: translate(-50%, -50%) scale(.39);
   }
 }
 
