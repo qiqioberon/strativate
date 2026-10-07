@@ -72,3 +72,85 @@
   .calendar :global(.calendar-agenda-tools) :global(.calendar-search) { flex-basis: 100%; max-width: none; }
   .calendar :global(.calendar-weekday-header) { font-size: 10px; }
 }
+
+/* Mentee-only calendar mobile refinement — 2026-10-08 */
+@media (max-width: 600px) {
+  .calendar[data-role='mentee'] { gap: 14px; }
+  .calendar[data-role='mentee'] :global(.role-page-title) h2 {
+    font-size: clamp(2rem, 8vw, 2.55rem);
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-connection-card) {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-connection-card__identity > div > span:only-of-type) {
+    display: inline-flex;
+    width: fit-content;
+    min-height: 24px;
+    align-items: center;
+    margin-top: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #f4f0ec;
+    color: #6f645c;
+    font-size: 11px;
+    font-weight: 550;
+    line-height: 1.25;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-connection-card) :global(.button:disabled) {
+    opacity: .68;
+    color: #766c65;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-toolbar) { padding: 11px; gap: 9px; }
+  .calendar[data-role='mentee'] :global(.calendar-nav) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+    flex-basis: 100%;
+    gap: 7px;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-nav) button:first-child {
+    min-width: 72px;
+    justify-self: start;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-period) {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 1px 0 0;
+    font-size: 16px;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-view-switch) { min-height: 44px; padding: 3px; }
+  .calendar[data-role='mentee'] :global(.calendar-view-switch) button { min-width: 0; padding-inline: 8px; }
+  .calendar[data-role='mentee'] :global(.calendar-filter-row) { gap: 6px 10px; padding: 7px 11px; }
+  .calendar[data-role='mentee'] :global(.calendar-source-controls) { gap: 4px 10px; }
+  .calendar[data-role='mentee'] :global(.calendar-source-toggle) { min-width: 0; min-height: 40px; }
+  .calendar[data-role='mentee'] :global(.calendar-source-state) {
+    width: fit-content;
+    max-width: 100%;
+    margin-left: 2px;
+    white-space: nowrap;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-loading) { min-height: 0; padding: 12px 14px; }
+  .calendar[data-role='mentee'] :global(.calendar-loading--initial) {
+    min-height: 64px;
+    justify-content: flex-start;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-month),
+  .calendar[data-role='mentee'] :global(.calendar-month-week),
+  .calendar[data-role='mentee'] :global(.calendar-month-days),
+  .calendar[data-role='mentee'] :global(.calendar-month-events) {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .calendar[data-role='mentee'] :global(.calendar-weekday-header),
+  .calendar[data-role='mentee'] :global(.calendar-month-days) {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .calendar[data-role='mentee'] :global(.calendar-day) { min-width: 0; }
+  .calendar[data-role='mentee'] :global(.calendar-week-scroll) {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+  }
+}

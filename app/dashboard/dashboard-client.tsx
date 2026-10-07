@@ -60,6 +60,10 @@ export function DashboardClient({ digitalProductsEnabled, ownedDigitalProducts, 
   useEffect(() => {
     if (!mobile) return
     closeRef.current?.focus()
+    const previousOverflow = document.body.style.overflow
+    const previousOverscrollBehavior = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { setMobile(false); menuRef.current?.focus() }
       else if (event.key === 'Tab') {
@@ -70,7 +74,11 @@ export function DashboardClient({ digitalProductsEnabled, ownedDigitalProducts, 
       }
     }
     document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = previousOverflow
+      document.body.style.overscrollBehavior = previousOverscrollBehavior
+    }
   }, [mobile])
   function open(next: Section) {
     if (next !== section) setPreviousSection(section)
@@ -96,7 +104,7 @@ export function DashboardClient({ digitalProductsEnabled, ownedDigitalProducts, 
     </aside>
     {mobile ? <button type="button" className="workspace-scrim" onClick={closeMenu} aria-label="Close menu" tabIndex={-1} /> : null}
     <main className="workspace-main"><header className="workspace-topbar">
-      <button ref={menuRef} type="button" className="workspace-menu" onClick={() => setMobile(true)} aria-label="Open navigation" aria-expanded={mobile} aria-controls="mentee-navigation"><Menu aria-hidden="true" /></button>
+      <button ref={menuRef} type="button" className="workspace-menu" onClick={() => setMobile(current => !current)} aria-label={mobile ? 'Close navigation' : 'Open navigation'} aria-expanded={mobile} aria-controls="mentee-navigation"><Menu aria-hidden="true" /></button>
       <span className={styles.srOnly} aria-live="polite">{nav.find(item => item.id === section)?.label}</span>
       <div className="workspace-actions"><DashboardTopbarActions role="mentee" onEditProfile={() => open('profile')} onOpenNotification={openNotification} /></div>
     </header><div className="workspace-content">

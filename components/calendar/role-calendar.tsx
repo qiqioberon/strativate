@@ -206,7 +206,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
     ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(cursor)
     : `${new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(visible.start)} – ${new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(addDays(visible.end, -1))}`
 
-  return <div className={`native-calendar${english ? ` ${styles.calendar}` : ''}`} lang={english ? 'en' : undefined}>
+  return <div className={`native-calendar${english ? ` ${styles.calendar}` : ''}`} lang={english ? 'en' : undefined} data-role={role}>
     <div className="role-page-title">
       {!english ? <p className="kicker">Jadwal terintegrasi</p> : null}
       <h2>{role === 'admin' ? 'Jadwal Mentoring' : role === 'mentor' ? 'Calendar' : 'Schedule'}</h2>

@@ -100,3 +100,63 @@
   .explorer :global(.mentee-availability-day) > small i { display: none; }
   .explorer :global(.mentee-availability-dialog__surface) { padding: 18px; }
 }
+
+/* Mentee availability mobile refinement — 2026-10-08 */
+@media (max-width: 600px) {
+  .explorer { gap: 14px; }
+  .explorer :global(.mentee-availability-filters) { gap: 12px 10px; padding: 15px; }
+  .explorer :global(.mentee-availability-filter-copy) {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px 12px;
+  }
+  .explorer :global(.mentee-availability-filter-copy) strong { font-size: 14px; }
+  .explorer :global(.mentee-availability-filter-copy) small { font-size: 11px; }
+  .explorer :global(.mentee-availability-field),
+  .explorer :global(.mentee-availability-field) input,
+  .explorer :global(.mentee-availability-field) select { min-width: 0; }
+  .explorer :global(.mentee-availability-field) input,
+  .explorer :global(.mentee-availability-field) select,
+  .explorer :global(.mentee-availability-field--search) > div { min-height: 44px; height: 44px; }
+  .explorer :global(.mentee-availability-time) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 5px;
+  }
+  .explorer :global(.mentee-availability-filter-actions) { gap: 8px; }
+  .explorer :global(.mentee-availability-filter-actions) button { min-height: 44px; padding-inline: 10px; }
+  .explorer :global(.mentee-availability-mentor__summary) { min-height: 72px; }
+  .explorer :global(.mentee-availability-identity) strong {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.4;
+  }
+  .explorer :global(.mentee-availability-empty) {
+    min-height: 0;
+    grid-template-columns: 28px minmax(0, 1fr);
+    justify-items: start;
+    align-items: start;
+    gap: 10px 12px;
+    padding: 18px;
+    text-align: left;
+  }
+  .explorer :global(.mentee-availability-empty) > svg { width: 26px; height: 26px; margin-top: 1px; }
+  .explorer :global(.mentee-availability-empty) > div { min-width: 0; }
+  .explorer :global(.mentee-availability-empty) p { margin-top: 4px; line-height: 1.5; }
+  .explorer :global(.mentee-availability-loading) { min-height: 56px; padding: 12px 4px; }
+  .explorer :global(.mentee-availability-skeleton-grid) { gap: 8px; }
+  .explorer :global(.mentee-availability-skeleton-grid) i { min-height: 72px; }
+  .explorer :global(.mentee-availability-dialog__head) :global(.ops-icon-button) {
+    width: 44px; height: 44px; flex: 0 0 44px;
+  }
+  .explorer :global(.mentee-availability-dialog__actions) :global(.button) { min-height: 44px; }
+}
+@media (max-width: 380px) {
+  .explorer :global(.mentee-availability-filters) { padding: 14px; }
+  .explorer :global(.mentee-availability-filter-copy) { align-items: flex-start; flex-direction: column; }
+}
