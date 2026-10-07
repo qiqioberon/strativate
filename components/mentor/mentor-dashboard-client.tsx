@@ -31,16 +31,17 @@ import { displayName } from '@/lib/auth/rules'
 import { buildMentorOverview, type MentorAvailabilityState, type MentorDashboardData } from '@/lib/mentor/dashboard'
 import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
 import type { Notification } from '@/lib/supabase/database.types'
+import styles from './mentor-shell-overview.module.css'
 
 const nav = [
-  { id: 'overview' as const, label: 'Ringkasan', icon: LayoutDashboard },
-  { id: 'calendar' as const, label: 'Kalender', icon: CalendarDays },
-  { id: 'assignments' as const, label: 'Penugasan', icon: ClipboardList },
-  { id: 'mentees' as const, label: 'Peserta Saya', icon: UsersRound },
-  { id: 'availability' as const, label: 'Ketersediaan', icon: Clock3 },
-  { id: 'history' as const, label: 'Riwayat Sesi', icon: HistoryIcon },
-  { id: 'notifications' as const, label: 'Notifikasi', icon: Bell },
-  { id: 'profile' as const, label: 'Profil', icon: UserRound },
+  { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+  { id: 'calendar' as const, label: 'Calendar', icon: CalendarDays },
+  { id: 'assignments' as const, label: 'Assignments', icon: ClipboardList },
+  { id: 'mentees' as const, label: 'My mentees', icon: UsersRound },
+  { id: 'availability' as const, label: 'Availability', icon: Clock3 },
+  { id: 'history' as const, label: 'Session history', icon: HistoryIcon },
+  { id: 'notifications' as const, label: 'Notifications', icon: Bell },
+  { id: 'profile' as const, label: 'Profile', icon: UserRound },
 ]
 
 export function MentorDashboardClient({
@@ -58,7 +59,7 @@ export function MentorDashboardClient({
   const [mobile, setMobile] = useState(false)
   const [availability, setAvailability] = useState<MentorAvailabilityState>(initialData.availability)
   const [focusSessionId, setFocusSessionId] = useState<string | null>(null)
-  const accountName = displayName(account)
+  const accountName = displayName(account, 'en')
   const overview = useMemo(() => buildMentorOverview(initialData.sessions, new Date(), initialData.timezone), [initialData.sessions, initialData.timezone])
 
   const open = (next: MentorDashboardSection) => {
@@ -69,20 +70,20 @@ export function MentorDashboardClient({
     if (item.related_entity === 'session' || item.related_entity === 'intensive_mentoring_session') { setFocusSessionId(item.related_entity_id); open('assignments'); return }
     open('overview')
   }
-  const currentLabel = nav.find(item => item.id === section)?.label || 'Dashboard mentor'
+  const currentLabel = nav.find(item => item.id === section)?.label || 'Mentor dashboard'
   const retry = () => router.refresh()
   useOperationalInvalidation(['mentor-dashboard', 'mentoring', 'provider'], () => router.refresh())
 
-  return <div className="role-shell mentor-shell">
+  return <div className={"role-shell mentor-shell " + styles.shell} lang="en">
     <aside id="mentor-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
-      <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Tutup menu mentor"><X aria-hidden="true"/></button></div>
-      <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{accountName}</strong><small>Akun mentor</small></div></div>
-      <nav aria-label="Navigasi mentor">{nav.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => open(id)}><Icon aria-hidden="true"/>{label}{id === 'assignments' && overview.upcomingSessions > 0 ? <b aria-label={`${overview.upcomingSessions} sesi mendatang`}>{overview.upcomingSessions}</b> : null}</button>)}</nav>
-      <div className="role-sidebar-bottom"><DashboardSidebarUtilities/></div>
+      <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Close navigation"><X aria-hidden="true"/></button></div>
+      <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{accountName}</strong><small>Mentor account</small></div></div>
+      <nav aria-label="Mentor navigation">{nav.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => open(id)}><Icon aria-hidden="true"/>{label}{id === 'assignments' && overview.upcomingSessions > 0 ? <b aria-label={`${overview.upcomingSessions} upcoming sessions`}>{overview.upcomingSessions}</b> : null}</button>)}</nav>
+      <div className="role-sidebar-bottom"><DashboardSidebarUtilities language="en"/></div>
     </aside>
-    {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu"/> : null}
+    {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Close navigation"/> : null}
     <main className="role-main">
-      <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu mentor" aria-controls="mentor-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className="role-context">{currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="mentor" onEditProfile={() => open('profile')} onOpenNotification={openNotification}/></div></header>
+      <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Open navigation" aria-controls="mentor-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className={styles.srOnly}>Current section: {currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="mentor" onEditProfile={() => open('profile')} onOpenNotification={openNotification}/></div></header>
       <div className="role-content mentor-role-content">
         {section === 'overview' ? <MentorOverview name={accountName} data={{ ...initialData, availability }} open={open} onRetry={retry}/> : null}
         {section === 'calendar' ? <RoleCalendar role="mentor" onOpenAvailability={() => open('availability')}/> : null}

@@ -1,48 +1,211 @@
 'use client'
 
-import { CalendarDays, ClipboardList, Clock3, ExternalLink, UsersRound } from 'lucide-react'
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Clock3,
+  ExternalLink,
+  UsersRound,
+} from 'lucide-react'
 import { useMemo } from 'react'
 
-import { buildMentorOverview, type MentorDashboardData } from '@/lib/mentor/dashboard'
 import {
-  availabilityLabel,
-  availabilityTone,
-  DataError,
-  EmptyState,
-  MentorPageHeader,
-  Metric,
-  mentorSessionStatusLabel,
-  sessionDate,
-  sessionDay,
-  statusClass,
-} from './dashboard-ui'
+  buildMentorOverview,
+  mentorSessionStatusTone,
+  type MentorDashboardData,
+  type MentorSessionRow,
+  type MentorSessionStatus,
+} from '@/lib/mentor/dashboard'
+import styles from '../mentor-shell-overview.module.css'
 
 export type MentorDashboardSection = 'overview' | 'calendar' | 'assignments' | 'mentees' | 'availability' | 'history' | 'notifications' | 'profile'
 
-export function MentorOverview({ name, data, open, onRetry }: { name: string; data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
-  const overview = useMemo(() => buildMentorOverview(data.sessions, new Date(), data.timezone), [data.sessions, data.timezone])
+const sessionStatusLabels: Record<MentorSessionStatus, string> = {
+  awaiting_focus: 'Awaiting review',
+  awaiting_scheduling: 'Awaiting scheduling',
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+}
 
-  return <div className="mentor-section">
-    <MentorPageHeader eyebrow="Dashboard mentor" title={`Selamat datang, ${name}.`} detail="Lihat agenda terdekat, peserta aktif, dan pekerjaan mentoring yang benar-benar terhubung ke akun Anda." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/>
-    {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry}/> : <>
-      <div className="mentor-metric-grid" aria-label="Ringkasan mentor">
-        <Metric label="Sesi hari ini" value={overview.sessionsToday} detail="Sesi Strativate pada tanggal lokal Anda"/>
-        <Metric label="Sesi mendatang" value={overview.upcomingSessions} detail="Terjadwal dan belum berakhir"/>
-        <Metric label="Peserta aktif" value={overview.activeMentees} detail="Memiliki sesi mendatang dengan Anda"/>
-        <Metric label="Selesai bulan ini" value={overview.completedThisMonth} detail="Berdasarkan status sesi canonical"/>
+function sessionTime(session: MentorSessionRow, timezone: string) {
+  if (!session.scheduled_start_at) return 'Not scheduled'
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: session.mentor_timezone || timezone,
+  }).format(new Date(session.scheduled_start_at))
+}
+
+function sessionDay(session: MentorSessionRow, timezone: string) {
+  if (!session.scheduled_start_at) return 'Date not set'
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: session.mentor_timezone || timezone,
+  }).format(new Date(session.scheduled_start_at))
+}
+
+function availabilityLabel(value: boolean | null) {
+  return value ? 'Set' : 'Not set'
+}
+
+export function MentorOverview({
+  name,
+  data,
+  open,
+  onRetry,
+}: {
+  name: string
+  data: MentorDashboardData
+  open: (section: MentorDashboardSection) => void
+  onRetry: () => void
+}) {
+  const overview = useMemo(
+    () => buildMentorOverview(data.sessions, new Date(), data.timezone),
+    [data.sessions, data.timezone],
+  )
+
+  return <div className={styles.overview}>
+    <header className={styles.overviewHeader}>
+      <h1>Welcome back, {name}.</h1>
+      <button type="button" className={"button button-primary " + styles.availabilityAction} onClick={() => open('availability')}>
+        <Clock3 aria-hidden="true" />
+        Set availability
+      </button>
+    </header>
+
+    {data.sessionError ? (
+      <section className={styles.errorState} role="alert">
+        <strong>Mentor data could not be loaded.</strong>
+        <p>Please refresh and try again.</p>
+        <button type="button" className="button button-outline" onClick={onRetry}>Try again</button>
+      </section>
+    ) : <>
+      <div className={styles.metrics} aria-label="Mentor overview">
+        <button type="button" className={styles.metric} data-tone="orange" onClick={() => open('calendar')}>
+          <span className={styles.metricLabel}>Sessions today</span>
+          <strong>{overview.sessionsToday}</strong>
+          <span className={styles.metricIcon}><CalendarDays aria-hidden="true" /></span>
+          <small>On your local date</small>
+        </button>
+        <button type="button" className={styles.metric} data-tone="amber" onClick={() => open('calendar')}>
+          <span className={styles.metricLabel}>Upcoming sessions</span>
+          <strong>{overview.upcomingSessions}</strong>
+          <span className={styles.metricIcon}><Clock3 aria-hidden="true" /></span>
+          <small>Scheduled ahead</small>
+        </button>
+        <button type="button" className={styles.metric} data-tone="coral" onClick={() => open('mentees')}>
+          <span className={styles.metricLabel}>Active mentees</span>
+          <strong>{overview.activeMentees}</strong>
+          <span className={styles.metricIcon}><UsersRound aria-hidden="true" /></span>
+          <small>With upcoming sessions</small>
+        </button>
+        <button type="button" className={styles.metric} data-tone="positive" onClick={() => open('history')}>
+          <span className={styles.metricLabel}>Completed this month</span>
+          <strong>{overview.completedThisMonth}</strong>
+          <span className={styles.metricIcon}><CheckCircle2 aria-hidden="true" /></span>
+          <small>Finished this month</small>
+        </button>
       </div>
-      <div className="mentor-overview-grid">
-        <section className="role-card mentor-agenda-card">
-          <div className="role-card-heading"><div><p className="kicker">Agenda terdekat</p><h2>Sesi berikutnya</h2></div><button type="button" className="text-link" onClick={() => open('calendar')}>Lihat kalender <CalendarDays aria-hidden="true"/></button></div>
-          {overview.upcoming.length ? <div className="mentor-agenda-list">{overview.upcoming.map(session => <article className="mentor-agenda-row" key={session.session_id}><div className="mentor-agenda-time"><strong>{sessionDate(session, data.timezone, false)}</strong><span>{sessionDay(session, data.timezone)}</span></div><div className="mentor-agenda-main"><strong>{session.mentee_name || session.mentee_email || 'Peserta Strativate'}</strong><span>{session.mentoring_type==='intensive'?'Intensive · '+(session.program_name||'Program'):'Private Mentoring'} · {session.resolved_topic||session.focus_name||'Fokus belum dicatat'} · Sesi {session.session_number}{session.purchased_sessions?'/'+session.purchased_sessions:''}</span></div><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span>{session.meeting_url ? <a className="mentor-agenda-link" href={session.meeting_url} target="_blank" rel="noopener noreferrer">Join Zoom <ExternalLink aria-hidden="true"/></a> : <button type="button" className="mentor-agenda-link" onClick={() => open('calendar')}>Detail</button>}</article>)}</div> : <EmptyState icon={CalendarDays} title="Belum ada sesi mendatang." detail="Sesi Private atau Intensive akan muncul setelah admin menjadwalkannya kepada Anda." action={<button type="button" className="button button-outline" onClick={() => open('calendar')}>Buka kalender</button>}/>} 
+
+      <div className={styles.overviewGrid}>
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2>Upcoming sessions</h2>
+            <button type="button" className={"button button-outline " + styles.secondaryAction} onClick={() => open('calendar')}>
+              <CalendarDays aria-hidden="true" />
+              View calendar
+            </button>
+          </div>
+
+          {overview.upcoming.length ? (
+            <div className={styles.sessionList}>
+              {overview.upcoming.map(session => (
+                <article className={styles.sessionRow} key={session.session_id}>
+                  <div className={styles.sessionTime}>
+                    <strong>{sessionTime(session, data.timezone)}</strong>
+                    <span>{sessionDay(session, data.timezone)}</span>
+                  </div>
+                  <div className={styles.sessionMain}>
+                    <strong>{session.mentee_name || session.mentee_email || 'Strativate mentee'}</strong>
+                    <span>
+                      {session.mentoring_type === 'intensive'
+                        ? 'Intensive · ' + (session.program_name || 'Program')
+                        : 'Private Mentoring'}
+                      {' · '}
+                      {session.resolved_topic || session.focus_name || 'Focus not set'}
+                      {' · Session '}
+                      {session.session_number}
+                      {session.purchased_sessions ? '/' + session.purchased_sessions : ''}
+                    </span>
+                  </div>
+                  <span className={"ops-status ops-status--" + mentorSessionStatusTone(session.status) + " " + styles.sessionStatus}>
+                    {sessionStatusLabels[session.status]}
+                  </span>
+                  {session.meeting_url ? (
+                    <a className={styles.sessionAction} href={session.meeting_url} target="_blank" rel="noopener noreferrer">
+                      Join Zoom
+                      <ExternalLink aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <button type="button" className={styles.sessionAction} onClick={() => open('calendar')}>Details</button>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <CalendarDays aria-hidden="true" />
+              <p>No upcoming sessions.</p>
+            </div>
+          )}
         </section>
-        <section className="role-card mentor-quick-card">
-          <p className="kicker">Operasional</p><h2>Akses yang paling sering dibutuhkan.</h2>
-          <dl className="mentor-quick-status"><div><dt>Penugasan mendatang</dt><dd>{overview.upcomingSessions} sesi</dd></div><div><dt>Ketersediaan minggu ini</dt><dd><span className={`ops-status ops-status--${availabilityTone(data.availability.current)}`}>{availabilityLabel(data.availability.current)}</span></dd></div><div><dt>Ketersediaan minggu depan</dt><dd><span className={`ops-status ops-status--${availabilityTone(data.availability.next)}`}>{availabilityLabel(data.availability.next)}</span></dd></div></dl>
-          <div className="mentor-quick-actions"><button type="button" onClick={() => open('assignments')}><ClipboardList aria-hidden="true"/><span><strong>Lihat penugasan</strong><small>Fokus, sesi, jadwal, dan status.</small></span></button><button type="button" onClick={() => open('mentees')}><UsersRound aria-hidden="true"/><span><strong>Lihat peserta</strong><small>Ringkasan peserta yang Anda dampingi.</small></span></button><button type="button" onClick={() => open('availability')}><Clock3 aria-hidden="true"/><span><strong>Atur ketersediaan</strong><small>Perbarui waktu untuk minggu ini atau berikutnya.</small></span></button></div>
+
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2>Quick access</h2>
+          </div>
+
+          <dl className={styles.quickStatus}>
+            <div>
+              <dt>Upcoming assignments</dt>
+              <dd>{overview.upcomingSessions} sessions</dd>
+            </div>
+            <div>
+              <dt>Availability this week</dt>
+              <dd>{availabilityLabel(data.availability.current)}</dd>
+            </div>
+            <div>
+              <dt>Availability next week</dt>
+              <dd>{availabilityLabel(data.availability.next)}</dd>
+            </div>
+          </dl>
+
+          <div className={styles.quickActions}>
+            <button type="button" onClick={() => open('assignments')}>
+              <span className={styles.quickIcon}><ClipboardList aria-hidden="true" /></span>
+              <span><strong>View assignments</strong><small>Focus and upcoming sessions</small></span>
+              <ChevronRight aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => open('mentees')}>
+              <span className={styles.quickIcon}><UsersRound aria-hidden="true" /></span>
+              <span><strong>View mentees</strong><small>Mentees you currently support</small></span>
+              <ChevronRight aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => open('availability')}>
+              <span className={styles.quickIcon}><Clock3 aria-hidden="true" /></span>
+              <span><strong>Set availability</strong><small>Update weekly availability</small></span>
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </div>
         </section>
       </div>
     </>}
-    {data.metadataError ? <p className="mentor-inline-warning" role="status">{data.metadataError}</p> : null}
+
+    {data.metadataError ? <p className={styles.inlineWarning} role="status">Some mentor details are temporarily unavailable.</p> : null}
   </div>
 }

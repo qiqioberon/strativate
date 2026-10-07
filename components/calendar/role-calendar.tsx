@@ -11,7 +11,7 @@ import {
   Loader2,
   RefreshCw,
   Unplug,
-  UsersRound,
+  Clock3,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -53,7 +53,7 @@ function supportHref(event: EventItem, locale: CalendarLocale) {
 }
 
 export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole; onOpenAvailability?: () => void }) {
-  const english = role === 'mentee'
+  const english = role === 'mentee' || role === 'mentor'
   const locale: CalendarLocale = english ? 'en-GB' : 'id-ID'
   const [view, setView] = useState<CalendarView>('month')
   const [cursor, setCursor] = useState(() => new Date())
@@ -207,7 +207,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
   return <div className={`native-calendar${english ? ` ${styles.calendar}` : ''}`} lang={english ? 'en' : undefined}>
     <div className="role-page-title">
       {!english ? <p className="kicker">Jadwal terintegrasi</p> : null}
-      <h2>{role === 'admin' ? 'Jadwal Mentoring' : role === 'mentor' ? 'Kalender' : 'Schedule'}</h2>
+      <h2>{role === 'admin' ? 'Jadwal Mentoring' : role === 'mentor' ? 'Calendar' : 'Schedule'}</h2>
       {!english ? <p>{role === 'admin' ? 'Pantau seluruh sesi Strativate, Zoom room, dan sinkronisasi Google Calendar tanpa membuka detail kalender pribadi mentor atau mentee.' : 'Gabungkan sesi Strativate dengan agenda Google Calendar pribadi Anda. Link Zoom sesi tersedia pada detail jadwal.'}</p> : null}
     </div>
 
@@ -315,7 +315,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
             <button className="button button-outline" type="button" disabled={actionBusy} onClick={() => void runAction(async () => { await navigator.clipboard.writeText(selected.meetingUrl!); setCopied(true) })}><Clipboard aria-hidden="true" /> {english ? 'Copy meeting link' : 'Salin link meeting'}</button>
           </> : null}
           {selected.source === 'strativate' && role !== 'admin' ? <a className="button button-outline" href={supportHref(selected, locale)} target="_blank" rel="noopener noreferrer">{english ? 'Contact admin via WhatsApp' : 'Hubungi Admin via WhatsApp'}</a> : null}
-          {role === 'mentor' && selected.source === 'strativate' && onOpenAvailability ? <button className="button button-outline" type="button" onClick={() => { setSelected(null); onOpenAvailability() }}><UsersRound aria-hidden="true" />Atur ketersediaan</button> : null}
+          {role === 'mentor' && selected.source === 'strativate' && onOpenAvailability ? <button className="button button-outline" type="button" onClick={() => { setSelected(null); onOpenAvailability() }}><Clock3 aria-hidden="true" />Set availability</button> : null}
           {role === 'admin' && selected.source === 'strativate' ? <>
             <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId} onClick={() => {
               setScheduleKind(selected.mentoringType === 'intensive' ? 'intensive' : 'private')
