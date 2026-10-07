@@ -29,8 +29,9 @@ test('shared PageIntro mirrors the homepage hero surface and centered hierarchy'
   assert.doesNotMatch(programStyles, /marketing-page-intro/)
 })
 
-test('mentor directory tightens only its post-intro desktop spacing', () => {
-  assert.match(mentor, /className="marketing-page-section mentor-directory-section"/)
+test('mentor directory keeps tighter spacing without section-level reveal gating', () => {
+  assert.match(mentor, /<section className="marketing-page-section mentor-directory-section" data-testid="mentor-directory-section">/)
+  assert.doesNotMatch(mentor, /mentor-directory-section"\s+data-reveal/)
   assert.match(marketing, /\.marketing-page-section \{ padding: clamp\(70px, 8vw, 120px\) 0; \}/)
   assert.match(marketing, /@media \(min-width: 761px\) \{\s*\.mentor-directory-section \{ padding-top: clamp\(48px, 4\.5vw, 68px\); \}\s*\}/)
   assert.doesNotMatch(intro, /mentor-directory-section/)
