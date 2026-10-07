@@ -1,33 +1,22 @@
 'use client'
 
 import { Search, SlidersHorizontal } from 'lucide-react'
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
 import type { PublicPublication } from '@/lib/content/editorial'
 import { filterPublications, type PublicationSort } from '@/lib/content/editorial-filters'
+import { PublicationCard } from './publication-card'
 
-function PublicationCard({ item, featured = false }: { item: PublicPublication; featured?: boolean }) {
-  return <Link
-    className={featured ? 'editorial-card editorial-card--featured' : 'editorial-card'}
-    href={`/publications/${item.slug}`}
-    aria-label={`Read ${item.title}`}
-  >
-    <div className="editorial-card__media">
-      {item.coverUrl
-        ? <img src={item.coverUrl} alt={item.cover_alt_text ?? ''} />
-        : <div className="editorial-card__cover-fallback" aria-hidden="true">Strativate</div>}
-    </div>
-    <div className="editorial-card__content">
-      <div className="editorial-card__eyebrow">
-        {item.categoryName ? <span className="editorial-card__category">{item.categoryName}</span> : null}
-        <small>{item.published_at ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(`${item.published_at}T00:00:00`)) : 'Published by Strativate'}</small>
-      </div>
-      <h3>{item.title}</h3>
-      <p>{item.excerpt}</p>
-      <span className="marketing-text-link">Read more <span aria-hidden="true">→</span></span>
-    </div>
-  </Link>
+function publicationCardProps(item: PublicPublication) {
+  return {
+    slug: item.slug,
+    title: item.title,
+    excerpt: item.excerpt,
+    category: item.categoryName,
+    publicationDate: item.published_at,
+    coverUrl: item.coverUrl,
+    coverAltText: item.cover_alt_text,
+  }
 }
 
 export function PublicationDirectory({ publications }: { publications: PublicPublication[] }) {
@@ -62,7 +51,7 @@ export function PublicationDirectory({ publications }: { publications: PublicPub
         <p>Selected stories curated by the Strativate editorial team.</p>
       </div>
       <div className={`editorial-featured__grid editorial-featured__grid--${featured.length}`}>
-        {featured.map(item => <PublicationCard key={item.id} item={item} featured />)}
+        {featured.map(item => <PublicationCard key={item.id} {...publicationCardProps(item)} featured />)}
       </div>
     </section> : null}
 
@@ -95,7 +84,7 @@ export function PublicationDirectory({ publications }: { publications: PublicPub
       </div>
       <p className="editorial-result" aria-live="polite">{filtered.length} publication{filtered.length === 1 ? '' : 's'}</p>
       {filtered.length
-        ? <div className="editorial-grid">{filtered.map(item => <PublicationCard key={item.id} item={item} />)}</div>
+        ? <div className="editorial-grid">{filtered.map(item => <PublicationCard key={item.id} {...publicationCardProps(item)} />)}</div>
         : <div className="editorial-empty"><strong>No publications match these filters.</strong><span>Try a different search or category.</span></div>}
     </section>
   </div>

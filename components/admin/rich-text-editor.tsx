@@ -18,7 +18,7 @@ import {
   Undo2,
   Unlink,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import {
   editorDocumentToRichText,
@@ -233,8 +233,7 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
     setLinkError('')
   }
 
-  function applyLink(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function applyLink() {
     if (!linkDraft) return
     const href = sanitizeRichTextUrl(linkDraft.url)
     if (!linkDraft.text.trim()) {
@@ -248,7 +247,7 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
     const linkAttrs = {
       href,
       target: linkDraft.newTab ? '_blank' : null,
-      rel: linkDraft.newTab ? 'noreferrer' : null,
+      rel: linkDraft.newTab ? 'noopener noreferrer' : null,
     }
     const currentText = activeEditor.state.doc.textBetween(linkDraft.from, linkDraft.to, ' ')
     if (linkDraft.from < linkDraft.to && currentText === linkDraft.text) {
@@ -279,42 +278,61 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
   }
 
   return <div className="rich-editor" data-testid="publication-rich-text-editor">
-    <div className="rich-editor__toolbar" role="toolbar" aria-label="Article formatting">
-      <label className="rich-editor__block-select">
-        <span className="sr-only">Text style</span>
-        <select value={blockType} onChange={event => changeBlock(event.target.value)} aria-label="Text style">
-          <option value="p">Paragraph</option>
-          <option value="h2">H2</option>
-          <option value="h3">H3</option>
-          <option value="h4">H4</option>
-        </select>
-      </label>
-      <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Bold" active={activeEditor.isActive('bold')} onClick={() => activeEditor.chain().focus().toggleBold().run()}><Bold aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Italic" active={activeEditor.isActive('italic')} onClick={() => activeEditor.chain().focus().toggleItalic().run()}><Italic aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Bullet list" active={activeEditor.isActive('bulletList')} onClick={() => activeEditor.chain().focus().toggleBulletList().run()}><List aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Numbered list" active={activeEditor.isActive('orderedList')} onClick={() => activeEditor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Blockquote" active={activeEditor.isActive('blockquote')} onClick={() => activeEditor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Link" active={activeEditor.isActive('link')} onClick={openLinkDialog}><Link2 aria-hidden="true" /></ToolbarButton>
-      <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Align left" active={textAlignment === 'left'} onClick={() => activeEditor.chain().focus().setTextAlign('left').run()}><AlignLeft aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Align center" active={textAlignment === 'center'} onClick={() => activeEditor.chain().focus().setTextAlign('center').run()}><AlignCenter aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Align right" active={textAlignment === 'right'} onClick={() => activeEditor.chain().focus().setTextAlign('right').run()}><AlignRight aria-hidden="true" /></ToolbarButton>
-      <span className="rich-editor__separator" aria-hidden="true" />
-      <ToolbarButton label="Undo" disabled={!activeEditor.can().chain().focus().undo().run()} onClick={() => activeEditor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolbarButton>
-      <ToolbarButton label="Redo" disabled={!activeEditor.can().chain().focus().redo().run()} onClick={() => activeEditor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolbarButton>
-    </div>
-    {linkDraft ? <form className="rich-editor__link-popover" onSubmit={applyLink}>
-      <label>Text to display<input autoFocus value={linkDraft.text} onChange={event => setLinkDraft(current => current ? { ...current, text: event.target.value } : current)} /></label>
-      <label>URL<input type="url" value={linkDraft.url} onChange={event => setLinkDraft(current => current ? { ...current, url: event.target.value } : current)} placeholder="https://…" /></label>
-      <label className="rich-editor__link-check"><input type="checkbox" checked={linkDraft.newTab} onChange={event => setLinkDraft(current => current ? { ...current, newTab: event.target.checked } : current)} /> Open in new tab</label>
-      {linkError ? <p role="alert">{linkError}</p> : null}
-      <div>
-        {linkDraft.existing ? <button type="button" className="button button-danger button-compact" onClick={removeLink}><Unlink aria-hidden="true" /> Remove link</button> : null}
-        <button type="button" className="button button-outline button-compact" onClick={() => setLinkDraft(null)}>Cancel</button>
-        <button type="submit" className="button button-primary button-compact">{linkDraft.existing ? 'Update link' : 'Apply link'}</button>
+    <div className="rich-editor__controls">
+      <div className="rich-editor__toolbar" role="toolbar" aria-label="Article formatting">
+        <label className="rich-editor__block-select">
+          <span className="sr-only">Text style</span>
+          <select value={blockType} onChange={event => changeBlock(event.target.value)} aria-label="Text style">
+            <option value="p">Paragraph</option>
+            <option value="h2">H2</option>
+            <option value="h3">H3</option>
+            <option value="h4">H4</option>
+          </select>
+        </label>
+        <span className="rich-editor__separator" aria-hidden="true" />
+        <ToolbarButton label="Bold" active={activeEditor.isActive('bold')} onClick={() => activeEditor.chain().focus().toggleBold().run()}><Bold aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Italic" active={activeEditor.isActive('italic')} onClick={() => activeEditor.chain().focus().toggleItalic().run()}><Italic aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Bullet list" active={activeEditor.isActive('bulletList')} onClick={() => activeEditor.chain().focus().toggleBulletList().run()}><List aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Numbered list" active={activeEditor.isActive('orderedList')} onClick={() => activeEditor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Blockquote" active={activeEditor.isActive('blockquote')} onClick={() => activeEditor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Link" active={activeEditor.isActive('link')} onClick={openLinkDialog}><Link2 aria-hidden="true" /></ToolbarButton>
+        <span className="rich-editor__separator" aria-hidden="true" />
+        <ToolbarButton label="Align left" active={textAlignment === 'left'} onClick={() => activeEditor.chain().focus().setTextAlign('left').run()}><AlignLeft aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Align center" active={textAlignment === 'center'} onClick={() => activeEditor.chain().focus().setTextAlign('center').run()}><AlignCenter aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Align right" active={textAlignment === 'right'} onClick={() => activeEditor.chain().focus().setTextAlign('right').run()}><AlignRight aria-hidden="true" /></ToolbarButton>
+        <span className="rich-editor__separator" aria-hidden="true" />
+        <ToolbarButton label="Undo" disabled={!activeEditor.can().chain().focus().undo().run()} onClick={() => activeEditor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolbarButton>
+        <ToolbarButton label="Redo" disabled={!activeEditor.can().chain().focus().redo().run()} onClick={() => activeEditor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolbarButton>
       </div>
-    </form> : null}
+      {linkDraft ? <div
+        className="rich-editor__link-popover"
+        role="dialog"
+        aria-label={linkDraft.existing ? 'Edit link' : 'Insert link'}
+        onKeyDown={event => {
+          if (event.key === 'Escape') {
+            event.preventDefault()
+            event.stopPropagation()
+            setLinkDraft(null)
+            activeEditor.commands.focus()
+          }
+          if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+            event.preventDefault()
+            event.stopPropagation()
+            if (!event.nativeEvent.isComposing) applyLink()
+          }
+        }}
+      >
+        <label>Text to display<input autoFocus value={linkDraft.text} onChange={event => setLinkDraft(current => current ? { ...current, text: event.target.value } : current)} /></label>
+        <label>URL<input type="url" value={linkDraft.url} onChange={event => setLinkDraft(current => current ? { ...current, url: event.target.value } : current)} placeholder="https://…" /></label>
+        <label className="rich-editor__link-check"><input type="checkbox" checked={linkDraft.newTab} onChange={event => setLinkDraft(current => current ? { ...current, newTab: event.target.checked } : current)} /> Open in new tab</label>
+        {linkError ? <p role="alert">{linkError}</p> : null}
+        <div>
+          {linkDraft.existing ? <button type="button" className="button button-danger button-compact" onClick={removeLink}><Unlink aria-hidden="true" /> Remove link</button> : null}
+          <button type="button" className="button button-outline button-compact" onClick={() => { setLinkDraft(null); activeEditor.commands.focus() }}>Cancel</button>
+          <button type="button" className="button button-primary button-compact" onClick={applyLink}>{linkDraft.existing ? 'Update link' : 'Apply link'}</button>
+        </div>
+      </div> : null}
+    </div>
     <EditorContent editor={activeEditor} />
   </div>
 }

@@ -5,6 +5,7 @@ import type { RichTextDocument } from '@/lib/content/rich-text'
 
 import { CompetitionBadges, competitionStatusIcons } from './competition-badges'
 import { RichTextRenderer } from './rich-text-renderer'
+import { PublicationCard } from './publication-card'
 
 export type PublicationDetailViewModel = {
   id: string
@@ -70,10 +71,15 @@ export function PublicationDetailView({
       <div className="marketing-container">
         <div className="marketing-section-head"><div><p className="marketing-kicker">Keep reading</p><h2>Related Publications</h2></div></div>
         <div className="editorial-related__grid">
-          {related.slice(0, 3).map(relatedItem => <Link className="editorial-related-card" href={`/publications/${relatedItem.slug}`} key={relatedItem.id}>
-            {relatedItem.coverUrl ? <img src={relatedItem.coverUrl} alt={relatedItem.coverAltText ?? ''} /> : <div className="editorial-card__cover-fallback" aria-hidden="true">Strativate</div>}
-            <div>{relatedItem.category ? <span>{relatedItem.category}</span> : null}<h3>{relatedItem.title}</h3><p>{relatedItem.summary}</p><strong>Read more <ArrowRight aria-hidden="true" /></strong></div>
-          </Link>)}
+          {related.slice(0, 3).map(relatedItem => <PublicationCard
+            key={relatedItem.id}
+            slug={relatedItem.slug}
+            title={relatedItem.title}
+            excerpt={relatedItem.summary}
+            category={relatedItem.category}
+            coverUrl={relatedItem.coverUrl}
+            coverAltText={relatedItem.coverAltText}
+          />)}
         </div>
       </div>
     </section> : null}

@@ -10,7 +10,7 @@ function renderInline(content: RichTextInline[] | undefined, keyPrefix: string) 
       if (mark.type === 'italic') node = <em>{node}</em>
       if (mark.type === 'link') {
         const href = sanitizeRichTextUrl(mark.href)
-        if (href) node = <a href={href} target={mark.newTab ? '_blank' : undefined} rel={mark.newTab ? 'noreferrer' : undefined}>{node}</a>
+        if (href) node = <a href={href} target={mark.newTab ? '_blank' : undefined} rel={mark.newTab ? 'noopener noreferrer' : undefined}>{node}</a>
       }
     }
     return <span key={`${keyPrefix}-${index}`}>{node}</span>

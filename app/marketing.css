@@ -1930,7 +1930,6 @@
 .editorial-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--marketing-line); border-radius: 22px 22px 8px 22px; background: #fff; }
 .editorial-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #fff2e5; }
 .editorial-card > div { display: grid; gap: 12px; height: 100%; padding: 24px; }
-.editorial-card span, .editorial-card small { color: var(--marketing-orange-dark); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .editorial-card h2 { font-size: 1.4rem; letter-spacing: -.045em; }
 .editorial-card p { color: var(--marketing-muted); font-size: .86rem; line-height: 1.65; }
 .editorial-card .marketing-text-link { align-self: end; margin-top: auto; }

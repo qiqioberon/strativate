@@ -869,9 +869,11 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
         </div>
 
         <footer className="editorial-editor__footer">
-          <button className="button button-outline editorial-editor__cancel" type="button" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
-          <button className="button button-outline" type="button" onClick={() => void openPreview()} disabled={busy}><Eye aria-hidden="true" /> Preview</button>
-          <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
+          <div className="editorial-editor__action-group">
+            <button className="button button-outline editorial-editor__cancel" type="button" onClick={requestCloseEditor} disabled={busy}><X aria-hidden="true" /> Cancel</button>
+            <button className="button button-outline" type="button" onClick={() => void openPreview()} disabled={busy}><Eye aria-hidden="true" /> Preview</button>
+            <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
+          </div>
         </footer>
       </form>
     </dialog>
