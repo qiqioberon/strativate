@@ -27,7 +27,7 @@ function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors:
           aria-label={duplicate ? undefined : `View details for ${mentor.name}`}
           onClick={(event) => openMentor(event, mentor)}
         >
-          <div className="marketing-mentor-marquee__portrait"><MentorPortraitMedia mentor={mentor} sizes="108px" /></div>
+          <div className="marketing-mentor-marquee__portrait"><MentorPortraitMedia mentor={mentor} sizes="112px" /></div>
           <div className="marketing-mentor-marquee__content">
             <div className="marketing-mentor-marquee__identity">
               <span className="marketing-mentor-marquee__tier">{mentor.tier ?? 'Strativate mentor'}</span>

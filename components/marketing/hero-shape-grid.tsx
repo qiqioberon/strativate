@@ -20,6 +20,8 @@ type ShapeGridProps = {
   squareSize?: number
   shape?: ShapeGridShape
   fadeColor?: string
+  className?: string
+  testId?: string
 }
 
 function ShapeGrid({
@@ -29,6 +31,8 @@ function ShapeGrid({
   squareSize = 40,
   shape = 'square',
   fadeColor = '#120F17',
+  className = 'homepage-shape-grid',
+  testId = 'hero-shape-grid',
 }: ShapeGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const requestRef = useRef<number | null>(null)
@@ -262,10 +266,10 @@ function ShapeGrid({
   return (
     <canvas
       ref={canvasRef}
-      className="homepage-shape-grid"
+      className={className}
       aria-hidden="true"
       data-react-bits="shape-grid"
-      data-testid="hero-shape-grid"
+      data-testid={testId}
     />
   )
 }
@@ -279,6 +283,21 @@ export function HeroShapeGrid() {
       squareSize={48}
       shape="square"
       fadeColor="rgba(104,26,0,.16)"
+    />
+  )
+}
+
+export function RecognitionShapeGrid() {
+  return (
+    <ShapeGrid
+      direction="diagonal"
+      speed={0.16}
+      borderColor="rgba(255,248,238,.2)"
+      squareSize={56}
+      shape="square"
+      fadeColor="rgba(173,48,0,.16)"
+      className="homepage-recognition__shape-grid"
+      testId="recognition-shape-grid"
     />
   )
 }

@@ -4,6 +4,8 @@ import {
 } from '@/lib/marketing/competition-recognition-config'
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
 
+import { RecognitionShapeGrid } from './hero-shape-grid'
+
 const MINIMUM_LOGOS_PER_CYCLE = 12
 const MINIMUM_LOGOS_FOR_TWO_ROWS = 12
 
@@ -104,6 +106,7 @@ export function CompetitionRecognitionSection({
       data-testid="homepage-recognition-section"
     >
       <div className="homepage-recognition__statement">
+        <RecognitionShapeGrid />
         <div className="marketing-container homepage-recognition__inner">
           <h2 id="homepage-recognition-heading">
             Our mentors and students are award-winning business competition finalists.
