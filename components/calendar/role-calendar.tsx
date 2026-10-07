@@ -245,7 +245,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
         {payload?.connection.connected ? <>
           <button className="button button-outline" disabled={loading || actionBusy} onClick={() => void load()}><RefreshCw aria-hidden="true" />{english ? 'Refresh' : 'Muat ulang'}</button>
           <button className="button button-ghost" disabled={actionBusy} onClick={() => void runAction(disconnect)}><Unplug aria-hidden="true" />{english ? 'Disconnect' : 'Putuskan'}</button>
-        </> : <button className="button button-primary" disabled={!payload && loading} onClick={connect}>{payload?.connection.status === 'invalid' ? english ? 'Reconnect Google Calendar' : 'Hubungkan ulang Google Calendar' : english ? 'Connect Google Calendar' : 'Hubungkan Google Calendar'}</button>}
+        </> : <button className="button button-primary" disabled={!payload && loading} onClick={connect}>{payload?.connection.status === 'invalid' ? <RefreshCw aria-hidden="true" /> : <Link2 aria-hidden="true" />}{payload?.connection.status === 'invalid' ? english ? 'Reconnect Google Calendar' : 'Hubungkan ulang Google Calendar' : english ? 'Connect Google Calendar' : 'Hubungkan Google Calendar'}</button>}
       </div>
     </section>
 

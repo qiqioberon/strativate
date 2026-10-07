@@ -19,7 +19,8 @@
   font-weight: 700;
   letter-spacing: -.025em;
   line-height: 1.12;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .pageHeadingAction {
@@ -27,7 +28,7 @@
 }
 
 .headerAction {
-  min-height: 38px;
+  min-height: 44px;
   gap: 8px;
   padding: 8px 12px;
   border-color: #d9c8b9;
@@ -316,7 +317,25 @@
   line-height: 1.35;
 }
 
+.weekOption[aria-pressed='true'] span {
+  color: #fffaf4;
+}
+
 .weekOption[aria-pressed='true'] small {
+  color: #fff4e9;
+}
+
+.weekOption[aria-pressed='true']:is(:hover, :focus, :focus-visible, :active):not(:disabled) {
+  border-color: #923b0d;
+  background: #a94710;
+  color: #fffaf4;
+}
+
+.weekOption[aria-pressed='true']:is(:hover, :focus, :focus-visible, :active):not(:disabled) span {
+  color: #fffaf4;
+}
+
+.weekOption[aria-pressed='true']:is(:hover, :focus, :focus-visible, :active):not(:disabled) small {
   color: #fff4e9;
 }
 
@@ -383,6 +402,7 @@
   color: #a34713;
   font-size: .72rem;
   font-weight: 650;
+  min-height: 40px;
   cursor: pointer;
 }
 
@@ -449,8 +469,8 @@
 
 .removeButton {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   place-items: center;
   border: 1px solid #e3cdc6;
   border-radius: 9px;
@@ -520,12 +540,21 @@
 
 @media (max-width: 540px) {
   .pageHeading {
-    align-items: stretch;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
     margin-bottom: 20px;
   }
 
+  .pageHeading h1 {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
   .pageHeadingAction {
-    flex: 1 1 100%;
+    width: 100%;
+    flex: 0 0 auto;
   }
 
   .headerAction {
@@ -535,8 +564,15 @@
 
   .availabilityCard,
   .operationalCard {
-    padding: 15px;
+    padding: 16px;
   }
+
+  .editor { gap: 16px; }
+  .domainTile { padding: 11px 12px; column-gap: 12px; }
+  .weekSwitcher { gap: 8px; padding: 0; border: 0; background: transparent; }
+  .weekOption { min-height: 58px; padding: 10px 12px; }
+  .dayCard { gap: 10px; padding: 14px; }
+  .addRange { min-height: 44px; padding: 8px 10px; }
 
   .domainSummary,
   .weekSwitcher {
@@ -544,7 +580,7 @@
   }
 
   .weekOption {
-    text-align: center;
+    text-align: left;
   }
 
   .dayHeading {
@@ -552,9 +588,22 @@
   }
 
   .range {
-    grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr) 32px;
-    gap: 6px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
+
+  .range > span[aria-hidden='true'] { display: none; }
+  .range input { height: 44px; }
+  .removeButton {
+    width: 44px;
+    height: 44px;
+    justify-self: end;
+    border-color: #e0bbb4;
+    background: #fff7f5;
+    color: #9b3f37;
+  }
+
+  .actions :global(.button) { min-height: 44px; }
 
   .actions {
     display: grid;
@@ -568,11 +617,6 @@
 }
 
 @media (max-width: 410px) {
-  .range {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
-  }
-
-  .range > span[aria-hidden='true'] {
-    display: none;
-  }
+  .dayHeading { gap: 8px; }
+  .addRange { flex: 0 0 auto; }
 }

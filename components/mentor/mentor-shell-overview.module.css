@@ -2,7 +2,7 @@
   --mentor-border: #e8dfd6;
   --mentor-muted: #786c63;
   --mentor-ink: #2c2723;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: #f8f6f2;
   color: var(--mentor-ink);
   font-size: .875rem;
@@ -17,6 +17,7 @@
 
 .shell :global(.role-sidebar) {
   width: 246px;
+  max-height: 100dvh;
   padding: 24px 14px 16px;
   gap: 20px;
   overflow-y: auto;
@@ -52,7 +53,7 @@
 .shell :global(.role-sidebar nav) { gap: 4px; }
 
 .shell :global(.role-sidebar nav button) {
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 12px;
   border-radius: 9px;
   color: #6c6057;
@@ -136,13 +137,14 @@
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -.025em;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .availabilityAction,
 .secondaryAction {
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 44px;
   gap: 8px;
   font-size: .8rem;
 }
@@ -380,6 +382,7 @@
   gap: 11px;
   min-width: 0;
   width: 100%;
+  min-height: 44px;
   padding: 11px 12px;
   border: 1px solid #e8ded4;
   border-radius: 11px;
@@ -462,24 +465,59 @@
 }
 
 @media (max-width: 800px) {
-  .shell :global(.role-main) { margin-left: 0; }
+  .shell :global(.role-main) { min-height: 100dvh; margin-left: 0; }
 
   .shell :global(.role-sidebar) {
-    width: min(86vw, 300px);
-    padding: 20px 14px 16px;
+    top: 60px;
+    bottom: 0;
+    z-index: 80;
+    width: min(84vw, 340px);
+    max-height: calc(100dvh - 60px);
+    padding: 16px 14px;
+    gap: 16px;
+    visibility: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .shell :global(.role-sidebar.open) { visibility: visible; }
+  .shell :global(.role-sidebar nav) { overflow: visible; }
+  .shell :global(.role-sidebar nav button) { min-height: 44px; }
+  .shell :global(.role-sidebar-bottom) { margin-top: auto; }
+  .shell :global(.role-sidebar-bottom a),
+  .shell :global(.role-sidebar-bottom button) { min-height: 44px; }
+
+  .shell :global(.role-scrim) {
+    position: fixed;
+    inset: 60px 0 0;
+    z-index: 60;
+    border: 0;
+    background: rgba(48, 35, 28, .42);
   }
 
   .shell :global(.role-topbar) {
-    height: 62px;
-    padding-inline: 18px;
+    z-index: 70;
+    height: 60px;
+    padding-inline: 20px;
+    gap: 10px;
   }
 
-  .shell :global(.role-menu) { margin-right: 0; }
+  .shell :global(.role-menu),
+  .shell :global(.role-close) {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    margin-right: 0;
+    border-radius: 10px;
+  }
+
+  .shell :global(.role-actions) { gap: 8px; }
+  .shell :global(.role-actions button) { min-width: 44px; min-height: 44px; }
 
   .shell :global(.role-content),
   .shell :global(.mentor-role-content) {
-    width: calc(100% - 36px);
-    padding: 30px 0 56px;
+    width: calc(100% - 40px);
+    padding: 28px 0 56px;
   }
 }
 
@@ -507,9 +545,17 @@
 }
 
 @media (max-width: 560px) {
+  .overviewHeader h1 {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
   .metrics { grid-template-columns: 1fr; }
   .metric { padding: 17px; }
-  .card { padding: 18px; }
+  .card { padding: 17px; }
+  .emptyState { min-height: 150px; gap: 12px; }
+  .sessionAction { min-height: 44px; }
 
   .cardHeader {
     align-items: flex-start;
@@ -525,12 +571,11 @@
 @media (max-width: 430px) {
   .shell :global(.role-content),
   .shell :global(.mentor-role-content) {
-    width: calc(100% - 28px);
+    width: calc(100% - 40px);
     padding-top: 24px;
   }
 
   .overview { gap: 20px; }
-  .overviewHeader h1 { font-size: 1.8rem; }
 
   .availabilityAction {
     width: 100%;

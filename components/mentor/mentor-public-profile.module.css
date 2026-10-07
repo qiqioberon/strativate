@@ -29,7 +29,8 @@
 }
 
 .editButton {
-  min-height: 38px;
+  min-height: 44px;
+  gap: 8px;
   padding-inline: 12px;
   border-color: #d9c8b9;
   background: #fffdf9;
@@ -39,6 +40,20 @@
 .editButton:hover {
   border-color: #caa384;
   background: #fff7ef;
+}
+
+.editButton:focus-visible {
+  outline: 3px solid rgba(236, 122, 41, .24);
+  outline-offset: 2px;
+}
+
+.editButton:active {
+  background: #fff0e3;
+}
+
+.editButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .error,
@@ -139,7 +154,8 @@
   font-size: .86rem;
   font-weight: 600;
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .summaryGrid a {
@@ -451,8 +467,12 @@
 
 @media (max-width: 540px) {
   .card {
-    padding: 15px;
+    padding: 16px;
   }
+
+  .summaryGrid { gap: 8px; }
+  .summaryGrid > div { padding: 11px 12px; }
+  .summaryGrid dt { margin-bottom: 3px; }
 
   .header {
     align-items: stretch;
@@ -460,6 +480,7 @@
 
   .editButton {
     width: 100%;
+    min-height: 46px;
     justify-content: center;
   }
 
