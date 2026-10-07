@@ -26,6 +26,7 @@
 .stack :global(.profile-avatar-edit-row strong) { font-size: 14px; font-weight: 600; }
 .stack :global(.profile-avatar-edit-trigger > .profile-avatar-fallback) { position: static; width: 76px; height: 76px; border: 0; border-radius: 50%; background: #f7e3d5; color: #99502e; font-size: 23px; font-weight: 600; }
 .stack :global(.profile-avatar-edit-trigger):focus-visible { outline: 3px solid #ed81214d; outline-offset: 4px; }
+.stack :global(.profile-edit-button) { width: 44px; height: 44px; flex-basis: 44px; }
 .stack :global(.avatar-editor-card > header h3) { font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
 .stack :global(.avatar-editor-card > header p:last-child), .stack :global(.avatar-dropzone span), .stack :global(.avatar-existing-actions p) { font-size: 12px; line-height: 1.6; }
 .stack :global(.avatar-dropzone strong) { font-size: 14px; font-weight: 600; }
@@ -38,16 +39,44 @@
 .stack :global(.profile-whatsapp-reminder span) { font-size: 12px; line-height: 1.6; }
 .stack :global(.account-profile__form), .stack :global(.account-security__form) { max-width: none; gap: 16px; }
 .stack :global(.auth-form label), .stack :global(.password-field > label) { font-size: 13px; font-weight: 600; }
-.stack :global(.auth-form input) { min-width: 0; font-size: 14px; }
+.stack :global(.auth-form input) { min-width: 0; min-height: 44px; font-size: 14px; }
+.stack :global(.password-control) { min-width: 0; }
+.stack :global(.password-toggle) { width: 44px; min-width: 44px; height: 44px; }
 .stack :global(.profile-field-optional) { font-size: 11px; }
 .stack :global(.account-security__heading small) { font-size: 12px; line-height: 1.6; }
 .stack :global(.account-security__heading strong) { font-size: 14px; }
 .stack :global(.account-profile__saved) { font-size: 13px; font-weight: 500; }
 .stack :global(.button-row) { flex-wrap: wrap; gap: 10px; }
-.stack :global(.button-row .button) { min-height: 42px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+.stack :global(.button-row .button) { min-height: 44px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
 .stack :global(.form-error), .stack :global(.form-success) { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 
 @media (max-width: 620px) {
-  .stack { gap: 16px; }
+  .stack { gap: 14px; }
+  .stack :global(.account-profile) { gap: 18px; padding: 20px; }
+  .stack :global(.profile-avatar-edit-row) { align-items: center; gap: 12px; padding: 12px; }
+  .stack :global(.profile-avatar-edit-trigger),
+  .stack :global(.profile-avatar-edit-trigger > .profile-avatar-image),
+  .stack :global(.profile-avatar-edit-trigger > .profile-avatar-fallback) { width: 68px; height: 68px; }
+  .stack :global(.profile-avatar-edit-trigger > span) { width: 28px; height: 28px; }
+  .stack :global(.account-profile__header) { align-items: center; gap: 12px; }
+  .stack :global(.profile-whatsapp-reminder) { gap: 4px; padding: 12px 14px; }
+  .stack :global(.profile-whatsapp-reminder span) { line-height: 1.5; }
+  .stack :global(.account-profile__details) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+  .stack :global(.account-profile__details > div) { gap: 5px; }
+  .stack :global(.account-profile__details > div:nth-child(3)),
+  .stack :global(.account-profile__details > div:nth-child(4)) { grid-column: 1 / -1; }
+  .stack :global(.account-profile__details dd) { min-width: 0; overflow-wrap: anywhere; }
+  .stack :global(.account-profile__form),
+  .stack :global(.account-security__form) { gap: 14px; }
+  .stack :global(.auth-form input) { min-height: 46px; }
+  .stack :global(.button-row) { gap: 10px; }
+  .stack :global(.button-row .button) { min-height: 46px; }
+  .stack :global(.account-security__heading small) { line-height: 1.5; }
+}
+
+@media (max-width: 370px) {
+  .stack :global(.account-profile) { padding: 18px; }
   .stack :global(.account-profile__details) { grid-template-columns: minmax(0, 1fr); }
+  .stack :global(.account-profile__details > div:nth-child(3)),
+  .stack :global(.account-profile__details > div:nth-child(4)) { grid-column: auto; }
 }
