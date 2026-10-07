@@ -19,7 +19,8 @@ export type Competition = { id:string; slug:string; name:string; category_id:str
 export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type AboutFeaturedStoryMediaLayout = 'single'|'pair'
-export type AboutFeaturedStory = { id:string; title:string; quote:string; attribution_name:string; attribution_organization:string; achievement_text:string; media_layout:AboutFeaturedStoryMediaLayout; primary_image_path:string; primary_image_source_path:string; primary_image_crop:Json; primary_image_alt_text:string; secondary_image_path:string|null; secondary_image_source_path:string|null; secondary_image_crop:Json|null; secondary_image_alt_text:string|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type AboutFeaturedStorySlot = 'story_one'|'story_two'
+export type AboutFeaturedStory = { id:string; slot:AboutFeaturedStorySlot; title:string|null; quote:string|null; attribution_name:string|null; attribution_organization:string|null; achievement_text:string|null; media_layout:AboutFeaturedStoryMediaLayout; primary_image_path:string|null; primary_image_source_path:string|null; primary_image_crop:Json|null; primary_image_alt_text:string|null; secondary_image_path:string|null; secondary_image_source_path:string|null; secondary_image_crop:Json|null; secondary_image_alt_text:string|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type AboutUsStoryMedia = { id:string; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; created_at:string; updated_at:string }
@@ -94,7 +95,7 @@ export type Database = {
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
-      about_featured_stories: Table<AboutFeaturedStory, Partial<AboutFeaturedStory> & Pick<AboutFeaturedStory,"title"|"quote"|"attribution_name"|"attribution_organization"|"achievement_text"|"media_layout"|"primary_image_path"|"primary_image_source_path"|"primary_image_crop"|"primary_image_alt_text">>
+      about_featured_stories: Table<AboutFeaturedStory, Partial<AboutFeaturedStory>>
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
       about_us_story_media: Table<AboutUsStoryMedia, Partial<AboutUsStoryMedia> & Pick<AboutUsStoryMedia,"id">>
        digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
@@ -178,7 +179,6 @@ export type Database = {
       admin_list_about_us_story_media: { Args:Record<PropertyKey,never>; Returns:AboutUsStoryMedia[] }
       reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_trusted_partners: { Args:{p_ids:string[]}; Returns:undefined }
-      reorder_about_featured_stories: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }
