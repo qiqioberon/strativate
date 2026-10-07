@@ -1,6 +1,6 @@
 'use client'
 
-import { ExternalLink, Pencil, Plus, Save, Send, Trash2, UserRound, X } from 'lucide-react'
+import { Check, Clock3, ExternalLink, Pencil, Plus, Save, Send, Trash2, UserRound, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { MentoringCompetitionEditor } from '@/components/mentoring/mentoring-competition-editor'
@@ -44,7 +44,7 @@ type MentoringSessionPreferencesProps={
 }
 
 const isUrl=(value:string)=>/^https?:\/\/\S+$/i.test(value)
-const reviewLabel=(status:Preference['topicStatus'])=>status==='confirmed'?'Sudah ditinjau':status==='pending_review'?'Menunggu review admin':'Belum ditinjau'
+const reviewLabel=(status:Preference['topicStatus'],language:'en'|'id'='id')=>language==='en'?(status==='confirmed'?'Reviewed':status==='pending_review'?'Awaiting admin review':'Not reviewed'):(status==='confirmed'?'Sudah ditinjau':status==='pending_review'?'Menunggu review admin':'Belum ditinjau')
 
 export function MentoringSessionPreferences({
   kind,
@@ -61,7 +61,8 @@ export function MentoringSessionPreferences({
   const supabase=useMemo(()=>createClient(),[])
   const rpc=supabase as unknown as RpcClient
   const mentee=role==='mentee'
-  const copy=(english:string,indonesian:string)=>mentee?english:indonesian
+  const english=role!=='admin'
+  const copy=(englishCopy:string,indonesian:string)=>english?englishCopy:indonesian
   const[data,setData]=useState<Preference|null>(null)
   const[focuses,setFocuses]=useState<Focus[]>([])
   const[editing,setEditing]=useState(false)
@@ -164,13 +165,13 @@ export function MentoringSessionPreferences({
       <div><span>{copy('Session focus (optional)','Fokus sesi (opsional)')}</span><strong>{finalFocus||requestedFocus||copy('Not selected','Belum ditentukan')}</strong></div>
       {!readOnly&&!closed&&!hideEditButton?<button className="button button-outline button-compact" type="button" onClick={()=>setEditing(true)}><Pencil aria-hidden="true"/>{copy('Edit preferences','Edit preferensi')}</button>:null}
     </div>
-    {showCompetitionContext?<MentoringCompetitionEditor key={data.parentId} kind={kind} parentId={data.parentId} readOnly compact language={mentee?'en':'id'}/>:null}
+    {showCompetitionContext?<MentoringCompetitionEditor key={data.parentId} kind={kind} parentId={data.parentId} readOnly compact language={english?'en':'id'}/>:null}
     <div className="mentoring-preference-grid">
       <div><span>{copy('Topic / scope (optional)','Topik / scope (opsional)')}</span><strong>{data.topic||data.requestedTopic||copy('Not provided','Belum ditentukan')}</strong></div>
       <div><span>{copy('Supporting files (optional)','File pendukung (opsional)')}</span>{data.supportingMaterials.length?<ul className="mentoring-material-list">{data.supportingMaterials.map((item,index)=><li key={item+'-'+index}>{isUrl(item)?<a href={item} target="_blank" rel="noopener noreferrer">{copy('Open file','Buka file')} <ExternalLink aria-hidden="true"/></a>:item}</li>)}</ul>:<strong>{copy('No files added','Belum ada')}</strong>}</div>
     </div>
     {data.mentorNotes?<div className="mentoring-session-note"><span>{copy('Mentor notes','Catatan untuk mentor')}</span><p>{data.mentorNotes}</p></div>:null}
-    {showReviewStatus?<div className="mentoring-preference-review"><span>{copy('Review status','Status review')}</span><strong>{mentee?menteeReviewStatus(data.topicStatus):reviewLabel(data.topicStatus)}</strong></div>:null}
+    {showReviewStatus?<div className="mentoring-preference-review"><span>{copy('Review status','Status review')}</span><span className={`ops-status ops-status--${data.topicStatus==='confirmed'?'positive':data.topicStatus==='pending_review'?'warning':'neutral'}`}>{data.topicStatus==='confirmed'?<Check aria-hidden="true" size={13}/>:<Clock3 aria-hidden="true" size={13}/>}<strong>{mentee?menteeReviewStatus(data.topicStatus):reviewLabel(data.topicStatus,english?'en':'id')}</strong></span></div>:null}
     {closed?<small className="muted">{copy('This session is closed. Preferences cannot be edited.','Sesi yang sudah selesai atau dibatalkan disimpan sebagai riwayat dan tidak dapat diubah.')}</small>:null}
     {role==='admin'&&auditMode==='request-only'?<details className="mentoring-audit-details"><summary>Permintaan awal</summary>{requestedFocus||data.requestedTopic?<dl><div><dt>Fokus yang diajukan</dt><dd>{requestedFocus||'Tidak ada'}</dd></div><div><dt>Topik / scope yang diajukan</dt><dd>{data.requestedTopic||'Tidak ada'}</dd></div></dl>:<p className="muted">Tidak ada preferensi awal yang diajukan.</p>}</details>:null}
     {role==='admin'&&auditMode==='full'?<details className="mentoring-audit-details"><summary>Permintaan awal & detail teknis</summary><dl><div><dt>Fokus yang diajukan</dt><dd>{requestedFocus||'Tidak ada'}</dd></div><div><dt>Topik yang diajukan</dt><dd>{data.requestedTopic||'Tidak ada'}</dd></div><div><dt>Status review</dt><dd>{reviewLabel(data.topicStatus)}</dd></div><div><dt>Session ID</dt><dd><code>{data.sessionId}</code></dd></div><div><dt>Catatan mentor</dt><dd>{data.mentorNotes||'Tidak ada'}</dd></div></dl></details>:null}

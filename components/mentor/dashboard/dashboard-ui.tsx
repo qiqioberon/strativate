@@ -11,7 +11,7 @@ import {
 } from '@/lib/mentor/dashboard'
 import type { SortDirection } from '@/components/admin/sortable-table-header'
 
-const collator = new Intl.Collator('id-ID', { numeric: true, sensitivity: 'base' })
+const collator = new Intl.Collator('en-GB', { numeric: true, sensitivity: 'base' })
 
 export function timestamp(value: string | null, fallback = Number.MAX_SAFE_INTEGER) {
   if (!value) return fallback
@@ -20,8 +20,8 @@ export function timestamp(value: string | null, fallback = Number.MAX_SAFE_INTEG
 }
 
 export function sessionDate(session: MentorSessionRow, timezone: string, withDate = true) {
-  if (!session.scheduled_start_at) return 'Belum dijadwalkan'
-  return new Intl.DateTimeFormat('id-ID', {
+  if (!session.scheduled_start_at) return 'Not scheduled'
+  return new Intl.DateTimeFormat('en-GB', {
     ...(withDate ? { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } : {}),
     hour: '2-digit',
     minute: '2-digit',
@@ -30,8 +30,8 @@ export function sessionDate(session: MentorSessionRow, timezone: string, withDat
 }
 
 export function detailDate(session: MentorSessionRow, timezone: string) {
-  if (!session.scheduled_start_at) return 'Belum dijadwalkan'
-  return new Intl.DateTimeFormat('id-ID', {
+  if (!session.scheduled_start_at) return 'Not scheduled'
+  return new Intl.DateTimeFormat('en-GB', {
     dateStyle: 'full',
     timeStyle: 'short',
     timeZone: session.mentor_timezone || timezone,
@@ -39,8 +39,8 @@ export function detailDate(session: MentorSessionRow, timezone: string) {
 }
 
 export function sessionDay(session: MentorSessionRow, timezone: string) {
-  if (!session.scheduled_start_at) return 'Belum dijadwalkan'
-  return new Intl.DateTimeFormat('id-ID', {
+  if (!session.scheduled_start_at) return 'Not scheduled'
+  return new Intl.DateTimeFormat('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -53,8 +53,8 @@ export function statusClass(status: MentorSessionStatus) {
 }
 
 export function availabilityLabel(value: boolean | null) {
-  if (value === null) return 'Belum terverifikasi'
-  return value ? 'Sudah diatur' : 'Belum diatur'
+  if (value === null) return 'Not verified'
+  return value ? 'Set' : 'Not set'
 }
 
 export function availabilityTone(value: boolean | null) {
@@ -73,12 +73,12 @@ export function sortNumber(left: number, right: number, direction: SortDirection
   return direction === 'asc' ? left - right : right - left
 }
 
-export function MentorPageHeader({ eyebrow, title, detail, action }: { eyebrow: string; title: string; detail: string; action?: ReactNode }) {
-  return <div className="mentor-page-header"><div className="mentor-page-header__copy"><p className="kicker">{eyebrow}</p><h1>{title}</h1><p>{detail}</p></div>{action ? <div className="mentor-page-header__action">{action}</div> : null}</div>
+export function MentorPageHeader({ eyebrow, title, detail, action }: { eyebrow?: string; title: string; detail?: string; action?: ReactNode }) {
+  return <div className="mentor-page-header"><div className="mentor-page-header__copy">{eyebrow ? <p className="kicker">{eyebrow}</p> : null}<h1>{title}</h1>{detail ? <p>{detail}</p> : null}</div>{action ? <div className="mentor-page-header__action">{action}</div> : null}</div>
 }
 
 export function DataError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return <section className="role-card mentor-data-state mentor-data-state--error" role="alert"><strong>Data operasional belum dapat dimuat.</strong><p>{message}</p><button type="button" className="button button-outline" onClick={onRetry}>Muat ulang</button></section>
+  return <section className="role-card mentor-data-state mentor-data-state--error" role="alert"><strong>Operational data could not be loaded.</strong><p>{message}</p><button type="button" className="button button-outline" onClick={onRetry}>Try again</button></section>
 }
 
 export function EmptyState({ icon: Icon, title, detail, action }: { icon: LucideIcon; title: string; detail: string; action?: ReactNode }) {

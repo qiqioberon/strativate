@@ -3,18 +3,18 @@
 import { Eye, History as HistoryIcon, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
-import dataStyles from '@/components/admin/data-management.module.css'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
 import { TablePagination } from '@/components/admin/table-pagination'
-import { historyMentorSessions, type MentorDashboardData, type MentorSessionRow } from '@/lib/mentor/dashboard'
+import { historyMentorSessions, type MentorDashboardData } from '@/lib/mentor/dashboard'
 import { SessionDetailDialog } from './mentor-detail-dialogs'
 import type { MentorDashboardSection } from './mentor-overview'
 import { DataError, EmptyState, MentorPageHeader, mentorSessionStatusLabel, sessionDate, sortNumber, sortText, statusClass, timestamp } from './dashboard-ui'
+import styles from './mentor-operations.module.css'
 
 type HistorySortKey = 'date' | 'mentee' | 'focus' | 'status'
 const PAGE_SIZE = 8
 
-export function HistoryPanel({ data, open, onRetry }: { data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
+export function HistoryPanel({ data, onRetry }: { data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
   const history = useMemo(() => historyMentorSessions(data.sessions), [data.sessions])
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'all' | 'completed' | 'cancelled'>('all')
@@ -32,16 +32,16 @@ export function HistoryPanel({ data, open, onRetry }: { data: MentorDashboardDat
   }, [selected, selectedSessionId])
 
   const rows = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase('id-ID')
+    const q = query.trim().toLocaleLowerCase('en-GB')
     const filtered = history.filter(session => {
-      const matchesQuery = !q || [session.mentee_name,session.mentee_email,session.focus_name,session.resolved_topic,session.program_name,session.mentoring_type].some(value => value?.toLocaleLowerCase('id-ID').includes(q))
+      const matchesQuery = !q || [session.mentee_name, session.mentee_email, session.focus_name, session.resolved_topic, session.program_name, session.mentoring_type].some(value => value?.toLocaleLowerCase('en-GB').includes(q))
       return matchesQuery && (status === 'all' || session.status === status)
     })
     if (!sortKey || !direction) return filtered
     return [...filtered].sort((left, right) => {
       if (sortKey === 'date') return sortNumber(timestamp(left.scheduled_start_at, Number.NEGATIVE_INFINITY), timestamp(right.scheduled_start_at, Number.NEGATIVE_INFINITY), direction)
       if (sortKey === 'mentee') return sortText(left.mentee_name || left.mentee_email, right.mentee_name || right.mentee_email, direction)
-      if (sortKey === 'focus') return sortText(left.focus_name, right.focus_name, direction)
+      if (sortKey === 'focus') return sortText(left.resolved_topic || left.focus_name, right.resolved_topic || right.focus_name, direction)
       return sortText(mentorSessionStatusLabel(left.status), mentorSessionStatusLabel(right.status), direction)
     })
   }, [direction, history, query, sortKey, status])
@@ -51,11 +51,28 @@ export function HistoryPanel({ data, open, onRetry }: { data: MentorDashboardDat
   const changeSort = (key: string | null, next: SortDirection) => { setSortKey(key as HistorySortKey | null); setDirection(next); setPage(0) }
 
   return <div className="mentor-section">
-    <MentorPageHeader eyebrow="Riwayat sesi" title="Sesi yang sudah masuk riwayat." detail="Riwayat hanya menggunakan status canonical selesai atau dibatalkan; sesi yang dibatalkan tidak pernah dilabeli selesai." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/>
-    {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry}/> : <section className={dataStyles.surface}>
-      <div className={dataStyles.toolbar}><label className={dataStyles.searchField}><span>Cari riwayat</span><span className={dataStyles.searchControl}><Search aria-hidden="true"/><input value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Mentee atau fokus"/></span></label><label className={dataStyles.filterField}><span>Status</span><select value={status} onChange={event => { setStatus(event.target.value as 'all' | 'completed' | 'cancelled'); setPage(0) }}><option value="all">Semua riwayat</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label></div>
-      {rows.length ? <><div className={dataStyles.tableScroll}><table className={`${dataStyles.table} mentor-history-table`} data-testid="mentor-history-table"><thead><tr><SortableTableHeader label="Tanggal" sortKey="date" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><SortableTableHeader label="Fokus" sortKey="focus" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Durasi</th><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead><tbody>{visible.map(session => <tr key={session.session_id}><td className={dataStyles.dateCell}>{sessionDate(session, data.timezone)}</td><td><strong>{session.mentee_name || 'Peserta Strativate'}</strong><div className={dataStyles.secondaryText}>{session.mentee_email}</div></td><td><span className={'ops-status '+(session.mentoring_type==='intensive'?'ops-status--info':'ops-status--neutral')}>{session.mentoring_type==='intensive'?'Intensive':'Private'}</span><strong>{session.resolved_topic||session.focus_name||'Belum dicatat'}</strong>{session.mentoring_type==='intensive'&&session.program_name?<div className={dataStyles.secondaryText}>{session.program_name}</div>:null}</td><td>{session.duration_minutes ? `${session.duration_minutes} menit` : '—'}</td><td><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span></td><td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => setSelectedSessionId(session.session_id)} aria-label={`Lihat detail riwayat sesi ${session.session_number} ${session.mentee_name || session.mentee_email}`}><Eye aria-hidden="true" size={14}/>Detail</button></td></tr>)}</tbody></table></div><TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Halaman riwayat sesi mentor"/></> : <EmptyState icon={HistoryIcon} title={history.length ? 'Tidak ada riwayat yang cocok.' : 'Belum ada riwayat sesi.'} detail={history.length ? 'Ubah pencarian atau filter status.' : 'Sesi berstatus selesai atau dibatalkan akan muncul di sini.'}/>}
+    <MentorPageHeader title="Session history" />
+    {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry} /> : <section className={styles.surface}>
+      <div className={`${styles.toolbar} ${styles.toolbarTwo}`}>
+        <label className={styles.field}><span>Search history</span><span className={styles.searchControl}><Search aria-hidden="true" /><input type="search" value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Mentee or focus" /></span></label>
+        <label className={styles.field}><span>Status</span><select value={status} onChange={event => { setStatus(event.target.value as 'all' | 'completed' | 'cancelled'); setPage(0) }}><option value="all">All history</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+      </div>
+      {rows.length ? <>
+        <div className={styles.tableWrap}><table className={`${styles.table} ${styles.historyTable}`} data-testid="mentor-history-table">
+          <colgroup><col className={styles.historyDateCol} /><col className={styles.historyMenteeCol} /><col className={styles.historyFocusCol} /><col className={styles.historyDurationCol} /><col className={styles.historyStatusCol} /><col className={styles.historyActionCol} /></colgroup>
+          <thead><tr><SortableTableHeader label="Date" sortKey="date" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><SortableTableHeader label="Focus" sortKey="focus" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><th scope="col">Duration</th><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><th scope="col">Actions</th></tr></thead>
+          <tbody>{visible.map(session => <tr key={session.session_id}>
+            <td data-label="Date" className={styles.date}>{sessionDate(session, data.timezone)}</td>
+            <td data-label="Mentee"><div className={styles.stack}><strong>{session.mentee_name || 'Strativate mentee'}</strong><span className={styles.secondary}>{session.mentee_email || 'Email unavailable'}</span></div></td>
+            <td data-label="Focus"><div className={styles.stack}><div className={styles.focusRow}><span className={`${styles.typeBadge} ${session.mentoring_type === 'intensive' ? styles.typeBadgeIntensive : ''}`}>{session.mentoring_type === 'intensive' ? 'Intensive' : 'Private'}</span><strong>{session.resolved_topic || session.focus_name || 'Not recorded'}</strong></div>{session.mentoring_type === 'intensive' && session.program_name ? <span className={`${styles.secondary} ${styles.wrapSecondary}`}>{session.program_name}</span> : null}</div></td>
+            <td data-label="Duration">{session.duration_minutes ? `${session.duration_minutes} minutes` : 'Not recorded'}</td>
+            <td data-label="Status"><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span></td>
+            <td data-label="Actions" className={styles.actionCell}><button type="button" className={`button button-outline ${styles.tableAction}`} onClick={() => setSelectedSessionId(session.session_id)} aria-label={`View history details for session ${session.session_number} ${session.mentee_name || session.mentee_email}`}><Eye aria-hidden="true" />Details</button></td>
+          </tr>)}</tbody>
+        </table></div>
+        <TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Mentor session history pages" language="en" />
+      </> : <EmptyState icon={HistoryIcon} title={history.length ? 'No history matches these filters.' : 'No session history yet.'} detail={history.length ? 'Adjust the search or status filter.' : 'Completed or cancelled sessions will appear here.'} />}
     </section>}
-    <SessionDetailDialog session={selected} timezone={data.timezone} onClose={() => setSelectedSessionId(null)}/>
+    <SessionDetailDialog session={selected} timezone={data.timezone} onClose={() => setSelectedSessionId(null)} />
   </div>
 }

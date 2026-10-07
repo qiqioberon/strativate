@@ -94,11 +94,11 @@ function monthKey(value: Date, timezone: string) {
 }
 
 export function mentorSessionStatusLabel(status: MentorSessionStatus) {
-  if (status === 'awaiting_focus') return 'Menunggu review admin'
-  if (status === 'awaiting_scheduling') return 'Menunggu jadwal'
-  if (status === 'scheduled') return 'Terjadwal'
-  if (status === 'completed') return 'Selesai'
-  return 'Dibatalkan'
+  if (status === 'awaiting_focus') return 'Awaiting admin review'
+  if (status === 'awaiting_scheduling') return 'Awaiting scheduling'
+  if (status === 'scheduled') return 'Scheduled'
+  if (status === 'completed') return 'Completed'
+  return 'Cancelled'
 }
 
 export function mentorSessionStatusTone(status: MentorSessionStatus) {
@@ -163,7 +163,7 @@ export function buildMentorMenteeSummaries(sessions: MentorSessionRow[], now = n
       mentoringType:first.mentoring_type==='intensive'?'intensive':'private',
       programName:first.program_name || (first.mentoring_type==='intensive'?'Intensive Mentoring':'Private Mentoring'),
       menteeId: first.mentee_id,
-      menteeName: first.mentee_name?.trim() || first.mentee_email || 'Peserta Strativate',
+      menteeName: first.mentee_name?.trim() || first.mentee_email || 'Strativate mentee',
       menteeEmail: first.mentee_email,
       purchasedSessions: first.purchased_sessions,
       assignedSessions: ordered.length,

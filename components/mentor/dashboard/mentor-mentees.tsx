@@ -3,18 +3,18 @@
 import { Eye, Search, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import dataStyles from '@/components/admin/data-management.module.css'
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
 import { TablePagination } from '@/components/admin/table-pagination'
 import { buildMentorMenteeSummaries, type MentorDashboardData, type MentorMenteeSummary } from '@/lib/mentor/dashboard'
 import { MenteeDetailDialog } from './mentor-detail-dialogs'
 import type { MentorDashboardSection } from './mentor-overview'
 import { DataError, EmptyState, MentorPageHeader, sessionDate, sortNumber, sortText, timestamp } from './dashboard-ui'
+import styles from './mentor-operations.module.css'
 
 type MenteeSortKey = 'mentee' | 'progress' | 'next'
 const PAGE_SIZE = 8
 
-export function MenteePanel({ data, open, onRetry }: { data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
+export function MenteePanel({ data, onRetry }: { data: MentorDashboardData; open: (section: MentorDashboardSection) => void; onRetry: () => void }) {
   const summaries = useMemo(() => buildMentorMenteeSummaries(data.sessions, new Date()), [data.sessions])
   const [query, setQuery] = useState('')
   const [scheduleFilter, setScheduleFilter] = useState<'all' | 'upcoming' | 'none'>('all')
@@ -24,9 +24,9 @@ export function MenteePanel({ data, open, onRetry }: { data: MentorDashboardData
   const [selected, setSelected] = useState<MentorMenteeSummary | null>(null)
 
   const rows = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase('id-ID')
+    const q = query.trim().toLocaleLowerCase('en-GB')
     const filtered = summaries.filter(summary => {
-      const matchesQuery = !q || [summary.menteeName, summary.menteeEmail, ...summary.focusNames].some(value => value.toLocaleLowerCase('id-ID').includes(q))
+      const matchesQuery = !q || [summary.menteeName, summary.menteeEmail, ...summary.focusNames].some(value => value.toLocaleLowerCase('en-GB').includes(q))
       const matchesSchedule = scheduleFilter === 'all' || (scheduleFilter === 'upcoming' ? Boolean(summary.nextSession) : !summary.nextSession)
       return matchesQuery && matchesSchedule
     })
@@ -43,11 +43,28 @@ export function MenteePanel({ data, open, onRetry }: { data: MentorDashboardData
   const changeSort = (key: string | null, next: SortDirection) => { setSortKey(key as MenteeSortKey | null); setDirection(next); setPage(0) }
 
   return <div className="mentor-section">
-    <MentorPageHeader eyebrow="Peserta saya" title="Peserta yang Anda dampingi." detail="Setiap baris mengikuti enrollment Private atau engagement Intensive yang memiliki sesi yang benar-benar dialokasikan kepada Anda." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/>
-    {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry}/> : <section className={dataStyles.surface}>
-      <div className={dataStyles.toolbar}><label className={dataStyles.searchField}><span>Cari peserta</span><span className={dataStyles.searchControl}><Search aria-hidden="true"/><input value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Nama, email, atau fokus"/></span></label><label className={dataStyles.filterField}><span>Jadwal</span><select value={scheduleFilter} onChange={event => { setScheduleFilter(event.target.value as 'all' | 'upcoming' | 'none'); setPage(0) }}><option value="all">Semua peserta</option><option value="upcoming">Ada sesi mendatang</option><option value="none">Tanpa sesi mendatang</option></select></label></div>
-      {rows.length ? <><div className={dataStyles.tableScroll}><table className={`${dataStyles.table} mentor-mentees-table`} data-testid="mentor-mentees-table"><thead><tr><SortableTableHeader label="Peserta" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Fokus mentoring</th><SortableTableHeader label="Progres sesi Anda" sortKey="progress" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col">Paket</th><SortableTableHeader label="Sesi berikutnya" sortKey="next" activeKey={sortKey} direction={direction} onSortChange={changeSort}/><th scope="col" className={dataStyles.actionCell}>Aksi</th></tr></thead><tbody>{visible.map(summary => <tr key={summary.enrollmentId}><td><div className={dataStyles.identity}><span className={dataStyles.avatar}>{summary.menteeName.slice(0, 2).toUpperCase()}</span><span className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{summary.menteeName}</strong><span className={dataStyles.secondaryText}>{summary.menteeEmail}</span></span></div></td><td>{summary.focusNames.length ? summary.focusNames.join(', ') : 'Belum dicatat'}</td><td><strong>{summary.completedSessions}/{summary.progressSessions} selesai</strong><div className={dataStyles.secondaryText}>{summary.assignedSessions} sesi dialokasikan kepada Anda{summary.cancelledSessions ? ` · ${summary.cancelledSessions} dibatalkan` : ''}</div></td><td><strong>{summary.mentoringType==='intensive'?'Intensive Mentoring':'Private Mentoring'}</strong><div className={dataStyles.secondaryText}>{summary.programName}{summary.purchasedSessions?' · '+summary.purchasedSessions+' sesi dibeli':' · program berkelanjutan'}</div></td><td className={dataStyles.dateCell}>{summary.nextSession ? sessionDate(summary.nextSession, data.timezone) : 'Belum ada sesi mendatang'}</td><td className={dataStyles.actionCell}><button type="button" className={`button button-outline ${dataStyles.actionButton}`} onClick={() => setSelected(summary)} aria-label={`Lihat detail peserta ${summary.menteeName}`}><Eye aria-hidden="true" size={14}/>Detail</button></td></tr>)}</tbody></table></div><TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Halaman peserta mentor"/></> : <EmptyState icon={UsersRound} title={summaries.length ? 'Tidak ada peserta yang cocok.' : 'Belum ada peserta yang dialokasikan.'} detail={summaries.length ? 'Ubah pencarian atau filter jadwal.' : 'Peserta akan muncul setelah ada sesi yang dialokasikan kepada Anda.'}/>} 
+    <MentorPageHeader title="My mentees" />
+    {data.sessionError ? <DataError message={data.sessionError} onRetry={onRetry} /> : <section className={styles.surface}>
+      <div className={`${styles.toolbar} ${styles.toolbarTwo}`}>
+        <label className={styles.field}><span>Search mentees</span><span className={styles.searchControl}><Search aria-hidden="true" /><input type="search" value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Name, email, or focus" /></span></label>
+        <label className={styles.field}><span>Schedule</span><select value={scheduleFilter} onChange={event => { setScheduleFilter(event.target.value as 'all' | 'upcoming' | 'none'); setPage(0) }}><option value="all">All mentees</option><option value="upcoming">Has upcoming session</option><option value="none">No upcoming session</option></select></label>
+      </div>
+      {rows.length ? <>
+        <div className={styles.tableWrap}><table className={`${styles.table} ${styles.menteesTable}`} data-testid="mentor-mentees-table">
+          <colgroup><col className={styles.menteeIdentityCol} /><col className={styles.menteeFocusCol} /><col className={styles.menteeProgressCol} /><col className={styles.menteeProgramCol} /><col className={styles.menteeNextCol} /><col className={styles.menteeActionCol} /></colgroup>
+          <thead><tr><SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><th scope="col">Mentoring focus</th><SortableTableHeader label="Session progress" sortKey="progress" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><th scope="col">Program</th><SortableTableHeader label="Next session" sortKey="next" activeKey={sortKey} direction={direction} onSortChange={changeSort} /><th scope="col">Actions</th></tr></thead>
+          <tbody>{visible.map(summary => <tr key={summary.enrollmentId}>
+            <td data-label="Mentee"><div className={styles.identity}><span className={styles.avatar}>{summary.menteeName.slice(0, 2).toUpperCase()}</span><span className={styles.identityText}><strong className={styles.primary}>{summary.menteeName}</strong><span className={styles.secondary}>{summary.menteeEmail || 'Email unavailable'}</span></span></div></td>
+            <td data-label="Mentoring focus"><span>{summary.focusNames.length ? summary.focusNames.join(', ') : 'Not recorded'}</span></td>
+            <td data-label="Session progress"><div className={styles.stack}><strong>{summary.completedSessions}/{summary.progressSessions} completed</strong><span className={`${styles.secondary} ${styles.wrapSecondary}`}>{summary.assignedSessions} {summary.assignedSessions === 1 ? 'session' : 'sessions'} assigned{summary.cancelledSessions ? ` · ${summary.cancelledSessions} cancelled` : ''}</span></div></td>
+            <td data-label="Program"><div className={styles.stack}><strong>{summary.mentoringType === 'intensive' ? 'Intensive Mentoring' : 'Private Mentoring'}</strong><span className={`${styles.secondary} ${styles.wrapSecondary}`}>{summary.programName}{summary.purchasedSessions ? ` · ${summary.purchasedSessions} sessions purchased` : ''}</span></div></td>
+            <td data-label="Next session" className={styles.date}>{summary.nextSession ? sessionDate(summary.nextSession, data.timezone) : 'No upcoming session'}</td>
+            <td data-label="Actions" className={styles.actionCell}><button type="button" className={`button button-outline ${styles.tableAction}`} onClick={() => setSelected(summary)} aria-label={`View details for ${summary.menteeName}`}><Eye aria-hidden="true" />Details</button></td>
+          </tr>)}</tbody>
+        </table></div>
+        <TablePagination page={safePage} pageSize={PAGE_SIZE} totalItems={rows.length} onPageChange={setPage} label="Mentor mentee pages" language="en" />
+      </> : <EmptyState icon={UsersRound} title={summaries.length ? 'No mentees match these filters.' : 'No mentees yet.'} detail={summaries.length ? 'Adjust the search or schedule filter.' : 'Mentees will appear after sessions are assigned to you.'} />}
     </section>}
-    <MenteeDetailDialog summary={selected} timezone={data.timezone} onClose={() => setSelected(null)}/>
+    <MenteeDetailDialog summary={selected} timezone={data.timezone} onClose={() => setSelected(null)} />
   </div>
 }
