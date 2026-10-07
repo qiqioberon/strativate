@@ -6,12 +6,18 @@
 }
 
 .calendar :global(.role-page-title) { margin: 0; }
-.calendar :global(.role-page-title) h2 { font-size: clamp(28px, 3vw, 36px); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; }
+.calendar :global(.role-page-title) h2 { font-size: clamp(28px, 3vw, 36px); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; word-break: normal; overflow-wrap: normal; }
 .calendar :global(.calendar-connection-card) { padding: 18px 20px; gap: 14px; border: 1px solid #e9e0d8; border-radius: 12px; background: #fffdf9; }
 .calendar :global(.calendar-connection-card__identity) { min-width: 0; gap: 12px; }
 .calendar :global(.calendar-connection-card__identity) > div { min-width: 0; }
 .calendar :global(.calendar-connection-card__identity) strong { font-size: 14px; font-weight: 600; }
 .calendar :global(.calendar-connection-card__identity) span { font-size: 12px; overflow-wrap: anywhere; }
+.calendar :global(.calendar-connection-meta) { display: flex; min-width: 0; align-items: center; gap: 7px; margin-top: 4px; flex-wrap: wrap; }
+.calendar :global(.calendar-connection-status) { display: inline-flex; align-items: center; gap: 5px; min-height: 24px; padding: 4px 8px; border: 1px solid #e0d7cf; border-radius: 999px; background: #f7f3ef; color: #665b53; font-size: 11px; font-weight: 600; line-height: 1.2; }
+.calendar :global(.calendar-connection-status) svg { width: 13px; height: 13px; flex: 0 0 auto; }
+.calendar :global(.calendar-connection-status--connected) { border-color: #d1dfd1; background: #f1f7f0; color: #356246; }
+.calendar :global(.calendar-connection-status--warning) { border-color: #ead8ba; background: #fff7e8; color: #80591b; }
+.calendar :global(.calendar-connection-email) { min-width: 0; color: #786c63; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .calendar :global(.calendar-connection-card) :global(.button-row) { flex-wrap: wrap; }
 .calendar :global(.calendar-connection-card) :global(.button) { min-height: 38px; padding: 8px 12px; font-size: 12px; font-weight: 550; border-radius: 8px; }
 .calendar :global(.calendar-card) { border: 1px solid #e9e0d8; border-radius: 12px; box-shadow: 0 6px 24px #59371705; }
@@ -26,6 +32,9 @@
 .calendar :global(.calendar-source-controls) { flex-wrap: wrap; min-width: 0; gap: 8px 16px; }
 .calendar :global(.calendar-source-toggle) { flex-wrap: wrap; min-width: 0; min-height: 30px; font-size: 12px; }
 .calendar :global(.calendar-source-toggle) small { font-size: 10px; }
+.calendar :global(.calendar-source-state) { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 999px; background: #f2eeea; color: #6f645c; font-weight: 600; line-height: 1.25; }
+.calendar :global(.calendar-source-state) svg { width: 11px; height: 11px; flex: 0 0 auto; }
+.calendar :global(.calendar-source-state--warning) { background: #fff4df; color: #80591b; }
 .calendar :global(.calendar-legend-trigger) { min-height: 34px; font-size: 12px; }
 .calendar :global(.calendar-weekday-header) { padding-block: 12px; font-size: 11px; background: #fffdf9; }
 .calendar :global(.calendar-agenda-tools) :global(.calendar-search) { max-width: 430px; }
@@ -44,16 +53,21 @@
 @media (max-width: 600px) {
   .calendar { gap: 16px; }
   .calendar :global(.calendar-connection-card) { padding: 16px; }
+  .calendar :global(.role-page-title) h2 { font-size: clamp(2rem, 9vw, 2.6rem); }
   .calendar :global(.calendar-connection-card) :global(.button-row) { width: 100%; }
+  .calendar :global(.calendar-connection-card) :global(.button) { min-height: 44px; flex: 1 1 150px; }
   .calendar :global(.calendar-toolbar) { padding: 12px; gap: 10px; }
-  .calendar :global(.calendar-nav) { flex-basis: 100%; flex-wrap: wrap; }
-  .calendar :global(.calendar-period) { flex-basis: 100%; margin: 5px 0 0; font-size: 16px; }
+  .calendar :global(.calendar-nav) { flex-basis: 100%; flex-wrap: wrap; gap: 8px; }
+  .calendar :global(.calendar-nav) button { min-width: 44px; min-height: 44px; }
+  .calendar :global(.calendar-period) { flex-basis: 100%; margin: 2px 0 0; font-size: 16px; word-break: normal; overflow-wrap: normal; }
   .calendar :global(.calendar-view-switch) { width: 100%; display: flex; }
-  .calendar :global(.calendar-view-switch) button { flex: 1; }
+  .calendar :global(.calendar-view-switch) button { flex: 1; min-height: 44px; }
   .calendar :global(.calendar-filter-row) { padding: 8px 12px; }
   .calendar :global(.calendar-source-controls) { flex-basis: 100%; gap: 5px 12px; }
-  .calendar :global(.calendar-source-toggle) { font-size: 11px; }
-  .calendar :global(.calendar-source-toggle) small { flex-basis: 100%; padding-left: 24px; }
+  .calendar :global(.calendar-source-toggle) { min-height: 44px; font-size: 11px; }
+  .calendar :global(.calendar-source-toggle) small { flex-basis: auto; padding-left: 0; }
+  .calendar :global(.calendar-source-state) { margin-left: 2px; }
+  .calendar :global(.calendar-legend-trigger) { min-height: 44px; }
   .calendar :global(.calendar-agenda-row) { padding: 12px; }
   .calendar :global(.calendar-agenda-tools) :global(.calendar-search) { flex-basis: 100%; max-width: none; }
   .calendar :global(.calendar-weekday-header) { font-size: 10px; }

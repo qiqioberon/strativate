@@ -1,22 +1,48 @@
-.history { display: grid; gap: 20px; min-width: 0; }
+.history { display: grid; gap: 18px; min-width: 0; }
+.history :global(.notification-list) { display: grid; gap: 10px; }
+.history :global(.notification-item) { min-width: 0; align-items: flex-start; gap: 12px; padding: 16px 18px; }
+.history :global(.notification-item.is-unread) { border-color: #e7c7ad; background: #fffaf5; }
+.history :global(.notification-history__icon) { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: #fff1e4; color: #a64c17; }
+.history :global(.notification-history__icon svg) { width: 16px; height: 16px; }
 .history :global(.notification-history__filters) { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid #e8dfd6; }
 .history :global(.ops-field) { flex: 0 1 180px; }
-.history :global(.ops-field select) { height: 40px; background: #fffdfa; }
+.history :global(.ops-field select) { width: 100%; min-width: 0; height: 44px; background: #fffdfa; }
 .history :global(.notification-history__summary) { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 0 0 10px; margin-left: auto; font-size: .76rem; }
 .history :global(.notification-history__summary strong), .history :global(.notification-history__summary span) { font-size: .76rem; font-weight: 500; }
 .history :global(.notification-history__filters) > :global(.button) { min-height: 40px; padding: 9px 12px; font-size: .75rem; }
 .history :global(.notification-history__title-row) > div { min-width: 0; }
+.history :global(.notification-category) { max-width: 100%; overflow-wrap: anywhere; }
 .history :global(.notification-history__title-row h3) { margin: 4px 0 0; font-size: .92rem; line-height: 1.5; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .history :global(.notification-category) { margin: 0; padding: 0; border-radius: 0; background: transparent; font-size: .7rem; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .history :global(.notification-history__title-row time) { font-size: .7rem; }
-.history :global(.notification-history__body) { gap: 10px; }
-.history :global(.notification-history__body) > p { margin: 0; font-size: .8rem; line-height: 1.6; overflow-wrap: anywhere; }
+.history :global(.notification-history__body) { min-width: 0; gap: 8px; }
+.history :global(.notification-history__body) > p { margin: 0; font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
 .history :global(.notification-history__actions) { gap: 8px; }
-.itemAction { min-height: 32px; padding: 6px 10px; border: 1px solid #dfd4ca; background: #fffdfa; font-size: .72rem; line-height: 1.4; font-weight: 500; }
+.itemAction { min-height: 40px; padding: 7px 10px; border: 1px solid #dfd4ca; background: #fffdfa; font-size: .72rem; line-height: 1.4; font-weight: 500; }
 .itemAction svg, .readStatus svg { width: 14px; height: 14px; }
 .readStatus { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 6px; background: #f1f0e9; color: #626953; font-size: .72rem; }
 @media (max-width: 700px) {
-  .history :global(.notification-history__title-row) { flex-direction: column; gap: 5px; }
+  .history { gap: 14px; }
+  .history :global(.notification-history__filters) { gap: 10px; padding-bottom: 14px; }
+  .history :global(.notification-history__title-row) { flex-direction: column; gap: 4px; }
   .history :global(.notification-history__summary) { margin-left: 0; flex: 1 1 100%; padding-bottom: 0; }
-  .history :global(.ops-field) { flex: 1 1 140px; }
+  .history :global(.ops-field) { flex: 1 1 140px; min-width: 0; }
+  .history :global(.ops-field select) { min-height: 46px; }
+  .history :global(.notification-history__filters) > :global(.button),
+  .itemAction { min-height: 44px; }
+  .history :global(.notification-item) { gap: 10px; padding: 14px 15px; }
+  .history :global(.notification-history__icon) { width: 32px; height: 32px; border-radius: 9px; }
+  .history :global(.notification-history__body) { gap: 7px; }
+  .history :global(.notification-history__body) > p { line-height: 1.5; }
+  .history :global(.notification-history__actions) { gap: 6px; flex-wrap: wrap; }
+  .itemAction { padding: 8px 11px; }
+}
+
+@media (max-width: 420px) {
+  .history :global(.ops-field) { flex: 1 1 calc(50% - 5px); width: auto; }
+  .history :global(.notification-history__filters) > :global(.button) { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 340px) {
+  .history :global(.ops-field) { flex-basis: 100%; width: 100%; }
 }

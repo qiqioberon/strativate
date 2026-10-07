@@ -103,7 +103,7 @@ create policy marketing_photo_sources_admin_insert on storage.objects
     and public.is_admin()
     and split_part(name, '/', 1) in (
       'publications', 'competitions', 'testimonials', 'who-we-are',
-      'competition-recognitions', 'trusted-partners', 'about-us'
+      'competition-recognitions', 'trusted-partners', 'about-featured-stories', 'about-us'
     )
     and name !~ '(^|/)\.\.(/|$)'
     and name not like '%//%'
@@ -126,6 +126,7 @@ create policy marketing_editorial_public_read on storage.objects
       or name like 'recognition-logos/%'
       or name like 'partner-logos/%'
       or name ~ '^who-we-are/(primary|upper_right|lower_right)/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
+      or name ~ '^about-featured-stories/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
       or name ~ '^about-us/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
     )
     and name not like '%..%'
@@ -144,6 +145,7 @@ create policy marketing_editorial_admin_insert on storage.objects
       or name like 'recognition-logos/%'
       or name like 'partner-logos/%'
       or name ~ '^who-we-are/(primary|upper_right|lower_right)/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
+      or name ~ '^about-featured-stories/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
       or name ~ '^about-us/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
     )
     and name not like '%..%'
@@ -162,6 +164,7 @@ create policy marketing_editorial_admin_update on storage.objects
       or name like 'recognition-logos/%'
       or name like 'partner-logos/%'
       or name ~ '^who-we-are/(primary|upper_right|lower_right)/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
+      or name ~ '^about-featured-stories/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
       or name ~ '^about-us/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
     )
     and name not like '%..%'
@@ -177,6 +180,7 @@ create policy marketing_editorial_admin_update on storage.objects
       or name like 'recognition-logos/%'
       or name like 'partner-logos/%'
       or name ~ '^who-we-are/(primary|upper_right|lower_right)/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
+      or name ~ '^about-featured-stories/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
       or name ~ '^about-us/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
     )
     and name not like '%..%'
@@ -195,6 +199,7 @@ create policy marketing_editorial_admin_delete on storage.objects
       or name like 'recognition-logos/%'
       or name like 'partner-logos/%'
       or name ~ '^who-we-are/(primary|upper_right|lower_right)/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
+      or name ~ '^about-featured-stories/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
       or name ~ '^about-us/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$'
     )
     and name not like '%..%'

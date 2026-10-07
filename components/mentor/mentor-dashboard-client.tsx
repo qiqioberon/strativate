@@ -12,7 +12,7 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useAccount } from '@/components/auth/account-provider'
@@ -59,12 +59,51 @@ export function MentorDashboardClient({
   const [mobile, setMobile] = useState(false)
   const [availability, setAvailability] = useState<MentorAvailabilityState>(initialData.availability)
   const [focusSessionId, setFocusSessionId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
   const accountName = displayName(account, 'en')
   const overview = useMemo(() => buildMentorOverview(initialData.sessions, new Date(), initialData.timezone), [initialData.sessions, initialData.timezone])
 
+  useEffect(() => {
+    if (!mobile) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobile(false)
+        menuRef.current?.focus()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const controls = sidebarRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')
+      const first = controls?.[0]
+      const last = controls?.[controls.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [mobile])
+
+  const closeMobileNavigation = () => {
+    setMobile(false)
+    menuRef.current?.focus()
+  }
   const open = (next: MentorDashboardSection) => {
     setSection(next)
-    setMobile(false)
+    if (mobile) closeMobileNavigation()
   }
   const openNotification = (item: Notification) => {
     if (item.related_entity === 'session' || item.related_entity === 'intensive_mentoring_session') { setFocusSessionId(item.related_entity_id); open('assignments'); return }
@@ -75,15 +114,15 @@ export function MentorDashboardClient({
   useOperationalInvalidation(['mentor-dashboard', 'mentoring', 'provider'], () => router.refresh())
 
   return <div className={"role-shell mentor-shell " + styles.shell} lang="en">
-    <aside id="mentor-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
-      <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Close navigation"><X aria-hidden="true"/></button></div>
+    <aside ref={sidebarRef} id="mentor-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
+      <div className="role-brand"><BrandLogo/><button ref={closeRef} type="button" onClick={closeMobileNavigation} className="role-close" aria-label="Close navigation"><X aria-hidden="true"/></button></div>
       <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{accountName}</strong><small>Mentor account</small></div></div>
-      <nav aria-label="Mentor navigation">{nav.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => open(id)}><Icon aria-hidden="true"/>{label}{id === 'assignments' && overview.upcomingSessions > 0 ? <b aria-label={`${overview.upcomingSessions} upcoming sessions`}>{overview.upcomingSessions}</b> : null}</button>)}</nav>
+      <nav aria-label="Mentor navigation">{nav.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} aria-current={section === id ? 'page' : undefined} onClick={() => open(id)}><Icon aria-hidden="true"/>{label}{id === 'assignments' && overview.upcomingSessions > 0 ? <b aria-label={`${overview.upcomingSessions} upcoming sessions`}>{overview.upcomingSessions}</b> : null}</button>)}</nav>
       <div className="role-sidebar-bottom"><DashboardSidebarUtilities language="en"/></div>
     </aside>
-    {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Close navigation"/> : null}
+    {mobile ? <button type="button" className="role-scrim" onClick={closeMobileNavigation} aria-label="Close navigation" tabIndex={-1}/> : null}
     <main className="role-main">
-      <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Open navigation" aria-controls="mentor-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className={styles.srOnly}>Current section: {currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="mentor" onEditProfile={() => open('profile')} onOpenNotification={openNotification}/></div></header>
+      <header className="role-topbar"><button ref={menuRef} type="button" className="role-menu" onClick={() => setMobile(current => !current)} aria-label={mobile ? 'Close navigation' : 'Open navigation'} aria-controls="mentor-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className={styles.srOnly}>Current section: {currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="mentor" onEditProfile={() => open('profile')} onOpenNotification={openNotification}/></div></header>
       <div className="role-content mentor-role-content">
         {section === 'overview' ? <MentorOverview name={accountName} data={{ ...initialData, availability }} open={open} onRetry={retry}/> : null}
         {section === 'calendar' ? <RoleCalendar role="mentor" onOpenAvailability={() => open('availability')}/> : null}

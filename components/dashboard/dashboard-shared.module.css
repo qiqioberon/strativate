@@ -47,12 +47,12 @@
 .accountSignOut { color: #b3151c; }
 .accountSignOut:hover { background: #fff0ee; }
 .sidebarUtilities { display: grid; gap: .45rem; width: 100%; }
-.sidebarLink, .signOut { display: flex; align-items: center; justify-content: flex-start; gap: .7rem; width: 100%; min-height: 2.75rem; border: 1px solid; border-radius: .75rem; padding: .65rem .8rem; font: inherit; font-size: .8rem; font-weight: 600; line-height: 1.4; text-decoration: none; text-align: left; cursor: pointer; transition: background 150ms, color 150ms, border-color 150ms; }
-.sidebarLink { border-color: #ddd3c9; background: #fffdfa; color: #3d342d; }
-.sidebarLink:hover { background: #fff; border-color: #c8a68c; }
-.signOut { border-color: #e7c8c4; background: #fff5f3; color: #b3151c; }
-.signOut:hover { border-color: #cb9792; background: #ffe9e6; }
-.sidebarLink:active, .signOut:active { transform: translateY(1px); }
+.sidebarUtilities .sidebarLink, .sidebarUtilities .signOut { display: flex; align-items: center; justify-content: flex-start; gap: .7rem; width: 100%; min-height: 2.75rem; border: 1px solid; border-radius: .75rem; padding: .65rem .8rem; font: inherit; font-size: .8rem; font-weight: 600; line-height: 1.4; text-decoration: none; text-align: left; cursor: pointer; transition: background 150ms, color 150ms, border-color 150ms; }
+.sidebarUtilities .sidebarLink { border-color: #ddd3c9; background: #fffdfa; color: #3d342d; }
+.sidebarUtilities .sidebarLink:hover { background: #fff; border-color: #c8a68c; }
+.sidebarUtilities .signOut { border-color: #e7c8c4; background: #fff5f3; color: #b3151c; }
+.sidebarUtilities .signOut:hover { border-color: #cb9792; background: #ffe9e6; }
+.sidebarUtilities .sidebarLink:active, .sidebarUtilities .signOut:active { transform: translateY(1px); }
 @media (max-width: 640px) {
   .accountButton { width: 2.5rem; height: 2.5rem; padding: .24rem; justify-content: center; }
   .accountName, .chevron { display: none; }

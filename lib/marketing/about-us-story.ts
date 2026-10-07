@@ -24,9 +24,7 @@ export async function getAboutUsStoryMedia(): Promise<AboutUsStoryMediaView | nu
     console.warn('About Us story media is unavailable.', { code: error.code })
     return null
   }
-
   if (!data?.image_path || !data.alt_text?.trim()) return null
-
   return {
     imageUrl: supabase.storage.from(ABOUT_US_STORY_IMAGE_BUCKET).getPublicUrl(data.image_path).data.publicUrl,
     altText: data.alt_text.trim(),

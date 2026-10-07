@@ -88,7 +88,7 @@ export function AssignmentPanel({
             <td data-label="Focus"><strong>{session.resolved_topic || session.focus_name || 'Focus not selected'}</strong></td>
             <td data-label="Schedule" className={styles.date}>{sessionDate(session, data.timezone)}</td>
             <td data-label="Status"><span className={statusClass(session.status)}>{mentorSessionStatusLabel(session.status)}</span></td>
-            <td data-label="Zoom">{session.status === 'scheduled' && session.meeting_url ? <a className={`button button-primary ${styles.tableLink}`} href={session.meeting_url} target="_blank" rel="noopener noreferrer" aria-label={`Join Zoom for session ${session.session_number}`}><ExternalLink aria-hidden="true" />Zoom</a> : <span className={styles.unavailable}>Not available</span>}</td>
+            <td data-label="Zoom">{session.status === 'scheduled' && session.meeting_url ? <a className={`button button-primary ${styles.tableLink}`} href={session.meeting_url} target="_blank" rel="noopener noreferrer" aria-label={`Join Zoom for session ${session.session_number}`}><ExternalLink aria-hidden="true" />Zoom</a> : <span className={styles.unavailable}>Meeting unavailable</span>}</td>
             <td data-label="Actions" className={styles.actionCell}><button type="button" className={`button button-outline ${styles.tableAction}`} onClick={() => setSelectedSessionId(session.session_id)} aria-label={`View details for session ${session.session_number} ${session.mentee_name || session.mentee_email}`}><Eye aria-hidden="true" />Details</button></td>
           </tr>)}</tbody>
         </table></div>

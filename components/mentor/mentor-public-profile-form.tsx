@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDown, ArrowUp, Award, CheckCircle2, CircleDot, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Award, CheckCircle2, CircleDot, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAccount } from '@/components/auth/account-provider'
@@ -162,6 +162,7 @@ export function MentorPublicProfileForm({ initialData, loadError }: { initialDat
         <h2>Public profile</h2>
         {!editing ? (
           <button type="button" className={`button button-outline ${styles.editButton}`} onClick={startEditing} data-testid="mentor-public-profile-edit-button">
+            <Pencil aria-hidden="true" />
             {profile ? 'Edit public profile' : 'Set up public profile'}
           </button>
         ) : null}

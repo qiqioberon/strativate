@@ -1,0 +1,218 @@
+.stateCard {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  gap: 10px;
+  padding: 28px;
+  border: 1px solid #e1e5e8;
+  border-radius: 16px;
+  color: #68727d;
+  background: #fff;
+  text-align: center;
+}
+.stateCard svg { color: var(--primary); }
+.stateCard p { max-width: 680px; font-size: 11px; line-height: 1.6; }
+
+.tableWrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #e7eaed;
+  border-radius: 12px;
+  background: #fff;
+}
+.table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  color: #28323b;
+  font-size: 10px;
+  text-align: left;
+}
+.table th,
+.table td { padding: 12px 13px; border-bottom: 1px solid #edf0f2; vertical-align: middle; }
+.table thead th {
+  color: #78828b;
+  background: #fafbfc;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: #fff8f2; }
+
+.thumbnailStack {
+  display: grid;
+  width: 76px;
+  height: 58px;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  overflow: hidden;
+  border: 1px solid #e3e7ea;
+  border-radius: 9px;
+  background: #f7f8f9;
+}
+.thumbnailStack[data-layout='pair'] { width: 78px; height: 58px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.thumbnailStack img { width: 100%; height: 100%; min-width: 0; object-fit: cover; }
+
+.storyCell { min-width: 240px; }
+.storyCell strong { display: block; color: #1f2932; font-size: 10px; overflow-wrap: anywhere; }
+.storyCell small { display: block; margin-top: 4px; color: #7a848d; font-size: 9px; line-height: 1.4; }
+
+.layoutPill {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #7d420f;
+  background: #fff0df;
+  font-size: 9px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.orderControls,
+.statusStack,
+.actions { display: inline-flex; align-items: center; gap: 7px; }
+.orderControls > span:first-child { min-width: 24px; color: #5f6972; font-weight: 800; text-align: center; }
+.iconButton,
+.manageButton,
+.statusButton,
+.deleteButton {
+  min-height: 32px;
+  border: 1px solid #dfe4e8;
+  border-radius: 8px;
+  color: #53606b;
+  background: #fff;
+  font-size: 9px;
+  font-weight: 750;
+}
+.iconButton { display: inline-grid; width: 32px; padding: 0; place-items: center; }
+.manageButton,
+.statusButton { padding: 0 10px; }
+.deleteButton { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; color: #ad3c42; border-color: #e6b8bb; background: #fffafa; }
+.iconButton:hover:not(:disabled),
+.manageButton:hover:not(:disabled),
+.statusButton:hover:not(:disabled) { border-color: #f0a06d; color: #9b3e0c; background: #fff8f2; }
+.deleteButton:hover:not(:disabled) { color: #8e2027; background: #fff4f4; }
+.iconButton:disabled,
+.manageButton:disabled,
+.statusButton:disabled,
+.deleteButton:disabled { opacity: .42; cursor: not-allowed; }
+.actionCell { width: 1%; white-space: nowrap; text-align: right; }
+.actions { justify-content: flex-end; }
+
+.form { display: grid; gap: 22px; }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.formGrid label,
+.mediaSlot label {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  color: #525e68;
+  font-size: 10px;
+  font-weight: 800;
+}
+.formGrid input,
+.formGrid select,
+.formGrid textarea,
+.mediaSlot input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #dce2e7;
+  border-radius: 9px;
+  outline: 0;
+  color: #27313a;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+}
+.formGrid textarea { min-height: 120px; resize: vertical; line-height: 1.55; }
+.formGrid input:focus,
+.formGrid select:focus,
+.formGrid textarea:focus,
+.mediaSlot input:focus { border-color: #f0a06d; box-shadow: 0 0 0 3px #ff7a0012; }
+.fullField { grid-column: 1 / -1; }
+
+.activeToggle {
+  display: flex !important;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid #e4e8eb;
+  border-radius: 9px;
+  background: #fafbfc;
+}
+.activeToggle span { display: grid; gap: 2px; }
+.activeToggle strong { color: #3f4a53; font-size: 10px; }
+.activeToggle small { color: #7a848d; font-size: 9px; font-weight: 500; }
+.activeToggle input { width: 16px; min-height: 16px; accent-color: #ff7a00; }
+
+.mediaSection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid #e8ebee;
+}
+.mediaSlot {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid #e4e8eb;
+  border-radius: 13px;
+  background: #fafbfc;
+}
+.mediaSlot > div:first-child { display: grid; gap: 3px; }
+.mediaSlot > div:first-child strong { color: #35414a; font-size: 11px; }
+.mediaSlot > div:first-child span { color: #7a848d; font-size: 9px; line-height: 1.5; }
+.formActions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; padding-top: 2px; }
+
+@media (max-width: 760px) {
+  .tableWrap { overflow: visible; border: 0; background: transparent; }
+  .table { min-width: 0; border-collapse: separate; border-spacing: 0 10px; }
+  .table thead { display: none; }
+  .table,
+  .table tbody,
+  .table tr,
+  .table td { display: block; width: 100%; }
+  .table tbody tr { overflow: hidden; border: 1px solid #e7eaed; border-radius: 12px; background: #fff; }
+  .table tbody tr:hover { background: #fff; }
+  .table td {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f4f6;
+  }
+  .table td::before {
+    content: attr(data-label);
+    color: #7b858e;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  .table td.actionCell { display: flex; justify-content: flex-end; }
+  .table td.actionCell::before { display: none; }
+  .formGrid,
+  .mediaSection { grid-template-columns: 1fr; }
+  .fullField { grid-column: auto; }
+}
+
+@media (max-width: 480px) {
+  .actions { width: 100%; }
+  .manageButton,
+  .deleteButton { flex: 1 1 0; justify-content: center; }
+  .formActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .formActions :global(.button) { width: 100%; }
+}

@@ -1,17 +1,22 @@
 import { Focus, Repeat2, Waypoints } from 'lucide-react'
 
+import { AboutFeaturedStories } from '@/components/marketing/about-featured-stories'
 import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { homepageExpertise, preparationPrinciples } from '@/lib/content/marketing-content'
 import { ABOUT_US_STORY_IMAGE_HEIGHT, ABOUT_US_STORY_IMAGE_WIDTH } from '@/lib/marketing/about-us-story-config'
 import { getAboutUsStoryMedia } from '@/lib/marketing/about-us-story'
+import { listActiveAboutFeaturedStories } from '@/lib/marketing/about-featured-stories'
 
 const icons = [Focus, Waypoints, Repeat2]
 const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
 export default async function AboutPage() {
-  const storyMedia = await getAboutUsStoryMedia()
+  const [featuredStories, storyMedia] = await Promise.all([
+    listActiveAboutFeaturedStories(),
+    getAboutUsStoryMedia(),
+  ])
 
   return (
     <MarketingShell>
@@ -65,7 +70,6 @@ export default async function AboutPage() {
             <div className="homepage-expertise__grid">
               {homepageExpertise.map((item, index) => {
                 const expertiseMark = expertiseMarks[index]
-
                 return (
                   <article className="homepage-expertise__card" key={item.title}>
                     <div className="homepage-expertise__icon" aria-hidden="true">
@@ -82,6 +86,8 @@ export default async function AboutPage() {
             </div>
           </div>
         </section>
+
+        <AboutFeaturedStories stories={featuredStories} />
       </main>
     </MarketingShell>
   )
