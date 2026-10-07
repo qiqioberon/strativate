@@ -1,5 +1,7 @@
 'use client'
 
+import { Award, CalendarCheck2, CalendarDays, Globe2, UserRoundCheck } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { ProfileForm } from '@/components/auth/profile-form'
 import { DashboardNotificationCenter } from '@/components/dashboard/notification-center'
 import { MentorAvailabilityEditor } from '@/components/mentor/availability-editor'
@@ -8,23 +10,64 @@ import type { MentorAvailabilityState, MentorDashboardData } from '@/lib/mentor/
 import type { MyMentorPublicProfileData } from '@/lib/mentor/public-profile-types'
 import type { Notification } from '@/lib/supabase/database.types'
 
-import { availabilityLabel, availabilityTone, MentorPageHeader } from './dashboard-ui'
 import type { MentorDashboardSection } from './mentor-overview'
-import styles from './mentor-profile-layout.module.css'
+import profileStyles from './mentor-profile-layout.module.css'
+import styles from './mentor-secondary-sections.module.css'
 
-export function AvailabilityPanel({ mentorId, onSaved, open }: { mentorId: string; onSaved: (value: MentorAvailabilityState) => void; open: (section: MentorDashboardSection) => void }) {
-  return <div className="mentor-section"><MentorPageHeader eyebrow="Ketersediaan" title="Buka waktu terbaik Anda untuk sesi." detail="Ketersediaan menentukan slot yang boleh dipilih admin; perubahan tidak memindahkan booking yang sudah ada." action={<button type="button" className="button button-outline" onClick={() => open('calendar')}>Lihat kalender</button>}/><section className="role-card mentor-availability-card"><MentorAvailabilityEditor mentorId={mentorId} mode="mentor" onSaved={onSaved}/></section></div>
+function PageHeading({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <div className={styles.pageHeading}>
+      <h1>{title}</h1>
+      {action ? <div className={styles.pageHeadingAction}>{action}</div> : null}
+    </div>
+  )
 }
 
-export function NotificationsPanel({ open, onOpenRelated }: { open: (section: MentorDashboardSection) => void; onOpenRelated?: (item: Notification) => void }) {
-  return <div className="mentor-section"><MentorPageHeader eyebrow="Notifikasi" title="Pembaruan operasional mentor." detail="Penugasan, jadwal, meeting link, reschedule, cancellation, dan scope update berasal dari backend notification yang sama dengan bell realtime." action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}/><DashboardNotificationCenter onOpenRelated={onOpenRelated ?? (item=>open(item.related_entity==='session'?'assignments':'overview'))}/></div>
+function availabilityLabel(value: boolean | null) {
+  if (value === null) return 'Not verified'
+  return value ? 'Set' : 'Not set'
+}
+
+function availabilityToneClass(value: boolean | null) {
+  if (value === null) return styles.neutral
+  return value ? styles.positive : styles.warning
+}
+
+export function AvailabilityPanel({ mentorId, onSaved, open }: { mentorId: string; onSaved: (value: MentorAvailabilityState) => void; open: (section: MentorDashboardSection) => void }) {
+  return (
+    <div className={`mentor-section ${styles.section}`}>
+      <PageHeading
+        title="Availability"
+        action={(
+          <button type="button" className={`button button-outline ${styles.headerAction}`} onClick={() => open('calendar')}>
+            <CalendarDays aria-hidden="true" />
+            View calendar
+          </button>
+        )}
+      />
+      <section className={`role-card mentor-availability-card ${styles.availabilityCard}`}>
+        <MentorAvailabilityEditor mentorId={mentorId} mode="mentor" onSaved={onSaved} />
+      </section>
+    </div>
+  )
+}
+
+export function NotificationsPanel({ open: fallbackOpen, onOpenRelated }: { open: (section: MentorDashboardSection) => void; onOpenRelated?: (item: Notification) => void }) {
+  return (
+    <div className={`mentor-section ${styles.section}`}>
+      <PageHeading title="Notifications" />
+      <DashboardNotificationCenter
+        language="en"
+        onOpenRelated={onOpenRelated ?? (item => fallbackOpen(item.related_entity === 'session' ? 'assignments' : 'overview'))}
+      />
+    </div>
+  )
 }
 
 export function MentorProfilePanel({
   data,
   publicProfile,
   publicProfileError,
-  open,
 }: {
   data: MentorDashboardData
   publicProfile: MyMentorPublicProfileData
@@ -32,29 +75,42 @@ export function MentorProfilePanel({
   open: (section: MentorDashboardSection) => void
 }) {
   return (
-    <div className="mentor-section">
-      <MentorPageHeader
-        eyebrow="Profil"
-        title="Akun dan profil publik mentor."
-        detail="Informasi akun tetap mengikuti policy profil. Informasi direktori publik dapat Anda kelola terpisah; tier, publikasi, dan status operasional tetap dikendalikan domain mentor/admin."
-        action={<button type="button" className="button button-primary" onClick={() => open('availability')}>Atur ketersediaan</button>}
-      />
-      {data.metadataError ? <p className="mentor-inline-warning" role="status">{data.metadataError}</p> : null}
-      <div className={styles.profileStack} data-testid="mentor-profile-management-stack">
-        <ProfileForm />
+    <div className={`mentor-section ${styles.section}`}>
+      <PageHeading title="Profile" />
+      {data.metadataError ? <p className={styles.inlineWarning} role="status">Some operational profile details could not be loaded.</p> : null}
+      <div className={profileStyles.profileStack} data-testid="mentor-profile-management-stack">
+        <ProfileForm language="en" />
         <MentorPublicProfileForm initialData={publicProfile} loadError={publicProfileError} />
-        <section className="workspace-card mentor-operational-profile">
-          <div>
-            <p className="kicker">Operational Mentor Status</p>
-            <h2>Status operasional</h2>
-            <p>Informasi berikut read-only dan mengikuti konfigurasi domain mentor canonical.</p>
+        <section className={`workspace-card mentor-operational-profile ${styles.operationalCard}`}>
+          <div className={styles.cardHeading}>
+            <h2>Operational status</h2>
           </div>
-          <dl>
-            <div><dt>Tier mentor</dt><dd>{data.tierName || 'Belum ditetapkan'}</dd></div>
-            <div><dt>Timezone</dt><dd>{data.timezone}</dd></div>
-            <div><dt>Status akun mentor</dt><dd><span className={`ops-status ops-status--${data.isActive ? 'positive' : 'danger'}`}>{data.isActive ? 'Aktif' : 'Nonaktif'}</span></dd></div>
-            <div><dt>Ketersediaan minggu ini</dt><dd><span className={`ops-status ops-status--${availabilityTone(data.availability.current)}`}>{availabilityLabel(data.availability.current)}</span></dd></div>
-            <div><dt>Ketersediaan minggu depan</dt><dd><span className={`ops-status ops-status--${availabilityTone(data.availability.next)}`}>{availabilityLabel(data.availability.next)}</span></dd></div>
+          <dl className={styles.statusGrid}>
+            <div className={styles.statusTile}>
+              <span className={styles.statusIcon}><Award aria-hidden="true" /></span>
+              <dt>Mentor tier</dt>
+              <dd>{data.tierName || 'Tier not assigned'}</dd>
+            </div>
+            <div className={styles.statusTile}>
+              <span className={styles.statusIcon}><Globe2 aria-hidden="true" /></span>
+              <dt>Time zone</dt>
+              <dd>{data.timezone}</dd>
+            </div>
+            <div className={styles.statusTile}>
+              <span className={styles.statusIcon}><UserRoundCheck aria-hidden="true" /></span>
+              <dt>Account status</dt>
+              <dd><span className={`${styles.stateChip} ${data.isActive ? styles.positive : styles.danger}`}>{data.isActive ? 'Active' : 'Inactive'}</span></dd>
+            </div>
+            <div className={styles.statusTile}>
+              <span className={styles.statusIcon}><CalendarCheck2 aria-hidden="true" /></span>
+              <dt>This week</dt>
+              <dd><span className={`${styles.stateChip} ${availabilityToneClass(data.availability.current)}`}>{availabilityLabel(data.availability.current)}</span></dd>
+            </div>
+            <div className={styles.statusTile}>
+              <span className={styles.statusIcon}><CalendarCheck2 aria-hidden="true" /></span>
+              <dt>Next week</dt>
+              <dd><span className={`${styles.stateChip} ${availabilityToneClass(data.availability.next)}`}>{availabilityLabel(data.availability.next)}</span></dd>
+            </div>
           </dl>
         </section>
       </div>
