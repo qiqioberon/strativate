@@ -3,7 +3,7 @@
 import { useId, useState, type KeyboardEvent } from 'react'
 
 import {
-  CATEGORY_LABELS, SALES_COLORS, count, percent, statusLabel,
+  CATEGORY_LABELS, SALES_COLORS, count, paymentMethodLabel, percent, statusLabel,
   type SalesBreakdown, type SalesGranularity, type SalesReport,
 } from '@/lib/admin/sales-reporting'
 import { formatRupiah } from '@/lib/commerce/money'
@@ -87,7 +87,7 @@ function PrivateAnalytics({ report }: { report: SalesReport }) {
       <SalesBreakdownChart title="Pendapatan per tier mentor" description="Tier pada sumber pembelian historis Private Mentoring." rows={report.private_tiers} color={SALES_COLORS.private}/>
       <SalesBreakdownChart title="Ukuran pembelian sesi" description="Unit pembelian menurut jumlah sesi aktual; mencakup penawaran fleksibel." rows={report.private_sessions} metric="units" color={SALES_COLORS.private} valueLabel="Unit pembelian"/>
     </div>
-    {knownUnits > 0 ? <div className={styles.stats}>
+    {knownUnits > 0 ? <div className={styles.stats} data-wide-value={currency(knownRevenue / purchasedSessions).length > 17}>
       <div className={styles.stat}><span>Sesi dibeli</span><strong>{count(purchasedSessions)}</strong><small>Dari item dengan jumlah sesi historis yang diketahui.</small></div>
       <div className={styles.stat}><span>Rata-rata ukuran pembelian</span><strong>{new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(purchasedSessions / knownUnits)} sesi</strong><small>Jumlah sesi / unit pembelian dengan metadata sesi.</small></div>
       <div className={styles.stat}><span>Rata-rata harga bersih per sesi</span><strong>{currency(knownRevenue / purchasedSessions)}</strong><small>Pendapatan item dengan metadata sesi / sesi dibeli.</small></div>
@@ -126,10 +126,10 @@ function PaymentDiscountAnalytics({ report }: { report: SalesReport }) {
   const codes = [...report.discounts].sort((a, b) => b.net - a.net || a.code.localeCompare(b.code, 'id')).slice(0, 10)
   return <>
     <div className={styles.grid}>
-      <SalesBreakdownChart title="Metode pembayaran" description="Satu hasil pembayaran per pesanan lunas; percobaan ulang tidak menambah hitungan." rows={report.payments} metric="orders" color={SALES_COLORS.paid} tooltipDetails={row => `${currency(row.net)} · ${percent(ratio(row.orders, report.totals.orders))} dari pesanan lunas`}/>
+      <SalesBreakdownChart title="Metode pembayaran" description="Satu hasil pembayaran per pesanan lunas; percobaan ulang tidak menambah hitungan." rows={report.payments.map(row => ({ ...row, label: paymentMethodLabel(row.key) }))} metric="orders" color={SALES_COLORS.paid} tooltipDetails={row => `${currency(row.net)} · ${percent(ratio(row.orders, report.totals.orders))} dari pesanan lunas`}/>
       <SalesBreakdownChart title="Siklus pesanan" description="Status saat ini dari pesanan yang dibuat pada periode ini, berdasarkan waktu pembuatan." rows={lifecycleRows} metric="orders" valueLabel="Pesanan dibuat" tooltipDetails={row => `${currency(row.net)} nominal pesanan; bukan pendapatan periode pembayaran`}/>
     </div>
-    <div className={styles.stats}>
+    <div className={styles.stats} data-wide-value={[report.totals.discount, report.discount_orders > 0 ? report.totals.discount / report.discount_orders : 0].some(value => currency(value).length > 17)}>
       <div className={styles.stat}><span>Diskon pada pesanan lunas</span><strong>{currency(report.totals.discount)}</strong><small>{percent(ratio(report.totals.discount, report.totals.gross))} pengurangan bruto menjadi bersih.</small></div>
       <div className={styles.stat}><span>Pesanan menggunakan diskon</span><strong>{count(report.discount_orders)}</strong><small>{percent(ratio(report.discount_orders, report.totals.orders))} dari semua pesanan lunas pada cakupan ini.</small></div>
       <div className={styles.stat}><span>Rata-rata diskon</span><strong>{currency(report.discount_orders > 0 ? report.totals.discount / report.discount_orders : 0)}</strong><small>Per pesanan lunas yang menggunakan diskon.</small></div>

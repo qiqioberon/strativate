@@ -1,4 +1,4 @@
-import type { SalesReport, SalesTransaction, SalesTransactionPage } from '@/lib/admin/sales-reporting'
+import type { LegacySalesReport, SalesComparisonMode, SalesReport, SalesTransaction, SalesTransactionPage } from '@/lib/admin/sales-reporting'
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 export type AppRole = "admin" | "mentor" | "mentee"
@@ -129,9 +129,11 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
-      get_admin_sales_report: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare?:boolean;p_granularity?:string}; Returns:SalesReport }
+      get_admin_sales_report: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare?:boolean;p_granularity?:string}; Returns:LegacySalesReport }
+      get_admin_sales_report_v2: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare_mode?:SalesComparisonMode;p_compare_from?:string|null;p_compare_to?:string|null;p_granularity?:string}; Returns:SalesReport }
       list_admin_sales_transactions: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_query?:string;p_status?:string;p_payment?:string;p_sort?:string;p_direction?:string;p_limit?:number;p_offset?:number}; Returns:SalesTransactionPage }
-      get_admin_sales_export: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare?:boolean;p_query?:string;p_status?:string;p_payment?:string;p_sort?:string;p_direction?:string;p_max_orders?:number;p_max_items?:number}; Returns:{report:SalesReport;rows:SalesTransaction[];total_count:number;item_count:number} }
+      get_admin_sales_export: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare?:boolean;p_query?:string;p_status?:string;p_payment?:string;p_sort?:string;p_direction?:string;p_max_orders?:number;p_max_items?:number}; Returns:{report:LegacySalesReport;rows:SalesTransaction[];total_count:number;item_count:number} }
+      get_admin_sales_export_v2: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare_mode?:SalesComparisonMode;p_compare_from?:string|null;p_compare_to?:string|null;p_query?:string;p_status?:string;p_payment?:string;p_sort?:string;p_direction?:string;p_max_orders?:number;p_max_items?:number}; Returns:{report:SalesReport;rows:SalesTransaction[];total_count:number;item_count:number} }
       list_mentor_invites: { Args:{p_offset?:number}; Returns:MentorInviteSummary[] }
       list_managed_mentors: { Args:{p_offset:number;p_query:string;p_tier_id:string|null;p_account_status:string;p_setup_status:string}; Returns:ManagedMentor[] }
       count_managed_mentors: { Args:{p_query:string;p_tier_id:string|null;p_account_status:string;p_setup_status:string}; Returns:number }

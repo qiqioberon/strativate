@@ -8,7 +8,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { Bar, Doughnut, Line } from 'react-chartjs-2'
 
 import {
-  CATEGORY_LABELS, SALES_COLORS, count, displayDate, itemKindLabel, metricValue,
+  CATEGORY_LABELS, SALES_COLORS, comparisonLabel, count, displayDate, itemKindLabel, metricValue,
   percent, statusLabel, type ProductPerformance, type SalesBreakdown,
   type SalesGranularity, type SalesMetric, type SalesReport,
 } from '@/lib/admin/sales-reporting'
@@ -57,9 +57,11 @@ export function SalesPerformanceChart({ report, granularity, onGranularityChange
   const id = useId()
   const [metric, setMetric] = useState<SalesMetric>('net')
   const [series, setSeries] = useState<string[]>(['total', 'digital', 'private', 'intensive'])
-  const compare = report.previous !== null && report.previous_trend.length > 0
-  const length = Math.max(report.trend.length, compare ? report.previous_trend.length : 0)
-  const labels = Array.from({ length }, (_, index) => report.trend[index]?.date ?? `Periode ${index + 1}`)
+  // Only the backend's equal-duration previous-period buckets are aligned.
+  // Custom comparison totals use their own dates without a synthetic overlay.
+  const compare = report.range.comparison_aligned && report.previous !== null && report.previous_trend.length === report.trend.length && report.trend.length > 0
+  const length = report.trend.length
+  const labels = report.trend.map(point => point.date)
   const hasSales = report.totals.orders > 0 || Boolean(compare && report.previous?.orders)
   const data = {
     labels,
@@ -96,9 +98,9 @@ export function SalesPerformanceChart({ report, granularity, onGranularityChange
             const date = report.trend[index]?.date
             if (!date) return `${index + 1}`
             return new Intl.DateTimeFormat('id-ID', {
-              timeZone: 'Asia/Jakarta', month: 'short',
+              timeZone: 'UTC', month: 'short',
               ...(report.range.granularity === 'month' ? { year: '2-digit' as const } : { day: 'numeric' as const }),
-            }).format(new Date(`${date}T00:00:00+07:00`))
+            }).format(new Date(`${date}T00:00:00Z`))
           },
         },
       },
@@ -113,7 +115,10 @@ export function SalesPerformanceChart({ report, granularity, onGranularityChange
         backgroundColor: '#24313e', padding: 11, cornerRadius: 8,
         titleFont: { family: chartFont, size: 11 }, bodyFont: { family: chartFont, size: 11 },
         callbacks: {
-          title: items => report.trend[items[0]?.dataIndex ?? 0]?.date ? displayDate(report.trend[items[0].dataIndex].date) : 'Periode pembanding',
+          title: items => {
+            const date = report.trend[items[0]?.dataIndex ?? 0]?.date
+            return date ? displayDate(date) : 'Periode laporan'
+          },
           label: context => {
             const value = context.parsed.y ?? 0
             const key = series[context.datasetIndex]
@@ -143,7 +148,7 @@ export function SalesPerformanceChart({ report, granularity, onGranularityChange
       {SERIES.map(key => <button type="button" key={key} aria-pressed={series.includes(key)} onClick={() => toggleSeries(key)} disabled={!series.includes(key) && series.length + (compare ? 1 : 0) >= 6}><span className={styles.swatch} style={{ backgroundColor: SALES_COLORS[key] }} aria-hidden="true"/>{CATEGORY_LABELS[key]}</button>)}
     </div>
     {hasSales && length > 0 ? <div className={styles.mainCanvas}><Line data={data} options={options} role="img" aria-label={`${METRIC_LABELS[metric]} dari waktu ke waktu`} aria-describedby={`${id}-summary`}/></div> : <EmptyChart/>}
-    <p id={`${id}-summary`} className={styles.note}>{METRIC_LABELS[metric]} periode ini: <strong>{metricValue(metric, report.totals[metric])}</strong>{report.previous ? `; sebelumnya ${metricValue(metric, report.previous[metric])}.` : '.'} {compare ? 'Garis putus-putus membandingkan total pada urutan interval yang sama.' : ''} Klik legenda untuk sembunyikan seri. Maksimal 6 seri.</p>
+    <p id={`${id}-summary`} className={styles.note}>{METRIC_LABELS[metric]} periode ini: <strong>{metricValue(metric, report.totals[metric])}</strong>{report.previous ? <>; {comparisonLabel(report.range)}: <strong>{metricValue(metric, report.previous[metric])}</strong>.</> : '.'} {compare ? 'Garis putus-putus membandingkan total pada urutan interval yang sama; tooltip mencantumkan tanggal pembanding.' : report.previous ? 'Grafik menampilkan periode utama; total pembanding dihitung dari rentangnya sendiri.' : ''} Klik legenda untuk sembunyikan seri. Maksimal 6 seri.</p>
   </article>
 }
 
@@ -163,7 +168,7 @@ export function SalesMix({ report }: { report: SalesReport }) {
   return <article className={styles.card} aria-labelledby={`${id}-title`}>
     <header className={styles.cardHeader}><div><h3 id={`${id}-title`}>Komposisi penjualan</h3><p>Kontribusi kategori pada penjualan lunas.</p></div></header>
     {rows.length > 0 ? <>
-      {report.totals.net > 0 ? <div className={styles.mixCanvas}><Doughnut data={{ labels: rows.map(row => CATEGORY_LABELS[row.key] ?? row.label), datasets: [{ data: rows.map(row => row.net), backgroundColor: rows.map(row => SALES_COLORS[row.key] ?? SALES_COLORS.other), borderWidth: 3, borderColor: '#fff', hoverOffset: 3 }] }} options={options} role="img" aria-label="Kontribusi pendapatan bersih menurut kategori" aria-describedby={`${id}-summary`}/><div className={styles.mixCenter} aria-hidden="true"><span>Pendapatan bersih</span><strong>{currency(report.totals.net)}</strong></div></div> : <p className={styles.note}>Semua penjualan lunas memiliki pendapatan bersih nol.</p>}
+      {report.totals.net > 0 ? <><div className={styles.mixCanvas}><Doughnut data={{ labels: rows.map(row => CATEGORY_LABELS[row.key] ?? row.label), datasets: [{ data: rows.map(row => row.net), backgroundColor: rows.map(row => SALES_COLORS[row.key] ?? SALES_COLORS.other), borderWidth: 3, borderColor: '#fff', hoverOffset: 3 }] }} options={options} role="img" aria-label="Kontribusi pendapatan bersih menurut kategori" aria-describedby={`${id}-summary`}/><div className={styles.mixCenter} aria-hidden="true"><span>Kategori penjualan</span><strong>{count(rows.length)}</strong></div></div><p className={styles.note}>Pendapatan bersih: <strong>{currency(report.totals.net)}</strong></p></> : <p className={styles.note}>Semua penjualan lunas memiliki pendapatan bersih nol.</p>}
       <ul id={`${id}-summary`} className={styles.mixList}>{rows.map(row => <li key={row.key}><span><i className={styles.swatch} style={{ backgroundColor: SALES_COLORS[row.key] ?? SALES_COLORS.other }} aria-hidden="true"/>{CATEGORY_LABELS[row.key] ?? row.label}</span><div><strong>{currency(row.net)}</strong><small>{percent(report.totals.net > 0 ? row.net / report.totals.net * 100 : 0)} · {count(row.units)} unit</small></div></li>)}</ul>
     </> : <EmptyChart/>}
   </article>
@@ -298,6 +303,6 @@ export function SalesOrderVolumeChart({ report }: { report: SalesReport }) {
   return <article className={styles.card} aria-labelledby={`${id}-title`}>
     <header className={styles.cardHeader}><div><h3 id={`${id}-title`}>Volume pesanan lunas</h3><p>Setiap pesanan dihitung satu kali pada interval pembayarannya.</p></div></header>
     {report.totals.orders > 0 && report.trend.length ? <div className={styles.smallCanvas}><Line data={{ labels: report.trend.map(point => displayDate(point.date)), datasets: [{ label: 'Pesanan lunas', data: report.trend.map(point => point.total.orders), borderColor: SALES_COLORS.paid, backgroundColor: SALES_COLORS.paid, borderWidth: 2, pointRadius: report.trend.length === 1 ? 4 : 0, pointHoverRadius: 4, pointHitRadius: 12, tension: .2 }] }} options={options} role="img" aria-label="Jumlah pesanan lunas dari waktu ke waktu" aria-describedby={`${id}-summary`}/></div> : <EmptyChart/>}
-    <p id={`${id}-summary`} className={styles.note}>{count(report.totals.orders)} pesanan lunas menghasilkan {currency(report.totals.net)}; rata-rata {currency(report.totals.aov)} per pesanan.</p>
+    <p id={`${id}-summary`} className={styles.note}>{count(report.totals.orders)} pesanan lunas menghasilkan <strong>{currency(report.totals.net)}</strong>; rata-rata <strong>{currency(report.totals.aov)}</strong> per pesanan.</p>
   </article>
 }

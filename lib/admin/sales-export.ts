@@ -2,6 +2,7 @@ import {
   CATEGORY_LABELS,
   itemKindLabel,
   statusLabel,
+  type SalesComparison,
   type SalesItem,
   type SalesScope,
   type SalesTransaction,
@@ -17,13 +18,12 @@ export type SalesExportField = {
   type?: 'money' | 'number' | 'date'
   width?: number
 }
-export type SalesExportRequest = {
+export type SalesExportRequest = SalesComparison & {
   format: 'xlsx' | 'csv'
   dataset: SalesExportDataset
   from: string | null
   to: string | null
   scope: SalesScope
-  compare: boolean
   columns: string[]
   filters: SalesTransactionFilters
 }
