@@ -1,15 +1,19 @@
 import { Focus, Repeat2, Waypoints } from 'lucide-react'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
+import { AboutFeaturedStories } from '@/components/marketing/about-featured-stories'
 import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { homepageExpertise, preparationPrinciples } from '@/lib/content/marketing-content'
+import { listActiveAboutFeaturedStories } from '@/lib/marketing/about-featured-stories'
 
 const icons = [Focus, Waypoints, Repeat2]
 const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const featuredStories = await listActiveAboutFeaturedStories()
+
   return (
     <MarketingShell>
       <main className="about-reference-page">
@@ -69,6 +73,8 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        <AboutFeaturedStories stories={featuredStories} />
       </main>
     </MarketingShell>
   )
