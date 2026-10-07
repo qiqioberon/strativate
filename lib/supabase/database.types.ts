@@ -20,6 +20,7 @@ export type CompetitionRecognition = { id:string; competition_name:string; logo_
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
+export type AboutUsStoryMedia = { id:string; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
 export type DigitalProductReview = { id:string; product_id:string; user_id:string; rating:number; comment:string|null; created_at:string; updated_at:string }
 export type AdminDigitalProductReview = DigitalProductReview & { customer_name:string }
@@ -92,6 +93,7 @@ export type Database = {
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
+      about_us_story_media: Table<AboutUsStoryMedia, Partial<AboutUsStoryMedia> & Pick<AboutUsStoryMedia,"id">>
        digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
        digital_product_reviews: Table<DigitalProductReview, never, never>
       commerce_discount_codes: Table<DiscountCode, Partial<DiscountCode> & Pick<DiscountCode,"code"|"discount_type"|"discount_value">>
@@ -169,6 +171,7 @@ export type Database = {
       admin_list_competitions: { Args:Record<PropertyKey,never>; Returns:Competition[] }
       admin_list_marketing_testimonials: { Args:Record<PropertyKey,never>; Returns:MarketingTestimonial[] }
       admin_list_homepage_who_we_are_photos: { Args:Record<PropertyKey,never>; Returns:HomepageWhoWeArePhoto[] }
+      admin_list_about_us_story_media: { Args:Record<PropertyKey,never>; Returns:AboutUsStoryMedia[] }
       reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_trusted_partners: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }

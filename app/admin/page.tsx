@@ -39,6 +39,7 @@ import { MentorExpertiseManagement } from '@/components/admin/mentor-expertise-m
 import { MentorManagement } from '@/components/admin/mentor-management'
 import { MenteeManagement } from '@/components/admin/people'
 import { TestimonialManagement } from '@/components/admin/testimonial-management'
+import { AboutUsContentManagement } from '@/components/admin/about-us-content-management'
 import { TrustedPartnerManagement } from '@/components/admin/trusted-partner-management'
 import { WhoWeArePhotoManagement } from '@/components/admin/who-we-are-photo-management'
 import { ZoomRoomManagement } from '@/components/admin/zoom-room-management'
@@ -77,6 +78,7 @@ type Section =
   | 'Competition Recognition'
   | 'Trusted Partners'
   | 'Who We Are Photos'
+  | 'About Us Content'
   | 'Reports'
   | 'Mentor Expertise'
   | 'Institutions'
@@ -126,6 +128,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'Competition Recognition', label: 'Competition Recognition', icon: Trophy },
       { id: 'Trusted Partners', label: 'Trusted Partners', icon: Handshake },
       { id: 'Who We Are Photos', label: 'Who We Are Photos', icon: Images },
+      { id: 'About Us Content', label: 'About Us Content', icon: Images },
     ],
   },
   { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
@@ -247,6 +250,7 @@ export default function AdminDashboard() {
           {section === 'Competition Recognition' ? <CompetitionRecognitionManagement/> : null}
           {section === 'Trusted Partners' ? <TrustedPartnerManagement/> : null}
           {section === 'Who We Are Photos' ? <WhoWeArePhotoManagement/> : null}
+          {section === 'About Us Content' ? <AboutUsContentManagement/> : null}
           {section === 'Reports' ? <AdminSalesReporting/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}
