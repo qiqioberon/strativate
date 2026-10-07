@@ -4,6 +4,7 @@ import {IntensiveMentoringEngagements} from './intensive-mentoring-engagements'
 import {PrivateMentoringSessions} from './private-mentoring-sessions'
 import type {IntensiveEngagementView} from '@/lib/intensive-mentoring/types'
 import type {PrivateMentoringSessionFocusView,PrivateMentoringSessionView} from '@/lib/private-mentoring/types'
+import styles from './mentee-mentoring.module.css'
 
 type Mode='private'|'intensive'
 
@@ -14,8 +15,8 @@ export function MentoringWorkspace({privateSessions,intensiveEngagements,session
  const privateCount=new Set(privateSessions.map(item=>item.enrollmentId)).size
  function select(next:Mode,focus=false){setMode(next);if(focus)requestAnimationFrame(()=>{(next==='private'?privateRef:intensiveRef).current?.focus()})}
  function keydown(event:React.KeyboardEvent<HTMLButtonElement>,current:Mode){let next:Mode|null=null;if(event.key==='Home')next='private';else if(event.key==='End')next='intensive';else if(event.key==='ArrowLeft'||event.key==='ArrowRight')next=current==='private'?'intensive':'private';if(!next)return;event.preventDefault();select(next,true)}
- return <div className="mentoring-mode-panel">
-  <div className="mentoring-mode-tabs" role="tablist" aria-label="Jenis mentoring">
+ return <div className={styles.workspace}>
+  <div className={styles.modeTabs} role="tablist" aria-label="Mentoring type">
    <button ref={privateRef} id="mentoring-private-tab" type="button" role="tab" aria-selected={mode==='private'} aria-controls="mentoring-private-panel" tabIndex={mode==='private'?0:-1} onKeyDown={event=>keydown(event,'private')} onClick={()=>select('private')}>Private Mentoring ({privateCount})</button>
    <button ref={intensiveRef} id="mentoring-intensive-tab" type="button" role="tab" aria-selected={mode==='intensive'} aria-controls="mentoring-intensive-panel" tabIndex={mode==='intensive'?0:-1} onKeyDown={event=>keydown(event,'intensive')} onClick={()=>select('intensive')}>Intensive Mentoring ({intensiveEngagements.length})</button>
   </div>

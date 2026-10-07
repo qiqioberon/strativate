@@ -24,6 +24,6 @@ export function passwordError(password: string, confirmation: string, required: 
 export function usernameError(username: string): string | null {
   return /^[a-zA-Z0-9_]{3,30}$/.test(username) ? null : "Nama pengguna harus 3–30 karakter, menggunakan huruf, angka, atau garis bawah."
 }
-export function displayName(profile: { first_name: string | null; last_name: string | null; username: string | null }) {
-  return [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.username || 'Akun Strativate'
+export function displayName(profile: { first_name: string | null; last_name: string | null; username: string | null }, language: 'id' | 'en' = 'id') {
+  return [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.username || (language === 'en' ? 'Strativate account' : 'Akun Strativate')
 }

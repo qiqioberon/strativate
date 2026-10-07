@@ -1,391 +1,60 @@
-.topbarActions {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.iconButton,
-.accountButton {
-  min-height: 2.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: #fff;
-  color: #27364a;
-  cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-.iconButton {
-  position: relative;
-  width: 2.5rem;
-  border-radius: 0.75rem;
-  display: inline-grid;
-  place-items: center;
-}
-
-.iconButton svg,
-.accountButton svg,
-.sidebarLink svg,
-.signOut svg,
-.profileAction svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex: 0 0 auto;
-}
-
-.iconButton:hover,
-.accountButton:hover {
-  border-color: rgba(220, 13, 22, 0.28);
-  background: #fff9f4;
-}
-
-.iconButton:focus-visible,
-.accountButton:focus-visible,
-.profileAction:focus-visible,
-.sidebarLink:focus-visible,
-.signOut:focus-visible {
-  outline: 3px solid rgba(255, 122, 0, 0.28);
-  outline-offset: 2px;
-}
-
-.notificationDot {
-  position: absolute;
-  top: 0.48rem;
-  right: 0.48rem;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 999px;
-  background: #dc0d16;
-  box-shadow: 0 0 0 2px #fff;
-}
-
-.accountButton {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  border-radius: 999px;
-  padding: 0.28rem 0.65rem 0.28rem 0.3rem;
-  max-width: 15rem;
-}
-
-.triggerAvatar,
-.accountAvatar {
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  font-weight: 800;
-  line-height: 1;
-  background: #27364a;
-  color: #fff;
-}
-
-.triggerAvatar {
-  width: 2rem;
-  height: 2rem;
-  font-size: 0.74rem;
-}
-
-.accountName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.chevron {
-  width: 0.95rem !important;
-  height: 0.95rem !important;
-  opacity: 0.64;
-}
-
-.popover {
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  right: 0;
-  z-index: 80;
-  width: min(23rem, calc(100vw - 1.5rem));
-  max-height: min(31rem, calc(100vh - 5.5rem));
-  overflow-y: auto;
-  border: 1px solid rgba(39, 54, 74, 0.13);
-  border-radius: 1rem;
-  background: #fff;
-  box-shadow: 0 18px 48px rgba(39, 54, 74, 0.18);
-  padding: 0.45rem;
-}
-
-.popoverHeader {
-  padding: 0.85rem 0.9rem 0.7rem;
-}
-
-.popoverHeader strong {
-  display: block;
-  color: #27364a;
-  font-size: 0.98rem;
-}
-
-.popoverHeader span {
-  display: block;
-  margin-top: 0.18rem;
-  color: #667085;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.notificationList {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.notificationItem {
-  display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr);
-  gap: 0.7rem;
-  border-radius: 0.8rem;
-  padding: 0.75rem 0.8rem;
-  background: #fffaf5;
-}
-
-.notificationIcon {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  flex: 0 0 2.75rem;
-  border-radius: 0.8rem;
-  background: #ffe79d;
-  color: #b3151c;
-}
-
-.notificationIcon svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.notificationItem > div{min-width:0}
-.notificationItem strong,
-.notificationItem span {
-  display: block;
-  overflow-wrap:anywhere;
-}
-
-.notificationItem strong {
-  color: #27364a;
-  font-size: 0.84rem;
-}
-
-.notificationItem span {
-  margin-top: 0.18rem;
-  color: #667085;
-  font-size: 0.76rem;
-  line-height: 1.45;
-}
-
-.templateBadge {
-  display: inline-flex !important;
-  width: fit-content;
-  margin-bottom: 0.25rem;
-  border-radius: 999px;
-  background: #fff;
-  padding: 0.16rem 0.4rem;
-  color: #b3151c !important;
-  font-size: 0.62rem !important;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.accountSummary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.9rem;
-}
-
-.accountAvatar {
-  width: 2.8rem;
-  height: 2.8rem;
-  font-size: 0.9rem;
-}
-
-.accountIdentity {
-  min-width: 0;
-}
-
-.accountIdentity strong,
-.accountIdentity span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.accountIdentity strong {
-  color: #27364a;
-  font-size: 0.9rem;
-}
-
-.accountIdentity span {
-  margin-top: 0.16rem;
-  color: #667085;
-  font-size: 0.76rem;
-}
-
-.roleBadge {
-  width: fit-content;
-  margin-top: 0.45rem !important;
-  border-radius: 999px;
-  background: #fff2e8;
-  padding: 0.2rem 0.45rem;
-  color: #b3151c !important;
-  font-size: 0.68rem !important;
-  font-weight: 800;
-}
-
-.divider {
-  height: 1px;
-  margin: 0.3rem 0.45rem;
-  background: rgba(39, 54, 74, 0.09);
-}
-
-.profileAction,
-.accountSignOut {
-  width: 100%;
-  min-height: 2.55rem;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 0;
-  border-radius: 0.7rem;
-  padding: 0.65rem 0.75rem;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: left;
-}
-
-.profileAction {
-  background: transparent;
-  color: #27364a;
-}
-
-.profileAction:hover {
-  background: #f7f7f8;
-}
-
-.accountSignOut {
-  background: transparent;
-  color: #b3151c;
-}
-
-.accountSignOut:hover {
-  background: #fff0f0;
-}
-
-.sidebarUtilities {
-  display: grid;
-  gap: 0.45rem;
-  width: 100%;
-}
-
-.sidebarLink,
-.signOut {
-  width: 100%;
-  min-height: 2.65rem;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  border-radius: 0.75rem;
-  padding: 0.65rem 0.8rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-.sidebarLink {
-  border: 1px solid rgba(39, 54, 74, 0.12);
-  background: rgba(255, 255, 255, 0.64);
-  color: #27364a;
-}
-
-.sidebarLink:hover {
-  background: #fff;
-  border-color: rgba(255, 122, 0, 0.38);
-}
-
-.signOut {
-  justify-content: flex-start;
-  border: 1px solid rgba(179, 21, 28, 0.24);
-  background: rgba(255, 240, 240, 0.82);
-  color: #b3151c;
-  cursor: pointer;
-  font: inherit;
-}
-
-.signOut:hover {
-  border-color: rgba(179, 21, 28, 0.42);
-  background: #ffe9e9;
-}
-
+.topbarActions { position: relative; display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.iconButton, .accountButton { min-height: 2.5rem; border: 1px solid #d6cec5; background: #fffdfa; color: #2c2723; cursor: pointer; transition: border-color 160ms, box-shadow 160ms, background 160ms; }
+.iconButton { position: relative; width: 2.5rem; flex: 0 0 auto; border-radius: .75rem; display: inline-grid; place-items: center; }
+.iconButton svg, .accountButton svg, .sidebarLink svg, .signOut svg, .profileAction svg, .accountSignOut svg { width: 1.1rem; height: 1.1rem; flex: 0 0 auto; }
+.iconButton:hover, .accountButton:hover { border-color: #b79c86; background: #fff6eb; }
+.iconButton[aria-expanded=true] { background: #fff0df; border-color: #ba8e63; box-shadow: 0 0 0 3px #ff7a0014; }
+.iconButton:focus-visible, .accountButton:focus-visible, .profileAction:focus-visible, .accountSignOut:focus-visible, .sidebarLink:focus-visible, .signOut:focus-visible, .notificationItem:focus-visible, .markAllButton:focus-visible { outline: 3px solid #ff7a0047; outline-offset: 2px; }
+.accountButton { display: flex; align-items: center; gap: .55rem; border-radius: .75rem; padding: .28rem .65rem .28rem .3rem; max-width: 15rem; }
+.triggerAvatar, .accountAvatar { display: inline-grid; place-items: center; flex: 0 0 auto; border-radius: 50%; font-weight: 600; line-height: 1; background: #3e342d; color: #fff; }
+.triggerAvatar { width: 2rem; height: 2rem; font-size: .74rem; }
+.accountName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; font-weight: 600; }
+.chevron { opacity: .64; }
+.popover { position: absolute; top: calc(100% + .6rem); right: 0; z-index: 80; width: min(25rem, calc(100vw - 1.5rem)); max-height: min(31rem, calc(100dvh - 5.5rem)); overflow-y: auto; border: 1px solid #e1d7cd; border-radius: 1rem; background: #fffdfa; box-shadow: 0 14px 40px #3d281b24; padding: .45rem; }
+.popoverHeader { padding: .85rem .9rem .7rem; }
+.popoverHeader strong { display: block; color: #2c2723; font-size: .92rem; font-weight: 600; }
+.popoverHeader span { display: block; margin-top: .18rem; color: #786c63; font-size: .75rem; line-height: 1.45; }
+.notificationHeaderRow { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: .7rem; }
+.markAllButton { display: inline-flex; align-items: center; gap: .3rem; border: 0; padding: .2rem 0; background: transparent; color: #a6440e; font-size: .72rem; font-weight: 600; cursor: pointer; }
+.markAllButton svg { width: .9rem; height: .9rem; flex: 0 0 auto; }
+.notificationList { display: grid; gap: .35rem; }
+.notificationItem { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: .7rem; width: 100%; border: 0; border-radius: .8rem; padding: .8rem; background: #fff9f1; text-align: left; cursor: pointer; }
+.notificationItem:hover { background: #ffefdf; }
+.notificationItem > div { min-width: 0; }
+.notificationItem strong, .notificationItem span { display: block; overflow-wrap: anywhere; }
+.notificationItem strong { color: #2c2723; font-size: .84rem; font-weight: 600; line-height: 1.45; }
+.notificationItem span { margin-top: .18rem; color: #786c63; font-size: .76rem; line-height: 1.5; }
+.notificationItem small { display: block; margin-top: .4rem; color: #8d7e72; font-size: .68rem; }
+.notificationItem > .notificationIcon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin: 0; border: 1px solid #ead2b3; border-radius: .65rem; background: #fbe8c7; color: #925522; }
+.notificationIcon svg { width: 1rem; height: 1rem; }
+.notificationUnread { box-shadow: inset 3px 0 0 #cf681d; }
+.notificationItem .unreadLabel { display: inline-flex; width: fit-content; margin: 0 0 .25rem; padding: .08rem .35rem; border-radius: 4px; background: #f6d6b6; color: #824317; font-size: .62rem; font-weight: 600; }
+.notificationState { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: 1rem; color: #786c63; font-size: .8rem; line-height: 1.5; }
+.notificationState > svg { flex: 0 0 auto; width: 18px; height: 18px; }
+.notificationState button { border: 0; background: transparent; color: #a6440e; font-weight: 600; cursor: pointer; }
+.notificationCount { position: absolute; top: -.3rem; right: -.3rem; min-width: 1.25rem; height: 1.25rem; display: inline-grid; place-items: center; padding: 0 .28rem; border: 2px solid #fffdfa; border-radius: 999px; background: #b42318; color: #fff; font-size: .62rem; font-weight: 600; }
+.accountSummary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .75rem; align-items: center; padding: .9rem; }
+.accountAvatar { width: 2.8rem; height: 2.8rem; font-size: .9rem; }
+.accountIdentity { min-width: 0; }
+.accountIdentity strong, .accountIdentity span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.accountIdentity strong { color: #2c2723; font-size: .9rem; font-weight: 600; }
+.accountIdentity span { margin-top: .16rem; color: #786c63; font-size: .76rem; }
+.accountIdentity .roleBadge { width: fit-content; margin-top: .45rem; border-radius: 6px; background: #fff0df; padding: .2rem .45rem; color: #9a4e1e; font-size: .68rem; font-weight: 600; }
+.divider { height: 1px; margin: .3rem .45rem; background: #e8dfd6; }
+.profileAction, .accountSignOut { width: 100%; min-height: 2.55rem; display: flex; align-items: center; gap: .65rem; border: 0; border-radius: .7rem; padding: .65rem .75rem; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; line-height: 1.4; text-align: left; background: transparent; }
+.profileAction { color: #2c2723; }
+.profileAction:hover { background: #f5f1eb; }
+.accountSignOut { color: #b3151c; }
+.accountSignOut:hover { background: #fff0ee; }
+.sidebarUtilities { display: grid; gap: .45rem; width: 100%; }
+.sidebarLink, .signOut { display: flex; align-items: center; justify-content: flex-start; gap: .7rem; width: 100%; min-height: 2.75rem; border: 1px solid; border-radius: .75rem; padding: .65rem .8rem; font: inherit; font-size: .8rem; font-weight: 600; line-height: 1.4; text-decoration: none; text-align: left; cursor: pointer; transition: background 150ms, color 150ms, border-color 150ms; }
+.sidebarLink { border-color: #ddd3c9; background: #fffdfa; color: #3d342d; }
+.sidebarLink:hover { background: #fff; border-color: #c8a68c; }
+.signOut { border-color: #e7c8c4; background: #fff5f3; color: #b3151c; }
+.signOut:hover { border-color: #cb9792; background: #ffe9e6; }
+.sidebarLink:active, .signOut:active { transform: translateY(1px); }
 @media (max-width: 640px) {
-  .accountButton {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0.24rem;
-    justify-content: center;
-  }
-
-  .accountName,
-  .chevron {
-    display: none;
-  }
-
-  .popover {
-    position: fixed;
-    top: 4.4rem;
-    right: 0.75rem;
-    left: 0.75rem;
-    width: auto;
-    max-height: calc(100vh - 5.2rem);
-  }
-}
-
-.notificationCount{position:absolute;top:-.28rem;right:-.28rem;min-width:1.25rem;height:1.25rem;display:inline-grid;place-items:center;padding:0 .28rem;border:2px solid #fff;border-radius:999px;background:#b42318;color:#fff;font-size:.64rem;font-weight:800}
-.notificationHeaderRow{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
-.markAllButton{border:0;background:transparent;color:#b3151c;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.72rem;font-weight:700}
-.markAllButton svg{width:.9rem;height:.9rem}
-.notificationUnread{background:#fff2e8;box-shadow:inset 3px 0 0 #dc0d16}
-.unreadLabel{display:inline-flex!important;width:fit-content;margin-bottom:.22rem;border-radius:999px;padding:.12rem .38rem;background:#dc0d16;color:#fff!important;font-size:.6rem!important;font-weight:800;text-transform:uppercase}
-.notificationItem{width:100%;border:0;text-align:left;cursor:pointer}
-.notificationItem small{display:block;margin-top:.3rem;color:#98a2b3;font-size:.66rem}
-.notificationState{display:flex;align-items:center;gap:.45rem;padding:1rem;color:#667085;font-size:.8rem}
-.notificationState button{border:0;background:transparent;color:#b3151c;font-weight:700;cursor:pointer}
-
-/* Stronger action affordance and visually centered notification trigger. */
-.iconButton{border-color:rgba(22,29,37,.46);background:#fff;color:#20262d}
-.iconButton:hover{border-color:#20262d;background:#fff8f1}
-.iconButton[aria-expanded="true"]{border-color:#20262d;background:#fff4e8;box-shadow:0 0 0 3px rgba(255,122,0,.1)}
-.iconButton svg{display:block;width:1.05rem;height:1.05rem}
-.notificationCount{top:-.34rem;right:-.34rem}
-.sidebarLink,.signOut{min-height:2.75rem;border-width:1px;border-style:solid;box-shadow:0 1px 0 rgba(39,54,74,.035)}
-.sidebarLink{border-color:rgba(39,54,74,.24);background:#fff}
-.signOut{border-color:rgba(179,21,28,.34);background:#fff5f5}
-.sidebarLink:active,.signOut:active{transform:translateY(1px)}
-
-.notificationItem > .notificationIcon{
-  display:grid;
-  align-items:center;
-  justify-items:center;
-  margin-top:0;
-  border:1px solid #d6b33f;
-  color:#20262d;
-}
-.notificationItem > .notificationIcon svg{
-  display:block;
-  width:1rem;
-  height:1rem;
-  margin:0;
+  .accountButton { width: 2.5rem; height: 2.5rem; padding: .24rem; justify-content: center; }
+  .accountName, .chevron { display: none; }
+  .popover { position: fixed; top: 4.1rem; right: .75rem; left: .75rem; width: auto; max-height: calc(100dvh - 5rem); }
 }

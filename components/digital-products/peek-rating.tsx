@@ -12,9 +12,10 @@ type Props = {
   size?: number
   ariaLabel?: string
   className?: string
+  language?: 'id' | 'en'
 }
 
-export function PeekRating({ value: valueProp, defaultValue = 0, onChange, readOnly = false, disabled = false, size = 30, ariaLabel = 'Rating', className = '' }: Props) {
+export function PeekRating({ value: valueProp, defaultValue = 0, onChange, readOnly = false, disabled = false, size = 30, ariaLabel = 'Rating', className = '', language = 'id' }: Props) {
   const [inner, setInner] = useState(defaultValue)
   const value = Math.min(5, Math.max(0, valueProp ?? inner))
   const interactive = !readOnly && !disabled
@@ -76,7 +77,7 @@ export function PeekRating({ value: valueProp, defaultValue = 0, onChange, readO
   useEffect(() => { const reset = () => { pressing.current = false; pointerId.current = null; hover.current = null; paint() }; window.addEventListener('blur', reset); return () => window.removeEventListener('blur', reset) }, [paint])
   return <div ref={rootRef} className={`peek-rating ${className}`} role={readOnly ? 'img' : 'radiogroup'} aria-label={readOnly ? `${value} of 5` : ariaLabel} aria-disabled={disabled || undefined} style={{ '--peek-size': `${size}px` } as CSSProperties} onKeyDown={onKeyDown}>
     <div ref={rowRef} className="peek-rating__row" onPointerEnter={measure} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={() => { if (!pressing.current) setHover(null) }}>
-      {Array.from({ length: 5 }, (_, index) => <button key={index} ref={element => { stars.current[index] = element }} type="button" className="peek-rating__star" role={readOnly ? undefined : 'radio'} aria-checked={readOnly ? undefined : value === index + 1} aria-label={readOnly ? undefined : `${index + 1} dari 5`} aria-hidden={readOnly || undefined} tabIndex={readOnly ? -1 : value === 0 ? (index === 0 ? 0 : -1) : value === index + 1 ? 0 : -1} disabled={readOnly || disabled}><span ref={element => { lifts.current[index] = element }} className="peek-rating__lift"><span ref={element => { glyphs.current[index] = element }} className="peek-rating__glyph"><Star size={size} fill="currentColor" /></span></span></button>)}
+      {Array.from({ length: 5 }, (_, index) => <button key={index} ref={element => { stars.current[index] = element }} type="button" className="peek-rating__star" role={readOnly ? undefined : 'radio'} aria-checked={readOnly ? undefined : value === index + 1} aria-label={readOnly ? undefined : `${index + 1} ${language === 'en' ? 'of' : 'dari'} 5`} aria-hidden={readOnly || undefined} tabIndex={readOnly ? -1 : value === 0 ? (index === 0 ? 0 : -1) : value === index + 1 ? 0 : -1} disabled={readOnly || disabled}><span ref={element => { lifts.current[index] = element }} className="peek-rating__lift"><span ref={element => { glyphs.current[index] = element }} className="peek-rating__glyph"><Star size={size} fill="currentColor" /></span></span></button>)}
     </div>
   </div>
 }

@@ -1,0 +1,23 @@
+.page { background: #fffcf8; }
+.page :global(.checkout-header) { align-items: center; margin-top: 22px; }
+.page :global(.checkout-header h1) { margin: 0; font-size: clamp(32px, 4vw, 46px); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
+.page :global(.checkout-header__status) { font-size: 12px; font-weight: 500; }
+.page :global(.checkout-grid) { gap: 28px; }
+.page :global(.checkout-main) { min-width: 0; gap: 24px; }
+.page :global(.checkout-order), .page :global(.checkout-payment), .page :global(.checkout-paid-state), .page :global(.checkout-customer) { min-width: 0; border-radius: 18px; }
+.page :global(.checkout-section-heading h2), .page :global(.checkout-payment__head h2) { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -.025em; line-height: 1.3; }
+.page :global(.checkout-order__items article > div) { min-width: 0; }
+.page :global(.checkout-order__items article span), .page :global(.checkout-customer > span) { font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.page :global(.checkout-order__items h3) { font-size: 15px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.page :global(.checkout-order__pricing span), .page :global(.checkout-customer > p), .page :global(.checkout-payment__message), .page :global(.checkout-payment-error) { font-size: 13px; line-height: 1.6; }
+.page :global(.checkout-customer > strong) { overflow-wrap: anywhere; font-size: 15px; font-weight: 600; }
+.page :global(.checkout-customer dt) { font-size: 11px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.page :global(.checkout-customer dd) { font-size: 12px; }
+.page :global(.checkout-payment__head small) { font-size: 11px; }
+.page :global(.checkout-paid-state h2) { font-weight: 600; letter-spacing: -.025em; }
+.page :global(.checkout-paid-state p) { font-size: 13px; }
+
+@media (max-width: 480px) {
+  .page :global(.checkout-order__items article) { flex-wrap: wrap; }
+  .page :global(.checkout-payment__actions > button) { width: 100%; }
+}

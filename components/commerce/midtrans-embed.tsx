@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { buttonVariants } from '@/components/ui/button'
 import type { SanitizedCheckout } from '@/lib/payments/types'
+import type { CommerceLanguage } from '@/lib/commerce/presentation'
 
 type SnapEmbedOptions = {
   embedId: string
@@ -27,16 +28,19 @@ export function MidtransEmbed({
   orderId,
   clientKey,
   snapScriptUrl,
+  language = 'id',
 }: {
   orderId: string
   clientKey: string
   snapScriptUrl: string
+  language?: CommerceLanguage
 }) {
+  const text = useCallback((english: string, indonesian: string) => language === 'en' ? english : indonesian, [language])
   const router = useRouter()
   const embeddedToken = useRef<string | null>(null)
   const [scriptReady, setScriptReady] = useState(false)
   const [checkout, setCheckout] = useState<SanitizedCheckout | null>(null)
-  const [message, setMessage] = useState('Klik Mulai pembayaran ketika kamu siap melanjutkan.')
+  const [message, setMessage] = useState(text('Start payment when you are ready.', 'Klik Mulai pembayaran ketika kamu siap melanjutkan.'))
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [canStart, setCanStart] = useState(true)
@@ -46,7 +50,7 @@ export function MidtransEmbed({
   const reconcile = useCallback(async () => {
     if (reconciling.current) return
     reconciling.current = true
-    setMessage('Memverifikasi pembayaran…')
+    setMessage(text('Verifying payment…', 'Memverifikasi pembayaran…'))
     setError(null)
     try {
       const response = await fetch('/api/checkout/status', {
@@ -58,30 +62,30 @@ export function MidtransEmbed({
       if (!response.ok || !('order' in payload)) throw new Error('reconcile_failed')
       setCheckout(payload)
       if (payload.order.status === 'paid') {
-        setMessage('Pembayaran terverifikasi. Pesanan sudah lunas.')
+        setMessage(text('Payment verified. Your order is paid.', 'Pembayaran terverifikasi. Pesanan sudah lunas.'))
         setCanStart(false)
         router.refresh()
       } else if (payload.payment?.status === 'failed' || payload.payment?.status === 'expired' || payload.payment?.status === 'cancelled') {
-        setMessage('Percobaan pembayaran berakhir. Kamu dapat membuat percobaan pembayaran baru.')
+        setMessage(text('This payment attempt has ended. You can try again.', 'Percobaan pembayaran berakhir. Kamu dapat membuat percobaan pembayaran baru.'))
         embeddedToken.current = null
         setCanStart(true)
       } else {
-        setMessage('Pembayaran masih menunggu konfirmasi.')
+        setMessage(text('Payment is awaiting confirmation.', 'Pembayaran masih menunggu konfirmasi.'))
       }
     } catch {
-      setError('Status pembayaran belum dapat diverifikasi. Sinkronkan status bila koneksi sudah stabil.')
-      setMessage('Pembayaran belum dapat dikonfirmasi.')
+      setError(text('Payment could not be verified. Refresh the status when your connection is stable.', 'Status pembayaran belum dapat diverifikasi. Sinkronkan status bila koneksi sudah stabil.'))
+      setMessage(text('Payment has not been confirmed yet.', 'Pembayaran belum dapat dikonfirmasi.'))
     } finally {
       reconciling.current = false
     }
-  }, [orderId, router])
+  }, [orderId, router, text])
 
   const startPayment = useCallback(async () => {
     if (starting) return
     setStarting(true)
     setCanStart(false)
     setError(null)
-    setMessage('Menyiapkan pembayaran…')
+    setMessage(text('Preparing payment…', 'Menyiapkan pembayaran…'))
     try {
       const response = await fetch('/api/checkout/start', {
         method: 'POST',
@@ -92,20 +96,20 @@ export function MidtransEmbed({
       if (!response.ok || !('order' in payload)) throw new Error('start_failed')
       setCheckout(payload)
       if (payload.order.status === 'paid') {
-        setMessage('Pembayaran sudah terverifikasi.')
+        setMessage(text('Payment verified.', 'Pembayaran sudah terverifikasi.'))
         router.refresh()
         return
       }
       if (!payload.payment?.snapToken) throw new Error('missing_snap_token')
-      setMessage(scriptReady ? 'Pilih metode pembayaran di bawah ini.' : 'Memuat layanan pembayaran…')
+      setMessage(scriptReady ? text('Choose a payment method below.', 'Pilih metode pembayaran di bawah ini.') : text('Loading payment service…', 'Memuat layanan pembayaran…'))
     } catch {
-      setError('Pembayaran belum dapat dimulai. Pastikan konfigurasi Midtrans tersedia lalu coba lagi.')
-      setMessage('Pembayaran belum siap.')
+      setError(text('Payment could not be started. Try again in a moment.', 'Pembayaran belum dapat dimulai. Pastikan konfigurasi Midtrans tersedia lalu coba lagi.'))
+      setMessage(text('Payment is not ready yet.', 'Pembayaran belum siap.'))
       setCanStart(true)
     } finally {
       setStarting(false)
     }
-  }, [orderId, router, scriptReady, starting])
+  }, [orderId, router, scriptReady, starting, text])
 
   useEffect(() => {
     const paymentStatus = checkout?.payment?.status
@@ -151,23 +155,23 @@ export function MidtransEmbed({
       embedId: 'midtrans-snap-container',
       onSuccess: () => { void reconcile() },
       onPending: () => {
-        setMessage('Pembayaran sedang diproses.')
+        setMessage(text('Payment is processing.', 'Pembayaran sedang diproses.'))
         void reconcile()
       },
       onError: () => {
-        setError('Midtrans melaporkan kendala pada pembayaran. Status akan disinkronkan otomatis; gunakan fallback manual bila diperlukan.')
+        setError(text('There was a payment problem. The status will refresh automatically; you can also refresh it below.', 'Midtrans melaporkan kendala pada pembayaran. Status akan disinkronkan otomatis; gunakan fallback manual bila diperlukan.'))
         void reconcile()
       },
       onClose: () => {
         embeddedToken.current = null
         setCanStart(true)
-        setMessage('Pembayaran ditutup tanpa mengubah status pesanan. Kamu dapat melanjutkan lagi dari halaman ini.')
+        setMessage(text('Payment closed. You can continue from this page.', 'Pembayaran ditutup tanpa mengubah status pesanan. Kamu dapat melanjutkan lagi dari halaman ini.'))
       },
     })
-  }, [checkout, reconcile, scriptReady])
+  }, [checkout, reconcile, scriptReady, text])
 
   if (!clientKey) {
-    return <p className="checkout-payment-error">Konfigurasi pembayaran belum tersedia.</p>
+    return <p className="checkout-payment-error" role="alert">{text('Payment is currently unavailable. Try again later.', 'Konfigurasi pembayaran belum tersedia.')}</p>
   }
 
   const terminalAttempt = checkout?.payment?.status === 'failed'
@@ -181,14 +185,14 @@ export function MidtransEmbed({
         data-client-key={clientKey}
         strategy="afterInteractive"
         onReady={() => setScriptReady(true)}
-        onError={() => setError('Snap.js belum dapat dimuat.')}
+        onError={() => setError(text('The payment service could not be loaded. Refresh the page and try again.', 'Snap.js belum dapat dimuat.'))}
       />
       <div className="checkout-payment__head">
         <div>
-          <span>Midtrans Snap</span>
-          <h2 id="payment-heading">Pembayaran aman di dalam Strativate</h2>
+          {language === 'id' ? <span>Midtrans Snap</span> : null}
+          <h2 id="payment-heading">{text('Payment', 'Pembayaran aman di dalam Strativate')}</h2>
         </div>
-        {checkout?.payment ? <small>Status: {checkout.payment.status}</small> : null}
+        {checkout?.payment ? <small>Status: {language === 'en' ? ({ creating: 'Preparing payment', pending: 'Pending payment', paid: 'Paid', failed: 'Payment failed', expired: 'Expired', cancelled: 'Cancelled' } as Record<string, string>)[checkout.payment.status] ?? 'Processing' : checkout.payment.status}</small> : null}
       </div>
       <p className="checkout-payment__message" role="status">{message}</p>
       {error ? <p className="checkout-payment-error" role="alert">{error}</p> : null}
@@ -201,12 +205,12 @@ export function MidtransEmbed({
             disabled={starting}
             onClick={() => void startPayment()}
           >
-            {starting ? 'Menyiapkan…' : checkout?.payment ? 'Lanjutkan pembayaran' : 'Mulai pembayaran'}
+            {starting ? text('Preparing…', 'Menyiapkan…') : checkout?.payment ? text('Continue payment', 'Lanjutkan pembayaran') : text('Start payment', 'Mulai pembayaran')}
           </button>
         ) : null}
         {checkout?.payment ? (
           <button className={buttonVariants({ variant: 'outline', size: 'marketing' })} type="button" onClick={() => void reconcile()}>
-            Sinkronkan status
+            {text('Refresh status', 'Sinkronkan status')}
           </button>
         ) : null}
       </div>

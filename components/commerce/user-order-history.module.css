@@ -1,0 +1,53 @@
+.orders { min-width: 0; gap: 20px; border-radius: 18px; container-type: inline-size; }
+.orders :global(.data-management-toolbar) { grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)); gap: 14px; }
+.orders :global(.ops-field) { min-width: 0; }
+.orders :global(.ops-field > span) { font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.orders :global(.ops-field input), .orders :global(.ops-field select) { min-width: 0; min-height: 42px; font-size: 13px; }
+.orders :global(.data-management-summary) { font-size: 13px; }
+.orders :global(.data-management-summary strong) { font-weight: 500; }
+.orders :global(.ops-table-wrap) { min-width: 0; max-width: 100%; overscroll-behavior-inline: contain; }
+.orders .table { width: 100%; min-width: 960px; }
+.orders .table th { font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.orders .table td { font-size: 12px; line-height: 1.6; vertical-align: middle; }
+.orders .table td:nth-child(3) { min-width: 180px; max-width: 270px; overflow-wrap: anywhere; }
+.orders .table td:nth-child(3) strong { font-weight: 600; }
+.orders .table td:nth-child(3) small { font-size: 11px; }
+.orders .table td:nth-child(4) { max-width: 180px; overflow-wrap: anywhere; }
+.orders .table :global(.ops-status) { white-space: normal; text-wrap: balance; }
+.empty { display: grid; justify-items: start; gap: 18px; padding: 28px; }
+.empty h3 { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.dialog { max-width: calc(100vw - 24px); border-radius: 18px; }
+.dialog :global(.ops-dialog__header > div) { min-width: 0; }
+.dialog :global(.ops-dialog__header h2) { font-size: 24px; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
+.dialog :global(.ops-dialog__header p) { font-size: 12px; line-height: 1.6; }
+.dialog :global(.ops-detail-grid) { gap: 12px; }
+.dialog :global(.ops-detail-grid > div > span) { font-size: 12px; text-transform: none; letter-spacing: 0; }
+.dialog :global(.ops-detail-grid > div > strong) { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.dialog :global(.ops-line-item) { gap: 16px; align-items: start; }
+.dialog :global(.ops-line-item > div) { min-width: 0; }
+.dialog :global(.ops-line-item strong) { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.dialog :global(.ops-line-item span) { font-size: 11px; line-height: 1.6; }
+.dialog .dialogLabel { color: #83746a; font-size: 12px; font-weight: 500; }
+
+@container (max-width: 760px) {
+  .orders :global(.data-management-toolbar) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .orders :global(.ops-field--wide) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  .orders { padding: 16px; }
+  .orders :global(.data-management-toolbar) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .orders :global(.ops-field--wide) { grid-column: 1 / -1; }
+  .orders :global(.ops-table-wrap) { border: 0; overflow: visible; }
+  .orders .table { display: block; min-width: 0; }
+  .orders .table thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .orders .table tbody { display: grid; gap: 14px; }
+  .orders .table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; padding: 16px; border: 1px solid #e9dfd6; border-radius: 14px; background: #fffdfb; }
+  .orders .table td { display: grid; min-width: 0; max-width: none; min-height: 0; gap: 3px; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .orders .table td::before { content: attr(data-label); color: #88776b; font-size: 10px; font-weight: 500; }
+  .orders .table td:nth-child(3), .orders .table td:nth-child(4), .orders .table td:nth-child(7), .orders .table td[colspan] { grid-column: 1 / -1; min-width: 0; max-width: none; }
+  .orders .table td[colspan]::before { content: none; }
+  .orders .table :global(.user-order-action-group) { gap: 8px; }
+  .dialog :global(.ops-detail-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dialog :global(.ops-line-item) { flex-wrap: wrap; }
+}

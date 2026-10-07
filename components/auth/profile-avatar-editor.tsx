@@ -6,13 +6,17 @@ import { useEffect, useRef, useState, type DragEvent } from 'react'
 
 import { DirectImageCropper } from '@/components/admin/direct-image-cropper'
 import { cropRectFromJson, type CropOutput, type NormalizedCropRect } from '@/lib/media/image-crop'
+import { accountMessage, type AccountLanguage } from '@/lib/auth/account-presentation'
 
 const MAX_BYTES = 8 * 1024 * 1024
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 type Metadata = { hasAvatar: boolean; hasSource: boolean; crop: unknown }
 
-export function ProfileAvatarEditor({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: (url: string, cleanupWarning?: string | null) => void }) {
+export function ProfileAvatarEditor({ open, onClose, onSaved, language = 'id' }: { open: boolean; onClose: () => void; onSaved: (url: string, cleanupWarning?: string | null) => void; language?: AccountLanguage }) {
+  const en = language === 'en'
+  const text = (english: string, indonesian: string) => en ? english : indonesian
+  const photoError = (message: string) => accountMessage(message, language, 'Your photo could not be saved. Check your connection and try again.')
   const dialogRef = useRef<HTMLDialogElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [newSourceFile, setNewSourceFile] = useState<File | null>(null)
@@ -67,8 +71,8 @@ export function ProfileAvatarEditor({ open, onClose, onSaved }: { open: boolean;
   function choose(next: File | null) {
     setError('')
     if (!next) return
-    if (!ALLOWED.has(next.type)) { setError('Format foto harus JPG, PNG, atau WebP.'); return }
-    if (next.size <= 0 || next.size > MAX_BYTES) { setError('Ukuran foto maksimal 8 MB.'); return }
+    if (!ALLOWED.has(next.type)) { setError(text('Choose a JPG, PNG, or WebP photo.', 'Format foto harus JPG, PNG, atau WebP.')); return }
+    if (next.size <= 0 || next.size > MAX_BYTES) { setError(text('Choose a photo no larger than 8 MB.', 'Ukuran foto maksimal 8 MB.')); return }
     setNewSourceFile(next)
     setEditableSourceFile(next)
     setCropInitial(null)
@@ -93,7 +97,7 @@ export function ProfileAvatarEditor({ open, onClose, onSaved }: { open: boolean;
       setEditableSourceFile(source)
       setCropSourceFile(source)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Sumber asli foto profil tidak tersedia.')
+      setError(photoError(caught instanceof Error ? caught.message : 'Sumber asli foto profil tidak tersedia.'))
     } finally {
       setBusy(false)
     }
@@ -118,14 +122,14 @@ export function ProfileAvatarEditor({ open, onClose, onSaved }: { open: boolean;
       const response = await fetch('/api/profile/avatar', { method: 'POST', body: form })
       const body = await response.json() as { avatarUrl?: string; cleanupWarning?: string | null; error?: string }
       if (!response.ok || !body.avatarUrl) throw new Error(body.error || 'Foto profil belum dapat disimpan.')
-      onSaved(body.avatarUrl, body.cleanupWarning)
+      onSaved(body.avatarUrl, body.cleanupWarning ? accountMessage(body.cleanupWarning, language, 'Your photo was saved.') : null)
       setNewSourceFile(null)
       setEditableSourceFile(null)
       setCrop(null)
       setPreview('')
       onClose()
     } catch (value) {
-      setError(value instanceof Error ? value.message : 'Foto profil belum dapat disimpan.')
+      setError(photoError(value instanceof Error ? value.message : 'Foto profil belum dapat disimpan.'))
     } finally {
       setBusy(false)
     }
@@ -134,14 +138,14 @@ export function ProfileAvatarEditor({ open, onClose, onSaved }: { open: boolean;
   return <>
     <dialog ref={dialogRef} className="avatar-editor-dialog" aria-labelledby="avatar-editor-title" onCancel={event => { event.preventDefault(); if (!busy) onClose() }} onClose={onClose}>
       <div className="avatar-editor-card">
-        <header><div><p className="kicker">Foto profil</p><h3 id="avatar-editor-title">Atur foto profil</h3><p>JPG, PNG, atau WebP · maksimal 8 MB. Hasil akhir disimpan 512×512.</p></div><button type="button" className="ops-icon-button" aria-label="Tutup editor foto" title="Tutup" disabled={busy} onClick={onClose}><X aria-hidden="true" /></button></header>
-        {preview ? <div className="avatar-crop-result"><img src={preview} alt="Pratinjau crop foto profil" /><button type="button" className="button button-outline button-compact" onClick={() => setCropSourceFile(editableSourceFile)} disabled={!editableSourceFile || busy}><Crop aria-hidden="true" /> Adjust crop</button></div> : <button type="button" className={'avatar-dropzone ' + (dragging ? 'is-dragging' : '')} onClick={() => inputRef.current?.click()} onDragEnter={event => { event.preventDefault(); setDragging(true) }} onDragOver={event => event.preventDefault()} onDragLeave={() => setDragging(false)} onDrop={drop}><UploadCloud aria-hidden="true" /><strong>Klik atau tarik foto ke sini</strong><span>Gunakan foto wajah yang jelas agar mudah dikenali.</span></button>}
+        <header><div>{!en ? <p className="kicker">Foto profil</p> : null}<h3 id="avatar-editor-title">{text('Edit profile photo', 'Atur foto profil')}</h3><p>{text('JPG, PNG, or WebP · maximum 8 MB', 'JPG, PNG, atau WebP · maksimal 8 MB. Hasil akhir disimpan 512×512.')}</p></div><button type="button" className="ops-icon-button" aria-label={text('Close photo editor', 'Tutup editor foto')} title={text('Close', 'Tutup')} disabled={busy} onClick={onClose}><X aria-hidden="true" /></button></header>
+        {preview ? <div className="avatar-crop-result"><img src={preview} alt={text('Profile photo preview', 'Pratinjau crop foto profil')} /><button type="button" className="button button-outline button-compact" onClick={() => setCropSourceFile(editableSourceFile)} disabled={!editableSourceFile || busy}><Crop aria-hidden="true" /> Adjust crop</button></div> : <button type="button" className={'avatar-dropzone ' + (dragging ? 'is-dragging' : '')} disabled={busy} onClick={() => inputRef.current?.click()} onDragEnter={event => { event.preventDefault(); setDragging(true) }} onDragOver={event => event.preventDefault()} onDragLeave={() => setDragging(false)} onDrop={drop}><UploadCloud aria-hidden="true" /><strong>{text('Click or drag a photo here', 'Klik atau tarik foto ke sini')}</strong><span>{text('Use a clear photo of your face.', 'Gunakan foto wajah yang jelas agar mudah dikenali.')}</span></button>}
         {hasAvatar && !preview ? <div className="avatar-existing-actions">
-          {hasSource ? <button type="button" className="button button-outline button-compact" onClick={() => void adjustExisting()} disabled={busy}><Crop aria-hidden="true" /> Adjust existing crop</button> : <p>Original source is unavailable for this existing image. Replace the image once to enable future crop adjustments.</p>}
+          {hasSource ? <button type="button" className="button button-outline button-compact" onClick={() => void adjustExisting()} disabled={busy}><Crop aria-hidden="true" /> {en ? 'Adjust crop' : 'Adjust existing crop'}</button> : <p>{en ? 'Replace your photo to adjust its crop.' : 'Original source is unavailable for this existing image. Replace the image once to enable future crop adjustments.'}</p>}
         </div> : null}
         <input ref={inputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { choose(event.target.files?.[0] ?? null); event.target.value = '' }} />
         {error ? <p className="form-error" role="alert">{error}</p> : null}
-        <footer><button type="button" className="button button-outline" disabled={busy} onClick={() => preview ? inputRef.current?.click() : onClose()}>{preview ? 'Ganti foto' : 'Batal'}</button><button type="button" className="button button-primary" disabled={!crop || busy} onClick={() => void save()}><Save aria-hidden="true" />{busy ? 'Menyimpan…' : 'Simpan foto'}</button></footer>
+        <footer><button type="button" className="button button-outline" disabled={busy} onClick={() => preview ? inputRef.current?.click() : onClose()}>{preview ? text('Replace photo', 'Ganti foto') : text('Cancel', 'Batal')}</button><button type="button" className="button button-primary" disabled={!crop || busy} onClick={() => void save()}><Save aria-hidden="true" />{busy ? text('Saving…', 'Menyimpan…') : text('Save photo', 'Simpan foto')}</button></footer>
       </div>
     </dialog>
     <DirectImageCropper

@@ -8,9 +8,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
 function maskedEmail(email: string | undefined) {
-  if (!email) return 'Akun Strativate'
+  if (!email) return 'Strativate account'
   const [local, domain] = email.split('@')
-  if (!domain) return 'Akun Strativate'
+  if (!domain) return 'Strativate account'
   const visible = local.slice(0, Math.min(2, local.length))
   return `${visible}***@${domain}`
 }

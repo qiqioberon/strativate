@@ -1,0 +1,60 @@
+.calendar {
+  min-width: 0;
+  width: 100%;
+  gap: 20px;
+  color: #28221e;
+}
+
+.calendar :global(.role-page-title) { margin: 0; }
+.calendar :global(.role-page-title) h2 { font-size: clamp(28px, 3vw, 36px); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; }
+.calendar :global(.calendar-connection-card) { padding: 18px 20px; gap: 14px; border: 1px solid #e9e0d8; border-radius: 12px; background: #fffdf9; }
+.calendar :global(.calendar-connection-card__identity) { min-width: 0; gap: 12px; }
+.calendar :global(.calendar-connection-card__identity) > div { min-width: 0; }
+.calendar :global(.calendar-connection-card__identity) strong { font-size: 14px; font-weight: 600; }
+.calendar :global(.calendar-connection-card__identity) span { font-size: 12px; overflow-wrap: anywhere; }
+.calendar :global(.calendar-connection-card) :global(.button-row) { flex-wrap: wrap; }
+.calendar :global(.calendar-connection-card) :global(.button) { min-height: 38px; padding: 8px 12px; font-size: 12px; font-weight: 550; border-radius: 8px; }
+.calendar :global(.calendar-card) { border: 1px solid #e9e0d8; border-radius: 12px; box-shadow: 0 6px 24px #59371705; }
+.calendar :global(.calendar-toolbar) { flex-wrap: wrap; align-items: center; padding: 16px; gap: 14px; border-color: #ece4dd; }
+.calendar :global(.calendar-nav) { min-width: 0; flex: 1 1 300px; gap: 6px; }
+.calendar :global(.calendar-nav) button { min-height: 36px; border-radius: 7px; font-size: 12px; }
+.calendar :global(.calendar-period) { min-width: 0; margin-left: 8px; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
+.calendar :global(.calendar-view-switch) { padding: 3px; border-radius: 8px; background: #f6f0e9; }
+.calendar :global(.calendar-view-switch) button { padding: 7px 13px; font-size: 12px; font-weight: 550; border-radius: 5px; }
+.calendar :global(.calendar-view-switch) :global(.active) { background: #fff; color: #a35924; box-shadow: 0 1px 4px #5d361416; }
+.calendar :global(.calendar-filter-row) { flex-wrap: wrap; padding: 8px 16px; gap: 8px 14px; border-color: #ece4dd; }
+.calendar :global(.calendar-source-controls) { flex-wrap: wrap; min-width: 0; gap: 8px 16px; }
+.calendar :global(.calendar-source-toggle) { flex-wrap: wrap; min-width: 0; min-height: 30px; font-size: 12px; }
+.calendar :global(.calendar-source-toggle) small { font-size: 10px; }
+.calendar :global(.calendar-legend-trigger) { min-height: 34px; font-size: 12px; }
+.calendar :global(.calendar-weekday-header) { padding-block: 12px; font-size: 11px; background: #fffdf9; }
+.calendar :global(.calendar-agenda-tools) :global(.calendar-search) { max-width: 430px; }
+.calendar :global(.calendar-search) input { font-size: 13px; }
+.calendar :global(.calendar-agenda-content) > strong { font-size: 14px; }
+.calendar :global(.calendar-agenda-content) > span,
+.calendar :global(.calendar-agenda-row) > time { font-size: 12px; }
+.calendar :global(.calendar-warning),
+.calendar :global(.calendar-error),
+.calendar :global(.calendar-empty),
+.calendar :global(.calendar-loading) { font-size: 13px; }
+.calendar :global(.calendar-dialog__head) h3 { font-weight: 650; }
+.calendar :global(.calendar-dialog__actions) :global(.button) { font-size: 12px; font-weight: 550; }
+.calendar button:focus-visible { outline: 2px solid #b96726; outline-offset: 2px; }
+
+@media (max-width: 600px) {
+  .calendar { gap: 16px; }
+  .calendar :global(.calendar-connection-card) { padding: 16px; }
+  .calendar :global(.calendar-connection-card) :global(.button-row) { width: 100%; }
+  .calendar :global(.calendar-toolbar) { padding: 12px; gap: 10px; }
+  .calendar :global(.calendar-nav) { flex-basis: 100%; flex-wrap: wrap; }
+  .calendar :global(.calendar-period) { flex-basis: 100%; margin: 5px 0 0; font-size: 16px; }
+  .calendar :global(.calendar-view-switch) { width: 100%; display: flex; }
+  .calendar :global(.calendar-view-switch) button { flex: 1; }
+  .calendar :global(.calendar-filter-row) { padding: 8px 12px; }
+  .calendar :global(.calendar-source-controls) { flex-basis: 100%; gap: 5px 12px; }
+  .calendar :global(.calendar-source-toggle) { font-size: 11px; }
+  .calendar :global(.calendar-source-toggle) small { flex-basis: 100%; padding-left: 24px; }
+  .calendar :global(.calendar-agenda-row) { padding: 12px; }
+  .calendar :global(.calendar-agenda-tools) :global(.calendar-search) { flex-basis: 100%; max-width: none; }
+  .calendar :global(.calendar-weekday-header) { font-size: 10px; }
+}

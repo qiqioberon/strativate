@@ -13,6 +13,7 @@ type Props = {
   onPageChange: (page: number) => void
   disabled?: boolean
   label?: string
+  language?: 'id' | 'en'
 }
 
 function pageItems(page: number, totalPages: number): PageItem[] {
@@ -28,7 +29,8 @@ function pageItems(page: number, totalPages: number): PageItem[] {
   return items
 }
 
-export function TablePagination({ page, pageSize, totalItems, onPageChange, disabled = false, label = 'Pagination' }: Props) {
+export function TablePagination({ page, pageSize, totalItems, onPageChange, disabled = false, label = 'Pagination', language = 'id' }: Props) {
+  const english = language === 'en'
   const totalPages = Math.ceil(totalItems / pageSize)
   if (totalPages === 0) return null
 
@@ -37,14 +39,14 @@ export function TablePagination({ page, pageSize, totalItems, onPageChange, disa
 
   return <nav className={styles.pagination} aria-label={label} data-testid="table-pagination">
     <div className={styles.controls}>
-      <button type="button" className={`button button-outline ${styles.edgeButton}`} disabled={disabled || currentPage === 0} onClick={() => onPageChange(currentPage - 1)} aria-label="Halaman sebelumnya"><ChevronLeft size={14} aria-hidden="true" /><span>Sebelumnya</span></button>
+      <button type="button" className={`button button-outline ${styles.edgeButton}`} disabled={disabled || currentPage === 0} onClick={() => onPageChange(currentPage - 1)} aria-label={english ? 'Previous page' : 'Halaman sebelumnya'}><ChevronLeft size={14} aria-hidden="true" /><span>{english ? 'Previous' : 'Sebelumnya'}</span></button>
       <div className={styles.pages}>
         {items.map((item, index) => item === 'ellipsis'
           ? <span className={styles.ellipsis} aria-hidden="true" key={`ellipsis-${index}`}>…</span>
-          : <button type="button" className={`${styles.pageButton} ${item === currentPage ? styles.activePage : ''}`} aria-current={item === currentPage ? 'page' : undefined} aria-label={`Halaman ${item + 1}`} disabled={disabled} onClick={() => onPageChange(item)} key={item}>{item + 1}</button>)}
+          : <button type="button" className={`${styles.pageButton} ${item === currentPage ? styles.activePage : ''}`} aria-current={item === currentPage ? 'page' : undefined} aria-label={`${english ? 'Page' : 'Halaman'} ${item + 1}`} disabled={disabled} onClick={() => onPageChange(item)} key={item}>{item + 1}</button>)}
       </div>
-      <button type="button" className={`button button-outline ${styles.edgeButton}`} disabled={disabled || currentPage >= totalPages - 1} onClick={() => onPageChange(currentPage + 1)} aria-label="Halaman berikutnya"><span>Berikutnya</span><ChevronRight size={14} aria-hidden="true" /></button>
+      <button type="button" className={`button button-outline ${styles.edgeButton}`} disabled={disabled || currentPage >= totalPages - 1} onClick={() => onPageChange(currentPage + 1)} aria-label={english ? 'Next page' : 'Halaman berikutnya'}><span>{english ? 'Next' : 'Berikutnya'}</span><ChevronRight size={14} aria-hidden="true" /></button>
     </div>
-    <span className={styles.summary}>Halaman {currentPage + 1} dari {totalPages}</span>
+    <span className={styles.summary}>{english ? `Page ${currentPage + 1} of ${totalPages}` : `Halaman ${currentPage + 1} dari ${totalPages}`}</span>
   </nav>
 }

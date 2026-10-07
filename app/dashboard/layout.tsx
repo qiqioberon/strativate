@@ -6,7 +6,7 @@ import { requireAccount } from '@/lib/auth/server'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<BrandedRouteLoading label="Menyiapkan dashboard" />}>
+    <Suspense fallback={<BrandedRouteLoading label="Preparing your dashboard" />}>
       <DashboardAccountBoundary>{children}</DashboardAccountBoundary>
     </Suspense>
   )

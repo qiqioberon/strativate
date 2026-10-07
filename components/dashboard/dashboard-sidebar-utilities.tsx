@@ -5,14 +5,14 @@ import { Home } from 'lucide-react'
 import { SignOut } from '@/components/auth/sign-out'
 import styles from './dashboard-shared.module.css'
 
-export function DashboardSidebarUtilities() {
+export function DashboardSidebarUtilities({ language = 'id' }: { language?: 'id' | 'en' } = {}) {
   return (
     <div className={styles.sidebarUtilities}>
       <Link className={styles.sidebarLink} href="/">
         <Home aria-hidden="true" />
-        Kembali ke Beranda
+        {language === 'en' ? 'Back to Home' : 'Kembali ke Beranda'}
       </Link>
-      <SignOut className={styles.signOut} withIcon />
+      <SignOut className={styles.signOut} withIcon language={language} />
     </div>
   )
 }

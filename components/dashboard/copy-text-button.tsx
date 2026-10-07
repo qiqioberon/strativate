@@ -5,15 +5,19 @@ import { useEffect, useRef, useState } from 'react'
 
 export function CopyTextButton({
   value,
-  label = 'Salin',
-  copiedLabel = 'Disalin',
+  label,
+  copiedLabel,
+  language = 'id',
   className = '',
 }: {
   value: string
   label?: string
   copiedLabel?: string
   className?: string
+  language?: 'id' | 'en'
 }) {
+  const actionLabel = label ?? (language === 'en' ? 'Copy' : 'Salin')
+  const successLabel = copiedLabel ?? (language === 'en' ? 'Copied' : 'Disalin')
   const [copied, setCopied] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -37,12 +41,12 @@ export function CopyTextButton({
       type="button"
       className={`copy-action ${className}`.trim()}
       onClick={() => void copy()}
-      aria-label={copied ? copiedLabel : label}
-      title={copied ? copiedLabel : label}
+      aria-label={copied ? successLabel : actionLabel}
+      title={copied ? successLabel : actionLabel}
       data-copy-state={copied ? 'copied' : 'idle'}
     >
       {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-      <span>{copied ? copiedLabel : label}</span>
+      <span>{copied ? successLabel : actionLabel}</span>
     </button>
   )
 }

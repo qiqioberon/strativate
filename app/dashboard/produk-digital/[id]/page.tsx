@@ -6,6 +6,7 @@ import { ProtectedContentViewer } from '@/components/digital-products/protected-
 import { RatingFeedback } from '@/components/digital-products/rating-feedback'
 import { getOwnedDigitalProduct } from '@/lib/commerce/server'
 import { isDigitalProductsEnabled } from '@/lib/features'
+import styles from '../../mentee-dashboard.module.css'
 
 export default async function ProtectedDigitalProductPage({ params }: { params: Promise<{ id: string }> }) {
   if (!isDigitalProductsEnabled()) redirect('/dashboard')
@@ -14,25 +15,24 @@ export default async function ProtectedDigitalProductPage({ params }: { params: 
   if (!product) notFound()
 
   return (
-    <main className="protected-content-page">
+    <main className={`protected-content-page ${styles.reader}`} lang="en">
       <header className="protected-content-header">
-        <Link href="/dashboard"><ArrowLeft aria-hidden="true" size={17} /> Kembali ke dashboard</Link>
+        <Link href="/dashboard"><ArrowLeft aria-hidden="true" size={17} /> Back to dashboard</Link>
         <div>
-          <span><ShieldCheck aria-hidden="true" size={16} /> Produk Digital Saya</span>
           <h1>{product.name_snapshot}</h1>
-          <p>{product.contentType === 'video' ? 'Video' : product.contentType === 'pdf' ? 'PDF' : 'Materi digital'} · akses khusus akun pembeli</p>
+          <p>{product.contentType === 'video' ? 'Video' : product.contentType === 'pdf' ? 'PDF' : 'Digital material'} · Purchased access</p>
         </div>
       </header>
       {product.contentReady ? (
-        <ProtectedContentViewer productId={product.product_id} title={product.name_snapshot} />
+        <ProtectedContentViewer productId={product.product_id} title={product.name_snapshot} language="en" />
       ) : (
         <section className="protected-content-state">
           <ShieldCheck aria-hidden="true" />
-          <h2>Materi sedang disiapkan</h2>
-          <p>Pembelian Anda sudah tercatat, tetapi file materi belum tersedia untuk dibuka. Silakan coba lagi setelah administrator menyelesaikan kontennya.</p>
+          <h2>Material is being prepared</h2>
+          <p>Your purchase is confirmed. Please check back when the material is available.</p>
         </section>
       )}
-      <RatingFeedback productId={product.product_id} productName={product.name_snapshot} />
+      <RatingFeedback productId={product.product_id} productName={product.name_snapshot} language="en" />
     </main>
   )
 }

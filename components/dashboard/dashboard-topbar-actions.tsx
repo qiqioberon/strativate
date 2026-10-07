@@ -8,11 +8,12 @@ import { SignOut } from '@/components/auth/sign-out'
 import { displayName } from '@/lib/auth/rules'
 import { createClient } from '@/lib/supabase/client'
 import type { AppRole, Notification } from '@/lib/supabase/database.types'
+import { notificationDate, presentNotification } from '@/lib/notifications/presentation'
 import styles from './dashboard-shared.module.css'
 import './dashboard-layout-overrides.module.css'
 
 type Panel = 'notification' | 'account' | null
-const roleLabels: Record<AppRole, string> = { admin:'Admin',mentor:'Mentor',mentee:'User' }
+const roleLabels: Record<AppRole, string> = { admin:'Admin',mentor:'Mentor',mentee:'Mentee' }
 
 export function DashboardTopbarActions({
   role,
@@ -31,7 +32,7 @@ export function DashboardTopbarActions({
   const [notificationError,setNotificationError]=useState('')
   const [unreadCount,setUnreadCount]=useState(0)
   const rootRef=useRef<HTMLDivElement>(null)
-  const name=displayName(account)
+  const name=displayName(account,'en')
 
   const loadNotifications=useCallback(async()=>{
     setNotificationLoading(true);setNotificationError('')
@@ -40,7 +41,7 @@ export function DashboardTopbarActions({
       client.from('notifications').select('id',{count:'exact',head:true}).is('read_at',null),
     ])
     if(recent.error||countResult.error){
-      setNotificationError('Notifikasi belum dapat dimuat.')
+      setNotificationError('Notifications could not be loaded.')
       setNotificationLoading(false)
       return
     }
@@ -90,25 +91,25 @@ export function DashboardTopbarActions({
   }
 
   return <div className={styles.topbarActions} ref={rootRef}>
-    <button type="button" className={styles.iconButton} aria-label="Buka notifikasi" aria-haspopup="dialog" aria-expanded={openPanel==='notification'} aria-controls="dashboard-notification-popover" onClick={()=>toggle('notification')}>
+    <button type="button" className={styles.iconButton} aria-label={`Open notifications${unreadCount ? `, ${unreadCount} unread` : ''}`} aria-haspopup="dialog" aria-expanded={openPanel==='notification'} aria-controls="dashboard-notification-popover" onClick={()=>toggle('notification')}>
       <Bell aria-hidden="true"/>
       {unreadCount?<span className={styles.notificationCount} aria-hidden="true">{unreadCount>99?'99+':unreadCount}</span>:null}
     </button>
 
-    <button type="button" className={styles.accountButton} aria-label="Buka menu akun" aria-haspopup="dialog" aria-expanded={openPanel==='account'} aria-controls="dashboard-account-popover" onClick={()=>toggle('account')}>
+    <button type="button" className={styles.accountButton} aria-label="Open account menu" aria-haspopup="dialog" aria-expanded={openPanel==='account'} aria-controls="dashboard-account-popover" onClick={()=>toggle('account')}>
       <ProfileAvatar account={account} className={styles.triggerAvatar}/><span className={styles.accountName}>{name}</span><ChevronDown className={styles.chevron} aria-hidden="true"/>
     </button>
 
-    {openPanel==='notification'?<section id="dashboard-notification-popover" className={styles.popover} role="dialog" aria-label="Notifikasi">
-      <div className={styles.popoverHeader}><div className={styles.notificationHeaderRow}><div><strong>Notifikasi baru</strong><span>{unreadCount?unreadCount+' belum dibaca':'Semua sudah dibaca'}</span></div>{unreadCount?<button type="button" className={styles.markAllButton} onClick={()=>void markAllRead()}><CheckCheck aria-hidden="true"/>Tandai semua dibaca</button>:null}</div></div>
-      {notificationLoading?<p className={styles.notificationState}><Loader2 className="spin" aria-hidden="true"/>Memuat notifikasi…</p>:notificationError?<div className={styles.notificationState} role="alert">{notificationError}<button type="button" onClick={()=>void loadNotifications()}>Coba lagi</button></div>:notifications.length?<div className={styles.notificationList}>{notifications.map(item=><button type="button" className={styles.notificationItem+' '+styles.notificationUnread} key={item.id} onClick={()=>void openNotification(item)} aria-label={item.title+', belum dibaca'}><span className={styles.notificationIcon}><Bell aria-hidden="true"/></span><div><span className={styles.unreadLabel}>Baru</span><strong>{item.title}</strong><span>{item.message}</span><small>{new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.created_at))}</small></div></button>)}</div>:<div className={styles.notificationState}><Bell aria-hidden="true"/><span>Tidak ada notifikasi baru. Riwayat tetap tersedia di halaman Notifikasi.</span></div>}
+    {openPanel==='notification'?<section id="dashboard-notification-popover" className={styles.popover} role="dialog" aria-label="Notifications">
+      <div className={styles.popoverHeader}><div className={styles.notificationHeaderRow}><div><strong>New notifications</strong><span>{unreadCount?unreadCount+' unread':"You're all caught up"}</span></div>{unreadCount?<button type="button" className={styles.markAllButton} onClick={()=>void markAllRead()}><CheckCheck aria-hidden="true"/>Mark all as read</button>:null}</div></div>
+      {notificationLoading?<p className={styles.notificationState}><Loader2 className="spin" aria-hidden="true"/>Loading notifications…</p>:notificationError?<div className={styles.notificationState} role="alert">{notificationError}<button type="button" onClick={()=>void loadNotifications()}>Try again</button></div>:notifications.length?<div className={styles.notificationList}>{notifications.map(item=>{const content=presentNotification(item);return <button type="button" className={styles.notificationItem+' '+styles.notificationUnread} key={item.id} onClick={()=>void openNotification(item)} aria-label={content.title+', unread'}><span className={styles.notificationIcon}><Bell aria-hidden="true"/></span><div><span className={styles.unreadLabel}>New</span><strong>{content.title}</strong><span>{content.message}</span><small>{notificationDate(item.created_at)}</small></div></button>})}</div>:<div className={styles.notificationState}><Bell aria-hidden="true"/><span>No new notifications. Your notification history is still available.</span></div>}
     </section>:null}
 
-    {openPanel==='account'?<section id="dashboard-account-popover" className={styles.popover} role="dialog" aria-label="Informasi akun">
-      <div className={styles.accountSummary}><ProfileAvatar account={account} className={styles.accountAvatar}/><div className={styles.accountIdentity}><strong>{name}</strong><span>{account.email||'Email akun tidak tersedia'}</span><span className={styles.roleBadge}>{roleLabels[role]}</span></div></div>
+    {openPanel==='account'?<section id="dashboard-account-popover" className={styles.popover} role="dialog" aria-label="Account information">
+      <div className={styles.accountSummary}><ProfileAvatar account={account} className={styles.accountAvatar}/><div className={styles.accountIdentity}><strong>{name}</strong><span>{account.email||'Account email unavailable'}</span><span className={styles.roleBadge}>{roleLabels[role]}</span></div></div>
       <div className={styles.divider}/>
-      <button type="button" className={styles.profileAction} onClick={()=>{setOpenPanel(null);onEditProfile()}}><PencilLine aria-hidden="true"/>Edit Profil</button>
-      <div className={styles.divider}/><SignOut className={styles.accountSignOut} withIcon/>
+      <button type="button" className={styles.profileAction} onClick={()=>{setOpenPanel(null);onEditProfile()}}><PencilLine aria-hidden="true"/>Edit profile</button>
+      <div className={styles.divider}/><SignOut className={styles.accountSignOut} withIcon language="en"/>
     </section>:null}
   </div>
 }

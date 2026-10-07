@@ -1,0 +1,22 @@
+.history { display: grid; gap: 20px; min-width: 0; }
+.history :global(.notification-history__filters) { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid #e8dfd6; }
+.history :global(.ops-field) { flex: 0 1 180px; }
+.history :global(.ops-field select) { height: 40px; background: #fffdfa; }
+.history :global(.notification-history__summary) { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 0 0 10px; margin-left: auto; font-size: .76rem; }
+.history :global(.notification-history__summary strong), .history :global(.notification-history__summary span) { font-size: .76rem; font-weight: 500; }
+.history :global(.notification-history__filters) > :global(.button) { min-height: 40px; padding: 9px 12px; font-size: .75rem; }
+.history :global(.notification-history__title-row) > div { min-width: 0; }
+.history :global(.notification-history__title-row h3) { margin: 4px 0 0; font-size: .92rem; line-height: 1.5; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.history :global(.notification-category) { margin: 0; padding: 0; border-radius: 0; background: transparent; font-size: .7rem; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.history :global(.notification-history__title-row time) { font-size: .7rem; }
+.history :global(.notification-history__body) { gap: 10px; }
+.history :global(.notification-history__body) > p { margin: 0; font-size: .8rem; line-height: 1.6; overflow-wrap: anywhere; }
+.history :global(.notification-history__actions) { gap: 8px; }
+.itemAction { min-height: 32px; padding: 6px 10px; border: 1px solid #dfd4ca; background: #fffdfa; font-size: .72rem; line-height: 1.4; font-weight: 500; }
+.itemAction svg, .readStatus svg { width: 14px; height: 14px; }
+.readStatus { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 6px; background: #f1f0e9; color: #626953; font-size: .72rem; }
+@media (max-width: 700px) {
+  .history :global(.notification-history__title-row) { flex-direction: column; gap: 5px; }
+  .history :global(.notification-history__summary) { margin-left: 0; flex: 1 1 100%; padding-bottom: 0; }
+  .history :global(.ops-field) { flex: 1 1 140px; }
+}

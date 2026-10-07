@@ -1,0 +1,53 @@
+.stack {
+  display: grid;
+  width: min(100%, 800px);
+  min-width: 0;
+  margin-inline: auto;
+  gap: 20px;
+}
+
+.stack :global(.account-profile) {
+  min-width: 0;
+  margin: 0;
+  gap: 24px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid #e9dfd6;
+  border-radius: 18px;
+  box-shadow: 0 3px 14px #44302305;
+}
+
+.stack :global(.account-profile__header h2) {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.stack :global(.profile-avatar-edit-row strong) { font-size: 14px; font-weight: 600; }
+.stack :global(.profile-avatar-edit-trigger > .profile-avatar-fallback) { position: static; width: 76px; height: 76px; border: 0; border-radius: 50%; background: #f7e3d5; color: #99502e; font-size: 23px; font-weight: 600; }
+.stack :global(.profile-avatar-edit-trigger):focus-visible { outline: 3px solid #ed81214d; outline-offset: 4px; }
+.stack :global(.avatar-editor-card > header h3) { font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+.stack :global(.avatar-editor-card > header p:last-child), .stack :global(.avatar-dropzone span), .stack :global(.avatar-existing-actions p) { font-size: 12px; line-height: 1.6; }
+.stack :global(.avatar-dropzone strong) { font-size: 14px; font-weight: 600; }
+.stack :global(.account-profile__details) { gap: 18px 28px; }
+.stack :global(.account-profile__details > div) { padding: 0; border: 0; border-radius: 0; background: none; gap: 6px; }
+.stack :global(.account-profile__details dt) { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; color: #867870; }
+.stack :global(.account-profile__details dd) { font-size: 14px; font-weight: 600; line-height: 1.6; }
+.stack :global(.profile-whatsapp-reminder) { display: grid; gap: 5px; padding: 14px 16px; background: #fff8e9; }
+.stack :global(.profile-whatsapp-reminder strong) { font-size: 13px; font-weight: 600; }
+.stack :global(.profile-whatsapp-reminder span) { font-size: 12px; line-height: 1.6; }
+.stack :global(.account-profile__form), .stack :global(.account-security__form) { max-width: none; gap: 16px; }
+.stack :global(.auth-form label), .stack :global(.password-field > label) { font-size: 13px; font-weight: 600; }
+.stack :global(.auth-form input) { min-width: 0; font-size: 14px; }
+.stack :global(.profile-field-optional) { font-size: 11px; }
+.stack :global(.account-security__heading small) { font-size: 12px; line-height: 1.6; }
+.stack :global(.account-security__heading strong) { font-size: 14px; }
+.stack :global(.account-profile__saved) { font-size: 13px; font-weight: 500; }
+.stack :global(.button-row) { flex-wrap: wrap; gap: 10px; }
+.stack :global(.button-row .button) { min-height: 42px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+.stack :global(.form-error), .stack :global(.form-success) { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+
+@media (max-width: 620px) {
+  .stack { gap: 16px; }
+  .stack :global(.account-profile__details) { grid-template-columns: minmax(0, 1fr); }
+}
