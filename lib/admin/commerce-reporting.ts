@@ -1,3 +1,6 @@
+import { sanitizeSalesExportText } from './sales-export'
+import { itemKindLabel } from './sales-reporting'
+
 export type AdminCommerceItem = {
   id: string
   commerceItemId: string
@@ -56,7 +59,6 @@ export type AdminCommerceReport = {
 }
 
 export const commerceCsvFields = [
-  ['user', 'User'],
   ['email', 'Email'],
   ['orderId', 'Order ID'],
   ['product', 'Product'],
@@ -78,31 +80,31 @@ export function humanOrderTitle(names: string[]) {
 }
 
 function csvCell(value: unknown) {
-  const text = value == null ? '' : String(value)
+  const text = value == null ? '' : sanitizeSalesExportText(String(value))
   return `"${text.replaceAll('"', '""')}"`
 }
 
+/** @deprecated Reporting downloads use the authenticated sales export endpoint.
+ * Kept for existing consumers: one row per ORDER, so totals are safe to sum.
+ */
 export function buildCommerceCsv(orders: AdminCommerceOrder[], fields: CommerceCsvField[]) {
   const selected = commerceCsvFields.filter(([key]) => fields.includes(key))
   const header = selected.map(([, label]) => csvCell(label)).join(',')
-  const rows = orders.flatMap(order => {
-    const items = order.items.length ? order.items : [null]
-    return items.map(item => {
-      const values: Record<CommerceCsvField, unknown> = {
-        user: order.user_email,
+  const rows = orders.map(order => {
+    const item = order.items.length === 1 ? order.items[0] : null
+    const values: Record<CommerceCsvField, unknown> = {
         email: order.user_email,
         orderId: order.order_id,
-        product: item?.name ?? '',
-        type: item?.kind ?? '',
-        quantity: item?.quantity ?? 0,
-        unitPrice: item?.unitPrice ?? 0,
+        product: order.items.map(row => row.name).join('; '),
+        type: [...new Set(order.items.map(row => itemKindLabel(row.kind)))].join('; '),
+        quantity: order.items.reduce((sum, row) => sum + row.quantity, 0),
+        unitPrice: item?.unitPrice ?? '',
         total: order.total_amount,
         paymentStatus: order.payment?.status ?? (order.order_status === 'paid' ? 'paid' : 'unavailable'),
         orderStatus: order.order_status,
         date: order.created_at,
       }
-      return selected.map(([key]) => csvCell(values[key])).join(',')
-    })
+    return selected.map(([key]) => csvCell(values[key])).join(',')
   })
   return `\uFEFF${[header, ...rows].join('\r\n')}`
 }

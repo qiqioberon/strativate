@@ -24,6 +24,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
+import { AdminSalesReporting } from '@/components/admin/sales-reporting'
 import { CommerceCartLinkManagement } from '@/components/admin/commerce-cart-link-management'
 import { CompetitionRecognitionManagement } from '@/components/admin/competition-recognition-management'
 import { CompetitionCategoryManagement } from '@/components/admin/competition-category-management'
@@ -147,11 +148,16 @@ export default function AdminDashboard() {
   const menteeView = searchParams.get('view')
   const hasMenteeView = menteeView === 'data' || menteeView === 'analytics'
   const hasCartView = searchParams.has('cartView')
-  const [section, setSection] = useState<Section>(() => hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
+  const hasReportView = searchParams.has('reportView')
+  const [section, setSection] = useState<Section>(() => hasReportView ? 'Reports' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
   const [mobile, setMobile] = useState(false)
   const [relatedTarget, setRelatedTarget] = useState<{ entity: string | null; id: string | null } | null>(null)
 
   useEffect(() => {
+    if (hasReportView) {
+      setSection('Reports')
+      return
+    }
     if (hasCartView) {
       setSection('Cart Links')
       return
@@ -160,14 +166,15 @@ export default function AdminDashboard() {
       setSection('Mentees')
       return
     }
-    setSection(current => current === 'Cart Links' || current === 'Mentees' ? 'Overview' : current)
-  }, [hasCartView, hasMenteeView, searchParams])
+    setSection(current => current === 'Cart Links' || current === 'Mentees' || current === 'Reports' ? 'Overview' : current)
+  }, [hasCartView, hasMenteeView, hasReportView, searchParams])
 
   const navigate = (value: Section) => {
     setSection(value)
     setMobile(false)
 
     const params = new URLSearchParams(searchParams.toString())
+    if (value !== 'Reports') params.delete('reportView')
     if (value === 'Mentees') {
       params.delete('cartView')
       const view = params.get('view')
@@ -176,6 +183,11 @@ export default function AdminDashboard() {
       params.delete('view')
       const cartView = params.get('cartView')
       if (cartView !== 'create' && cartView !== 'history' && cartView !== 'international') params.set('cartView', 'create')
+    } else if (value === 'Reports') {
+      params.delete('view')
+      params.delete('cartView')
+      const reportView = params.get('reportView')
+      if (reportView !== 'summary' && reportView !== 'analytics' && reportView !== 'transactions') params.set('reportView', 'summary')
     } else {
       params.delete('view')
       params.delete('cartView')
@@ -184,7 +196,7 @@ export default function AdminDashboard() {
     const nextQuery = params.toString()
     if (nextQuery === searchParams.toString()) return
     const href = nextQuery ? `${pathname}?${nextQuery}` : pathname
-    if (value === 'Mentees' || value === 'Cart Links') router.push(href, { scroll: false })
+    if (value === 'Mentees' || value === 'Cart Links' || value === 'Reports' || hasReportView) router.push(href, { scroll: false })
     else router.replace(href, { scroll: false })
   }
   const navigateOperational = (target: string) => {
@@ -235,7 +247,7 @@ export default function AdminDashboard() {
           {section === 'Competition Recognition' ? <CompetitionRecognitionManagement/> : null}
           {section === 'Trusted Partners' ? <TrustedPartnerManagement/> : null}
           {section === 'Who We Are Photos' ? <WhoWeArePhotoManagement/> : null}
-          {section === 'Reports' ? <AdminCommerceOperations mode="reports"/> : null}
+          {section === 'Reports' ? <AdminSalesReporting/> : null}
           {section === 'Mentor Expertise' ? <MentorExpertiseManagement/> : null}
           {section === 'Institutions' ? <InstitutionManagement/> : null}
           {section === 'Referral Sources' ? <MasterOptions key="referral" table="referral_sources"/> : null}
