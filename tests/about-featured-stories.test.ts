@@ -60,6 +60,11 @@ test('public About renderer follows the fixed reference composition instead of g
   assert.match(css, /about-featured-story__media--single img[\s\S]*aspect-ratio:\s*4\s*\/\s*3/i)
   assert.match(css, /about-featured-story__media--pair img[\s\S]*aspect-ratio:\s*3\s*\/\s*4/i)
   assert.match(css, /about-featured-story__quote-badge[\s\S]*border-radius:\s*12px/i)
+  assert.match(css, /about-featured-story__quote[\s\S]*height:\s*fit-content/i)
+  assert.match(css, /about-featured-story__quote footer[\s\S]*align-items:\s*center[\s\S]*padding:\s*14px 0 0/i)
+  assert.match(css, /about-featured-story__media--single img[\s\S]*rotate\(1\.15deg\)/i)
+  assert.match(css, /about-featured-story__media--pair img:first-child[\s\S]*rotate\(-1\.45deg\)/i)
+  assert.match(css, /about-featured-story__media--pair img:nth-child\(2\)[\s\S]*rotate\(1\.85deg\)/i)
 })
 
 test('Admin exposes two fixed Featured Story slots with no add, delete, reorder, or layout selector', async () => {
