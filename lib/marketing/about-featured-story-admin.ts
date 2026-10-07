@@ -1,14 +1,14 @@
 import type { AboutFeaturedStory } from '@/lib/supabase/database.types'
 
-import type { AboutFeaturedStoryMediaLayout } from './about-featured-story-config'
+import type { AboutFeaturedStorySlot } from './about-featured-story-config'
 
 export type AboutFeaturedStoryDraftInput = {
+  slot: AboutFeaturedStorySlot
   title: string
   quote: string
   attributionName: string
   attributionOrganization: string
   achievementText: string
-  mediaLayout: AboutFeaturedStoryMediaLayout
   primaryAltText: string
   secondaryAltText: string
   hasPrimaryImage: boolean
@@ -17,7 +17,7 @@ export type AboutFeaturedStoryDraftInput = {
 
 export type AboutFeaturedStoryDraftErrors = Partial<Record<
   'title' | 'quote' | 'attributionName' | 'attributionOrganization' | 'achievementText' |
-  'mediaLayout' | 'primaryAltText' | 'secondaryAltText' | 'primaryImage' | 'secondaryImage',
+  'primaryAltText' | 'secondaryAltText' | 'primaryImage' | 'secondaryImage',
   string
 >>
 
@@ -41,28 +41,42 @@ export function validateAboutFeaturedStoryDraft(input: AboutFeaturedStoryDraftIn
   requiredText(input.attributionOrganization, 'Organization / institution', 240, 'attributionOrganization', errors)
   requiredText(input.achievementText, 'Achievement / result', 300, 'achievementText', errors)
   requiredText(input.primaryAltText, 'Primary image alt text', 300, 'primaryAltText', errors)
+  if (!input.hasPrimaryImage) errors.primaryImage = 'Choose and crop the primary story image.'
 
-  if (input.mediaLayout !== 'single' && input.mediaLayout !== 'pair') {
-    errors.mediaLayout = 'Choose a supported media layout.'
-  }
-  if (!input.hasPrimaryImage) errors.primaryImage = 'Choose and crop a primary story image.'
-  if (input.mediaLayout === 'pair') {
+  if (input.slot === 'story_two') {
     requiredText(input.secondaryAltText, 'Secondary image alt text', 300, 'secondaryAltText', errors)
-    if (!input.hasSecondaryImage) errors.secondaryImage = 'Choose and crop a secondary story image.'
+    if (!input.hasSecondaryImage) errors.secondaryImage = 'Choose and crop the secondary story image.'
   }
+
   return errors
 }
 
-export function getNextAboutFeaturedStoryOrder(records: AboutFeaturedStory[]) {
-  return records.length ? Math.max(...records.map(record => record.display_order)) + 1 : 1
+export function isCompleteAboutFeaturedStory(story: AboutFeaturedStory) {
+  const common = Boolean(
+    story.title?.trim()
+    && story.quote?.trim()
+    && story.attribution_name?.trim()
+    && story.attribution_organization?.trim()
+    && story.achievement_text?.trim()
+    && story.primary_image_path
+    && story.primary_image_source_path
+    && story.primary_image_crop
+    && story.primary_image_alt_text?.trim(),
+  )
+  if (!common) return false
+  if (story.slot === 'story_one') return true
+  return Boolean(
+    story.secondary_image_path
+    && story.secondary_image_source_path
+    && story.secondary_image_crop
+    && story.secondary_image_alt_text?.trim(),
+  )
 }
 
-export function reorderAboutFeaturedStoryIds(records: AboutFeaturedStory[], index: number, direction: -1 | 1) {
-  const ids = records.map(record => record.id)
-  const destination = index + direction
-  if (index < 0 || index >= ids.length || destination < 0 || destination >= ids.length) return ids
-  ;[ids[index], ids[destination]] = [ids[destination], ids[index]]
-  return ids
+export function isFixedAboutFeaturedStory(value: unknown): value is AboutFeaturedStory {
+  if (!value || typeof value !== 'object') return false
+  const slot = (value as { slot?: unknown }).slot
+  return slot === 'story_one' || slot === 'story_two'
 }
 
 export function isAboutFeaturedStorySetupRequired(error: unknown) {
@@ -71,10 +85,13 @@ export function isAboutFeaturedStorySetupRequired(error: unknown) {
   const code = typeof candidate.code === 'string' ? candidate.code.toUpperCase() : ''
   const message = typeof candidate.message === 'string' ? candidate.message.toLowerCase() : ''
   return code === 'PGRST205'
+    || code === 'PGRST204'
     || code === '42P01'
+    || code === '42703'
     || (message.includes('about_featured_stories') && (
       message.includes('does not exist')
       || message.includes('could not find')
       || message.includes('schema cache')
+      || message.includes('slot')
     ))
 }
