@@ -35,6 +35,13 @@ test('About Us Admin keeps grouped content and adds Story Image', () => {
   assert.match(admin, /admin_list_about_us_story_media/)
 })
 
+test('About Us Story Image save avoids upsert so update privileges stay column-scoped', () => {
+  assert.doesNotMatch(admin, /\.upsert\(/)
+  assert.match(admin, /const \{ error: persistError \} = media/)
+  assert.match(admin, /\.update\(payload\)[\s\S]*\.eq\('id', ABOUT_US_STORY_MEDIA_ID\)/)
+  assert.match(admin, /\.insert\(\{[\s\S]*id: ABOUT_US_STORY_MEDIA_ID,[\s\S]*\.\.\.payload/)
+})
+
 test('About Us migration follows Featured Stories and preserves both storage prefixes', () => {
   assert.match(migration, /create table public\.about_us_story_media/)
   assert.match(migration, /'about-featured-stories', 'about-us'/)
