@@ -4,8 +4,10 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return <main className="auth-page">
     <div className="auth-card">
-      <div className="auth-brand"><BrandLogo /></div>
-      <a className="auth-home-link" href="/" aria-label="Back to homepage" data-testid="auth-back-link"><ArrowLeft aria-hidden="true" size={18} />Back to Strativate</a>
+      <div className="auth-header">
+        <div className="auth-brand"><BrandLogo /></div>
+        <a className="auth-home-link" href="/" aria-label="Back to homepage" data-testid="auth-back-link"><ArrowLeft aria-hidden="true" size={18} />Back to Strativate</a>
+      </div>
       {children}
     </div>
     <aside className="auth-side" aria-label="Strativate">

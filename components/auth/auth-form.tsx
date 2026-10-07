@@ -88,7 +88,7 @@ export function AuthForm() {
   return <>
     <div className="auth-heading">
       <p className="kicker">{register ? 'Start your journey' : 'Welcome back'}</p>
-      <h1>{register ? <>Join <em>Strativate.</em></> : <>Claim your <em>next win.</em></>}</h1>
+      <h1>{register ? <>Join <em>Strativate.</em></> : <><span className="auth-heading__line">Claim your</span> <em className="auth-heading__line">next win.</em></>}</h1>
       <p>{register ? 'Enter your email to receive a verification link and complete your profile.' : 'Sign in to continue your journey with Strativate.'}</p>
     </div>
     <form className="auth-form" onSubmit={submit}>
