@@ -281,30 +281,9 @@
 }
 
 .mentor-operational-profile {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
-  gap: 18px;
   min-width: 0;
 }
 
-.mentor-operational-profile > div:first-child {
-  display: grid;
-  gap: 6px;
-}
-
-.mentor-operational-profile > div:first-child h2 {
-  font-size: 22px;
-  letter-spacing: -.05em;
-}
-
-.mentor-operational-profile > div:first-child p:last-child {
-  color: #707982;
-  font-size: 10px;
-  line-height: 1.6;
-}
-
-.mentor-operational-profile dl,
 .mentor-dialog-contact {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -312,7 +291,6 @@
   margin: 0;
 }
 
-.mentor-operational-profile dl > div,
 .mentor-dialog-contact > div {
   display: grid;
   min-width: 0;
@@ -323,20 +301,12 @@
   background: #fafbfc;
 }
 
-.mentor-operational-profile dt,
 .mentor-dialog-contact span {
   color: #7b858d;
   font-size: 8px;
   font-weight: 750;
   letter-spacing: .05em;
   text-transform: uppercase;
-}
-
-.mentor-operational-profile dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 10px;
-  font-weight: 800;
 }
 
 .mentor-dialog-contact strong {
@@ -394,53 +364,11 @@
   width: 14px;
 }
 
-/* Availability uses the content width instead of a narrow left rail. */
-.mentor-availability-card {
-  padding: 24px;
-}
-
-.mentor-availability-editor.mentor form {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-
-.mentor-availability-editor.mentor .availability-week {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.mentor-availability-editor.mentor .availability-day {
-  align-content: start;
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid #e5e9ec;
-  border-radius: 12px;
-  background: #fafbfc;
-}
-
-.mentor-availability-editor.mentor .availability-day-heading {
-  align-items: flex-start;
-}
-
-.mentor-availability-editor.mentor .availability-range {
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
-}
-
-.mentor-availability-editor.mentor .availability-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
+/* Availability presentation is owned by the scoped Mentor CSS module. */
 
 @media (max-width: 1180px) {
   .mentor-overview-grid,
   .mentor-profile-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .mentor-availability-editor.mentor .availability-week {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -478,14 +406,10 @@
     justify-self: start;
   }
 
-  .mentor-availability-editor.mentor .availability-range {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
-  }
 }
 
 @media (max-width: 520px) {
   .mentor-metric-grid,
-  .mentor-operational-profile dl,
   .mentor-dialog-contact {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -500,30 +424,6 @@
     white-space: normal;
   }
 
-  .mentor-availability-card {
-    padding: 16px;
-  }
-
-  .mentor-availability-editor.mentor .availability-day {
-    padding: 13px;
-  }
-
-  .mentor-availability-editor.mentor .availability-range {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .mentor-availability-editor.mentor .availability-range > span {
-    display: none;
-  }
-
-  .mentor-availability-editor.mentor .availability-remove {
-    justify-self: start;
-  }
-
-  .mentor-availability-editor.mentor .availability-actions,
-  .mentor-availability-editor.mentor .availability-actions .button {
-    width: 100%;
-  }
 
   .mentor-dialog-session-list article {
     grid-template-columns: minmax(0, 1fr) auto;

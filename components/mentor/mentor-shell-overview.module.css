@@ -322,8 +322,9 @@
 
 .emptyState {
   display: grid;
-  place-items: center;
-  gap: 9px;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
   min-height: 180px;
   margin-top: 12px;
   border-top: 1px solid #ece4dc;
@@ -331,7 +332,7 @@
   text-align: center;
 }
 
-.emptyState svg { width: 24px; height: 24px; color: #b16432; }
+.emptyState svg { width: 30px; height: 30px; color: #b16432; }
 .emptyState p { margin: 0; font-size: .82rem; }
 
 .quickStatus {

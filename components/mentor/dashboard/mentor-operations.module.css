@@ -110,23 +110,33 @@
 
 .assignmentMenteeCol { width: 18%; }
 .assignmentSessionCol { width: 16%; }
-.assignmentFocusCol { width: 24%; }
-.assignmentScheduleCol { width: 17%; }
-.assignmentStatusCol { width: 14%; }
-.assignmentZoomCol { width: 6%; }
-.assignmentActionCol { width: 8%; }
-.menteeIdentityCol { width: 21%; }
-.menteeFocusCol { width: 22%; }
-.menteeProgressCol { width: 16%; }
-.menteeProgramCol { width: 18%; }
+.assignmentFocusCol { width: 21%; }
+.assignmentScheduleCol { width: 16%; }
+.assignmentStatusCol { width: 11%; }
+.assignmentZoomCol { width: 9%; }
+.assignmentActionCol { width: 9%; }
+.menteeIdentityCol { width: 22%; }
+.menteeFocusCol { width: 24%; }
+.menteeProgressCol { width: 12%; }
+.menteeProgramCol { width: 17%; }
 .menteeNextCol { width: 16%; }
-.menteeActionCol { width: 7%; }
-.historyDateCol { width: 17%; }
-.historyMenteeCol { width: 22%; }
-.historyFocusCol { width: 29%; }
-.historyDurationCol { width: 10%; }
+.menteeActionCol { width: 9%; }
+.historyDateCol { width: 16%; }
+.historyMenteeCol { width: 21%; }
+.historyFocusCol { width: 31%; }
+.historyDurationCol { width: 9%; }
 .historyStatusCol { width: 14%; }
-.historyActionCol { width: 8%; }
+.historyActionCol { width: 9%; }
+
+.menteesTable th:first-child,
+.menteesTable td:first-child,
+.historyTable th:first-child,
+.historyTable td:first-child { padding-left: 16px; }
+
+.menteesTable th:last-child,
+.menteesTable td:last-child,
+.historyTable th:last-child,
+.historyTable td:last-child { padding-right: 16px; }
 
 .identity {
   display: flex;
@@ -197,23 +207,25 @@
   display: inline-flex;
   width: fit-content;
   max-width: 100%;
-  min-height: 33px !important;
-  height: 33px;
+  min-height: 34px !important;
+  height: 34px;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 6px 10px !important;
+  padding: 6px 11px !important;
   border-radius: 8px !important;
   font-size: .7rem !important;
   font-weight: 550 !important;
   white-space: nowrap;
 }
+.tableLink { min-width: 72px; }
+.tableAction { min-width: 78px; }
 .tableAction svg,
 .tableLink svg { width: 14px; height: 14px; flex: 0 0 auto; }
 .tableAction:focus-visible,
 .tableLink:focus-visible { outline: 3px solid rgba(255, 122, 0, .22); outline-offset: 2px; }
 .actionCell { text-align: right; }
-.unavailable { color: #91847a; font-size: .68rem; }
+.unavailable { color: #91847a; font-size: .68rem; white-space: nowrap; }
 .date { color: #71645b; }
 
 .dialog {

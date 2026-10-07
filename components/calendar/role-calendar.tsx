@@ -1,7 +1,9 @@
 'use client'
 
 import {
+  AlertCircle,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clipboard,
@@ -216,9 +218,27 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
         <CalendarDays aria-hidden="true" />
         <div>
           <strong>Google Calendar</strong>
-          {!payload && loading ? <span>{english ? 'Loading connection…' : 'Memuat status koneksi…'}</span> : payload?.connection.connected
-            ? <span>{english ? 'Connected' : 'Terhubung'}{payload.connection.accountEmail ? ` · ${payload.connection.accountEmail}` : ''}</span>
-            : <span>{payload?.connection.status === 'invalid' ? english ? 'Reconnect required' : 'Koneksi perlu diperbarui.' : english ? 'Not connected' : 'Hubungkan agar agenda pribadi tampil bersama jadwal Strativate.'}</span>}
+          {!payload && loading ? <span>{english ? 'Loading connection…' : 'Memuat status koneksi…'}</span> : english ? (
+            <div className="calendar-connection-meta">
+              <span className={`calendar-connection-status calendar-connection-status--${payload?.connection.connected ? 'connected' : payload?.connection.status === 'invalid' ? 'warning' : 'neutral'}`}>
+                {payload?.connection.connected
+                  ? <CheckCircle2 aria-hidden="true" />
+                  : payload?.connection.status === 'invalid'
+                    ? <AlertCircle aria-hidden="true" />
+                    : <Unplug aria-hidden="true" />}
+                {payload?.connection.connected
+                  ? 'Connected'
+                  : payload?.connection.status === 'invalid'
+                    ? 'Reconnect required'
+                    : 'Not connected'}
+              </span>
+              {payload?.connection.connected && payload.connection.accountEmail
+                ? <span className="calendar-connection-email">{payload.connection.accountEmail}</span>
+                : null}
+            </div>
+          ) : payload?.connection.connected
+            ? <span>Terhubung{payload.connection.accountEmail ? ` · ${payload.connection.accountEmail}` : ''}</span>
+            : <span>{payload?.connection.status === 'invalid' ? 'Koneksi perlu diperbarui.' : 'Hubungkan agar agenda pribadi tampil bersama jadwal Strativate.'}</span>}
         </div>
       </div>
       <div className="button-row">
@@ -253,7 +273,12 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
           <label className="calendar-source-toggle">
             <input type="checkbox" checked={showGoogle} onChange={event => { setShowGoogle(event.target.checked); setAgendaPage(1) }} aria-describedby={!googleAvailable ? 'calendar-google-source-status' : undefined} />
             <span className="calendar-toggle-check"><Check aria-hidden="true" /></span><i className="calendar-source-dot google" aria-hidden="true" /><span>Google Calendar</span>
-            {!googleAvailable ? <small id="calendar-google-source-status">{payload?.connection.status === 'invalid' ? english ? 'Reconnect' : 'Hubungkan ulang' : english ? 'Not connected' : 'Belum terhubung'}</small> : null}
+            {!googleAvailable ? english ? (
+              <small id="calendar-google-source-status" className={`calendar-source-state${payload?.connection.status === 'invalid' ? ' calendar-source-state--warning' : ''}`}>
+                {payload?.connection.status === 'invalid' ? <AlertCircle aria-hidden="true" /> : <Unplug aria-hidden="true" />}
+                <span>{payload?.connection.status === 'invalid' ? 'Reconnect' : 'Not connected'}</span>
+              </small>
+            ) : <small id="calendar-google-source-status">{payload?.connection.status === 'invalid' ? 'Hubungkan ulang' : 'Belum terhubung'}</small> : null}
           </label>
         </div>
         <CalendarLegend events={events} showGoogle={showGoogle && googleAvailable} locale={locale} />
