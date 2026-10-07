@@ -4,6 +4,7 @@ export type StrativateCalendarEvent = {
   title: string
   start: string
   end: string
+  allDay?: boolean
   googleEventId?: string | null
   googleICalUid?: string | null
   [key: string]: unknown
@@ -14,6 +15,7 @@ export type GoogleCalendarEvent = {
   title: string
   start: string
   end: string
+  allDay?: boolean
   iCalUID?: string | null
   strativateSessionId?: string | null
   [key: string]: unknown

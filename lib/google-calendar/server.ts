@@ -157,13 +157,23 @@ export async function listPersonalGoogleEvents(userId: string, start: string, en
   const status = await getGoogleConnectionStatus(userId)
   if (!status.connected) return []
   const row = await connectionRow(userId); if (!row) return []
-  const params = new URLSearchParams({ timeMin:new Date(start).toISOString(), timeMax:new Date(end).toISOString(), singleEvents:'true', orderBy:'startTime', maxResults:'2500' })
-  const result = await googleFetch<{items?:GoogleEventApi[]}>(userId, `${CALENDAR_API}/calendars/${encodeURIComponent(row.calendar_id)}/events?${params}`)
-  return (result.items ?? []).flatMap(event => {
-    const eventStart = event.start?.dateTime || (event.start?.date ? `${event.start.date}T00:00:00.000Z` : null)
-    const eventEnd = event.end?.dateTime || (event.end?.date ? `${event.end.date}T00:00:00.000Z` : null)
+  // Google's calendar timezone can differ from the viewer's. Buffer the provider
+  // query so civil-date events at either edge survive; the client clips rendering.
+  const params = new URLSearchParams({ timeMin:new Date(new Date(start).getTime()-2*86400000).toISOString(), timeMax:new Date(new Date(end).getTime()+2*86400000).toISOString(), singleEvents:'true', orderBy:'startTime', maxResults:'2500' })
+  const items: GoogleEventApi[] = []
+  let pageToken: string | undefined
+  do {
+    if (pageToken) params.set('pageToken', pageToken)
+    const result = await googleFetch<{items?:GoogleEventApi[];nextPageToken?:string}>(userId, `${CALENDAR_API}/calendars/${encodeURIComponent(row.calendar_id)}/events?${params}`)
+    items.push(...(result.items ?? []))
+    pageToken = result.nextPageToken
+  } while (pageToken)
+  return items.flatMap(event => {
+    const allDay = Boolean(event.start?.date && event.end?.date)
+    const eventStart = allDay ? event.start?.date : event.start?.dateTime
+    const eventEnd = allDay ? event.end?.date : event.end?.dateTime
     if (!eventStart || !eventEnd) return []
-    return [{ id:event.id, source:'google' as const, title:event.summary || '(Tanpa judul)', start:eventStart, end:eventEnd, iCalUID:event.iCalUID ?? null, htmlLink:event.htmlLink ?? null, strativateSessionId:event.extendedProperties?.private?.strativateSessionId ?? null }]
+    return [{ id:event.id, source:'google' as const, title:event.summary || '(Tanpa judul)', start:eventStart, end:eventEnd, allDay, iCalUID:event.iCalUID ?? null, htmlLink:event.htmlLink ?? null, strativateSessionId:event.extendedProperties?.private?.strativateSessionId ?? null }]
   })
 }
 

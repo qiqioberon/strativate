@@ -17,6 +17,7 @@ function strativateEvent(row: AnyRow, role: AccountShape['profile']['role'], acc
     title:`${row.mentoring_type==='intensive'?'Intensive Mentoring':'Private Mentoring'} · Sesi ${row.session_number}`,
     start,
     end,
+    allDay:false,
     googleEventId:row.google_event_id ?? null,
     googleICalUid:row.google_ical_uid ?? null,
     sessionId:row.session_id,
@@ -59,12 +60,18 @@ export async function loadCalendarEvents(account: AccountShape, start: string, e
   }else if(account.profile.role==='mentor'){
     const[privateResult,intensiveResult]=await Promise.all([supabase.rpc('list_my_mentor_private_mentoring_sessions'),supabase.rpc('list_my_mentor_intensive_mentoring_sessions')])
     if(privateResult.error||intensiveResult.error)throw new Error(privateResult.error?.message||intensiveResult.error?.message)
-    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive',enrollment_id:row.engagement_id,purchased_sessions:null}))].filter((row:AnyRow)=>row.status!=='cancelled'&&row.scheduled_start_at&&row.scheduled_end_at&&row.scheduled_end_at>start&&row.scheduled_start_at<end)
+    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive',enrollment_id:row.engagement_id,purchased_sessions:null}))]
   }else{
     const[privateResult,intensiveResult]=await Promise.all([supabase.rpc('list_my_private_mentoring_sessions_v2'),supabase.rpc('list_my_intensive_mentoring_calendar_sessions')])
     if(privateResult.error||intensiveResult.error)throw new Error(privateResult.error?.message||intensiveResult.error?.message)
-    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive'}))].filter((row:AnyRow)=>row.status!=='cancelled'&&row.scheduled_start_at&&row.scheduled_end_at&&row.scheduled_end_at>start&&row.scheduled_start_at<end)
+    rows=[...(privateResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'private'})),...(intensiveResult.data??[]).map((row:AnyRow)=>({...row,mentoring_type:'intensive'}))]
   }
+
+  const rangeStart = new Date(start).getTime()
+  const rangeEnd = new Date(end).getTime()
+  rows = rows.filter(row => row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at
+    && new Date(row.scheduled_end_at).getTime() > rangeStart
+    && new Date(row.scheduled_start_at).getTime() < rangeEnd)
 
   const personIds = [...new Set(rows.map(row => account.profile.role === 'mentee' ? account.user.id : row.mentee_id).filter(Boolean) as string[])]
   const colorResults = await Promise.all(personIds.map(async personId => {
@@ -73,15 +80,20 @@ export async function loadCalendarEvents(account: AccountShape, start: string, e
   }))
   const colors = new Map(colorResults.flatMap(([personId,color]) => typeof color === 'string' ? [[personId,color] as const] : []))
 
-  const strativate = rows
-    .filter(row=>row.status !== 'cancelled' && row.scheduled_start_at && row.scheduled_end_at)
-    .map(row=>strativateEvent(row,account.profile.role,account.user.id,colors))
-  const connection = await getGoogleConnectionStatus(account.user.id)
+  const strativate = rows.map(row=>strativateEvent(row,account.profile.role,account.user.id,colors))
+  let connection: Awaited<ReturnType<typeof getGoogleConnectionStatus>> = {
+    connected:false, accountEmail:null, status:'not_connected', scopes:[], lastError:null,
+  }
   let google: GoogleCalendarEvent[] = []
   let googleError: string | null = null
-  if (connection.connected) {
-    try { google = await listPersonalGoogleEvents(account.user.id,start,end) as GoogleCalendarEvent[] }
-    catch (error) { googleError = error instanceof Error ? error.message : 'Google Calendar sedang tidak dapat disinkronkan.' }
+  try {
+    connection = await getGoogleConnectionStatus(account.user.id)
+    if (connection.connected) google = await listPersonalGoogleEvents(account.user.id,start,end)
+  } catch (error) {
+    googleError = error instanceof Error ? error.message : 'Google Calendar sedang tidak dapat disinkronkan.'
+    // Token refresh can mark stale OAuth invalid; return the updated connection
+    // without letting a provider failure hide the authorized Strativate schedule.
+    try { connection = await getGoogleConnectionStatus(account.user.id) } catch { /* retain the last known connection */ }
   }
   return { events:mergeCalendarEvents(strativate,google), connection, googleError }
 }
