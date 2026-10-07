@@ -349,3 +349,379 @@
   .meetingActions { grid-column: 1 / -1; justify-content: flex-start; }
   .referenceRow { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Purpose-built operational cards and dialogs for phone widths. Desktop table geometry stays unchanged. */
+@media (max-width: 640px) {
+  .surface {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .toolbar,
+  .toolbarTwo {
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .field { gap: 6px; font-size: .7rem; }
+  .searchControl,
+  .field select { height: 44px; }
+  .searchControl input,
+  .field select { font-size: .76rem; }
+
+  .table tbody { gap: 10px; }
+  .table tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .table td {
+    display: block;
+    min-width: 0;
+    padding: 9px 0;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .table td::before {
+    display: block;
+    margin-bottom: 5px;
+    line-height: 1.3;
+  }
+
+  .identity {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .identityText,
+  .stack { min-width: 0; }
+
+  .primary,
+  .secondary {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .table :global(.ops-status) {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .assignmentsTable tr {
+    grid-template-areas:
+      "mentee mentee"
+      "session session"
+      "focus focus"
+      "schedule status"
+      "zoom action";
+  }
+  .assignmentsTable td[data-label="Mentee"] { grid-area: mentee; padding-top: 0; }
+  .assignmentsTable td[data-label="Mentoring / session"] { grid-area: session; }
+  .assignmentsTable td[data-label="Focus"] { grid-area: focus; }
+  .assignmentsTable td[data-label="Schedule"] { grid-area: schedule; }
+  .assignmentsTable td[data-label="Status"] { grid-area: status; }
+  .assignmentsTable td[data-label="Zoom"] { grid-area: zoom; }
+  .assignmentsTable td[data-label="Actions"] { grid-area: action; }
+  .assignmentsTable td[data-label="Mentoring / session"] code { display: none; }
+
+  .menteesTable tr {
+    grid-template-areas:
+      "mentee mentee"
+      "focus focus"
+      "progress next"
+      "program program"
+      "action action";
+  }
+  .menteesTable td[data-label="Mentee"] { grid-area: mentee; padding-top: 0; }
+  .menteesTable td[data-label="Mentoring focus"] { grid-area: focus; }
+  .menteesTable td[data-label="Session progress"] { grid-area: progress; }
+  .menteesTable td[data-label="Program"] { grid-area: program; }
+  .menteesTable td[data-label="Next session"] { grid-area: next; }
+  .menteesTable td[data-label="Actions"] { grid-area: action; }
+
+  .historyTable tr {
+    grid-template-areas:
+      "date status"
+      "mentee mentee"
+      "focus focus"
+      "duration action";
+  }
+  .historyTable td[data-label="Date"] { grid-area: date; padding-top: 0; }
+  .historyTable td[data-label="Mentee"] { grid-area: mentee; }
+  .historyTable td[data-label="Focus"] { grid-area: focus; }
+  .historyTable td[data-label="Duration"] { grid-area: duration; }
+  .historyTable td[data-label="Status"] { grid-area: status; padding-top: 0; }
+  .historyTable td[data-label="Actions"] { grid-area: action; }
+
+  .assignmentsTable td[data-label="Zoom"],
+  .assignmentsTable td[data-label="Actions"],
+  .menteesTable td[data-label="Actions"],
+  .historyTable td[data-label="Duration"],
+  .historyTable td[data-label="Actions"] {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .tableAction,
+  .tableLink {
+    width: 100%;
+    min-height: 42px !important;
+    height: auto;
+    padding: 8px 10px !important;
+  }
+
+  .unavailable {
+    display: block;
+    color: #87786e;
+    font-size: .7rem;
+    line-height: 1.45;
+    white-space: normal;
+  }
+
+  .surface :global([data-testid="table-pagination"]) {
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .surface :global([data-testid="table-pagination"]) button {
+    min-width: 40px;
+    min-height: 40px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .dialog {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 20px;
+  }
+
+  .dialogSurface {
+    gap: 14px;
+    max-height: calc(100dvh - 24px);
+    padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dialogHeader { gap: 12px; }
+  .dialogHeader h2 {
+    margin-top: 1px;
+    font-size: 1.16rem;
+    line-height: 1.25;
+  }
+  .dialogContext { font-size: .69rem; }
+  .dialogDate { margin-top: 3px; font-size: .71rem; }
+  .dialogClose {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 11px;
+  }
+
+  .detailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .detailGrid > div {
+    gap: 4px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .detailGrid dt { font-size: .65rem; }
+  .detailGrid dd {
+    font-size: .76rem;
+    line-height: 1.45;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .dialog[aria-labelledby="mentor-session-detail-title"] .detailGrid > div:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .dialog[aria-labelledby="mentor-session-detail-title"] .detailGrid > div:nth-child(4) { grid-column: 2; grid-row: 1; }
+  .dialog[aria-labelledby="mentor-session-detail-title"] .detailGrid > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .dialog[aria-labelledby="mentor-session-detail-title"] .detailGrid > div:nth-child(3) { grid-column: 1 / -1; grid-row: 3; }
+
+  .dialog[aria-labelledby="mentor-mentee-detail-title"] .detailGrid > div:nth-child(1) { grid-column: 1 / -1; grid-row: 1; }
+  .dialog[aria-labelledby="mentor-mentee-detail-title"] .detailGrid > div:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .dialog[aria-labelledby="mentor-mentee-detail-title"] .detailGrid > div:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .dialog[aria-labelledby="mentor-mentee-detail-title"] .detailGrid > div:nth-child(4) { grid-column: 1 / -1; grid-row: 3; }
+
+  .section { gap: 7px; }
+  .section h3 { font-size: .81rem; }
+  .section p {
+    font-size: .73rem;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .contactGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .contactGrid > div {
+    gap: 3px;
+    padding: 10px 11px;
+    border-radius: 10px;
+  }
+  .contactGrid strong {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  .contactGrid > div:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .contactGrid > div:nth-child(3) { grid-column: 2; grid-row: 1; }
+  .contactGrid > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .contactGrid > div:nth-child(4) { grid-column: 1 / -1; grid-row: 3; }
+
+  .dialogSurface :global(.mentoring-preference-card) {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .dialogSurface :global(.mentoring-preference-card__head) {
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .dialogSurface :global(.mentoring-preference-grid) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .dialogSurface :global(.mentoring-preference-grid) > div,
+  .dialogSurface :global(.mentoring-session-note),
+  .dialogSurface :global(.mentoring-preference-review) {
+    padding: 10px 11px;
+    border: 1px solid #eee3da;
+    border-radius: 10px;
+    background: #fffcf8;
+  }
+  .dialogSurface :global(.mentoring-preference-review) {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .dialogSurface :global(.mentoring-audit-details) {
+    border-radius: 10px;
+  }
+  .dialogSurface :global(.mentoring-audit-details) summary {
+    min-height: 40px;
+    align-content: center;
+  }
+  .dialogSurface :global(.session-reference-row) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .dialogSurface :global(.session-reference-row) > div { min-width: 0; }
+  .dialogSurface :global(.session-reference-row) strong {
+    display: block;
+    min-width: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .66rem;
+    font-weight: 500;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .referenceList { gap: 7px; margin-top: 8px; }
+  .referenceRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 9px 10px;
+  }
+  .referenceRow code {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .referenceRow :global(.copy-action),
+  .dialogSurface :global(.session-reference-row) :global(.copy-action) {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    place-items: center;
+    padding: 0;
+  }
+  .referenceRow :global(.copy-action) span,
+  .dialogSurface :global(.session-reference-row) :global(.copy-action) span {
+    display: none;
+  }
+
+  .sessionList { gap: 0; }
+  .sessionRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    padding: 10px 0;
+  }
+  .sessionRowMain { gap: 3px; }
+  .sessionRowMain span,
+  .sessionRowMain small {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  .sessionRow > :global(.ops-status) {
+    max-width: 132px;
+    white-space: normal;
+    text-align: center;
+  }
+  .meetingActions {
+    grid-column: 1 / -1;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .meetingActions a {
+    width: 42px;
+    height: 42px;
+  }
+  .meetingActions :global(.copy-action) {
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+
+  .dialogActions {
+    align-items: stretch;
+  }
+  .dialogActions :global(.button),
+  .dialogActions :global(.copy-action) {
+    min-height: 44px;
+    padding: 9px 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .dialogSurface { padding: 18px; }
+
+  .assignmentsTable tr,
+  .menteesTable tr,
+  .historyTable tr { column-gap: 10px; }
+
+  .tableAction,
+  .tableLink { font-size: .68rem !important; }
+
+  .sessionRow > :global(.ops-status) { max-width: 118px; }
+}
