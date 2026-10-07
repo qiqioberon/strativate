@@ -139,15 +139,23 @@ export function AboutStoryImageManagement() {
           if (removeError) throw removeError
         },
         persist: async refs => {
-          const { error: persistError } = await supabase
-            .from('about_us_story_media')
-            .upsert({
-              id: ABOUT_US_STORY_MEDIA_ID,
-              image_path: refs.path,
-              source_image_path: refs.sourcePath,
-              image_crop: (image.crop ?? media?.image_crop ?? null) as Json | null,
-              alt_text: trimmedAlt,
-            }, { onConflict: 'id' })
+          const payload = {
+            image_path: refs.path,
+            source_image_path: refs.sourcePath,
+            image_crop: (image.crop ?? media?.image_crop ?? null) as Json | null,
+            alt_text: trimmedAlt,
+          }
+          const { error: persistError } = media
+            ? await supabase
+                .from('about_us_story_media')
+                .update(payload)
+                .eq('id', ABOUT_US_STORY_MEDIA_ID)
+            : await supabase
+                .from('about_us_story_media')
+                .insert({
+                  id: ABOUT_US_STORY_MEDIA_ID,
+                  ...payload,
+                })
           if (persistError) throw persistError
         },
         reconcile: async () => {
