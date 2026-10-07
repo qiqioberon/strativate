@@ -39,7 +39,6 @@ test('mentor directory keeps tighter spacing without section-level reveal gating
 
 test('requested landing pages use the shared first section with revised headline copy', () => {
   for (const source of [program, mentor, products, publications, competitions, about, faq]) assert.match(source, /<PageIntro/)
-
   assert.match(program, /title="Our Programs"/)
   assert.doesNotMatch(program, /Build skills for/)
   assert.match(mentor, /title="Meet Our Mentors"/)
@@ -55,9 +54,9 @@ test('requested landing pages use the shared first section with revised headline
   assert.doesNotMatch(faq, /Have Questions\?|We Have Answers/)
 })
 
-test('About Us moves the former hero story into its own following section', () => {
+test('About Us keeps the story after PageIntro with the approved clean headline treatment', () => {
   assert.match(about, /<PageIntro[\s\S]*<section className="marketing-section about-reference-story"/)
-  assert.match(about, /<h2>Empowering Future<br \/><em>Business Leaders<\/em><\/h2>/)
-  assert.doesNotMatch(about, /Business Leaders\./)
+  assert.match(about, /<h2>Empowering Future Business Leaders<\/h2>/)
+  assert.doesNotMatch(about, /<em>|Editorial image slot/)
   assert.match(marketing, /\.about-reference-story h2/)
 })

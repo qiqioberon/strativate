@@ -1,18 +1,22 @@
 import { Focus, Repeat2, Waypoints } from 'lucide-react'
 
-import { BrandLogo } from '@/components/brand/brand-logo'
 import { AboutFeaturedStories } from '@/components/marketing/about-featured-stories'
 import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
 import { PageIntro } from '@/components/marketing/page-intro'
 import { homepageExpertise, preparationPrinciples } from '@/lib/content/marketing-content'
+import { ABOUT_US_STORY_IMAGE_HEIGHT, ABOUT_US_STORY_IMAGE_WIDTH } from '@/lib/marketing/about-us-story-config'
+import { getAboutUsStoryMedia } from '@/lib/marketing/about-us-story'
 import { listActiveAboutFeaturedStories } from '@/lib/marketing/about-featured-stories'
 
 const icons = [Focus, Waypoints, Repeat2]
 const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
 export default async function AboutPage() {
-  const featuredStories = await listActiveAboutFeaturedStories()
+  const [featuredStories, storyMedia] = await Promise.all([
+    listActiveAboutFeaturedStories(),
+    getAboutUsStoryMedia(),
+  ])
 
   return (
     <MarketingShell>
@@ -23,16 +27,26 @@ export default async function AboutPage() {
         />
 
         <section className="marketing-section about-reference-story" data-reveal data-testid="about-story-section">
-          <div className="marketing-container about-reference-hero__grid">
-            <div>
-              <h2>Empowering Future<br /><em>Business Leaders</em></h2>
+          <div className={`marketing-container about-reference-hero__grid${storyMedia ? '' : ' about-reference-hero__grid--text-only'}`}>
+            <div className="about-reference-story__copy">
+              <h2>Empowering Future Business Leaders</h2>
               <p>Strativate is a business mentoring and coaching platform that supports students in building future-ready skills and achieving success in business competitions and future career pathways.</p>
               <p>Through structured learning, hands-on practice, and personalized guidance, we help students strengthen the skills needed for competition preparation.</p>
             </div>
-            <div className="about-reference-visual" role="img" aria-label="Strativate editorial image placeholder">
-              <BrandLogo variant="mark" priority />
-              <span>Editorial image slot</span>
-            </div>
+            {storyMedia ? (
+              <div
+                className="about-reference-visual"
+                style={{ aspectRatio: `${ABOUT_US_STORY_IMAGE_WIDTH} / ${ABOUT_US_STORY_IMAGE_HEIGHT}` }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={storyMedia.imageUrl}
+                  alt={storyMedia.altText}
+                  width={ABOUT_US_STORY_IMAGE_WIDTH}
+                  height={ABOUT_US_STORY_IMAGE_HEIGHT}
+                />
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -56,7 +70,6 @@ export default async function AboutPage() {
             <div className="homepage-expertise__grid">
               {homepageExpertise.map((item, index) => {
                 const expertiseMark = expertiseMarks[index]
-
                 return (
                   <article className="homepage-expertise__card" key={item.title}>
                     <div className="homepage-expertise__icon" aria-hidden="true">

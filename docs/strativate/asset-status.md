@@ -33,6 +33,7 @@ owned by the database-backed mentor public-profile domain introduced by
 | Actual Digital Product files/delivery | Not implemented | No downloadable/viewable product content delivery model exists | Implement only in a later explicitly scoped phase |
 | Program/achievement photography | Missing | Hero uses approved brand composition; registry slots remain placeholders | Supply standalone originals and captions if desired |
 | Testimonials and portraits | Missing | Not published | Supply approved quote, identity, context and consent |
+| About Us story image | Admin-ready; no image supplied | `public.about_us_story_media` owns one fixed 1600×1200 (4:3) editorial slot. Final WebP derivatives live in `marketing-editorial/about-us/`; originals remain private in `marketing-photo-sources/about-us/`. The public About story gracefully becomes text-only when the slot is empty. | Upload only an approved editorial image through Admin → About Us Content → Story Image; apply `202610080002_about_us_story_media.sql` before deploying the feature |
 | About Featured Stories | Admin-ready; no stories supplied | `public.about_featured_stories` owns approved story copy, ordering, visibility, and single/pair media. Admin-managed originals stay private in `marketing-photo-sources/about-featured-stories/`; only processed WebP derivatives under `marketing-editorial/about-featured-stories/` are public. The About page omits the section when no stories are active. | Add only approved success-story copy, attribution, achievement/result text, images, and consent through Admin → About Us Content; no fake story records are seeded |
 | Institution logos | Missing / intentionally omitted | Text-only social-proof wording | Supply official files and approved usage language |
 | Competition recognition logos | Admin-ready; no logos supplied | `public.competition_recognitions` owns approved names, ordering, and visibility; logo files are admin-managed in `marketing-editorial/recognition-logos/`. The homepage keeps the approved recognition statement visible when no active logos exist. | Add only approved official logo files and competition names through Admin → Competition Recognition; no fake assets are seeded |
@@ -45,10 +46,10 @@ owned by the database-backed mentor public-profile domain introduced by
 ## Status rules
 
 - Admin image uploads for Publications, Competitions, Competition Recognition,
-  Trusted Partners, Who We Are, and About Featured Stories share the direct crop workflow. Originals stay
+  Trusted Partners, Who We Are, the About Us story image, and About Featured Stories share the direct crop workflow. Originals stay
   private in `marketing-photo-sources`; only processed WebP derivatives are public.
   Recognition outputs are 1000×800 (5:4), partners 800×640 (5:4), editorial covers 1600×900,
-  Who We Are uses 1200×1600 (primary) / 1000×1000 (supporting), and About Featured Stories use
+  Who We Are uses 1200×1600 (primary) / 1000×1000 (supporting), the About Us story image uses 1600×1200 (4:3), and About Featured Stories use
   1200×900 (single, 4:3) or 1000×1250 (paired, 4:5). Apply
   `202610070001_marketing_logo_crop_sources.sql` before deploying the refactor.
   Existing derivative-only logos remain valid with null source/crop metadata;
