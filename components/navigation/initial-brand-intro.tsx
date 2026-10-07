@@ -81,7 +81,7 @@ export function InitialBrandIntro() {
       data-phase={phase}
       role="status"
       aria-live="polite"
-      aria-label="Menyiapkan Strativate"
+      aria-label="Preparing Strativate"
     >
       <span className={styles.sweep} aria-hidden="true" />
       <div className={styles.brandLockup}>
@@ -89,13 +89,13 @@ export function InitialBrandIntro() {
         <span className={styles.accent} aria-hidden="true" />
         <div className={styles.progressWrap}>
           <div className={styles.progressMeta}>
-            <span>Menyiapkan halaman</span>
+            <span>Preparing your page</span>
             <span data-testid="initial-load-percent">{progress}%</span>
           </div>
           <div
             className={styles.progressTrack}
             role="progressbar"
-            aria-label="Progress persiapan halaman"
+            aria-label="Page loading progress"
             aria-valuemin={1}
             aria-valuemax={100}
             aria-valuenow={progress}

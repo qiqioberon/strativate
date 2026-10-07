@@ -3,13 +3,15 @@
 import { useId, useState, type ComponentProps } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
-type Props = Omit<ComponentProps<'input'>, 'type'> & { label: string }
+type Props = Omit<ComponentProps<'input'>, 'type'> & { label: string; language?: 'id' | 'en' }
 
-export function PasswordInput({ label, id, disabled, ...props }: Props) {
+export function PasswordInput({ label, language = 'id', id, disabled, ...props }: Props) {
   const generatedId = useId()
   const inputId = id || generatedId
   const [visible, setVisible] = useState(false)
-  const action = `${visible ? 'Sembunyikan' : 'Tampilkan'} ${label.toLowerCase()}`
+  const action = language === 'en'
+    ? `${visible ? 'Hide' : 'Show'} password`
+    : `${visible ? 'Sembunyikan' : 'Tampilkan'} ${label.toLowerCase()}`
 
   return <div className="password-field">
     <label htmlFor={inputId}>{label}</label>

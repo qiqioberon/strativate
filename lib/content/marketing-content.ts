@@ -65,17 +65,17 @@ export const productPlaceholders: ProductPreview[] = [
     id: 'guide',
     contentStatus: 'placeholder',
     cover: 'products.guide.cover',
-    eyebrow: 'Slot produk digital 01',
-    title: 'Materi sedang disiapkan',
-    description: 'Nama, format, harga, dan sampul akan tampil setelah detail produk final disetujui.',
+    eyebrow: 'Digital product 01',
+    title: 'Learning materials coming soon',
+    description: 'Product names, formats, prices, and covers will appear once the final details are approved.',
   },
   {
     id: 'template',
     contentStatus: 'placeholder',
     cover: 'products.template.cover',
-    eyebrow: 'Slot produk digital 02',
-    title: 'Koleksi siap diganti',
-    description: 'Struktur kartu telah siap menerima sampul dan detail produk final tanpa redesain.',
+    eyebrow: 'Digital product 02',
+    title: 'More learning resources coming soon',
+    description: 'Product details and covers will appear once the collection is approved.',
   },
 ]
 

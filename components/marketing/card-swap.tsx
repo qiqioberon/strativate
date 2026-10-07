@@ -83,7 +83,7 @@ export function CardSwap({
   pauseOnHover = true,
   skewAmount = 6,
   easing = 'elastic',
-  ariaLabel = 'Produk Digital pilihan',
+  ariaLabel = 'Featured digital products',
   activeIndex,
   onActiveIndexChange,
   children,

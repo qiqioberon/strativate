@@ -999,7 +999,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         className="marketing-testimonial-gallery"
         tabIndex={0}
         role="region"
-        aria-label="Galeri cerita peserta. Gunakan tombol panah untuk menjelajah dan Enter untuk membuka testimoni."
+        aria-label="Student stories. Use the arrow keys to browse and Enter to open a testimonial."
         data-testid="testimonial-circular-gallery"
       >
         {hoveredItem && overlayStyle && hoveredIndex !== null ? (
@@ -1033,7 +1033,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
                 data-testimonial-overlay-action
                 data-testid="testimonial-open-button"
               >
-                Lihat testimoni <ArrowRight aria-hidden="true" size={15} />
+                View testimonial <ArrowRight aria-hidden="true" size={15} />
               </button>
             </div>
           </div>
@@ -1060,10 +1060,10 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
               <Image src={selected.imageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
             </div>
             <div className="marketing-testimonial-dialog__content">
-              <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Tutup testimoni">
+              <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Close testimonial">
                 <X aria-hidden="true" size={18} />
               </button>
-              <p className="marketing-kicker">Cerita dari peserta</p>
+              <p className="marketing-kicker">Student stories</p>
               <h2 id="testimonial-dialog-title">{selected.competition_name}</h2>
               <strong className="marketing-testimonial-dialog__achievement">{selected.achievement}</strong>
               <Quote aria-hidden="true" size={25} />

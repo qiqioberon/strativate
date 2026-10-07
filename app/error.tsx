@@ -12,14 +12,14 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
       <section className="global-error-page__panel" aria-labelledby="global-error-title">
         <div className="global-error-page__brand"><BrandLogo priority /></div>
         <div className="global-error-page__icon" aria-hidden="true"><WifiOff size={30} /></div>
-        <p className="global-error-page__kicker">Ada gangguan kecil</p>
-        <h1 id="global-error-title">Belum dapat <em>dimuat.</em></h1>
-        <p className="global-error-page__copy">Kami belum berhasil menampilkan halaman ini. Periksa koneksi lalu coba lagi, atau kembali ke beranda untuk melanjutkan dari sana.</p>
+        <p className="global-error-page__kicker">Something went wrong</p>
+        <h1 id="global-error-title">Unable to load <em>this page.</em></h1>
+        <p className="global-error-page__copy">We couldn&apos;t display this page. Check your connection and try again, or return to the homepage.</p>
         <div className="global-error-page__actions">
-          <button className="button button-primary" type="button" onClick={reset}><RefreshCw aria-hidden="true" size={17} /> Coba lagi</button>
-          <a className="button global-error-page__secondary" href="/"><ArrowLeft aria-hidden="true" size={17} /> Kembali ke beranda</a>
+          <button className="button button-primary" type="button" onClick={reset}><RefreshCw aria-hidden="true" size={17} /> Try again</button>
+          <a className="button global-error-page__secondary" href="/"><ArrowLeft aria-hidden="true" size={17} /> Back to Home</a>
         </div>
-        <p className="global-error-page__hint">Jika masalah tetap muncul, muat ulang halaman beberapa saat lagi.</p>
+        <p className="global-error-page__hint">If the issue continues, refresh the page in a moment.</p>
       </section>
     </main>
   )

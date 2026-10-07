@@ -2,8 +2,7 @@
 import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/supabase/database.types'
-import { passwordError, usernameError } from '@/lib/auth/rules'
-import { formError } from '@/lib/auth/errors'
+import { authFormError, authPasswordError, authUsernameError } from '@/lib/auth/public-errors'
 import { PasswordInput } from "./password-input"
 export function SetupForm({ profile, recovery = false }: { profile: Profile; recovery?: boolean }) {
   const [busy, setBusy] = useState(false)
@@ -16,7 +15,7 @@ export function SetupForm({ profile, recovery = false }: { profile: Profile; rec
     const password = String(data.get('password') || '')
     const confirmation = String(data.get('confirmation') || '')
     const username = String(data.get('username') || '').trim()
-    const invalid = passwordError(password, confirmation, !passwordSaved) || (!recovery && usernameError(username))
+    const invalid = authPasswordError(password, confirmation, !passwordSaved) || (!recovery && authUsernameError(username))
     if (invalid) { setError(invalid); return }
     setBusy(true)
     try {
@@ -33,15 +32,15 @@ export function SetupForm({ profile, recovery = false }: { profile: Profile; rec
         if (error) throw error
       }
       window.location.assign('/auth/continue')
-    } catch (error) { setError(formError(error, 'Akun belum dapat disimpan. Periksa data dan coba lagi.')) }
+    } catch (error) { setError(authFormError(error, 'We couldn\'t save your account. Check your details and try again.')) }
     finally { setBusy(false) }
   }
   return <form className="auth-form" onSubmit={submit}>
-    {!recovery && <><label>Nama Depan<input name="first_name" defaultValue={profile.first_name || ''} required maxLength={100} /></label><label>Nama Belakang<input name="last_name" defaultValue={profile.last_name || ''} maxLength={100} /></label><label>Nama pengguna<input name="username" defaultValue={profile.username || ''} required minLength={3} maxLength={30} autoComplete="username" /></label></>}
-    <PasswordInput label="Kata sandi" name="password" required={!passwordSaved} autoComplete="new-password" minLength={8} maxLength={128} disabled={busy} />
-    <p className="auth-password-requirements">Minimal 8 karakter dengan huruf kapital, angka, dan simbol.</p>
-    <PasswordInput label="Konfirmasi kata sandi" name="confirmation" required={!passwordSaved} autoComplete="new-password" disabled={busy} />
-    {passwordSaved && <p role="status">Kata sandi tersimpan. Lengkapi data akun untuk melanjutkan.</p>}{error && <p className="form-error" role="alert">{error}</p>}
-    <button className="button button-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan dan lanjutkan'}</button>
+    {!recovery && <><label>First name<input name="first_name" defaultValue={profile.first_name || ''} required maxLength={100} /></label><label>Last name<input name="last_name" defaultValue={profile.last_name || ''} maxLength={100} /></label><label>Username<input name="username" defaultValue={profile.username || ''} required minLength={3} maxLength={30} autoComplete="username" /></label></>}
+    <PasswordInput label="Password" language="en" name="password" required={!passwordSaved} autoComplete="new-password" minLength={8} maxLength={128} disabled={busy} />
+    <p className="auth-password-requirements">Use at least 8 characters, including an uppercase letter, a number, and a symbol.</p>
+    <PasswordInput label="Confirm password" language="en" name="confirmation" required={!passwordSaved} autoComplete="new-password" disabled={busy} />
+    {passwordSaved && <p role="status">{recovery ? 'Password saved. Continue to your account.' : 'Password saved. Complete your account details to continue.'}</p>}{error && <p className="form-error" role="alert">{error}</p>}
+    <button className="button button-primary" disabled={busy}>{busy ? 'Saving…' : 'Save and continue'}</button>
   </form>
 }

@@ -3,7 +3,7 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 import styles from './branded-route-loading.module.css'
 
 export function BrandedRouteLoading({
-  label = 'Menyiapkan halaman',
+  label = 'Preparing your page',
 }: {
   label?: string
 }) {
@@ -13,6 +13,7 @@ export function BrandedRouteLoading({
       role="status"
       aria-live="polite"
       aria-busy="true"
+      aria-label="Preparing Strativate"
       data-testid="route-loading-overlay"
       data-page-motion-blocker="true"
     >
@@ -24,7 +25,7 @@ export function BrandedRouteLoading({
         <div
           className={styles.progressTrack}
           role="progressbar"
-          aria-label={label}
+          aria-label="Page loading progress"
           data-testid="route-loading-progress"
         >
           <span className={styles.progressIndicator} />

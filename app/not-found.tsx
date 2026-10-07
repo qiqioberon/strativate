@@ -3,10 +3,10 @@ import Link from 'next/link'
 export default function NotFound() {
   return <main className="page-main">
     <div className="page-intro">
-      <p className="kicker">404 · Halaman tidak ditemukan</p>
-      <h1>Halaman ini <em>tidak tersedia.</em></h1>
-      <p>Periksa kembali alamatnya atau kembali ke beranda Strativate.</p>
+      <p className="kicker">404 · Page not found</p>
+      <h1>This page <em>isn&apos;t available.</em></h1>
+      <p>Check the URL or return to Strativate&apos;s homepage.</p>
     </div>
-    <Link href="/" className="button button-primary">Kembali ke beranda</Link>
+    <Link href="/" className="button button-primary">Back to Home</Link>
   </main>
 }

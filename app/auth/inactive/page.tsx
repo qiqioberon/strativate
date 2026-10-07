@@ -11,10 +11,10 @@ export default async function InactiveMentorAccount() {
 
   return <AuthShell>
     <div className="auth-heading">
-      <p className="kicker">Akun mentor nonaktif</p>
-      <h1>Akses dashboard <em>dinonaktifkan.</em></h1>
-      <p>Akun mentor Anda sedang dinonaktifkan oleh administrator. Hubungi administrator Strativate jika akses perlu dipulihkan.</p>
+      <p className="kicker">Inactive mentor account</p>
+      <h1>Dashboard access <em>disabled.</em></h1>
+      <p>Your mentor account has been deactivated by an administrator. Contact the Strativate administrator to restore access.</p>
     </div>
-    <SignOut className="button button-primary" />
+    <SignOut className="button button-primary" language="en" />
   </AuthShell>
 }

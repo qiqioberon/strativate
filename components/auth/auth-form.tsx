@@ -2,7 +2,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { formError } from '@/lib/auth/errors'
+import { authFormError } from '@/lib/auth/public-errors'
 import {
   clearBrowserAuthPersistenceMode,
   setBrowserAuthPersistenceMode,
@@ -41,9 +41,9 @@ export function AuthForm() {
       clearBrowserAuthPersistenceMode()
       const { error } = await createClient().auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } })
       if (error) throw error
-      setMessage('Jika email dapat diproses, tautan masuk akan dikirim. Periksa kotak masuk dan folder spam.')
+      setMessage('If your email can be processed, a verification link will be sent. Check your inbox and spam folder.')
     } catch (error) {
-      setError(formError(error, 'Tautan belum dapat dikirim. Silakan coba lagi.'))
+      setError(authFormError(error, 'We couldn\'t send the email link. Please try again.'))
     } finally { inFlight.current = false; setBusy(false) }
   }
 
@@ -74,9 +74,9 @@ export function AuthForm() {
       clearBrowserAuthPersistenceMode()
       setPendingLogin(null)
       inFlight.current = false
-      setError(formError(error, login.kind === 'google'
-        ? 'Google belum dapat dihubungkan. Silakan coba lagi.'
-        : 'Tidak dapat masuk. Periksa email dan kata sandi, lalu coba lagi.'))
+      setError(authFormError(error, login.kind === 'google'
+        ? 'We couldn\'t connect to Google. Please try again.'
+        : 'We couldn\'t sign you in. Check your email and password, then try again.'))
       setBusy(false)
     }
   }
@@ -86,14 +86,18 @@ export function AuthForm() {
   }
 
   return <>
-    <div className="auth-heading"><p className="kicker">{register ? 'Mulai perjalananmu' : 'Selamat datang kembali'}</p><h1>{register ? <>Daftar di <em>Strativate.</em></> : <>Raih kemenangan <em>berikutnya.</em></>}</h1><p>{register ? 'Masukkan email untuk menerima tautan verifikasi dan melengkapi profilmu.' : 'Masuk untuk melanjutkan perjalananmu bersama Strativate.'}</p></div>
+    <div className="auth-heading">
+      <p className="kicker">{register ? 'Start your journey' : 'Welcome back'}</p>
+      <h1>{register ? <>Join <em>Strativate.</em></> : <>Claim your <em>next win.</em></>}</h1>
+      <p>{register ? 'Enter your email to receive a verification link and complete your profile.' : 'Sign in to continue your journey with Strativate.'}</p>
+    </div>
     <form className="auth-form" onSubmit={submit}>
       <label>Email<input name="email" type="email" required autoComplete="email" maxLength={254} disabled={locked} /></label>
-      {!register && <><PasswordInput label="Kata sandi" name="password" required autoComplete="current-password" disabled={locked} /><a className="auth-back" href="/auth/forgot-password">Lupa kata sandi?</a></>}
+      {!register && <><PasswordInput label="Password" language="en" name="password" required autoComplete="current-password" disabled={locked} /><a className="auth-text-link auth-forgot-link" href="/auth/forgot-password">Forgot password?</a></>}
       {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
-      <button className="button button-primary full-button" disabled={locked}>{busy ? 'Memproses…' : register ? 'Kirim tautan email' : 'Masuk'}<ArrowRight size={16} /></button>
-      <button className="button button-outline full-button" type="button" onClick={google} disabled={locked}>Lanjutkan dengan Google</button>
-      <button className="button button-outline full-button auth-mode-switch" type="button" disabled={locked} onClick={() => { setRegister(!register); setError(''); setMessage('') }} data-testid="auth-mode-switch">{register ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}</button>
+      <button className="button button-primary full-button" disabled={locked}>{busy ? 'Processing…' : register ? 'Send email link' : 'Sign in'}<ArrowRight aria-hidden="true" size={16} /></button>
+      <button className="button button-outline full-button" type="button" onClick={google} disabled={locked}>Continue with Google</button>
+      <button className="button button-outline full-button auth-mode-switch" type="button" disabled={locked} onClick={() => { setRegister(!register); setError(''); setMessage('') }} data-testid="auth-mode-switch">{register ? 'Already have an account? Sign in' : 'Don\'t have an account? Sign up'}</button>
     </form>
     <SessionChoiceDialog open={pendingLogin !== null} busy={busy} onChoose={authenticate} onCancel={cancelPersistenceChoice} />
   </>

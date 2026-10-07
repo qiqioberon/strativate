@@ -46,14 +46,14 @@ export function SessionChoiceDialog({ open, busy, onChoose, onCancel }: Props) {
       <button
         className="auth-persistence-dialog__close"
         type="button"
-        aria-label="Batalkan pilihan tetap masuk"
+        aria-label="Cancel sign-in preference"
         onClick={onCancel}
         disabled={busy}
       ><X size={18} aria-hidden="true" /></button>
       <div className="auth-persistence-dialog__icon" aria-hidden="true"><ShieldCheck size={24} /></div>
       <div className="auth-persistence-dialog__copy">
-        <h2 id="auth-persistence-title">Tetap masuk di perangkat ini?</h2>
-        <p id="auth-persistence-description">Pilih “Tetap masuk” jika perangkat ini milik pribadi.</p>
+        <h2 id="auth-persistence-title">Stay signed in on this device?</h2>
+        <p id="auth-persistence-description">Choose “Stay signed in” if this is your personal device.</p>
       </div>
       <div className="auth-persistence-dialog__actions">
         <button
@@ -62,13 +62,13 @@ export function SessionChoiceDialog({ open, busy, onChoose, onCancel }: Props) {
           type="button"
           onClick={() => onChoose('persistent')}
           disabled={busy}
-        >{busy ? 'Memproses…' : 'Tetap masuk'}</button>
+        >{busy ? 'Processing…' : 'Stay signed in'}</button>
         <button
           className="button button-outline auth-persistence-dialog__secondary"
           type="button"
           onClick={() => onChoose('session')}
           disabled={busy}
-        >Hanya sesi ini</button>
+        >This session only</button>
       </div>
     </div>
   </dialog>

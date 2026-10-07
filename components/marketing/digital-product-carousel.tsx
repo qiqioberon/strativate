@@ -33,7 +33,7 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
   }, [hasMultiple, paused, products.length, reduceMotion, activeIndex])
 
   if (products.length === 0) {
-    return <p className="marketing-products__empty">Belum ada Produk Digital yang dipublikasikan.</p>
+    return <p className="marketing-products__empty">No digital products have been published yet.</p>
   }
 
   const select = (index: number) => setActiveIndex((index + products.length) % products.length)
@@ -43,7 +43,7 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
       className="digital-product-carousel"
       role="region"
       aria-roledescription="carousel"
-      aria-label="Preview Produk Digital"
+      aria-label="Digital product preview"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -66,14 +66,14 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
               <div className="digital-product-carousel__media">
                 <Image
                   src={product.imageUrl}
-                  alt={`Sampul ${product.name}`}
+                  alt={`Cover for ${product.name}`}
                   fill
                   sizes="(max-width: 760px) 88vw, 42vw"
                   unoptimized
                 />
               </div>
               <div className="digital-product-carousel__copy">
-                <span>Produk Digital · {formatRupiah(product.price_amount)}</span>
+                <span>Digital Product · {formatRupiah(product.price_amount)}</span>
                 <h3>{product.name}</h3>
                 <p>{product.description}</p>
               </div>
@@ -88,7 +88,7 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
                 className="digital-product-carousel__arrow digital-product-carousel__arrow--previous"
                 type="button"
                 onClick={() => select(activeIndex - 1)}
-                aria-label="Produk Digital sebelumnya"
+                aria-label="Previous digital product"
               >
                 <ArrowLeft aria-hidden="true" size={18} />
               </button>
@@ -96,19 +96,19 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
                 className="digital-product-carousel__arrow digital-product-carousel__arrow--next"
                 type="button"
                 onClick={() => select(activeIndex + 1)}
-                aria-label="Produk Digital berikutnya"
+                aria-label="Next digital product"
               >
                 <ArrowRight aria-hidden="true" size={18} />
               </button>
             </>
           ) : null}
 
-          <div className="digital-product-carousel__dots" aria-label="Pilih slide Produk Digital">
+          <div className="digital-product-carousel__dots" aria-label="Choose a digital product slide">
             {products.map((product, index) => (
               <button
                 key={product.id}
                 type="button"
-                aria-label={`Tampilkan ${product.name}`}
+                aria-label={`Show ${product.name}`}
                 aria-current={index === activeIndex ? 'true' : undefined}
                 className={index === activeIndex ? 'is-active' : undefined}
                 onClick={() => select(index)}

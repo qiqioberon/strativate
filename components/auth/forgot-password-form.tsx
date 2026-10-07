@@ -74,7 +74,7 @@ export function ForgotPasswordForm() {
         const seconds = Math.max(1, Number(payload.retryAfterSeconds) || PASSWORD_RECOVERY_COOLDOWN_SECONDS)
         const until = persistCooldown(seconds)
         setCooldown(remainingRecoveryCooldown(until))
-        setMessage(`Permintaan sebelumnya masih diproses. Coba lagi dalam ${countdownLabel(seconds)}.`)
+        setMessage(`Your previous request is still being processed. Try again in ${countdownLabel(seconds)}.`)
         return
       }
 
@@ -84,9 +84,9 @@ export function ForgotPasswordForm() {
       const until = persistCooldown(seconds)
       setCooldown(remainingRecoveryCooldown(until))
       setSent(true)
-      setMessage('Jika email tersebut terdaftar, tautan untuk membuat kata sandi baru sudah dikirim. Periksa kotak masuk dan folder spam.')
+      setMessage('If that email is registered, a link to create a new password has been sent. Check your inbox and spam folder.')
     } catch {
-      setError('Permintaan pemulihan belum dapat diproses. Silakan coba lagi beberapa saat lagi.')
+      setError('We couldn\'t process your recovery request. Please try again in a moment.')
     } finally {
       inFlight.current = false
       setBusy(false)
@@ -96,20 +96,20 @@ export function ForgotPasswordForm() {
   return <>
     <div className="auth-heading">
       <div className="auth-persistence-dialog__icon" aria-hidden="true">{sent ? <MailCheck size={24} /> : <Mail size={24} />}</div>
-      <p className="kicker">Pemulihan akun</p>
-      <h1>Lupa kata <em>sandi?</em></h1>
-      <p>Masukkan email akunmu. Kami akan mengirim tautan aman untuk membuat kata sandi baru.</p>
+      <p className="kicker">Account recovery</p>
+      <h1>Forgot your <em>password?</em></h1>
+      <p>Enter your account email. We&apos;ll send you a secure link to create a new password.</p>
     </div>
     <form className="auth-form" onSubmit={submit}>
       <label>Email
-        <input name="email" type="email" required autoComplete="email" maxLength={254} disabled={busy} placeholder="nama@email.com" />
+        <input name="email" type="email" required autoComplete="email" maxLength={254} disabled={busy} placeholder="name@example.com" />
       </label>
       {message && <p role="status">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-primary full-button" disabled={busy || cooldown > 0}>
-        {busy ? 'Mengirim…' : cooldown > 0 ? <>Kirim ulang dalam {countdownLabel(cooldown)}</> : sent ? <>Kirim ulang tautan <RotateCcw size={16} /></> : <>Kirim tautan pemulihan <Mail size={16} /></>}
+        {busy ? 'Sending…' : cooldown > 0 ? <>Resend in {countdownLabel(cooldown)}</> : sent ? <>Resend link <RotateCcw aria-hidden="true" size={16} /></> : <>Send recovery link <Mail aria-hidden="true" size={16} /></>}
       </button>
-      <a className="button button-outline full-button auth-mode-switch" href="/auth"><ArrowLeft size={16} aria-hidden="true" />Kembali ke halaman masuk</a>
+      <a className="button button-outline full-button auth-mode-switch" href="/auth"><ArrowLeft size={16} aria-hidden="true" />Back to sign in</a>
     </form>
   </>
 }

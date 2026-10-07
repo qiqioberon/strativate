@@ -100,7 +100,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
               key={product.id}
               type="button"
               className={activeIndex === index ? 'is-active' : undefined}
-              aria-label={`Tampilkan ${product.name}`}
+              aria-label={`Show ${product.name}`}
               aria-current={activeIndex === index ? 'true' : undefined}
               onClick={() => setRequestedIndex(index)}
               data-testid={`digital-product-card-dot-${index}`}

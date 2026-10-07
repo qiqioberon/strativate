@@ -24,13 +24,13 @@ function MentorMarqueeGroup({ mentors, duplicate = false, onSelect }: { mentors:
           key={`${duplicate ? 'copy-' : ''}${mentor.slug}`}
           tabIndex={duplicate ? -1 : undefined}
           data-testid={duplicate ? undefined : `mentor-marquee-card-${mentor.slug}`}
-          aria-label={duplicate ? undefined : `Lihat detail ${mentor.name}`}
+          aria-label={duplicate ? undefined : `View details for ${mentor.name}`}
           onClick={(event) => openMentor(event, mentor)}
         >
           <div className="marketing-mentor-marquee__portrait"><MentorPortraitMedia mentor={mentor} sizes="108px" /></div>
           <div className="marketing-mentor-marquee__content">
             <div className="marketing-mentor-marquee__identity">
-              <span className="marketing-mentor-marquee__tier">{mentor.tier ?? 'Mentor Strativate'}</span>
+              <span className="marketing-mentor-marquee__tier">{mentor.tier ?? 'Strativate mentor'}</span>
               <strong className="marketing-mentor-marquee__name">{mentor.name}</strong>
             </div>
             <div className="marketing-mentor-marquee__details">

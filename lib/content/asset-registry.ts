@@ -58,15 +58,15 @@ export const assetRegistry = {
   'mentors.faluna-a-janitra.portrait': missingPortrait('Faluna A. Janitra'),
   'mentors.m-sultan-perkasa.portrait': missingPortrait('M. Sultan Perkasa'),
 
-  'programs.private.cover': placeholder('/assets/placeholders/media-development.svg', 'Visual Private Mentoring belum tersedia', 'P1', 'No standalone approved program artwork was supplied.'),
-  'programs.intensive.cover': placeholder('/assets/placeholders/media-development.svg', 'Visual Intensive Mentoring belum tersedia', 'P1', 'No standalone approved program artwork was supplied.'),
-  'programs.bigClass.cover': placeholder('/assets/placeholders/media-development.svg', 'Visual Big Class belum tersedia', 'P1', 'No standalone approved program artwork was supplied.'),
-  'products.guide.cover': placeholder('/assets/placeholders/cover-development.svg', 'Sampul produk digital belum tersedia', 'P0', 'Awaiting an approved product master.'),
-  'products.template.cover': placeholder('/assets/placeholders/cover-development.svg', 'Sampul produk digital belum tersedia', 'P0', 'Awaiting an approved product master.'),
-  'products.workbook.cover': placeholder('/assets/placeholders/cover-development.svg', 'Sampul produk digital belum tersedia', 'P0', 'Awaiting an approved product master.'),
-  'achievements.featured.image': placeholder('/assets/placeholders/media-development.svg', 'Dokumentasi pencapaian belum tersedia', 'P1', 'Guidebooks contain embedded samples, but no standalone original media was supplied.'),
-  'testimonials.featured.portrait': placeholder('/assets/placeholders/portrait-development.svg', 'Foto pemberi testimoni belum tersedia', 'P1', 'No standalone approved testimonial portrait was supplied.'),
-  'institutions.featured.logo': placeholder('/assets/placeholders/logo-development.svg', 'Logo institusi belum tersedia', 'P1', 'Institution marks were not supplied as standalone approved assets.'),
+  'programs.private.cover': placeholder('/assets/placeholders/media-development.svg', 'Private Mentoring artwork is not available yet', 'P1', 'No standalone approved program artwork was supplied.'),
+  'programs.intensive.cover': placeholder('/assets/placeholders/media-development.svg', 'Intensive Mentoring artwork is not available yet', 'P1', 'No standalone approved program artwork was supplied.'),
+  'programs.bigClass.cover': placeholder('/assets/placeholders/media-development.svg', 'Big Class artwork is not available yet', 'P1', 'No standalone approved program artwork was supplied.'),
+  'products.guide.cover': placeholder('/assets/placeholders/cover-development.svg', 'Digital product cover is not available yet', 'P0', 'Awaiting an approved product master.'),
+  'products.template.cover': placeholder('/assets/placeholders/cover-development.svg', 'Digital product cover is not available yet', 'P0', 'Awaiting an approved product master.'),
+  'products.workbook.cover': placeholder('/assets/placeholders/cover-development.svg', 'Digital product cover is not available yet', 'P0', 'Awaiting an approved product master.'),
+  'achievements.featured.image': placeholder('/assets/placeholders/media-development.svg', 'Achievement photo is not available yet', 'P1', 'Guidebooks contain embedded samples, but no standalone original media was supplied.'),
+  'testimonials.featured.portrait': placeholder('/assets/placeholders/portrait-development.svg', 'Testimonial portrait is not available yet', 'P1', 'No standalone approved testimonial portrait was supplied.'),
+  'institutions.featured.logo': placeholder('/assets/placeholders/logo-development.svg', 'Institution logo is not available yet', 'P1', 'Institution marks were not supplied as standalone approved assets.'),
 } as const satisfies Record<string, FrontendAsset>
 
 export type AssetKey = keyof typeof assetRegistry
