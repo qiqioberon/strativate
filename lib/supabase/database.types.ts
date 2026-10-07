@@ -18,6 +18,8 @@ export type PublicationCategory = { id:string; name:string; sort_order:number; i
 export type Competition = { id:string; slug:string; name:string; category_id:string|null; description:string; rules_url:string|null; registration_url:string|null; registration_deadline:string|null; cover_path:string|null; cover_source_path:string|null; cover_crop:Json|null; cover_alt_text:string|null; status:'upcoming'|'open'|'closed'|'archived'; is_published:boolean; is_featured:boolean; sort_order:number; created_at:string; updated_at:string }
 export type CompetitionRecognition = { id:string; competition_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type TrustedPartner = { id:string; organization_name:string; logo_path:string; logo_source_path:string|null; logo_crop:Json|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
+export type AboutFeaturedStoryMediaLayout = 'single'|'pair'
+export type AboutFeaturedStory = { id:string; title:string; quote:string; attribution_name:string; attribution_organization:string; achievement_text:string; media_layout:AboutFeaturedStoryMediaLayout; primary_image_path:string; primary_image_source_path:string; primary_image_crop:Json; primary_image_alt_text:string; secondary_image_path:string|null; secondary_image_source_path:string|null; secondary_image_crop:Json|null; secondary_image_alt_text:string|null; display_order:number; is_active:boolean; created_at:string; updated_at:string }
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
@@ -91,6 +93,7 @@ export type Database = {
       competitions: Table<Competition, Partial<Competition> & Pick<Competition,"slug"|"name"|"description">>
       competition_recognitions: Table<CompetitionRecognition, Partial<CompetitionRecognition> & Pick<CompetitionRecognition,"competition_name"|"logo_path">>
       trusted_partners: Table<TrustedPartner, Partial<TrustedPartner> & Pick<TrustedPartner,"organization_name"|"logo_path">>
+      about_featured_stories: Table<AboutFeaturedStory, Partial<AboutFeaturedStory> & Pick<AboutFeaturedStory,"title"|"quote"|"attribution_name"|"attribution_organization"|"achievement_text"|"media_layout"|"primary_image_path"|"primary_image_source_path"|"primary_image_crop"|"primary_image_alt_text">>
       homepage_who_we_are_photos: Table<HomepageWhoWeArePhoto, Partial<HomepageWhoWeArePhoto> & Pick<HomepageWhoWeArePhoto,"role">>
        digital_products: Table<DigitalProduct, Partial<DigitalProduct> & Pick<DigitalProduct,"name"|"slug"|"description"|"image_path"|"price_amount">>
        digital_product_reviews: Table<DigitalProductReview, never, never>
@@ -166,11 +169,13 @@ export type Database = {
       admin_list_publications: { Args:Record<PropertyKey,never>; Returns:Publication[] }
       admin_list_competition_recognitions: { Args:Record<PropertyKey,never>; Returns:CompetitionRecognition[] }
       admin_list_trusted_partners: { Args:Record<PropertyKey,never>; Returns:TrustedPartner[] }
+      admin_list_about_featured_stories: { Args:Record<PropertyKey,never>; Returns:AboutFeaturedStory[] }
       admin_list_competitions: { Args:Record<PropertyKey,never>; Returns:Competition[] }
       admin_list_marketing_testimonials: { Args:Record<PropertyKey,never>; Returns:MarketingTestimonial[] }
       admin_list_homepage_who_we_are_photos: { Args:Record<PropertyKey,never>; Returns:HomepageWhoWeArePhoto[] }
       reorder_competition_recognitions: { Args:{p_ids:string[]}; Returns:undefined }
       reorder_trusted_partners: { Args:{p_ids:string[]}; Returns:undefined }
+      reorder_about_featured_stories: { Args:{p_ids:string[]}; Returns:undefined }
       get_or_create_active_cart: { Args:Record<PropertyKey,never>; Returns:Cart }
       add_cart_item: { Args:{p_commerce_item_id:string}; Returns:CartItem }
       remove_cart_item: { Args:{p_cart_item_id:string}; Returns:undefined }

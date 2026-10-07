@@ -43,6 +43,11 @@ async function mockBackend(
   ))
 }
 
+async function openWhoWeArePhotos(page: Page) {
+  await page.getByRole('button', { name: 'About Us Content', exact: true }).click()
+  await page.getByRole('tab', { name: 'Who We Are Photos', exact: true }).click()
+}
+
 test('admin exposes exactly three compact fixed slots and a focused responsive editor', async ({ page }) => {
   await mockBackend(page, [{
     role: 'primary',
@@ -56,7 +61,7 @@ test('admin exposes exactly three compact fixed slots and a focused responsive e
   await page.goto('http://localhost:3001/admin')
 
   await page.getByRole('button', { name: 'Buka menu admin' }).click()
-  await page.getByRole('button', { name: 'Who We Are Photos' }).click()
+  await openWhoWeArePhotos(page)
   const manager = page.getByTestId('who-we-are-photo-admin-section')
   await expect(manager).toBeVisible()
   await expect(manager.getByTestId('who-we-are-photo-admin-row')).toHaveCount(3)
@@ -88,7 +93,7 @@ test('extreme replacement aspect ratio stays clipped to the crop preview', async
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('http://localhost:3001/admin')
 
-  await page.getByRole('button', { name: 'Who We Are Photos' }).click()
+  await openWhoWeArePhotos(page)
   const manager = page.getByTestId('who-we-are-photo-admin-section')
   await manager.getByRole('button', { name: 'Manage' }).first().click()
 
@@ -145,7 +150,7 @@ test('editing an existing slot PATCHes mutable fields without resending its fixe
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('http://localhost:3001/admin')
 
-  await page.getByRole('button', { name: 'Who We Are Photos' }).click()
+  await openWhoWeArePhotos(page)
   const manager = page.getByTestId('who-we-are-photo-admin-section')
   await manager.getByRole('button', { name: 'Manage' }).first().click()
 

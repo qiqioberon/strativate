@@ -4,6 +4,15 @@ async function backend(page: Page) {
   await page.route('**/rest/v1/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
 }
 
+async function openAdminSection(page: Page, section: string) {
+  if (section === 'Who We Are Photos') {
+    await page.getByRole('button', { name: 'About Us Content', exact: true }).click()
+    await page.getByRole('tab', { name: 'Who We Are Photos', exact: true }).click()
+    return
+  }
+  await page.getByRole('button', { name: section, exact: true }).click()
+}
+
 async function png(page: Page, width = 2000, height = 1800) {
   const base64 = await page.evaluate(({ width, height }) => {
     const canvas = document.createElement('canvas')
@@ -32,7 +41,7 @@ for (const item of cases) {
   test(`${item.section} ${item.slot ?? ''} shares crop, preview, adjust and cancel at ${item.width}x${item.height}`, async ({ page }) => {
     await backend(page)
     await page.goto('http://localhost:3001/admin')
-    await page.getByRole('button', { name: item.section, exact: true }).click()
+    await openAdminSection(page, item.section)
     if (item.add) await page.getByRole('button', { name: item.add, exact: true }).first().click()
     else await page.getByRole('button', { name: 'Manage', exact: true }).nth(item.slot!).click()
     const editor = page.locator('dialog[open]').first()
@@ -117,7 +126,7 @@ test(`${feature.section} creates a record with private source and normalized cro
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
   await page.goto('http://localhost:3001/admin')
-  await page.getByRole('button', { name: feature.section, exact: true }).click()
+  await openAdminSection(page, feature.section)
   await page.getByRole('button', { name: feature.add, exact: true }).click()
   const editor = page.getByTestId(feature.editor)
   await editor.getByLabel(feature.nameLabel, { exact: true }).fill('Synthetic creation fixture')
@@ -178,7 +187,7 @@ test(`${feature.section} legacy replacement saves 5:4, adjusts from the same pri
     events.push(`${method}:${new URL(route.request().url()).pathname}`)
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
-  await page.getByRole('button', { name: feature.section, exact: true }).click()
+  await openAdminSection(page, feature.section)
   await page.getByRole('button', { name: 'Manage', exact: true }).click()
   const editor = page.getByTestId(feature.editor)
   await expect(editor.getByText(/Original source is unavailable/)).toBeVisible()
@@ -234,7 +243,7 @@ test('Who We Are removal clears image metadata before cleaning both stored files
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
   await page.goto('http://localhost:3001/admin')
-  await page.getByRole('button', { name: 'Who We Are Photos', exact: true }).click()
+  await openAdminSection(page, 'Who We Are Photos')
   await page.getByRole('button', { name: 'Manage', exact: true }).first().click()
   const editor = page.getByTestId('who-we-are-photo-editor-dialog')
   await editor.getByRole('button', { name: 'Remove photo', exact: true }).click()
@@ -247,7 +256,7 @@ test('Who We Are removal clears image metadata before cleaning both stored files
 test('Who We Are keeps the 8 MB limit and shared validation accepts JPEG and WebP', async ({ page }) => {
   await backend(page)
   await page.goto('http://localhost:3001/admin')
-  await page.getByRole('button', { name: 'Who We Are Photos', exact: true }).click()
+  await openAdminSection(page, 'Who We Are Photos')
   await page.getByRole('button', { name: 'Manage', exact: true }).first().click()
   const input = page.locator('dialog[open] input[type=file]')
   await input.setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(8 * 1024 * 1024 + 1) })

@@ -6,16 +6,21 @@ import test from 'node:test'
 const root = path.resolve(import.meta.dirname, '..')
 const read = (file: string) => readFile(path.join(root, file), 'utf8')
 
-test('admin navigation mounts one fixed-slot Who We Are management surface', async () => {
-  const [page, manager] = await Promise.all([
+test('admin navigation groups fixed-slot Who We Are photos under one About Us content surface', async () => {
+  const [page, group, manager] = await Promise.all([
     read('app/admin/page.tsx'),
+    read('components/admin/about-us-content-management.tsx'),
     read('components/admin/who-we-are-photo-management.tsx'),
   ])
 
-  assert.match(page, /import \{ WhoWeArePhotoManagement \}/)
-  assert.match(page, /\| 'Who We Are Photos'/)
-  assert.match(page, /id: 'Who We Are Photos', label: 'Who We Are Photos'/)
-  assert.match(page, /section === 'Who We Are Photos' \? <WhoWeArePhotoManagement\/>/)
+  assert.match(page, /import \{ AboutUsContentManagement \}/)
+  assert.match(page, /\| 'About Us Content'/)
+  assert.match(page, /id: 'About Us Content', label: 'About Us Content'/)
+  assert.match(page, /section === 'About Us Content' \? <AboutUsContentManagement\/>/)
+  assert.doesNotMatch(page, /id: 'Who We Are Photos'/)
+  assert.match(group, /Who We Are Photos/)
+  assert.match(group, /Featured Stories/)
+  assert.match(group, /<WhoWeArePhotoManagement/)
   assert.match(manager, /WHO_WE_ARE_PHOTO_ROLES\.map/)
   assert.match(manager, /data-testid="who-we-are-photo-admin-row"/)
   assert.match(manager, />Thumbnail</)
