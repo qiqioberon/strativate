@@ -62,21 +62,21 @@ export const commerceCsvFields = [
   ['email', 'Email'],
   ['orderId', 'Order ID'],
   ['product', 'Product'],
-  ['type', 'Jenis produk'],
+  ['type', 'Product type'],
   ['quantity', 'Quantity'],
-  ['unitPrice', 'Harga'],
+  ['unitPrice', 'Price'],
   ['total', 'Total'],
   ['paymentStatus', 'Payment status'],
   ['orderStatus', 'Order status'],
-  ['date', 'Tanggal'],
+  ['date', 'Date'],
 ] as const
 
 export type CommerceCsvField = typeof commerceCsvFields[number][0]
 
 export function humanOrderTitle(names: string[]) {
   const first = names.find(Boolean)
-  if (!first) return 'Pesanan Strativate'
-  return names.length > 1 ? `${first} +${names.length - 1} item lainnya` : first
+  if (!first) return 'Strativate order'
+  return names.length > 1 ? `${first} +${names.length - 1} other items` : first
 }
 
 function csvCell(value: unknown) {

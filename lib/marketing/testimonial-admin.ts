@@ -48,12 +48,12 @@ export function validateTestimonialDraft({
   file: TestimonialFile | null
 }): TestimonialDraftErrors {
   const errors: TestimonialDraftErrors = {}
-  if (!slug.trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug.trim())) errors.slug = 'Slug wajib memakai huruf kecil, angka, dan tanda hubung.'
-  if (!competitionName.trim()) errors.competitionName = 'Nama kompetisi wajib diisi.'
-  if (!achievement.trim()) errors.achievement = 'Pencapaian wajib diisi.'
-  if (!testimonial.trim()) errors.testimonial = 'Isi testimoni wajib diisi.'
-  if (file && !TESTIMONIAL_IMAGE_ALLOWED_TYPES.has(file.type)) errors.file = 'Gunakan gambar JPG, PNG, atau WebP.'
-  else if (file && file.size > TESTIMONIAL_IMAGE_MAX_FILE_SIZE) errors.file = 'Ukuran gambar maksimal 5 MB.'
+  if (!slug.trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug.trim())) errors.slug = 'Use lowercase letters, numbers, and hyphens for the slug.'
+  if (!competitionName.trim()) errors.competitionName = 'Competition name is required.'
+  if (!achievement.trim()) errors.achievement = 'Achievement is required.'
+  if (!testimonial.trim()) errors.testimonial = 'Testimonial text is required.'
+  if (file && !TESTIMONIAL_IMAGE_ALLOWED_TYPES.has(file.type)) errors.file = 'Use a JPG, PNG, or WebP image.'
+  else if (file && file.size > TESTIMONIAL_IMAGE_MAX_FILE_SIZE) errors.file = 'Image must be 5 MB or smaller.'
   return errors
 }
 

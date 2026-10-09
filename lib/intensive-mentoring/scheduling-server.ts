@@ -1,4 +1,5 @@
 import 'server-only'
+import { adminFormError } from '@/lib/auth/errors'
 
 import {buildBookableSlots,type SlotMentor,type TimeInterval} from '@/lib/calendar/slot-engine'
 import {getGoogleConnectionStatus,getGoogleFreeBusy} from '@/lib/google-calendar/server'
@@ -17,12 +18,12 @@ function overlap(start:string,end:string,busy:TimeInterval){return new Date(star
 export async function getAdminIntensiveBookableSlots(sessionId:string){
  const supabase=await createClient(),rpc=supabase as unknown as RpcClient
  const{data,error}=await rpc.rpc<SlotContext>('admin_get_intensive_mentoring_slot_context',{p_session_id:sessionId})
- if(error||!data)throw new Error(error?.message||'Slot context belum dapat dimuat.')
+ if(error||!data)throw new Error(adminFormError(error,'Unable to load session scheduling details.'))
  const context=data
- if(context.status==='completed'||context.status==='cancelled')return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Sesi historis tidak dapat dijadwalkan ulang.'}
- if(!context.mentors.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Belum ada mentor aktif untuk dijadwalkan.'}
+ if(context.status==='completed'||context.status==='cancelled')return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Completed or cancelled sessions cannot be rescheduled.'}
+ if(!context.mentors.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'No active mentors available for scheduling.'}
  const availability=context.mentors.flatMap(mentor=>mentor.availability)
- if(!availability.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Mentor aktif belum memasang availability untuk minggu ini atau minggu depan.'}
+ if(!availability.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings:[],message:'Active mentors have not set availability for this week or next week.'}
  const horizonStart=availability.reduce((min,r)=>r.start<min?r.start:min,availability[0].start)
  const horizonEnd=availability.reduce((max,r)=>r.end>max?r.end:max,availability[0].end)
  const mentorWarnings:string[]=[],mentors:SlotMentor[]=[],mentorCalendarStatus=new Map<string,GoogleCalendarAvailabilityStatus>()
@@ -31,7 +32,7 @@ export async function getAdminIntensiveBookableSlots(sessionId:string){
   let googleBusy:TimeInterval[]|null=[]
   if(connection.connected){
    try{googleBusy=await getGoogleFreeBusy(mentor.mentorId,horizonStart,horizonEnd)}
-   catch{googleBusy=null;mentorWarnings.push(mentor.mentorName+': Google Calendar belum dapat diverifikasi; periksa agenda mentor sebelum konfirmasi.')}
+   catch{googleBusy=null;mentorWarnings.push(mentor.mentorName+': Google Calendar could not be verified; check the mentor calendar before confirming.')}
   }
   const calendar=resolveGoogleCalendarBusy({connected:connection.connected,busy:googleBusy})
   mentorCalendarStatus.set(mentor.mentorId,calendar.status)
@@ -39,19 +40,19 @@ export async function getAdminIntensiveBookableSlots(sessionId:string){
  }
  const baseSlots=buildBookableSlots({now:new Date().toISOString(),durationMinutes:context.durationMinutes,requiredTierId:null,stepMinutes:15,mentors})
  const zoomRooms=await getManagedZoomRoomPool({from:horizonStart,to:horizonEnd,sessionId,mentoringKind:'intensive'})
- if(!zoomRooms.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings,message:'Belum ada Zoom room aktif. Tambahkan link Zoom dari menu Admin → Zoom.'}
+ if(!zoomRooms.length)return{context:{...context,requiredTierName:null},slots:[],mentorWarnings,message:'No active Zoom rooms. Add a link from Admin → Zoom.'}
  let menteeBusy:TimeInterval[]=[]
  try{if((await getGoogleConnectionStatus(context.menteeId)).connected)menteeBusy=await getGoogleFreeBusy(context.menteeId,horizonStart,horizonEnd)}catch{}
  const slots=baseSlots.flatMap(slot=>{const availableZoomRooms=availableManagedZoomRooms(zoomRooms,slot.start,slot.end);return availableZoomRooms.length?[{...slot,availableZoomRooms,zoomRoomCount:availableZoomRooms.length,menteeConflict:menteeBusy.some(busy=>overlap(slot.start,slot.end,busy)),googleCalendarStatus:mentorCalendarStatus.get(slot.mentorId)??'not_connected'}]:[]})
- return{context:{...context,requiredTierName:null,mentors:context.mentors.map(mentor=>({...mentor,googleCalendarStatus:mentorCalendarStatus.get(mentor.mentorId)??'not_connected'}))},slots,mentorWarnings,message:slots.length?'':baseSlots.length?'Semua Zoom room sedang terpakai pada jam yang tersedia. Pilih waktu lain atau tambahkan room dari Admin → Zoom.':'Belum ada slot yang dapat dipilih setelah availability, sesi Strativate lain, dan Google Calendar diperhitungkan.'}
+ return{context:{...context,requiredTierName:null,mentors:context.mentors.map(mentor=>({...mentor,googleCalendarStatus:mentorCalendarStatus.get(mentor.mentorId)??'not_connected'}))},slots,mentorWarnings,message:slots.length?'':baseSlots.length?'All Zoom rooms are reserved at the available times. Choose another time or add a room from Admin → Zoom.':'No bookable slots remain after accounting for availability, existing Strativate sessions, and Google Calendar.'}
 }
 
 export async function scheduleAdminIntensiveMentoringSession(sessionId:string,mentorId:string,start:string,zoomRoomId:string|null,currentAdminId:string){
  const available=await getAdminIntensiveBookableSlots(sessionId),normalized=new Date(start).toISOString()
- if(!available.slots.some(slot=>slot.mentorId===mentorId&&slot.start===normalized))throw new Error('Slot sudah tidak tersedia. Muat ulang pilihan jadwal.')
+ if(!available.slots.some(slot=>slot.mentorId===mentorId&&slot.start===normalized))throw new Error('This slot is no longer available. Refresh the schedule options.')
  const supabase=await createClient(),rpc=supabase as unknown as RpcClient
  const{data,error}=await rpc.rpc('admin_schedule_intensive_mentoring_session',{p_session_id:sessionId,p_mentor_id:mentorId,p_scheduled_start_at:normalized,p_zoom_room_id:zoomRoomId})
- if(error)throw new Error(error.message)
+ if(error)throw new Error(adminFormError(error,'Unable to update the session. Please refresh and try again.'))
  const sync=await syncIntensiveMentoringSession(sessionId,currentAdminId)
  return{session:data,sync}
 }
@@ -59,7 +60,7 @@ export async function scheduleAdminIntensiveMentoringSession(sessionId:string,me
 export async function cancelAdminIntensiveMentoringSession(sessionId:string,currentAdminId:string){
  const supabase=await createClient(),rpc=supabase as unknown as RpcClient
  const{data,error}=await rpc.rpc('admin_cancel_intensive_mentoring_session',{p_session_id:sessionId})
- if(error)throw new Error(error.message)
+ if(error)throw new Error(adminFormError(error,'Unable to update the session. Please refresh and try again.'))
  try{return{session:data,sync:await syncIntensiveMentoringSession(sessionId,currentAdminId)}}
  catch(syncError){return{session:data,sync:{status:'failed' as const,meetingUrl:null,eventId:null,error:syncError instanceof Error?syncError.message:'Google Calendar cancellation could not be synchronized.'}}}
 }

@@ -12,7 +12,6 @@
 
 .ops-page {
   grid-template-columns: minmax(0, 1fr);
-  overflow-x: clip;
 }
 
 .ops-page .role-card {
@@ -36,13 +35,16 @@
 .ops-metric {
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
+  gap: 8px;
+  padding: 18px;
+  border-color: #e8dfd6;
+  border-radius: 12px;
 }
 
 .ops-metric > strong {
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
   word-break: normal;
-  white-space: nowrap;
-  font-size: clamp(1rem, 1.65vw, 1.45rem);
+  white-space: normal;
 }
 
 .ops-table-section,
@@ -59,7 +61,6 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
 }
 
 .ops-table-wrap {

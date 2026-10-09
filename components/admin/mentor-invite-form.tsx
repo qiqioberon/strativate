@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 
 import { inviteMentor } from '@/lib/admin/invite-mentor'
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier } from '@/lib/supabase/database.types'
 
@@ -21,7 +21,7 @@ export function MentorInviteForm({ onInvited }: { onInvited: () => void | Promis
       if (error) throw error
       setTiers(data || [])
     } catch (error) {
-      setError(formError(error, 'Daftar tier mentor belum dapat dimuat.'))
+      setError(formError(error, 'Unable to load mentor tiers.'))
     } finally {
       setLoadingTiers(false)
     }
@@ -42,11 +42,11 @@ export function MentorInviteForm({ onInvited }: { onInvited: () => void | Promis
         setError(result.error)
         return
       }
-      setMessage(result.success || 'Undangan dikirim.')
+      setMessage(result.success || 'Invitation sent.')
       form.reset()
       await onInvited()
     } catch (error) {
-      setError(formError(error, 'Undangan belum dapat dikirim. Coba lagi.'))
+      setError(formError(error, 'Unable to send the invitation. Please try again.'))
     } finally {
       setBusy(false)
     }
@@ -54,14 +54,14 @@ export function MentorInviteForm({ onInvited }: { onInvited: () => void | Promis
 
   return <form className="auth-form mentor-invite-form" onSubmit={submit}>
     <div className="mentor-invite-fields">
-      <label>Email mentor<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
-      <label>Tier mentor<select name="tier_id" required defaultValue="" disabled={loadingTiers || tiers.length === 0}>
-        <option value="" disabled>{loadingTiers ? 'Memuat tier…' : 'Pilih tier'}</option>
+      <label>Mentor email<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
+      <label>Mentor tier<select name="tier_id" required defaultValue="" disabled={loadingTiers || tiers.length === 0}>
+        <option value="" disabled>{loadingTiers ? 'Loading tiers…' : 'Select a tier'}</option>
         {tiers.map(tier => <option value={tier.id} key={tier.id}>{tier.name}</option>)}
       </select></label>
     </div>
     <button type="submit" className="button button-primary" disabled={busy || loadingTiers || tiers.length === 0}>
-      {busy ? 'Mengirim…' : 'Kirim Undangan'}
+      {busy ? 'Sending…' : 'Send invitation'}
     </button>
     {error && <p role="alert" className="form-error">{error}</p>}
     {message && <p role="status">{message}</p>}

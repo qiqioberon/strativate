@@ -14,9 +14,9 @@ import {
 import styles from './sales-reporting-charts.module.css'
 
 const VIEWS = [
-  { key: 'performance', label: 'Kinerja Penjualan' },
-  { key: 'products', label: 'Produk & Mentoring' },
-  { key: 'payments', label: 'Pembayaran & Diskon' },
+  { key: 'performance', label: 'Sales Performance' },
+  { key: 'products', label: 'Products & Mentoring' },
+  { key: 'payments', label: 'Payments & Discounts' },
 ] as const
 type AnalyticsView = typeof VIEWS[number]['key']
 type ProductFocus = 'all' | 'private' | 'intensive'
@@ -40,8 +40,8 @@ export function SalesAnalytics({ report, granularity, onGranularityChange }: {
     setView(VIEWS[next].key)
     document.getElementById(`${id}-tab-${VIEWS[next].key}`)?.focus()
   }
-  return <section className={styles.analytics} aria-label="Analitik penjualan">
-    <div className={styles.tabs} role="tablist" aria-label="Bagian analitik penjualan">
+  return <section className={styles.analytics} aria-label="Sales analytics">
+    <div className={styles.tabs} role="tablist" aria-label="Sales analytics sections">
       {VIEWS.map((item, index) => <button type="button" key={item.key} role="tab" id={`${id}-tab-${item.key}`} aria-selected={view === item.key} aria-controls={`${id}-panel-${item.key}`} tabIndex={view === item.key ? 0 : -1} onClick={() => setView(item.key)} onKeyDown={event => navigateTabs(event, index)}>{item.label}</button>)}
     </div>
     {VIEWS.map(item => <div key={item.key} className={styles.panel} role="tabpanel" id={`${id}-panel-${item.key}`} aria-labelledby={`${id}-tab-${item.key}`} tabIndex={0} hidden={view !== item.key}>
@@ -51,9 +51,9 @@ export function SalesAnalytics({ report, granularity, onGranularityChange }: {
         <div className={styles.grid}><SalesFinancialComparison report={report}/><SalesOrderVolumeChart report={report}/></div>
         <CustomerSnapshot report={report}/>
       </> : view === 'products' ? <>
-        <div className={styles.cardHeader}><div><h3>Produk & mentoring</h3><p>Pilih cakupan analisis untuk melihat perilaku pembelian dan produk teratas.</p></div><label className={styles.localControl}>Fokus produk<select value={focus} onChange={event => setFocus(event.target.value as ProductFocus)}><option value="all">Semua kategori</option><option value="private">Private Mentoring</option><option value="intensive">Intensive Mentoring</option></select></label></div>
+        <div className={styles.cardHeader}><div><h3>Products & mentoring</h3><p>Choose a scope to see purchasing trends and top products.</p></div><label className={styles.localControl}>Product focus<select value={focus} onChange={event => setFocus(event.target.value as ProductFocus)}><option value="all">All categories</option><option value="private">Private Mentoring</option><option value="intensive">Intensive Mentoring</option></select></label></div>
         {focus === 'all' ? <>
-          <div className={styles.grid}><SalesBreakdownChart title="Pendapatan per kategori" description="Pendapatan bersih item lunas menurut kategori bisnis." rows={report.categories.map(row => ({ ...row, label: CATEGORY_LABELS[row.key] ?? row.label }))}/><SalesBreakdownChart title="Unit per kategori" description="Jumlah unit item lunas, termasuk pesanan dengan beberapa item." rows={report.categories.map(row => ({ ...row, label: CATEGORY_LABELS[row.key] ?? row.label }))} metric="units"/></div>
+          <div className={styles.grid}><SalesBreakdownChart title="Revenue by category" description="Net revenue from paid items by business category." rows={report.categories.map(row => ({ ...row, label: CATEGORY_LABELS[row.key] ?? row.label }))}/><SalesBreakdownChart title="Units by category" description="Paid item units, including orders with multiple items." rows={report.categories.map(row => ({ ...row, label: CATEGORY_LABELS[row.key] ?? row.label }))} metric="units"/></div>
           <SalesProductRanking products={report.products}/>
         </> : focus === 'private' ? <PrivateAnalytics report={report}/> : <IntensiveAnalytics report={report}/>}
       </> : <PaymentDiscountAnalytics report={report}/>}
@@ -65,13 +65,13 @@ export function SalesAnalytics({ report, granularity, onGranularityChange }: {
 function CustomerSnapshot({ report }: { report: SalesReport }) {
   const id = useId()
   return <article className={styles.card} aria-labelledby={`${id}-title`}>
-    <header className={styles.cardHeader}><div><h3 id={`${id}-title`}>Pembeli baru & berulang</h3><p>Pembeli unik yang membayar pada periode dan cakupan ini.</p></div></header>
+    <header className={styles.cardHeader}><div><h3 id={`${id}-title`}>New & repeat customers</h3><p>Unique paying customers in this period and scope.</p></div></header>
     <div className={styles.stats}>
-      <div className={styles.stat}><span>Pembeli unik</span><strong>{count(report.totals.buyers)}</strong><small>Satu orang tetap satu pembeli, berapa pun jumlah itemnya.</small></div>
-      <div className={styles.stat}><span>Pembeli pertama kali</span><strong>{count(report.customers.first_time)}</strong><small>Memiliki satu pesanan lunas sepanjang riwayat hingga akhir periode.</small></div>
-      <div className={styles.stat}><span>Pembeli berulang</span><strong>{count(report.customers.repeat)}</strong><small>{percent(report.customers.repeat_share)} dari pembeli periode ini.</small></div>
+      <div className={styles.stat}><span>Unique customers</span><strong>{count(report.totals.buyers)}</strong><small>Each person counts once, regardless of item count.</small></div>
+      <div className={styles.stat}><span>First-time customers</span><strong>{count(report.customers.first_time)}</strong><small>One paid order across their history by the end of the period.</small></div>
+      <div className={styles.stat}><span>Repeat customers</span><strong>{count(report.customers.repeat)}</strong><small>{percent(report.customers.repeat_share)} of customers in this period.</small></div>
     </div>
-    <p className={styles.note}>Pembeli berulang memiliki minimal dua pesanan lunas sepanjang riwayat sebelum akhir periode, termasuk pembelian pada periode ini. Riwayat memakai semua kategori; satu pesanan dengan beberapa item tetap dihitung satu kali.</p>
+    <p className={styles.note}>Repeat customers have at least two paid orders by the end of the period, including purchases in this period. History covers all categories; an order with multiple items counts once.</p>
   </article>
 }
 
@@ -84,23 +84,23 @@ function PrivateAnalytics({ report }: { report: SalesReport }) {
   const knownRevenue = known.reduce((total, row) => total + row.net, 0)
   return <>
     <div className={styles.grid}>
-      <SalesBreakdownChart title="Pendapatan per tier mentor" description="Tier pada sumber pembelian historis Private Mentoring." rows={report.private_tiers} color={SALES_COLORS.private}/>
-      <SalesBreakdownChart title="Ukuran pembelian sesi" description="Unit pembelian menurut jumlah sesi aktual; mencakup penawaran fleksibel." rows={report.private_sessions} metric="units" color={SALES_COLORS.private} valueLabel="Unit pembelian"/>
+      <SalesBreakdownChart title="Revenue by mentor tier" description="Mentor tier recorded on historical Private Mentoring purchases." rows={report.private_tiers} color={SALES_COLORS.private}/>
+      <SalesBreakdownChart title="Session purchase size" description="Purchase units by actual session count, including flexible offers." rows={report.private_sessions} metric="units" color={SALES_COLORS.private} valueLabel="Purchase units"/>
     </div>
     {knownUnits > 0 ? <div className={styles.stats} data-wide-value={currency(knownRevenue / purchasedSessions).length > 17}>
-      <div className={styles.stat}><span>Sesi dibeli</span><strong>{count(purchasedSessions)}</strong><small>Dari item dengan jumlah sesi historis yang diketahui.</small></div>
-      <div className={styles.stat}><span>Rata-rata ukuran pembelian</span><strong>{new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(purchasedSessions / knownUnits)} sesi</strong><small>Jumlah sesi / unit pembelian dengan metadata sesi.</small></div>
-      <div className={styles.stat}><span>Rata-rata harga bersih per sesi</span><strong>{currency(knownRevenue / purchasedSessions)}</strong><small>Pendapatan item dengan metadata sesi / sesi dibeli.</small></div>
+      <div className={styles.stat}><span>Sessions purchased</span><strong>{count(purchasedSessions)}</strong><small>From items with a known historical session count.</small></div>
+      <div className={styles.stat}><span>Average purchase size</span><strong>{new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(purchasedSessions / knownUnits)} sessions</strong><small>Session count / purchase units with session metadata.</small></div>
+      <div className={styles.stat}><span>Average net price per session</span><strong>{currency(knownRevenue / purchasedSessions)}</strong><small>Revenue from items with session metadata / sessions purchased.</small></div>
     </div> : null}
     <div className={styles.grid}>
       <article className={styles.card}>
-        <header className={styles.cardHeader}><div><h3>Pembelian baru & top-up</h3><p>Sesi yang dibeli dari sumber transaksi, bukan saldo enrollment saat ini.</p></div></header>
-        {purchaseRows.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Pesanan, sesi diperoleh, dan pendapatan pembelian Private Mentoring</caption><thead><tr><th scope="col">Jenis pembelian</th><th scope="col" className={styles.numeric}>Pesanan</th><th scope="col" className={styles.numeric}>Sesi dibeli</th><th scope="col" className={styles.numeric}>Bersih</th></tr></thead><tbody>{purchaseRows.map(row => <tr key={row.key}><th scope="row">{row.label}</th><td className={styles.numeric}>{count(row.orders)}</td><td className={styles.numeric}>{row.purchased_sessions == null ? 'Tidak diketahui' : count(row.purchased_sessions)}</td><td className={styles.numeric}>{currency(row.net)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>Belum ada pembelian Private Mentoring lunas pada periode ini.</p>}
-        <p className={styles.note}>Sesi tanpa sumber historis yang dapat dipastikan tidak dimasukkan ke jumlah sesi. Pesanan dengan pembelian baru dan top-up dapat muncul di kedua jenis.</p>
+        <header className={styles.cardHeader}><div><h3>New purchases & top-ups</h3><p>Purchased sessions from transaction records, independent of current enrollment balances.</p></div></header>
+        {purchaseRows.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Orders, sessions purchased and revenue from Private Mentoring purchases</caption><thead><tr><th scope="col">Purchase type</th><th scope="col" className={styles.numeric}>Orders</th><th scope="col" className={styles.numeric}>Sessions purchased</th><th scope="col" className={styles.numeric}>Net</th></tr></thead><tbody>{purchaseRows.map(row => <tr key={row.key}><th scope="row">{row.label}</th><td className={styles.numeric}>{count(row.orders)}</td><td className={styles.numeric}>{row.purchased_sessions == null ? 'Unknown' : count(row.purchased_sessions)}</td><td className={styles.numeric}>{currency(row.net)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>No paid Private Mentoring purchases in this period.</p>}
+        <p className={styles.note}>Sessions without a confirmed historical source are excluded from the session count. Orders containing new purchases and top-ups may appear in both types.</p>
       </article>
       <article className={styles.card}>
-        <header className={styles.cardHeader}><div><h3>Rincian jumlah sesi</h3><p>Semua ukuran pembelian yang tercatat, termasuk jumlah sesi nonstandar.</p></div></header>
-        {sessionRows.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Pembelian Private Mentoring berdasarkan jumlah sesi historis</caption><thead><tr><th scope="col">Sesi per unit</th><th scope="col" className={styles.numeric}>Unit</th><th scope="col" className={styles.numeric}>Bersih</th></tr></thead><tbody>{sessionRows.map(row => <tr key={row.key}><th scope="row">{row.sessions === null || row.sessions === undefined ? 'Tidak diketahui' : `${count(row.sessions)} sesi`}</th><td className={styles.numeric}>{count(row.units)}</td><td className={styles.numeric}>{currency(row.net)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>Belum ada data pembelian sesi pada periode ini.</p>}
+        <header className={styles.cardHeader}><div><h3>Session count breakdown</h3><p>All recorded purchase sizes, including nonstandard session counts.</p></div></header>
+        {sessionRows.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Private Mentoring purchases by historical session count</caption><thead><tr><th scope="col">Sessions per unit</th><th scope="col" className={styles.numeric}>Unit</th><th scope="col" className={styles.numeric}>Net</th></tr></thead><tbody>{sessionRows.map(row => <tr key={row.key}><th scope="row">{row.sessions === null || row.sessions === undefined ? 'Unknown' : `${count(row.sessions)} sessions`}</th><td className={styles.numeric}>{count(row.units)}</td><td className={styles.numeric}>{currency(row.net)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>No session purchase data in this period.</p>}
       </article>
     </div>
     <SalesProductRanking products={report.products.filter(row => row.category === 'private')}/>
@@ -110,10 +110,10 @@ function PrivateAnalytics({ report }: { report: SalesReport }) {
 function IntensiveAnalytics({ report }: { report: SalesReport }) {
   return <>
     <div className={styles.grid}>
-      <SalesBreakdownChart title="Pendapatan per jenis Intensive" description="Paket, bundle, add-on, dan penawaran Internasional berdasarkan item lunas." rows={report.intensive_subtypes} color={SALES_COLORS.intensive} tooltipDetails={row => `${count(row.units)} unit · ${percent(ratio(row.net, report.categories.find(category => category.key === 'intensive')?.net ?? 0))} dari pendapatan Intensive`}/>
-      <SalesBreakdownChart title="Unit per jenis Intensive" description="Unit item lunas menurut jenis penawaran Intensive." rows={report.intensive_subtypes} metric="units" color={SALES_COLORS.intensive}/>
+      <SalesBreakdownChart title="Revenue by Intensive type" description="Packages, bundles, add-ons and International Offers based on paid items." rows={report.intensive_subtypes} color={SALES_COLORS.intensive} tooltipDetails={row => `${count(row.units)} unit · ${percent(ratio(row.net, report.categories.find(category => category.key === 'intensive')?.net ?? 0))} of Intensive revenue`}/>
+      <SalesBreakdownChart title="Units by Intensive type" description="Paid item units by Intensive offer type." rows={report.intensive_subtypes} metric="units" color={SALES_COLORS.intensive}/>
     </div>
-    <p className={styles.sectionNote}>Sesi per bulan berasal dari snapshot pembelian paket. Cakupan kompetisi memakai sumber katalog yang masih tersedia; metadata ini dapat berubah. Bundle, add-on, dan penawaran khusus mengikuti jenisnya masing-masing.</p>
+    <p className={styles.sectionNote}>Sessions per month come from the package purchase snapshot. Competition scope uses available catalog records and may change. Bundles, add-ons and custom offers retain their respective types.</p>
     <SalesProductRanking products={report.products.filter(row => row.category === 'intensive')}/>
   </>
 }
@@ -126,20 +126,20 @@ function PaymentDiscountAnalytics({ report }: { report: SalesReport }) {
   const codes = [...report.discounts].sort((a, b) => b.net - a.net || a.code.localeCompare(b.code, 'id')).slice(0, 10)
   return <>
     <div className={styles.grid}>
-      <SalesBreakdownChart title="Metode pembayaran" description="Satu hasil pembayaran per pesanan lunas; percobaan ulang tidak menambah hitungan." rows={report.payments.map(row => ({ ...row, label: paymentMethodLabel(row.key) }))} metric="orders" color={SALES_COLORS.paid} tooltipDetails={row => `${currency(row.net)} · ${percent(ratio(row.orders, report.totals.orders))} dari pesanan lunas`}/>
-      <SalesBreakdownChart title="Siklus pesanan" description="Status saat ini dari pesanan yang dibuat pada periode ini, berdasarkan waktu pembuatan." rows={lifecycleRows} metric="orders" valueLabel="Pesanan dibuat" tooltipDetails={row => `${currency(row.net)} nominal pesanan; bukan pendapatan periode pembayaran`}/>
+      <SalesBreakdownChart title="Payment method" description="One payment result per paid order; retries do not increase the count." rows={report.payments.map(row => ({ ...row, label: paymentMethodLabel(row.key) }))} metric="orders" color={SALES_COLORS.paid} tooltipDetails={row => `${currency(row.net)} · ${percent(ratio(row.orders, report.totals.orders))} of paid orders`}/>
+      <SalesBreakdownChart title="Order lifecycle" description="Current statuses of orders created in this period, by creation date." rows={lifecycleRows} metric="orders" valueLabel="Orders created" tooltipDetails={row => `${currency(row.net)} order amount; excluded from payment-period revenue`}/>
     </div>
     <div className={styles.stats} data-wide-value={[report.totals.discount, report.discount_orders > 0 ? report.totals.discount / report.discount_orders : 0].some(value => currency(value).length > 17)}>
-      <div className={styles.stat}><span>Diskon pada pesanan lunas</span><strong>{currency(report.totals.discount)}</strong><small>{percent(ratio(report.totals.discount, report.totals.gross))} pengurangan bruto menjadi bersih.</small></div>
-      <div className={styles.stat}><span>Pesanan menggunakan diskon</span><strong>{count(report.discount_orders)}</strong><small>{percent(ratio(report.discount_orders, report.totals.orders))} dari semua pesanan lunas pada cakupan ini.</small></div>
-      <div className={styles.stat}><span>Rata-rata diskon</span><strong>{currency(report.discount_orders > 0 ? report.totals.discount / report.discount_orders : 0)}</strong><small>Per pesanan lunas yang menggunakan diskon.</small></div>
+      <div className={styles.stat}><span>Discounts on paid orders</span><strong>{currency(report.totals.discount)}</strong><small>{percent(ratio(report.totals.discount, report.totals.gross))} reduction from gross to net.</small></div>
+      <div className={styles.stat}><span>Orders with discounts</span><strong>{count(report.discount_orders)}</strong><small>{percent(ratio(report.discount_orders, report.totals.orders))} of all paid orders in this scope.</small></div>
+      <div className={styles.stat}><span>Average discount</span><strong>{currency(report.discount_orders > 0 ? report.totals.discount / report.discount_orders : 0)}</strong><small>Per paid order with a discount.</small></div>
     </div>
     <div className={styles.grid}>
       <SalesFinancialComparison report={report} overTime/>
       <article className={styles.card}>
-        <header className={styles.cardHeader}><div><h3>Kinerja kode diskon</h3><p>10 kode dengan pendapatan bersih tertinggi dari penjualan lunas.</p></div></header>
-        {codes.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Pemakaian dan nilai historis kode diskon pada pesanan lunas</caption><thead><tr><th scope="col">Kode</th><th scope="col" className={styles.numeric}>Pesanan</th><th scope="col" className={styles.numeric}>Bruto</th><th scope="col" className={styles.numeric}>Diskon</th><th scope="col" className={styles.numeric}>Bersih</th><th scope="col" className={styles.numeric}>Rata-rata</th></tr></thead><tbody>{codes.map(row => <tr key={row.code}><th scope="row"><span className={styles.productName} title={row.code}>{row.code}</span></th><td className={styles.numeric}>{count(row.orders)}</td><td className={styles.numeric}>{currency(row.gross)}</td><td className={styles.numeric}>{currency(row.discount)}</td><td className={styles.numeric}>{currency(row.net)}</td><td className={styles.numeric}>{currency(row.average_discount)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>Tidak ada pesanan lunas menggunakan kode diskon pada periode ini.</p>}
-        <p className={styles.note}>Nilai berasal dari snapshot pesanan. Reservasi atau diskon yang dilepas tidak dihitung sebagai pemakaian.</p>
+        <header className={styles.cardHeader}><div><h3>Discount code performance</h3><p>Top 10 codes by net revenue from paid sales.</p></div></header>
+        {codes.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Historical discount code usage and amounts on paid orders</caption><thead><tr><th scope="col">Code</th><th scope="col" className={styles.numeric}>Orders</th><th scope="col" className={styles.numeric}>Gross</th><th scope="col" className={styles.numeric}>Discount</th><th scope="col" className={styles.numeric}>Net</th><th scope="col" className={styles.numeric}>Average</th></tr></thead><tbody>{codes.map(row => <tr key={row.code}><th scope="row"><span className={styles.productName} title={row.code}>{row.code}</span></th><td className={styles.numeric}>{count(row.orders)}</td><td className={styles.numeric}>{currency(row.gross)}</td><td className={styles.numeric}>{currency(row.discount)}</td><td className={styles.numeric}>{currency(row.net)}</td><td className={styles.numeric}>{currency(row.average_discount)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>No paid orders used a discount code in this period.</p>}
+        <p className={styles.note}>Amounts come from order snapshots. Reserved or released discounts do not count as usage.</p>
       </article>
     </div>
   </>

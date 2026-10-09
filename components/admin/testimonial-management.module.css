@@ -4,14 +4,14 @@
   place-items: center;
   gap: 10px;
   padding: 28px;
-  border: 1px solid #e1e5e8;
+  border: 1px solid #e8dfd6;
   border-radius: 16px;
-  background: #fff;
+  background: #fffdf9;
   color: #68727d;
   text-align: center;
 }
 .stateCard svg { color: var(--primary); }
-.stateCard p { max-width: 680px; font-size: 11px; line-height: 1.6; }
+.stateCard p { max-width: 680px; font-size: 13px; line-height: 1.6; }
 
 .list { display: grid; gap: 10px; }
 .row {
@@ -22,7 +22,7 @@
   padding: 12px;
   border: 1px solid #e7eaed;
   border-radius: 13px;
-  background: #fff;
+  background: #fffdf9;
 }
 .thumbnail {
   position: relative;
@@ -38,27 +38,27 @@
 .thumbnail img { object-fit: cover; }
 .rowCopy { display: grid; min-width: 0; gap: 5px; }
 .rowTitle { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 8px; }
-.rowTitle strong { font-size: 11px; letter-spacing: -.02em; }
-.achievement { color: #b54d16; font-size: 9px; font-weight: 850; }
+.rowTitle strong { overflow-wrap: anywhere; font-size: 13px; letter-spacing: -.02em; }
+.achievement { color: #b54d16; font-size: 12px; font-weight: 600; }
 .rowCopy p {
   display: -webkit-box;
   overflow: hidden;
   color: #6d7780;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.55;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.rowActions { display: flex; align-items: center; gap: 6px; }
+.rowActions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .rowActions button {
   min-height: 32px;
   padding: 0 9px;
   border: 1px solid #dfe4e8;
   border-radius: 8px;
   color: #53606b;
-  background: #fff;
-  font-size: 9px;
-  font-weight: 750;
+  background: #fffdf9;
+  font-size: 12px;
+  font-weight: 600;
 }
 .rowActions button:hover:not(:disabled) { border-color: #f0a06d; color: #9b3e0c; background: #fff8f2; }
 .rowActions button:disabled { opacity: .42; }
@@ -68,24 +68,28 @@
 .formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .formGrid label,
 .mediaSection label {
+  min-width: 0;
   display: grid;
   gap: 7px;
   color: #525e68;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 600;
 }
-.formGrid label > span { color: #8b949d; font-size: 8px; font-weight: 650; }
+.formGrid label > span { color: #8b949d; font-size: 12px; font-weight: 650; }
 .formGrid input,
 .formGrid textarea,
 .mediaSection input {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid #dce2e7;
   border-radius: 9px;
   outline: 0;
   color: #27313a;
-  background: #fff;
+  background: #fffdf9;
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
 }
 .formGrid input { min-height: 42px; padding: 0 11px; }
 .formGrid textarea { padding: 11px; resize: vertical; line-height: 1.6; }
@@ -100,7 +104,7 @@
   padding-top: 18px;
   border-top: 1px solid #e8ebee;
 }
-.mediaSection small { display: block; margin-top: 7px; color: #7d8790; font-size: 9px; line-height: 1.5; }
+.mediaSection small { display: block; margin-top: 7px; color: #7d8790; font-size: 12px; line-height: 1.5; }
 .preview {
   position: relative;
   width: 100%;
@@ -114,16 +118,16 @@
   object-fit: cover;
   transition: object-position 120ms ease, transform 120ms ease;
 }
-.preview > div { display: grid; height: 100%; min-height: 250px; place-items: center; gap: 7px; padding: 20px; color: #89929a; text-align: center; font-size: 9px; }
+.preview > div { display: grid; height: 100%; min-height: 250px; place-items: center; gap: 7px; padding: 20px; color: #89929a; text-align: center; font-size: 12px; }
 .preview svg { color: #c06b35; }
 .cropControls {
   display: grid;
   gap: 11px;
   margin-top: 16px;
   padding: 13px;
-  border: 1px solid #e4e8eb;
+  border: 1px solid #e8dfd6;
   border-radius: 10px;
-  background: #fafbfc;
+  background: #faf8f5;
 }
 .cropMeta {
   display: flex;
@@ -131,10 +135,10 @@
   justify-content: space-between;
   gap: 12px;
   color: #7d8790;
-  font-size: 8px;
+  font-size: 12px;
 }
-.cropMeta strong { color: #4e5962; font-size: 9px; }
-.cropControls label { gap: 5px; font-size: 9px; }
+.cropMeta strong { color: #4e5962; font-size: 12px; }
+.cropControls label { gap: 5px; font-size: 12px; }
 .cropControls input[type='range'] {
   min-height: auto;
   padding: 0;
@@ -145,14 +149,14 @@
   align-items: flex-start;
   gap: 10px;
   padding: 13px;
-  border: 1px solid #e4e8eb;
+  border: 1px solid #e8dfd6;
   border-radius: 10px;
-  background: #fafbfc;
+  background: #faf8f5;
 }
 .publishToggle input { margin-top: 3px; }
 .publishToggle span { display: grid; gap: 2px; }
-.publishToggle strong { font-size: 10px; }
-.publishToggle small { color: #78828b; font-size: 9px; line-height: 1.45; }
+.publishToggle strong { font-size: 13px; }
+.publishToggle small { color: #78828b; font-size: 12px; line-height: 1.45; }
 .formActions { display: flex; flex-wrap: wrap; gap: 9px; }
 
 @media (max-width: 900px) {

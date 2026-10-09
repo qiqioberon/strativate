@@ -1,7 +1,7 @@
 'use client'
 
 import { Camera, Pencil, X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { ProfileAvatar } from './profile-avatar'
@@ -28,7 +28,7 @@ function displayValue(value: string | null | undefined, fallback = 'Belum diisi'
   return value?.trim() || fallback
 }
 
-export function ProfileForm({ language = 'id' }: { language?: AccountLanguage }) {
+export function ProfileForm({ language = 'id', onUnsavedChange }: { language?: AccountLanguage; onUnsavedChange?: (dirty: boolean) => void }) {
   const en = language === 'en'
   const text = (english: string, indonesian: string) => en ? english : indonesian
   const account = useAccount() as ProfileWithContact
@@ -39,9 +39,31 @@ export function ProfileForm({ language = 'id' }: { language?: AccountLanguage })
   const [saved, setSaved] = useState(false)
   const [avatarOpen,setAvatarOpen]=useState(false)
   const [avatarOverride,setAvatarOverride]=useState<string|null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    onUnsavedChange?.(dirty)
+    return () => onUnsavedChange?.(false)
+  }, [dirty, onUnsavedChange])
+
+  useEffect(() => {
+    if (account.role !== 'admin' || !dirty) return
+    const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+    window.addEventListener('beforeunload', beforeUnload)
+    return () => window.removeEventListener('beforeunload', beforeUnload)
+  }, [account.role, dirty])
+
+  function cancelEditing() {
+    if (busy) return
+    if (account.role === 'admin' && dirty && !window.confirm('Discard unsaved profile changes?')) return
+    setDirty(false)
+    setEditing(false)
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (busy) return
     setError('')
     setSaved(false)
     const form = new FormData(event.currentTarget)
@@ -65,6 +87,7 @@ export function ProfileForm({ language = 'id' }: { language?: AccountLanguage })
       }).eq('id', account.id)
       if (updateError) throw updateError
       setSaved(true)
+      setDirty(false)
       setEditing(false)
       router.refresh()
     } catch (caught) {
@@ -82,19 +105,19 @@ export function ProfileForm({ language = 'id' }: { language?: AccountLanguage })
     <ProfileAvatarEditor language={language} open={avatarOpen} onClose={()=>setAvatarOpen(false)} onSaved={(url, cleanupWarning)=>{setAvatarOverride(url);setSaved(true);setError(cleanupWarning ?? '');router.refresh()}}/>
     <div className="account-profile__header">
       <div>{!en ? <p className="kicker">Akun</p> : null}<h2>{text('Profile', 'Profil akun')}</h2>{!en ? <p>Informasi profil ditampilkan read-only sampai Anda memilih mode edit.</p> : null}</div>
-      {!editing ? <button type="button" className="profile-edit-button" onClick={() => { setEditing(true); setError(''); setSaved(false) }} aria-label={text('Edit profile', 'Edit profil')} title={text('Edit profile', 'Edit profil')}><Pencil aria-hidden="true" /></button> : <button type="button" className="profile-edit-button" disabled={busy} onClick={() => { if (!busy) setEditing(false) }} aria-label={text('Cancel editing', 'Batal edit profil')} title={text('Cancel editing', 'Batal edit')}><X aria-hidden="true" /></button>}
+      {!editing ? <button type="button" className="profile-edit-button" onClick={() => { setEditing(true); setError(''); setSaved(false) }} aria-label={text('Edit profile', 'Edit profil')} title={text('Edit profile', 'Edit profil')}><Pencil aria-hidden="true" /></button> : <button type="button" className="profile-edit-button" disabled={busy} onClick={cancelEditing} aria-label={text('Cancel editing', 'Batal edit profil')} title={text('Cancel editing', 'Batal edit')}><X aria-hidden="true" /></button>}
     </div>
 
     {!whatsapp ? <div className="profile-whatsapp-reminder" role="note"><strong>{text('Add your WhatsApp number', 'Tambahkan nomor WhatsApp')}</strong><span>{text('Optional, but useful if the Strativate team needs to contact you about your sessions.', 'Nomor ini opsional, tetapi membantu tim Strativate menghubungi Anda untuk kebutuhan operasional.')}</span></div> : null}
 
-    {editing ? <form className="auth-form account-profile__form" onSubmit={submit}>
-      <label>{text('First name', 'Nama Depan')}<input name="first_name" defaultValue={account.first_name || ''} required maxLength={100} /></label>
-      <label>{text('Last name', 'Nama Belakang')}<input name="last_name" defaultValue={account.last_name || ''} maxLength={100} /></label>
-      <label>{text('Username', 'Nama pengguna')}<input name="username" defaultValue={account.username || ''} required maxLength={30} /></label>
+    {editing ? <form ref={formRef} className="auth-form account-profile__form" onSubmit={submit} onChange={() => setDirty(Array.from(formRef.current?.elements ?? []).some(element => element instanceof HTMLInputElement && !element.readOnly && element.value !== element.defaultValue))}>
+      <label>{text('First name', 'Nama Depan')}<input name="first_name" defaultValue={account.first_name || ''} disabled={busy} required maxLength={100} /></label>
+      <label>{text('Last name', 'Nama Belakang')}<input name="last_name" defaultValue={account.last_name || ''} disabled={busy} maxLength={100} /></label>
+      <label>{text('Username', 'Nama pengguna')}<input name="username" defaultValue={account.username || ''} disabled={busy} required maxLength={30} /></label>
       <label>Email<input value={account.email || ''} readOnly aria-readonly="true" /></label>
-      <label>{text('WhatsApp number', 'Nomor WhatsApp')} <span className="profile-field-optional">{text('Optional', 'Opsional')}</span><input name="whatsapp_number" type="tel" inputMode="tel" defaultValue={whatsapp || ''} maxLength={24} placeholder="08123456789" /></label>
+      <label>{text('WhatsApp number', 'Nomor WhatsApp')} <span className="profile-field-optional">{text('Optional', 'Opsional')}</span><input name="whatsapp_number" type="tel" inputMode="tel" defaultValue={whatsapp || ''} disabled={busy} maxLength={24} placeholder="08123456789" /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="button-row"><button className="button button-primary" disabled={busy}>{busy ? text('Saving…', 'Menyimpan…') : text('Save profile', 'Simpan profil')}</button><button className="button button-outline" type="button" disabled={busy} onClick={() => setEditing(false)}>{text('Cancel', 'Batal')}</button></div>
+      <div className="button-row"><button className="button button-primary" disabled={busy}>{busy ? text('Saving…', 'Menyimpan…') : text('Save profile', 'Simpan profil')}</button><button className="button button-outline" type="button" disabled={busy} onClick={cancelEditing}>{text('Cancel', 'Batal')}</button></div>
     </form> : <dl className="account-profile__details">
       <div><dt>{text('Name', 'Nama')}</dt><dd>{displayValue(fullName, text('Not provided', 'Belum diisi'))}</dd></div>
       <div><dt>{text('Username', 'Nama pengguna')}</dt><dd>{account.username ? `@${account.username}` : text('Not provided', 'Belum diisi')}</dd></div>

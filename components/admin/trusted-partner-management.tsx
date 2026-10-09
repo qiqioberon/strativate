@@ -19,7 +19,7 @@ import {
   type FormEvent,
 } from 'react'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
 import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
 import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
@@ -165,6 +165,13 @@ export function TrustedPartnerManagement() {
     setFieldErrors({})
   }
 
+  function requestCloseEditor() {
+    if (busy) return
+    const dirty = JSON.stringify(draft) !== JSON.stringify(selected ? draftFromPartner(selected) : emptyDraft) || Boolean(image.processedFile || image.cropperProps.sourceFile)
+    if (dirty && !window.confirm('Discard unsaved changes? Your edits and selected images will be lost.')) return
+    resetEditor()
+  }
+
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (busy) return
@@ -306,9 +313,7 @@ export function TrustedPartnerManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Content · Homepage</p>
         <h2>Trusted Partners</h2>
-        <p>Manage partner organizations displayed on the homepage floating constellation.</p>
       </div>
       <span className={dataStyles.countPill}><Handshake aria-hidden="true" />{partners.length} partners</span>
     </header>
@@ -486,20 +491,20 @@ export function TrustedPartnerManagement() {
         aria-labelledby="trusted-partner-editor-heading"
         data-testid="trusted-partner-editor-dialog"
         onCancel={event => {
-          if (busy) event.preventDefault()
-          else resetEditor()
+          event.preventDefault()
+          requestCloseEditor()
         }}
         onClose={() => {
           if (!busy && editorOpen) resetEditor()
         }}
         onClick={event => {
-          if (event.target === event.currentTarget && !busy) resetEditor()
+          if (event.target === event.currentTarget) requestCloseEditor()
         }}
       >
         <div className={dialogStyles.panel}>
           <header className={dialogStyles.header}>
             <div>
-              <p className="kicker">{creating ? 'New partner' : 'Manage partner'}</p>
+
               <h2 id="trusted-partner-editor-heading">
                 {creating ? 'Add trusted partner' : selected?.organization_name}
               </h2>
@@ -507,7 +512,7 @@ export function TrustedPartnerManagement() {
             <button
               type="button"
               className={'role-close ' + dialogStyles.closeButton}
-              onClick={resetEditor}
+              onClick={requestCloseEditor}
               disabled={busy}
               aria-label="Close partner editor"
             >
@@ -516,7 +521,7 @@ export function TrustedPartnerManagement() {
           </header>
 
           <div className={dialogStyles.body}>
-            <form className={styles.form} key={creating ? 'create' : selected?.id ?? 'idle'} onSubmit={save} noValidate>
+            <form className={styles.form} key={creating ? 'create' : selected?.id ?? 'idle'} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
               <div className={styles.formGrid}>
                 <label>
                   Organization / Partner name
@@ -560,9 +565,9 @@ export function TrustedPartnerManagement() {
                         ? 'Add partner'
                         : 'Save changes'}
                 </button>
-                <button type="button" className="button button-outline" onClick={resetEditor} disabled={busy}>Cancel</button>
+                <button type="button" className="button button-outline" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       </dialog>

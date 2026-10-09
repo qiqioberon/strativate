@@ -254,4 +254,4 @@ footer { max-width: 1120px; margin: 0 auto; padding: 35px 32px; display: flex; a
   .availability-range > span { display: none; }
   .availability-remove { justify-self: start; }
 }
-.admin-shell .role-page-title h2,.admin-shell .admin-heading h2,.admin-shell [class*="pageHeader"] h2,.admin-shell [class*="headerCopy"] h2{font-family:var(--font-poppins),Poppins,sans-serif;font-size:clamp(1.85rem,3.3vw,2.55rem);font-weight:700;letter-spacing:-.045em;line-height:1.08;word-spacing:.02em;text-wrap:balance}.admin-shell .role-page-title{min-width:0}.admin-shell .role-page-title>p:last-child,.admin-shell .admin-heading>div>p:last-child{max-width:760px;line-height:1.65}
+.admin-shell .role-page-title h2,.admin-shell .admin-heading h2,.admin-shell [class*="pageHeader"] h2,.admin-shell [class*="headerCopy"] h2{font-family:var(--font-poppins),Poppins,sans-serif;font-size:clamp(1.75rem,2.6vw,2.25rem);font-weight:700;letter-spacing:-.025em;line-height:1.18;text-wrap:balance}.admin-shell .role-page-title{min-width:0}

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 
 import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
 import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import {
   ABOUT_US_STORY_IMAGE_BUCKET,
   ABOUT_US_STORY_IMAGE_PREFIX,
@@ -180,9 +180,7 @@ export function AboutStoryImageManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Content · About Us</p>
-        <h2>Story Image</h2>
-        <p>Manage the single editorial image used beside the About Us story. Page copy remains source-controlled.</p>
+        <h3>Story Image</h3>
       </div>
       <span className={dataStyles.countPill}><ImageIcon aria-hidden="true" />1 fixed slot</span>
     </header>
@@ -193,7 +191,7 @@ export function AboutStoryImageManagement() {
   if (loadFailed) return <section className={dataStyles.page}>{pageHeader}<div className={styles.stateCard} role="alert"><CircleAlert aria-hidden="true" /><strong>About Us content could not be loaded.</strong><p>{error}</p><button type="button" className="button button-outline" onClick={() => void load()}>Try again</button></div></section>
 
   return (
-    <section className={dataStyles.page} data-testid="about-story-image-admin-section" aria-busy={busy}>
+    <section className={dataStyles.page} data-testid="about-story-image-admin-section" aria-busy={busy} data-pending-save={busy} data-unsaved-changes={altText !== (media?.alt_text ?? '') || Boolean(image.processedFile)}>
       {pageHeader}
       {error ? <p className={dataStyles.feedback + ' ' + dataStyles.errorFeedback} role="alert">{error}</p> : null}
       {notice ? <p className={dataStyles.feedback + ' ' + dataStyles.successFeedback} role="status">{notice}</p> : null}
@@ -207,7 +205,7 @@ export function AboutStoryImageManagement() {
           </div>
         </div>
 
-        <form className={styles.form} onSubmit={save} noValidate>
+        <form className={styles.form} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
           <div className={styles.fields}>
             <label>
               Alt text
@@ -239,7 +237,7 @@ export function AboutStoryImageManagement() {
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
-        </form>
+        </fieldset></form>
       </div>
     </section>
   )

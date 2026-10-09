@@ -1,4 +1,4 @@
-import { formError } from '../auth/errors'
+import { adminFormError as formError } from '../auth/errors'
 import {
   DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE,
   DIGITAL_PRODUCT_CONTENT_NAMESPACE,
@@ -70,30 +70,30 @@ export function validateDigitalProductDraft({
   const trimmedReferencePrice = referencePriceInput.trim()
   const referencePriceAmount = trimmedReferencePrice ? parseDigitalProductPriceInput(trimmedReferencePrice) : null
 
-  if (!trimmedName) errors.name = 'Nama produk wajib diisi.'
-  else if (trimmedName.length > NAME_MAX_LENGTH) errors.name = `Nama produk maksimal ${NAME_MAX_LENGTH} karakter.`
+  if (!trimmedName) errors.name = 'Product name is required.'
+  else if (trimmedName.length > NAME_MAX_LENGTH) errors.name = `Product name must be ${NAME_MAX_LENGTH} characters or fewer.`
 
-  if (!trimmedSlug) errors.slug = 'Slug wajib diisi.'
+  if (!trimmedSlug) errors.slug = 'Slug is required.'
   else if (slug !== trimmedSlug || trimmedSlug.length > SLUG_MAX_LENGTH || !STRICT_SLUG.test(trimmedSlug)) {
-    errors.slug = 'Slug harus menggunakan huruf kecil, angka, dan tanda hubung tanpa spasi.'
+    errors.slug = 'Use lowercase letters, numbers, and hyphens without spaces for the slug.'
   }
 
-  if (!trimmedDescription) errors.description = 'Deskripsi wajib diisi.'
-  else if (trimmedDescription.length > DESCRIPTION_MAX_LENGTH) errors.description = `Deskripsi maksimal ${DESCRIPTION_MAX_LENGTH} karakter.`
+  if (!trimmedDescription) errors.description = 'Description is required.'
+  else if (trimmedDescription.length > DESCRIPTION_MAX_LENGTH) errors.description = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer.`
 
   if (priceAmount === null) {
-    errors.price = 'Harga harus berupa Rupiah bulat bernilai 0 atau lebih.'
+    errors.price = 'Price must be a whole Rupiah amount of 0 or more.'
   }
 
   if (trimmedReferencePrice && referencePriceAmount === null) {
-    errors.referencePrice = 'Harga referensi harus berupa Rupiah bulat bernilai 0 atau lebih.'
+    errors.referencePrice = 'Reference price must be a whole Rupiah amount of 0 or more.'
   } else if (priceAmount !== null && referencePriceAmount !== null && referencePriceAmount < priceAmount) {
-    errors.referencePrice = 'Harga referensi harus kosong atau setidaknya sebesar harga aktif.'
+    errors.referencePrice = 'Leave the reference price empty or enter at least the selling price.'
   }
 
-  if (!file && !hasStoredImage) errors.file = 'Pilih cover image untuk membuat Digital Product.'
-  if (file && !DIGITAL_PRODUCT_IMAGE_ALLOWED_TYPES.has(file.type)) errors.file = 'Gunakan gambar JPG, PNG, atau WebP.'
-  else if (file && file.size > DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE) errors.file = 'Ukuran gambar maksimal 5 MB.'
+  if (!file && !hasStoredImage) errors.file = 'Select a cover image to create a digital product.'
+  if (file && !DIGITAL_PRODUCT_IMAGE_ALLOWED_TYPES.has(file.type)) errors.file = 'Use a JPG, PNG, or WebP image.'
+  else if (file && file.size > DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE) errors.file = 'Image must be 5 MB or smaller.'
 
   return errors
 }
@@ -110,30 +110,30 @@ export function validateDigitalProductContentFile({
   publishing?: boolean
 }) {
   if (!contentType) {
-    return publishing || file || hasStoredContent ? 'Pilih Jenis Produk PDF atau Video.' : null
+    return publishing || file || hasStoredContent ? 'Select PDF or Video as the product type.' : null
   }
   if (!file && !hasStoredContent) {
-    return publishing ? 'Upload materi sebelum mempublikasikan Digital Product.' : null
+    return publishing ? 'Upload protected content before publishing the digital product.' : null
   }
   if (!file) return null
-  if (file.size <= 0) return 'File materi tidak valid.'
-  if (file.size > DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE) return 'Ukuran materi maksimal 500 MB.'
+  if (file.size <= 0) return 'The content file is invalid.'
+  if (file.size > DIGITAL_PRODUCT_CONTENT_MAX_FILE_SIZE) return 'Content file must be 500 MB or smaller.'
 
   const allowed = contentType === 'pdf' ? DIGITAL_PRODUCT_PDF_ALLOWED_TYPES : DIGITAL_PRODUCT_VIDEO_ALLOWED_TYPES
   if (!allowed.has(file.type)) {
     return contentType === 'pdf'
-      ? 'Materi PDF harus menggunakan file PDF.'
-      : 'Materi Video harus menggunakan MP4 atau WebM.'
+      ? 'PDF content requires a PDF file.'
+      : 'Video content requires an MP4 or WebM file.'
   }
 
   const extension = file.name?.trim().toLowerCase().split('.').pop() ?? ''
   if (contentType === 'pdf' && extension !== 'pdf') {
-    return 'Materi PDF harus menggunakan file PDF dengan ekstensi .pdf.'
+    return 'PDF content requires a PDF file with the .pdf extension.'
   }
   if (contentType === 'video') {
     const expectedExtension = file.type === 'video/mp4' ? 'mp4' : file.type === 'video/webm' ? 'webm' : ''
     if (!expectedExtension || extension !== expectedExtension) {
-      return 'Materi Video harus menggunakan file MP4 atau WebM dengan ekstensi yang sesuai.'
+      return 'Video content requires an MP4 or WebM file with the matching extension.'
     }
   }
   return null
@@ -255,7 +255,7 @@ export function isDigitalProductSetupRequired(error: unknown) {
 
 export function digitalProductMutationError(error: unknown) {
   if (error && typeof error === 'object' && 'code' in error && String(error.code) === '23505') {
-    return 'Slug sudah digunakan oleh Digital Product lain.'
+    return 'Another digital product already uses this slug.'
   }
-  return formError(error, 'Digital Product belum dapat disimpan. Periksa koneksi lalu coba lagi.')
+  return formError(error, 'Unable to save the digital product. Check your connection and try again.')
 }

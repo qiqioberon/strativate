@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { PHOTO_SOURCE_BUCKET, sourceExtension, type CropOutput, type NormalizedCropRect } from '@/lib/media/image-crop'
@@ -94,7 +95,7 @@ export function useAdminImageUpload({ supabase, target, onError }: {
       setInitialCrop(crop)
       setSourceFile(new File([data], `image-source.${sourceExtension(data)}`, { type: data.type || 'image/jpeg' }))
     } catch (caught) {
-      if (generation === generationRef.current) onError(caught instanceof Error ? caught.message : 'Original source could not be loaded.')
+      if (generation === generationRef.current) onError(formError(caught, 'The original source could not be loaded. Check your connection or replace the image.'))
     } finally {
       if (generation === generationRef.current) setLoadingSource(false)
     }

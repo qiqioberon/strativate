@@ -1,4 +1,5 @@
 import 'server-only'
+import { adminFormError } from '@/lib/auth/errors'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -39,7 +40,7 @@ export async function getManagedZoomRoomPool({
     p_private_session_id: mentoringKind === 'private' ? sessionId : null,
     p_intensive_session_id: mentoringKind === 'intensive' ? sessionId : null,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(adminFormError(error,'Unable to load Zoom room availability.'))
   return data ?? []
 }
 
@@ -63,7 +64,7 @@ export async function reconcileManagedZoomRoomCalendars(roomId: string, adminId:
     .eq('zoom_room_id', roomId)
     .is('released_at', null)
     .gt('ends_at', new Date().toISOString())
-  if (error) throw new Error('Sesi yang menggunakan Zoom room belum dapat dimuat.')
+  if (error) throw new Error('Unable to load sessions using this Zoom room.')
 
   const results = await Promise.allSettled((data ?? []).map((allocation: { private_session_id: string | null; intensive_session_id: string | null }) => {
     if (allocation.private_session_id) return syncPrivateMentoringSession(allocation.private_session_id, adminId)

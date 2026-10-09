@@ -21,7 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { AboutUsContentManagement } from '@/components/admin/about-us-content-management'
 import { AdminCommerceOperations } from '@/components/admin/commerce-operations'
@@ -32,7 +32,6 @@ import { CompetitionCategoryManagement } from '@/components/admin/competition-ca
 import { DigitalProductManagement } from '@/components/admin/digital-product-management'
 import { DiscountCodeManagement } from '@/components/admin/discount-code-management'
 import { EditorialContentManagement } from '@/components/admin/editorial-content-management'
-import { HeroPosterManagement } from '@/components/admin/hero-poster-management'
 import { InstitutionManagement } from '@/components/admin/institutions'
 import { IntensiveMentoringManagement } from '@/components/admin/intensive-mentoring-management'
 import { MasterOptions } from '@/components/admin/master-options'
@@ -54,6 +53,7 @@ import { DashboardTopbarActions } from '@/components/dashboard/dashboard-topbar-
 import { DashboardNotificationCenter } from '@/components/dashboard/notification-center'
 import { displayName } from '@/lib/auth/rules'
 import type { Notification } from '@/lib/supabase/database.types'
+import styles from './admin-shell.module.css'
 
 type Section =
   | 'Overview'
@@ -70,7 +70,6 @@ type Section =
   | 'Competition Categories'
   | 'Digital Products'
   | 'Discount Codes'
-  | 'Hero Posters'
   | 'Testimonials'
   | 'Publications'
   | 'Competitions'
@@ -88,38 +87,37 @@ type NavItem = { id: Section; label: string; icon: typeof LayoutDashboard }
 
 const groups: { label: string; items: NavItem[] }[] = [
   {
-    label: 'Operasional',
+    label: 'Operations',
     items: [
-      { id: 'Overview', label: 'Ringkasan', icon: LayoutDashboard },
-      { id: 'Orders', label: 'Pesanan', icon: ReceiptText },
+      { id: 'Overview', label: 'Overview', icon: LayoutDashboard },
+      { id: 'Orders', label: 'Orders', icon: ReceiptText },
       { id: 'Mentoring Sessions', label: 'Mentoring Sessions', icon: UsersRound },
-      { id: 'Calendar', label: 'Jadwal', icon: CalendarDays },
+      { id: 'Calendar', label: 'Schedule', icon: CalendarDays },
       { id: 'Zoom', label: 'Zoom', icon: Video },
       { id: 'Cart Links', label: 'Cart Links', icon: ShoppingCart },
-      { id: 'Notifications', label: 'Notifikasi', icon: Bell },
+      { id: 'Notifications', label: 'Notifications', icon: Bell },
     ],
   },
   {
-    label: 'Pengguna',
+    label: 'Users',
     items: [
       { id: 'Mentees', label: 'Mentees', icon: UsersRound },
       { id: 'Mentors', label: 'Mentors', icon: UsersRound },
     ],
   },
   {
-    label: 'Produk',
+    label: 'Products',
     items: [
       { id: 'Private Mentoring', label: 'Private Mentoring', icon: PackageOpen },
       { id: 'Intensive Mentoring', label: 'Intensive Mentoring', icon: PackageOpen },
       { id: 'Competition Categories', label: 'Competition Categories', icon: PackageOpen },
-      { id: 'Digital Products', label: 'Produk Digital', icon: PackageOpen },
+      { id: 'Digital Products', label: 'Digital Products', icon: PackageOpen },
       { id: 'Discount Codes', label: 'Discount Codes', icon: Tags },
     ],
   },
   {
-    label: 'Konten',
+    label: 'Content',
     items: [
-      { id: 'Hero Posters', label: 'Hero Posters', icon: Images },
       { id: 'Testimonials', label: 'Testimonials', icon: MessageSquareQuote },
       { id: 'Publications', label: 'Publications', icon: Newspaper },
       { id: 'Competitions', label: 'Competitions', icon: Trophy },
@@ -128,14 +126,14 @@ const groups: { label: string; items: NavItem[] }[] = [
       { id: 'About Us Content', label: 'About Us Content', icon: Images },
     ],
   },
-  { label: 'Bisnis', items: [{ id: 'Reports', label: 'Laporan', icon: FileBarChart2 }] },
+  { label: 'Business', items: [{ id: 'Reports', label: 'Reports', icon: FileBarChart2 }] },
   {
-    label: 'Data master',
+    label: 'Master Data',
     items: [
       { id: 'Mentor Expertise', label: 'Mentor Expertise', icon: Tags },
-      { id: 'Institutions', label: 'Institusi', icon: Building2 },
-      { id: 'Referral Sources', label: 'Sumber Referral', icon: Building2 },
-      { id: 'Competition Interests', label: 'Minat Kompetisi', icon: Building2 },
+      { id: 'Institutions', label: 'Institutions', icon: Building2 },
+      { id: 'Referral Sources', label: 'Referral Sources', icon: Building2 },
+      { id: 'Competition Interests', label: 'Competition Interests', icon: Building2 },
     ],
   },
 ]
@@ -151,27 +149,88 @@ export default function AdminDashboard() {
   const hasReportView = searchParams.has('reportView')
   const [section, setSection] = useState<Section>(() => hasReportView ? 'Reports' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
   const [mobile, setMobile] = useState(false)
+  const [narrowScreen, setNarrowScreen] = useState(false)
+  const [profileDirty, setProfileDirty] = useState(false)
+  const sectionRef = useRef(section)
+  const profileDirtyRef = useRef(profileDirty)
+  const acceptedHrefRef = useRef(`${pathname}${searchParams.size ? `?${searchParams.toString()}` : ''}`)
+  sectionRef.current = section
+  profileDirtyRef.current = profileDirty
+  const menuRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
+  const wasMobileOpen = useRef(false)
   const [relatedTarget, setRelatedTarget] = useState<{ entity: string | null; id: string | null } | null>(null)
 
   useEffect(() => {
-    if (hasReportView) {
-      setSection('Reports')
+    const query = window.matchMedia('(max-width: 800px)')
+    const update = () => {
+      setNarrowScreen(query.matches)
+      if (!query.matches) setMobile(false)
+    }
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!mobile) {
+      if (wasMobileOpen.current) menuRef.current?.focus()
+      wasMobileOpen.current = false
       return
     }
-    if (hasCartView) {
-      setSection('Cart Links')
-      return
+    wasMobileOpen.current = true
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobile(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const controls = sidebarRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')
+      const first = controls?.[0]
+      const last = controls?.[controls.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
     }
-    if (hasMenteeView) {
-      setSection('Mentees')
-      return
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = previousOverflow
     }
-    setSection(current => current === 'Cart Links' || current === 'Mentees' || current === 'Reports' ? 'Overview' : current)
-  }, [hasCartView, hasMenteeView, hasReportView, searchParams])
+  }, [mobile])
+
+  const closeMobileNavigation = () => {
+    setMobile(false)
+  }
+
+  useEffect(() => {
+    const current = sectionRef.current
+    const next: Section = hasReportView ? 'Reports' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees'
+      : current === 'Cart Links' || current === 'Mentees' || current === 'Reports' ? 'Overview' : current
+    if (next !== current && current === 'Profile' && profileDirtyRef.current) {
+      if (!window.confirm('Discard unsaved profile changes?')) {
+        router.replace(acceptedHrefRef.current, { scroll: false })
+        return
+      }
+      setProfileDirty(false)
+    }
+    acceptedHrefRef.current = `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ''}`
+    setSection(next)
+  }, [hasCartView, hasMenteeView, hasReportView, searchParams, pathname, router])
 
   const navigate = (value: Section) => {
+    if (value !== section && section === 'Profile' && profileDirty && !window.confirm('Discard unsaved profile changes?')) return
+    if (value !== section) setProfileDirty(false)
     setSection(value)
-    setMobile(false)
+    if (mobile) closeMobileNavigation()
 
     const params = new URLSearchParams(searchParams.toString())
     if (value !== 'Reports') params.delete('reportView')
@@ -210,21 +269,21 @@ export default function AdminDashboard() {
     else if (item.related_entity === 'session' || item.related_entity === 'enrollment' || item.related_entity === 'intensive_mentoring_session' || item.related_entity === 'intensive_mentoring_engagement') navigate('Mentoring Sessions')
     else navigate('Overview')
   }
-  const currentLabel = groups.flatMap(group => group.items).find(item => item.id === section)?.label ?? (section === 'Profile' ? 'Profil' : section)
+  const currentLabel = groups.flatMap(group => group.items).find(item => item.id === section)?.label ?? section
 
   return (
-    <div className="role-shell admin-shell">
-      <aside id="admin-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`}>
-        <div className="role-brand"><BrandLogo/><button type="button" onClick={() => setMobile(false)} className="role-close" aria-label="Tutup menu admin"><X aria-hidden="true"/></button></div>
-        <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{displayName(account)}</strong><small>Kantor pusat Strativate</small></div></div>
-        <nav aria-label="Navigasi admin">
-          {groups.map(group => <div className="nav-group" key={group.label}><small>{group.label}</small>{group.items.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} onClick={() => navigate(id)}><Icon aria-hidden="true"/>{label}</button>)}</div>)}
+    <div className={`role-shell admin-shell ${styles.shell}`} lang="en">
+      <aside ref={sidebarRef} id="admin-navigation" className={`role-sidebar ${mobile ? 'open' : ''}`} inert={narrowScreen && !mobile}>
+        <div className="role-brand"><BrandLogo/><button ref={closeRef} type="button" onClick={closeMobileNavigation} className="role-close" aria-label="Close Admin navigation"><X aria-hidden="true"/></button></div>
+        <div className="role-person"><ProfileAvatar account={account} className="role-avatar"/><div><strong>{displayName(account, 'en')}</strong><small>Strativate administration</small></div></div>
+        <nav aria-label="Admin navigation">
+          {groups.map(group => <div className="nav-group" key={group.label}><small>{group.label}</small>{group.items.map(({ id, label, icon: Icon }) => <button type="button" className={section === id ? 'active' : ''} key={id} aria-current={section === id ? 'page' : undefined} onClick={() => navigate(id)}><Icon aria-hidden="true"/>{label}</button>)}</div>)}
         </nav>
-        <div className="role-sidebar-bottom"><DashboardSidebarUtilities/></div>
+        <div className="role-sidebar-bottom"><DashboardSidebarUtilities language="en"/></div>
       </aside>
-      {mobile ? <button type="button" className="role-scrim" onClick={() => setMobile(false)} aria-label="Tutup menu"/> : null}
-      <main className="role-main">
-        <header className="role-topbar"><button type="button" className="role-menu" onClick={() => setMobile(true)} aria-label="Buka menu admin" aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className="role-context">{currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="admin" onEditProfile={() => navigate('Profile')} onOpenNotification={openNotification}/></div></header>
+      {mobile ? <button type="button" className="role-scrim" onClick={closeMobileNavigation} aria-label="Close navigation" tabIndex={-1}/> : null}
+      <main className="role-main" inert={mobile}>
+        <header className="role-topbar"><button ref={menuRef} type="button" className="role-menu" onClick={() => setMobile(current => !current)} aria-label={mobile ? 'Close Admin navigation' : 'Open Admin navigation'} aria-controls="admin-navigation" aria-expanded={mobile}><Menu aria-hidden="true"/></button><span className="sr-only">Current section: {currentLabel}</span><div className="role-actions"><DashboardTopbarActions role="admin" onEditProfile={() => navigate('Profile')} onOpenNotification={openNotification}/></div></header>
         <div className="role-content">
           {section === 'Overview' ? <AdminCommerceOperations mode="overview" onNavigate={navigateOperational}/> : null}
           {section === 'Orders' ? <AdminCommerceOperations mode="orders" focusOrderId={relatedTarget?.entity === 'order' ? relatedTarget.id : null}/> : null}
@@ -232,7 +291,7 @@ export default function AdminDashboard() {
           {section === 'Calendar' ? <RoleCalendar role="admin"/> : null}
           {section === 'Zoom' ? <ZoomRoomManagement/> : null}
           {section === 'Cart Links' ? <CommerceCartLinkManagement/> : null}
-          {section === 'Notifications' ? <><div className="role-page-title"><p className="kicker">Notifikasi</p><h2>Riwayat notifikasi</h2><p>Pembaruan operasional Admin dari backend realtime, dengan status baca yang tersinkron dengan bell.</p></div><DashboardNotificationCenter onOpenRelated={openNotification}/></> : null}
+          {section === 'Notifications' ? <><div className="role-page-title"><h2>Notifications</h2></div><DashboardNotificationCenter language="en" onOpenRelated={openNotification}/></> : null}
           {section === 'Mentees' ? <MenteeManagement/> : null}
           {section === 'Mentors' ? <MentorManagement/> : null}
           {section === 'Private Mentoring' ? <PrivateMentoringManagement/> : null}
@@ -240,7 +299,6 @@ export default function AdminDashboard() {
           {section === 'Competition Categories' ? <CompetitionCategoryManagement/> : null}
           {section === 'Digital Products' ? <DigitalProductManagement/> : null}
           {section === 'Discount Codes' ? <DiscountCodeManagement/> : null}
-          {section === 'Hero Posters' ? <HeroPosterManagement/> : null}
           {section === 'Testimonials' ? <TestimonialManagement/> : null}
           {section === 'Publications' ? <EditorialContentManagement initialKind="publications"/> : null}
           {section === 'Competitions' ? <EditorialContentManagement initialKind="competitions"/> : null}
@@ -252,7 +310,7 @@ export default function AdminDashboard() {
           {section === 'Institutions' ? <InstitutionManagement/> : null}
           {section === 'Referral Sources' ? <MasterOptions key="referral" table="referral_sources"/> : null}
           {section === 'Competition Interests' ? <MasterOptions key="interests" table="interests"/> : null}
-          {section === 'Profile' ? <ProfileForm/> : null}
+          {section === 'Profile' ? <ProfileForm language="en" onUnsavedChange={setProfileDirty}/> : null}
         </div>
       </main>
     </div>

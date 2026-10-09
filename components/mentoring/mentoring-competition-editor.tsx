@@ -12,8 +12,8 @@ type CompetitionContext = { parentId: string; competitionNames: string[]; compet
 type Category = { id: string; name: string; is_active: boolean }
 type RpcClient = { rpc: <T>(name: string, args: Record<string, unknown>) => PromiseLike<{ data: T | null; error: { message: string } | null }> }
 
-export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, compact = false, summary = false, language = 'id' }: {
-  kind: 'private' | 'intensive'; parentId: string; readOnly?: boolean; compact?: boolean; summary?: boolean; language?: 'id' | 'en'
+export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, compact = false, summary = false, language = 'id', confirmDiscard = false }: {
+  kind: 'private' | 'intensive'; parentId: string; readOnly?: boolean; compact?: boolean; summary?: boolean; language?: 'id' | 'en'; confirmDiscard?: boolean
 }) {
   const supabase = useMemo(() => createClient(), [])
   const rpc = supabase as unknown as RpcClient
@@ -24,6 +24,8 @@ export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, c
   const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [editing, setEditing] = useState(false)
+  const editingRef = useRef(false)
+  editingRef.current = editing
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [loadError, setLoadError] = useState(false)
@@ -38,7 +40,7 @@ export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, c
       ])
       if (sequence !== loadSequence.current) return
       setLoadError(Boolean(result.error || !result.data || catalog.error))
-      if (!result.error && result.data) {
+      if (!result.error && result.data && !editingRef.current) {
         setData(result.data)
         setNames(result.data.competitionNames ?? [])
         setCategoryId(result.data.competitionCategoryId ?? '')
@@ -53,6 +55,7 @@ export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, c
   useOperationalInvalidation(['mentoring', 'admin-overview'], () => { void load() })
 
   async function save() {
+    if (busy) return
     if (!names.length) { setMessage(copy('Add at least one competition name.', 'Tambahkan minimal satu nama lomba.')); return }
     setBusy(true)
     setMessage('')
@@ -89,10 +92,17 @@ export function MentoringCompetitionEditor({ kind, parentId, readOnly = false, c
     {message ? <small role="status">{message}</small> : null}
   </section>
 
-  return <section className={`${baseClass} is-editing${summary ? ' mentoring-competition-summary--editing' : ''}`}>
+  const dirty = JSON.stringify(names) !== JSON.stringify(values) || categoryId !== (data.competitionCategoryId ?? '')
+  function cancelEdit() {
+    if (busy || (confirmDiscard && dirty && !window.confirm(copy('Discard unsaved competition changes?', 'Batalkan perubahan kompetisi?')))) return
+    setNames(values); setCategoryId(data!.competitionCategoryId ?? ''); setMessage(''); setEditing(false)
+  }
+  return <section className={`${baseClass} is-editing${summary ? ' mentoring-competition-summary--editing' : ''}`} data-unsaved={dirty?'true':undefined} data-saving={busy?'true':undefined}>
+    <fieldset disabled={busy} style={{border:0,margin:0,padding:0,minWidth:0,display:'grid',gap:12}}>
     <MultiValueChipInput label={copy('Competition name', 'Nama lomba')} value={names} onChange={setNames} language={language} />
     <label className="ops-field"><span>{copy('Competition category (optional)', 'Kategori kompetisi (opsional)')}</span><select value={categoryId} onChange={event => setCategoryId(event.target.value)}><option value="">{copy('No category', 'Tanpa kategori')}</option>{categories.filter(category => category.is_active || category.id === categoryId).map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
-    <div className="button-row"><button className="button button-primary" type="button" disabled={busy || !names.length} onClick={() => void save()}><Save aria-hidden="true" />{busy ? copy('Saving…', 'Menyimpan…') : copy('Save', 'Simpan nama lomba')}</button><button className="button button-outline" type="button" disabled={busy} onClick={() => { setNames(values); setCategoryId(data.competitionCategoryId ?? ''); setMessage(''); setEditing(false) }}><X aria-hidden="true" />{copy('Cancel', 'Batal')}</button></div>
+    <div className="button-row"><button className="button button-primary" type="button" disabled={busy || !names.length} onClick={() => void save()}><Save aria-hidden="true" />{busy ? copy('Saving…', 'Menyimpan…') : copy('Save', 'Simpan nama lomba')}</button><button className="button button-outline" type="button" disabled={busy} onClick={cancelEdit}><X aria-hidden="true" />{copy('Cancel', 'Batal')}</button></div>
     {message ? <small className="form-error" role="alert">{message}</small> : null}
+    </fieldset>
   </section>
 }

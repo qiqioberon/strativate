@@ -10,6 +10,7 @@ import { TablePagination } from '@/components/admin/table-pagination'
 import { MultiValueChipInput } from '@/components/mentoring/multi-value-chip-input'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { formatRupiah } from '@/lib/commerce/money'
+import { adminFormError } from '@/lib/auth/errors'
 import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 
@@ -30,20 +31,26 @@ type CartView = 'create' | 'history' | 'international'
 type PrivateMode = 'new_enrollment' | 'top_up'
 
 function kindLabel(kind: string) {
-  if (kind === 'digital_product') return 'Produk Digital'
+  if (kind === 'digital_product') return 'Digital Products'
   if (kind === 'private_mentoring') return 'Private Mentoring'
   if (kind === 'intensive_mentoring_package') return 'Program / package'
   if (kind === 'intensive_mentoring_bundle') return 'Bundle'
   if (kind === 'intensive_mentoring_add_on') return 'Add-on'
-  if (kind === 'intensive_mentoring_custom_offer') return 'Penawaran Internasional'
+  if (kind === 'intensive_mentoring_custom_offer') return 'International Offers'
   return kind.replaceAll('_', ' ')
 }
 
 function linkStatusLabel(status: string) {
-  if (status === 'active') return 'Aktif'
-  if (status === 'claimed') return 'Diklaim'
-  if (status === 'revoked') return 'Dicabut'
+  if (status === 'active') return 'Active'
+  if (status === 'claimed') return 'Claimed'
+  if (status === 'revoked') return 'Revoked'
   return status
+}
+function enrollmentStatusLabel(status: string) {
+  if (status === 'active') return 'Active'
+  if (status === 'completed') return 'Completed'
+  if (status === 'cancelled') return 'Cancelled'
+  return status.replaceAll('_', ' ')
 }
 
 function tabFor(item: CommerceOption): CatalogTab {
@@ -118,7 +125,7 @@ export function CommerceCartLinkManagement() {
     const result = await supabase.rpc('list_cart_link_mentees', { p_query: menteeQuery.trim() })
     setMenteeLoading(false)
     if (result.error) {
-      setMessage('Daftar mentee belum dapat dimuat.')
+      setMessage('Unable to load mentees.')
       return
     }
     setMentees((result.data ?? []) as MenteeOption[])
@@ -132,7 +139,7 @@ export function CommerceCartLinkManagement() {
     }
     const result = await client.rpc<CommerceOption[]>('list_admin_cart_link_items', { p_mentee_id: menteeId, p_query: productQuery.trim() })
     if (result.error) {
-      setMessage('Daftar produk belum dapat dimuat.')
+      setMessage('Unable to load products.')
       return
     }
     setItems(result.data ?? [])
@@ -141,7 +148,7 @@ export function CommerceCartLinkManagement() {
   const loadHistory = useCallback(async () => {
     const result = await client.rpc<CartLinkRow[]>('list_admin_cart_links_page', { p_query: historyQuery.trim(), p_status: historyStatus, p_limit: pageSize, p_offset: page * pageSize })
     if (result.error) {
-      setMessage('Riwayat Cart Link belum dapat dimuat.')
+      setMessage('Unable to load Cart Link history.')
       return
     }
     const rows = result.data ?? []
@@ -161,7 +168,7 @@ export function CommerceCartLinkManagement() {
     }
     const result = await client.rpc<PrivateContext>('list_admin_private_cart_link_context', { p_mentee_id: menteeId })
     if (result.error || !result.data) {
-      setMessage(result.error?.message || 'Konteks Private Mentoring belum dapat dimuat.')
+      setMessage(adminFormError(result.error, 'Unable to load Private Mentoring details.'))
       return
     }
     setPrivateContext(result.data)
@@ -236,7 +243,7 @@ export function CommerceCartLinkManagement() {
       setQuoteBusy(false)
       if (result.error || !result.data) {
         setPrivateQuote(null)
-        setMessage(result.error?.message || 'Quote Private Mentoring belum tersedia.')
+        setMessage(adminFormError(result.error, 'Private Mentoring quote is unavailable.'))
         return
       }
       setPrivateQuote(result.data)
@@ -276,8 +283,12 @@ export function CommerceCartLinkManagement() {
       if (sortKey === 'items') return (a.item_count - b.item_count) * sign
       if (sortKey === 'created_at') return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * sign
       if (sortKey === 'claimed_at') return ((a.claimed_at ? new Date(a.claimed_at).getTime() : 0) - (b.claimed_at ? new Date(b.claimed_at).getTime() : 0)) * sign
-      const left = sortKey === 'mentee' ? a.mentee_email : sortKey === 'status' ? linkStatusLabel(a.status) : a.creator_email
-      const right = sortKey === 'mentee' ? b.mentee_email : sortKey === 'status' ? linkStatusLabel(b.status) : b.creator_email
+      if (sortKey === 'status') {
+        const priority: Record<string, number> = { active: 0, revoked: 1, claimed: 2 }
+        return ((priority[a.status] ?? 3) - (priority[b.status] ?? 3) || a.status.localeCompare(b.status)) * sign
+      }
+      const left = sortKey === 'mentee' ? a.mentee_email : a.creator_email
+      const right = sortKey === 'mentee' ? b.mentee_email : b.creator_email
       return left.localeCompare(right, 'id-ID') * sign
     })
   }, [links, sortDirection, sortKey])
@@ -352,7 +363,7 @@ export function CommerceCartLinkManagement() {
         {item.image_path ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="cart-link-product-card__cover" src={supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(item.image_path).data.publicUrl} alt={'Sampul ' + item.name}/>
+            <img className="cart-link-product-card__cover" src={supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(item.image_path).data.publicUrl} alt={'Cover for ' + item.name}/>
           </>
         ) : (
           <div className="cart-link-product-card__cover cart-link-product-card__cover--empty">{kindLabel(item.item_kind)}</div>
@@ -362,11 +373,11 @@ export function CommerceCartLinkManagement() {
           <small>{kindLabel(item.item_kind)}</small>
           <strong>{item.name}</strong>
           <b>{formatRupiah(item.price_amount)}</b>
-          {item.owned_by_mentee ? <span className="ops-status ops-status--neutral">Sudah dimiliki</span> : null}
+          {item.owned_by_mentee ? <span className="ops-status ops-status--neutral">Already owned</span> : null}
         </button>
         <button type="button" className="button button-outline" onClick={() => void openDetail(item)}>
           <Eye aria-hidden="true" size={15}/>
-          Lihat Detail
+          View details
         </button>
       </article>
     )
@@ -375,7 +386,7 @@ export function CommerceCartLinkManagement() {
   async function openDetail(item: CommerceOption) {
     const result = await client.rpc<ProductDetail[]>('get_admin_commerce_item_detail', { p_commerce_item_id: item.commerce_item_id })
     if (result.error || !result.data?.[0]) {
-      setMessage('Detail produk belum dapat dimuat.')
+      setMessage('Unable to load product details.')
       return
     }
     setDetail(result.data[0])
@@ -383,15 +394,15 @@ export function CommerceCartLinkManagement() {
 
   async function createLink() {
     if (!menteeId || (itemIds.length === 0 && !privateIncluded)) {
-      setMessage('Pilih satu mentee dan minimal satu item.')
+      setMessage('Select one mentee and at least one item.')
       return
     }
     if (privateIncluded && (!privateQuote || privateSessionCountValue === null)) {
-      setMessage('Tunggu sampai quote Private Mentoring tersedia.')
+      setMessage('Wait for the Private Mentoring quote.')
       return
     }
     if (privateMode === 'new_enrollment' && !competitionNames.length) {
-      setMessage('Tambahkan minimal satu nama lomba untuk enrollment baru.')
+      setMessage('Add at least one competition name for a new enrollment.')
       return
     }
 
@@ -416,14 +427,14 @@ export function CommerceCartLinkManagement() {
         }),
       })
       const body = await response.json() as { url?: string; error?: string }
-      if (!response.ok || !body.url) throw new Error(body.error || 'Cart Link gagal dibuat.')
+      if (!response.ok || !body.url) throw new Error(body.error || 'Unable to create the Cart Link.')
       setGeneratedUrl(body.url)
-      setMessage('Cart Link berhasil dibuat dengan harga yang sudah dikunci.')
+      setMessage('Cart Link created with locked prices.')
       setItemIds([])
       removePrivateMentoring()
       await loadHistory()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Cart Link gagal dibuat.')
+      setMessage(error instanceof Error ? error.message : 'Unable to create the Cart Link.')
     } finally {
       setBusy(false)
     }
@@ -431,8 +442,12 @@ export function CommerceCartLinkManagement() {
 
   async function copyLink() {
     if (!generatedUrl) return
-    await navigator.clipboard.writeText(generatedUrl)
-    setMessage('Cart Link disalin ke clipboard.')
+    try {
+      await navigator.clipboard.writeText(generatedUrl)
+      setMessage('Cart Link copied to clipboard.')
+    } catch {
+      setMessage('Unable to copy the Cart Link. Select the link and copy it manually.')
+    }
   }
 
   function changeSort(key: string | null, direction: SortDirection) {
@@ -445,29 +460,27 @@ export function CommerceCartLinkManagement() {
   return (
     <div className="ops-page cart-link-management">
       <div className="role-page-title">
-        <p className="kicker">Operasional · Shared Commerce</p>
         <h2>Cart Links</h2>
-        <p>Kelola pembuatan Cart Link, riwayat, dan penawaran internasional dari satu alur yang terstruktur.</p>
       </div>
 
-      <div className="cart-link-main-tabs" role="tablist" aria-label="Tampilan Cart Links">
-        <button id="cart-link-tab-create" type="button" role="tab" aria-selected={cartView === 'create'} aria-controls="cart-link-panel-create" className={cartView === 'create' ? 'active' : ''} onClick={() => changeCartView('create')}>Buat Cart Link</button>
-        <button id="cart-link-tab-history" type="button" role="tab" aria-selected={cartView === 'history'} aria-controls="cart-link-panel-history" className={cartView === 'history' ? 'active' : ''} onClick={() => changeCartView('history')}>Riwayat Cart Link</button>
-        <button id="cart-link-tab-international" type="button" role="tab" aria-selected={cartView === 'international'} aria-controls="cart-link-panel-international" className={cartView === 'international' ? 'active' : ''} onClick={() => changeCartView('international')}>Penawaran Internasional</button>
+      <div className="cart-link-main-tabs" role="tablist" aria-label="Cart Link views">
+        <button id="cart-link-tab-create" type="button" role="tab" aria-selected={cartView === 'create'} aria-controls="cart-link-panel-create" className={cartView === 'create' ? 'active' : ''} onClick={() => changeCartView('create')}>Create Cart Link</button>
+        <button id="cart-link-tab-history" type="button" role="tab" aria-selected={cartView === 'history'} aria-controls="cart-link-panel-history" className={cartView === 'history' ? 'active' : ''} onClick={() => changeCartView('history')}>Cart Link History</button>
+        <button id="cart-link-tab-international" type="button" role="tab" aria-selected={cartView === 'international'} aria-controls="cart-link-panel-international" className={cartView === 'international' ? 'active' : ''} onClick={() => changeCartView('international')}>International Offers</button>
       </div>
 
       {cartView === 'create' ? (
         <section id="cart-link-panel-create" role="tabpanel" aria-labelledby="cart-link-tab-create" className="role-card cart-link-create cart-link-view-panel">
           <div className="ops-section-heading">
             <div>
-              <p className="kicker">Langkah 1</p>
-              <h3>Pilih Mentee</h3>
-              <p>Cart Link hanya dapat diklaim akun tujuan.</p>
+              <p className="kicker">Step 1</p>
+              <h3>Select mentee</h3>
+              <p>Only the intended account can claim this Cart Link.</p>
             </div>
           </div>
 
           <div ref={comboRef} className="ops-field ops-field--wide">
-            <span>Cari mentee</span>
+            <span>Search mentees</span>
             <div className="ops-input-with-icon">
               <Search aria-hidden="true" size={15}/>
               <input
@@ -484,13 +497,13 @@ export function CommerceCartLinkManagement() {
                   setComboOpen(true)
                 }}
                 onKeyDown={onComboKeyDown}
-                placeholder="Ketik nama atau email"
+                placeholder="Type a name or email"
               />
               {menteeLoading ? <Loader2 className="spin" aria-hidden="true" size={15}/> : <ChevronDown aria-hidden="true" size={15}/>}
             </div>
             {comboOpen ? (
               <div id="cart-link-mentee-options" role="listbox" className="ops-combobox-options">
-                {menteeLoading ? <p>Memuat…</p> : mentees.length ? mentees.map((mentee, index) => (
+                {menteeLoading ? <p>Loading…</p> : mentees.length ? mentees.map((mentee, index) => (
                   <button
                     type="button"
                     role="option"
@@ -500,17 +513,17 @@ export function CommerceCartLinkManagement() {
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectMentee(mentee)}
                   >
-                    <strong>{mentee.display_name || 'Mentee Strativate'}</strong>
+                    <strong>{mentee.display_name || 'Strativate mentee'}</strong>
                     <span>{mentee.email}</span>
                   </button>
-                )) : <p>Tidak ada mentee yang cocok.</p>}
+                )) : <p>No matching mentees.</p>}
               </div>
             ) : null}
           </div>
 
           {selectedMentee ? (
             <div className="cart-link-selected-mentee" role="status">
-              <span>Email akun tujuan</span>
+              <span>Intended account email</span>
               <strong>{selectedMentee.email}</strong>
             </div>
           ) : null}
@@ -518,18 +531,18 @@ export function CommerceCartLinkManagement() {
           <div className={'cart-link-products ' + (menteeId ? '' : 'is-disabled')} aria-disabled={!menteeId}>
             <div className="ops-section-heading">
               <div>
-                <p className="kicker">Langkah 2</p>
-                <h3>Pilih produk</h3>
+                <p className="kicker">Step 2</p>
+                <h3>Select products</h3>
                 <p>
                   {!menteeId
-                    ? 'Pilih mentee untuk membuka katalog.'
+                    ? 'Select a mentee to open the catalog.'
                     : catalogTab === 'private'
                       ? privateReady
-                        ? 'Private Mentoring siap ditambahkan.'
+                        ? 'Private Mentoring is ready to add.'
                         : privateMode
-                          ? 'Lengkapi konfigurasi Private Mentoring.'
-                          : 'Pilih mode untuk menambahkan Private Mentoring.'
-                      : itemIds.length + ' item katalog dipilih.'}
+                          ? 'Complete the Private Mentoring configuration.'
+                          : 'Choose a mode to add Private Mentoring.'
+                      : itemIds.length + ' catalog items selected.'}
                 </p>
               </div>
             </div>
@@ -538,21 +551,21 @@ export function CommerceCartLinkManagement() {
               <>
                 {catalogTab !== 'private' ? (
                   <label className="ops-field ops-field--wide cart-link-product-search">
-                    <span>Cari produk</span>
-                    <input value={productQuery} onChange={event => setProductQuery(event.target.value)} placeholder="Nama produk"/>
+                    <span>Search products</span>
+                    <input value={productQuery} onChange={event => setProductQuery(event.target.value)} placeholder="Product name"/>
                   </label>
                 ) : null}
 
-                <div className="cart-link-product-tabs" role="tablist" aria-label="Kategori produk">
-                  <button id="cart-link-product-tab-digital" type="button" role="tab" aria-selected={catalogTab === 'digital'} aria-controls="cart-link-product-panel-digital" className={catalogTab === 'digital' ? 'active' : ''} onClick={() => setCatalogTab('digital')}>Produk Digital</button>
+                <div className="cart-link-product-tabs" role="tablist" aria-label="Product categories">
+                  <button id="cart-link-product-tab-digital" type="button" role="tab" aria-selected={catalogTab === 'digital'} aria-controls="cart-link-product-panel-digital" className={catalogTab === 'digital' ? 'active' : ''} onClick={() => setCatalogTab('digital')}>Digital Products</button>
                   <button id="cart-link-product-tab-private" type="button" role="tab" aria-selected={catalogTab === 'private'} aria-controls="cart-link-product-panel-private" className={catalogTab === 'private' ? 'active' : ''} onClick={() => setCatalogTab('private')}>Private Mentoring</button>
                   <button id="cart-link-product-tab-intensive" type="button" role="tab" aria-selected={catalogTab === 'intensive'} aria-controls="cart-link-product-panel-intensive" className={catalogTab === 'intensive' ? 'active' : ''} onClick={() => setCatalogTab('intensive')}>Intensive Mentoring</button>
                 </div>
 
                 {itemIds.length || privateIncluded ? (
                   <div className="cart-link-selection-summary" aria-live="polite">
-                    {itemIds.length ? <span><strong>{itemIds.length}</strong> produk katalog dipilih</span> : null}
-                    {privateMode ? <span><strong>Private Mentoring</strong> · {privateMode === 'new_enrollment' ? 'Enrollment baru' : 'Tambah sesi'}</span> : null}
+                    {itemIds.length ? <span><strong>{itemIds.length}</strong> catalog products selected</span> : null}
+                    {privateMode ? <span><strong>Private Mentoring</strong> · {privateMode === 'new_enrollment' ? 'New enrollment' : 'Add sessions'}</span> : null}
                   </div>
                 ) : null}
 
@@ -567,18 +580,18 @@ export function CommerceCartLinkManagement() {
                     <div className="private-cart-config__head">
                       <div>
                         <h4>Private Mentoring</h4>
-                        <p>Pilih salah satu mode untuk memasukkan Private Mentoring ke Cart Link.</p>
+                        <p>Choose a mode to add Private Mentoring to this Cart Link.</p>
                       </div>
                       {privateIncluded ? (
                         <button type="button" className="button button-outline button-compact private-cart-remove" onClick={removePrivateMentoring}>
-                          Batalkan Private Mentoring
+                          Remove Private Mentoring
                         </button>
                       ) : null}
                     </div>
 
-                    <div className="private-cart-mode" role="group" aria-label="Mode Private Mentoring">
-                      <button type="button" aria-pressed={privateMode === 'new_enrollment'} onClick={() => activatePrivateMode('new_enrollment')}>Enrollment baru</button>
-                      <button type="button" aria-pressed={privateMode === 'top_up'} onClick={() => activatePrivateMode('top_up')}>Tambah sesi</button>
+                    <div className="private-cart-mode" role="group" aria-label="Private Mentoring mode">
+                      <button type="button" aria-pressed={privateMode === 'new_enrollment'} onClick={() => activatePrivateMode('new_enrollment')}>New enrollment</button>
+                      <button type="button" aria-pressed={privateMode === 'top_up'} onClick={() => activatePrivateMode('top_up')}>Add sessions</button>
                     </div>
 
                     {privateIncluded ? (
@@ -586,24 +599,24 @@ export function CommerceCartLinkManagement() {
                         <div className="ops-form-stack private-cart-form">
                           {privateMode === 'new_enrollment' ? (
                             <label className="ops-field">
-                              <span>Tier mentor</span>
+                              <span>Mentor tier</span>
                               <select value={privateTierId} onChange={event => setPrivateTierId(event.target.value)}>
-                                <option value="">Pilih tier</option>
+                                <option value="">Select a tier</option>
                                 {privateContext.tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name}</option>)}
                               </select>
                             </label>
                           ) : (
                             <label className="ops-field">
-                              <span>Enrollment tujuan</span>
+                              <span>Target enrollment</span>
                               <select value={targetEnrollmentId} onChange={event => setTargetEnrollmentId(event.target.value)}>
-                                <option value="">Pilih enrollment</option>
-                                {privateContext.enrollments.map(enrollment => <option key={enrollment.id} value={enrollment.id}>{enrollment.tierName} · {enrollment.purchasedSessions} sesi · {enrollment.status}</option>)}
+                                <option value="">Select an enrollment</option>
+                                {privateContext.enrollments.map(enrollment => <option key={enrollment.id} value={enrollment.id}>{enrollment.tierName} · {enrollment.purchasedSessions} sessions · {enrollmentStatusLabel(enrollment.status)}</option>)}
                               </select>
                             </label>
                           )}
 
                           <label className="ops-field">
-                            <span>{privateMode === 'top_up' ? 'Sesi tambahan' : 'Jumlah sesi'}</span>
+                            <span>{privateMode === 'top_up' ? 'Additional sessions' : 'Session count'}</span>
                             <input
                               type="number"
                               min={1}
@@ -613,16 +626,16 @@ export function CommerceCartLinkManagement() {
                               onChange={event => setPrivateSessionCount(event.target.value)}
                               aria-invalid={privateSessionCount !== '' && privateSessionCountValue === null}
                             />
-                            {privateSessionCount === '' || privateSessionCountValue === null ? <small className="private-cart-helper">Masukkan bilangan bulat 1–20.</small> : null}
+                            {privateSessionCount === '' || privateSessionCountValue === null ? <small className="private-cart-helper">Enter a whole number from 1 to 20.</small> : null}
                           </label>
 
                           {privateMode === 'new_enrollment' ? (
                             <>
-                              <MultiValueChipInput label="Nama lomba" value={competitionNames} onChange={setCompetitionNames}/>
+                              <MultiValueChipInput language="en" label="Competition names" value={competitionNames} onChange={setCompetitionNames}/>
                               <label className="ops-field">
-                                <span>Kategori kompetisi <small>(opsional)</small></span>
+                                <span>Competition category <small>(optional)</small></span>
                                 <select value={competitionCategoryId} onChange={event => setCompetitionCategoryId(event.target.value)}>
-                                  <option value="">Tanpa kategori</option>
+                                  <option value="">No category</option>
                                   {competitionCategories.map(category => <option value={category.id} key={category.id}>{category.name}</option>)}
                                 </select>
                               </label>
@@ -631,34 +644,34 @@ export function CommerceCartLinkManagement() {
                         </div>
 
                         {quoteBusy ? (
-                          <p className="muted">Menghitung quote server…</p>
+                          <p className="muted">Calculating quote…</p>
                         ) : privateQuote ? (
                           <>
                             <div className={'private-cart-quote ' + (privateMode === 'top_up' ? 'private-cart-quote--four' : '')}>
-                              <div><span>Tier terkunci</span><strong>{privateQuote.mentorTierName}</strong></div>
-                              {privateMode === 'top_up' ? <div><span>Sesi saat ini</span><strong>{privateQuote.currentSessionCount}</strong></div> : null}
-                              <div><span>Total setelah pembelian</span><strong>{privateQuote.resultingSessionCount} sesi</strong></div>
-                              <div><span>Harga terkunci</span><strong>{formatRupiah(privateQuote.lockedTotalAmount)}</strong></div>
+                              <div><span>Locked tier</span><strong>{privateQuote.mentorTierName}</strong></div>
+                              {privateMode === 'top_up' ? <div><span>Current sessions</span><strong>{privateQuote.currentSessionCount}</strong></div> : null}
+                              <div><span>Total after purchase</span><strong>{privateQuote.resultingSessionCount} sessions</strong></div>
+                              <div><span>Locked price</span><strong>{formatRupiah(privateQuote.lockedTotalAmount)}</strong></div>
                             </div>
 
                             <div className="private-cart-secondary">
-                              <h5>Rincian harga</h5>
+                              <h5>Price breakdown</h5>
                               <ul className="private-cart-breakdown">
-                                {privateQuote.breakdown.map(item => <li key={item.packageId}>{item.quantity} × package {item.sessionCount} sesi · {formatRupiah(item.subtotalAmount)}</li>)}
+                                {privateQuote.breakdown.map(item => <li key={item.packageId}>{item.quantity} × package {item.sessionCount} sessions · {formatRupiah(item.subtotalAmount)}</li>)}
                               </ul>
                             </div>
 
                             {privateMode === 'top_up' ? (
                               <div className="private-cart-secondary">
-                                <h5>Kompetisi saat ini</h5>
+                                <h5>Current competitions</h5>
                                 <div className="mentoring-chip-list">
-                                  {privateQuote.competitionNames?.length ? privateQuote.competitionNames.map(name => <span className="mentoring-chip" key={name}>{name}</span>) : <span className="muted">Belum ada kompetisi tercatat.</span>}
+                                  {privateQuote.competitionNames?.length ? privateQuote.competitionNames.map(name => <span className="mentoring-chip" key={name}>{name}</span>) : <span className="muted">No competitions recorded.</span>}
                                 </div>
                               </div>
                             ) : null}
                           </>
                         ) : (
-                          <p className="muted">Lengkapi pilihan untuk melihat harga terkunci.</p>
+                          <p className="muted">Complete the selections to see the locked price.</p>
                         )}
                       </>
                     ) : null}
@@ -676,10 +689,10 @@ export function CommerceCartLinkManagement() {
                   </div>
                 ) : null}
 
-                {catalogTab !== 'private' && visibleItems.length === 0 ? <p className="muted">Tidak ada produk yang cocok di kategori ini.</p> : null}
+                {catalogTab !== 'private' && visibleItems.length === 0 ? <p className="muted">No matching products in this category.</p> : null}
               </>
             ) : (
-              <div className="cart-link-products__locked">Pilih mentee di atas sebelum memilih produk.</div>
+              <div className="cart-link-products__locked">Select a mentee above before choosing products.</div>
             )}
           </div>
 
@@ -690,13 +703,13 @@ export function CommerceCartLinkManagement() {
               disabled={busy || !menteeId || (itemIds.length === 0 && !privateIncluded) || Boolean(privateIncluded && !privateReady)}
               onClick={() => void createLink()}
             >
-              {busy ? 'Membuat…' : 'Buat Cart Link'}
+              {busy ? 'Creating…' : 'Create Cart Link'}
             </button>
           </div>
 
           {generatedUrl ? (
             <div className="cart-link-result">
-              <p className="kicker">Tautan baru</p>
+              <p className="kicker">New link</p>
               <p>{generatedUrl}</p>
               <button className="button button-outline" type="button" onClick={() => void copyLink()}>Copy Cart Link</button>
             </div>
@@ -709,28 +722,26 @@ export function CommerceCartLinkManagement() {
         <section id="cart-link-panel-history" role="tabpanel" aria-labelledby="cart-link-tab-history" className="role-card ops-table-section cart-link-view-panel">
           <div className="ops-section-heading cart-link-history-heading">
             <div>
-              <p className="kicker">Riwayat Cart Link</p>
-              <h3>Riwayat Cart Link</h3>
-              <p>Telusuri Cart Link yang pernah dibuat dan status klaimnya.</p>
+              <h3>Cart Link History</h3>
             </div>
-            <span>{totalLinks} data</span>
+            <span>{totalLinks} links</span>
           </div>
           <div className="ops-filter-bar cart-link-history-filters">
             <label className="ops-field ops-field--wide">
-              <span>Cari riwayat</span>
-              <input value={historyQuery} onChange={event => { setHistoryQuery(event.target.value); setPage(0) }} placeholder="Mentee, creator, atau ID"/>
+              <span>Search history</span>
+              <input value={historyQuery} onChange={event => { setHistoryQuery(event.target.value); setPage(0) }} placeholder="Mentee, creator or ID"/>
             </label>
             <label className="ops-field">
               <span>Status</span>
               <select value={historyStatus} onChange={event => { setHistoryStatus(event.target.value); setPage(0) }}>
-                <option value="">Semua</option>
-                <option value="active">Aktif</option>
-                <option value="claimed">Diklaim</option>
-                <option value="revoked">Dicabut</option>
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="claimed">Claimed</option>
+                <option value="revoked">Revoked</option>
               </select>
             </label>
             <label className="ops-field">
-              <span>Per halaman</span>
+              <span>Per page</span>
               <select value={pageSize} onChange={event => { setPageSize(Number(event.target.value)); setPage(0) }}>
                 {[5, 10, 20].map(size => <option key={size}>{size}</option>)}
               </select>
@@ -743,9 +754,9 @@ export function CommerceCartLinkManagement() {
                   <SortableTableHeader label="Mentee" sortKey="mentee" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
                   <SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
                   <SortableTableHeader label="Item" sortKey="items" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
-                  <SortableTableHeader label="Dibuat" sortKey="created_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
+                  <SortableTableHeader label="Created" sortKey="created_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
                   <SortableTableHeader label="Creator" sortKey="creator" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
-                  <SortableTableHeader label="Diklaim" sortKey="claimed_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
+                  <SortableTableHeader label="Claimed" sortKey="claimed_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/>
                 </tr>
               </thead>
               <tbody>
@@ -754,17 +765,17 @@ export function CommerceCartLinkManagement() {
                     <td><strong>{link.mentee_email}</strong><small>{link.id}</small></td>
                     <td><span className={'ops-status ops-status--' + (link.status === 'claimed' ? 'positive' : link.status === 'active' ? 'info' : 'neutral')}>{linkStatusLabel(link.status)}</span></td>
                     <td>{link.item_count}</td>
-                    <td>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(link.created_at))}</td>
+                    <td>{new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(link.created_at))}</td>
                     <td>{link.creator_email || '—'}</td>
-                    <td>{link.claimed_at ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(link.claimed_at)) : '—'}</td>
+                    <td>{link.claimed_at ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(link.claimed_at)) : '—'}</td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={6}>Belum ada Cart Link yang cocok.</td></tr>
+                  <tr><td colSpan={6}>No matching Cart Links.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
-          <TablePagination page={page} pageSize={pageSize} totalItems={totalLinks} onPageChange={setPage} label="Pagination riwayat Cart Link"/>
+          <TablePagination language="en" page={page} pageSize={pageSize} totalItems={totalLinks} onPageChange={setPage} label="Cart Link history pages"/>
           {message ? <p className="muted" role="status">{message}</p> : null}
         </section>
       ) : null}
@@ -780,25 +791,24 @@ export function CommerceCartLinkManagement() {
           <div className="ops-dialog__surface">
             <header className="ops-dialog__header">
               <div>
-                <p className="kicker">Detail produk</p>
                 <h2 id="cart-link-product-detail-title">{detail.name}</h2>
                 <p>{kindLabel(detail.item_kind)}</p>
               </div>
-              <button type="button" className="ops-icon-button" onClick={() => setDetail(null)} aria-label="Tutup detail produk"><X/></button>
+              <button type="button" className="ops-icon-button" onClick={() => setDetail(null)} aria-label="Close product details"><X/></button>
             </header>
             {imageUrl ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="cart-link-detail-cover" src={imageUrl} alt={'Sampul ' + detail.name}/>
+                <img className="cart-link-detail-cover" src={imageUrl} alt={'Cover for ' + detail.name}/>
               </>
             ) : null}
             <div className="ops-detail-grid">
-              <div><span>Harga</span><strong>{formatRupiah(detail.price_amount)}</strong></div>
-              <div><span>Status</span><strong>{detail.is_available ? 'Aktif / dapat dibeli' : 'Tidak tersedia'}</strong></div>
-              {detail.session_count ? <div><span>Jumlah sesi</span><strong>{detail.session_count}</strong></div> : null}
-              {detail.mentor_tier_name ? <div><span>Tier mentor</span><strong>{detail.mentor_tier_name}</strong></div> : null}
+              <div><span>Price</span><strong>{formatRupiah(detail.price_amount)}</strong></div>
+              <div><span>Status</span><strong>{detail.is_available ? 'Active / available for purchase' : 'Unavailable'}</strong></div>
+              {detail.session_count ? <div><span>Session count</span><strong>{detail.session_count}</strong></div> : null}
+              {detail.mentor_tier_name ? <div><span>Mentor tier</span><strong>{detail.mentor_tier_name}</strong></div> : null}
             </div>
-            {detail.description ? <section className="ops-dialog__section"><h3>Deskripsi</h3><p>{detail.description}</p></section> : null}
+            {detail.description ? <section className="ops-dialog__section"><h3>Description</h3><p>{detail.description}</p></section> : null}
           </div>
         ) : null}
       </dialog>

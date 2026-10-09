@@ -51,25 +51,48 @@ export type SalesTransactionFilters = {
   query: string; status: string; payment: string; sort: 'created' | 'paid' | 'net' | 'customer' | 'status' | 'invoice'; direction: 'asc' | 'desc'
 }
 export const SALES_KINDS: Record<string, string> = {
-  digital_product: 'Produk Digital', private_mentoring: 'Private Mentoring',
-  intensive_mentoring_package: 'Intensive Mentoring · Paket',
+  digital_product: 'Digital Products', private_mentoring: 'Private Mentoring',
+  intensive_mentoring_package: 'Intensive Mentoring · Package',
   intensive_mentoring_add_on: 'Intensive Mentoring · Add-on',
   intensive_mentoring_bundle: 'Intensive Mentoring · Bundle',
-  intensive_mentoring_custom_offer: 'Intensive Mentoring · Penawaran Internasional',
+  intensive_mentoring_custom_offer: 'Intensive Mentoring · International Offer',
 }
-export const CATEGORY_LABELS: Record<string, string> = { total: 'Total', digital: 'Produk Digital', private: 'Private Mentoring', intensive: 'Intensive Mentoring', other: 'Lainnya' }
+export const CATEGORY_LABELS: Record<string, string> = { total: 'Total', digital: 'Digital Products', private: 'Private Mentoring', intensive: 'Intensive Mentoring', other: 'Other' }
 export const SALES_COLORS: Record<string, string> = { total: '#ed7035', digital: '#4277bc', private: '#8660b1', intensive: '#2c9689', other: '#8a9099', discount: '#c69528', paid: '#348768', pending_payment: '#c69528', payment_failed: '#be5252', cancelled: '#a54c4c', expired: '#8a9099' }
-export const STATUS_LABELS: Record<string, string> = { paid: 'Lunas', pending_payment: 'Menunggu pembayaran', payment_failed: 'Pembayaran gagal', expired: 'Kedaluwarsa', cancelled: 'Dibatalkan', creating: 'Menyiapkan pembayaran', pending: 'Menunggu pembayaran', failed: 'Pembayaran gagal' }
-export const itemKindLabel = (kind: string) => SALES_KINDS[kind] ?? 'Lainnya'
-export const statusLabel = (status: string) => STATUS_LABELS[status] ?? 'Tidak diketahui'
+export const STATUS_LABELS: Record<string, string> = { paid: 'Paid', pending_payment: 'Pending payment', payment_failed: 'Payment failed', expired: 'Expired', cancelled: 'Cancelled', creating: 'Preparing payment', pending: 'Pending payment', failed: 'Payment failed' }
+export const itemKindLabel = (kind: string) => SALES_KINDS[kind] ?? 'Other'
+export const statusLabel = (status: string) => STATUS_LABELS[status] ?? 'Unknown'
+export function privatePurchaseLabel(type: string | null) {
+  if (type === 'new_enrollment' || type === 'new') return 'New purchase'
+  if (type === 'top_up' || type === 'topup') return 'Top-up'
+  return 'Unknown'
+}
+export function intensiveSubtypeLabel(kind: string) {
+  if (kind === 'intensive_mentoring_package') return 'Package'
+  if (kind === 'intensive_mentoring_add_on') return 'Add-on'
+  if (kind === 'intensive_mentoring_bundle') return 'Bundle'
+  if (kind === 'intensive_mentoring_custom_offer') return 'International Offer'
+  return 'Other'
+}
+// RPC labels are generated presentation copy; keep historical metadata and keys intact.
+export function salesReportPresentation(report: SalesReport): SalesReport {
+  return {
+    ...report,
+    categories: report.categories.map(row => ({ ...row, label: CATEGORY_LABELS[row.key] ?? 'Other' })),
+    private_tiers: report.private_tiers.map(row => ({ ...row, label: row.key === 'unknown' ? 'Unknown' : row.label })),
+    private_sessions: report.private_sessions.map(row => ({ ...row, label: row.sessions == null ? 'Unknown' : `${count(row.sessions)} sessions` })),
+    private_purchase_types: report.private_purchase_types.map(row => ({ ...row, label: privatePurchaseLabel(row.key) })),
+    intensive_subtypes: report.intensive_subtypes.map(row => ({ ...row, label: intensiveSubtypeLabel(row.key) })),
+  }
+}
 export function paymentMethodLabel(method: string | null | undefined) {
-  if (!method || method === 'unknown') return 'Tidak diketahui'
+  if (!method || method === 'unknown') return 'Unknown'
   switch (method) {
     case 'bank_transfer': return 'Bank transfer'
-    case 'credit_card': return 'Kartu kredit'
+    case 'credit_card': return 'Credit card'
     case 'gopay': return 'GoPay'
     case 'qris': return 'QRIS'
-    default: return method.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^./, value => value.toUpperCase()) || 'Tidak diketahui'
+    default: return method.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^./, value => value.toUpperCase()) || 'Unknown'
   }
 }
 export const count = (value: number) => new Intl.NumberFormat('id-ID').format(value)
@@ -89,10 +112,10 @@ export function isSalesDate(value: string | null): value is string {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
 }
 export function salesDateRangeError(from: string | null, to: string, comparison = false) {
-  const label = comparison ? 'perbandingan' : 'laporan'
-  if (from === '' || (comparison && from === null) || !isSalesDate(to) || (from !== null && !isSalesDate(from))) return `Lengkapi tanggal awal dan akhir ${label} yang valid.`
-  if (from && from > to) return `Tanggal awal ${label} harus sebelum atau sama dengan tanggal akhir.`
-  if (from && (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + Number(to.slice(5, 7)) - Number(from.slice(5, 7)) >= 600) return `Periode ${label} maksimal 600 bulan. Pilih rentang yang lebih pendek.`
+  const label = comparison ? 'comparison' : 'report'
+  if (from === '' || (comparison && from === null) || !isSalesDate(to) || (from !== null && !isSalesDate(from))) return `Enter valid start and end dates for the ${label}.`
+  if (from && from > to) return `The ${label} start date must be on or before the end date.`
+  if (from && (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + Number(to.slice(5, 7)) - Number(from.slice(5, 7)) >= 600) return `The ${label} can cover up to 600 months. Choose a shorter range.`
   return ''
 }
 export function previousSalesRange(from: string, to: string) {
@@ -105,15 +128,15 @@ export function displayDate(value: string | null, time = false) {
   const dateOnly = value.length === 10
   const date = new Date(dateOnly ? `${value}T00:00:00Z` : value)
   if (!Number.isFinite(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('id-ID', { timeZone: dateOnly ? 'UTC' : 'Asia/Jakarta', dateStyle: 'medium', ...(time && !dateOnly ? { timeStyle: 'short' as const } : {}) }).format(date)
+  return new Intl.DateTimeFormat('en-GB', { timeZone: dateOnly ? 'UTC' : 'Asia/Jakarta', dateStyle: 'medium', ...(time && !dateOnly ? { timeStyle: 'short' as const } : {}) }).format(date)
 }
 export function comparisonLabel(range: SalesReport['range']) {
   return range.compare_mode === 'custom'
     ? `vs ${displayDate(range.previous_from)} – ${displayDate(range.previous_to)}`
-    : 'vs periode sebelumnya'
+    : 'vs previous period'
 }
-export function comparisonText(current: number, previous: number, context = 'vs periode sebelumnya') {
-  if (!previous) return current ? 'Baru pada periode ini' : '—'
+export function comparisonText(current: number, previous: number, context = 'vs previous period') {
+  if (!previous) return current ? 'New in this period' : '—'
   const delta = (current - previous) / previous * 100
   return `${delta > 0 ? '↑ ' : delta < 0 ? '↓ ' : ''}${percent(Math.abs(delta))} ${context}`
 }

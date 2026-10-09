@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AdminScheduleDialog } from '@/components/admin/admin-schedule-dialog'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 import { publicContact } from '@/lib/content/brand'
+import { humanizeProviderError } from '@/lib/operations/provider-errors'
 import {
   addDays, compareEvents, eventDisplayTitle, eventRangeLabel, isSpanning, overlaps, readableStatus,
   visibleRange, type CalendarLocale, type CalendarRole, type CalendarView, type EventItem,
@@ -55,7 +56,7 @@ function supportHref(event: EventItem, locale: CalendarLocale) {
 }
 
 export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole; onOpenAvailability?: () => void }) {
-  const english = role === 'mentee' || role === 'mentor'
+  const english = role === 'mentee' || role === 'mentor' || role === 'admin'
   const locale: CalendarLocale = english ? 'en-GB' : 'id-ID'
   const [view, setView] = useState<CalendarView>('month')
   const [cursor, setCursor] = useState(() => new Date())
@@ -150,6 +151,16 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
     setOverflowDay(null)
     setSelected(event)
   }
+  function canDiscardMeetingDraft() {
+    if (actionBusy) return false
+    if (role === 'admin' && selected?.status === 'scheduled' && meetingDraft !== (selected.manualMeetingUrl || '') && !window.confirm('Discard the unsaved meeting link?')) return false
+    return true
+  }
+  function closeEventDetails() {
+    if (!canDiscardMeetingDraft()) return false
+    setSelected(null)
+    return true
+  }
   function resetPeriod() { setAgendaPage(1); setOverflowDay(null) }
   function move(direction: number) {
     resetPeriod()
@@ -162,6 +173,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
     })
   }
   async function runAction(action: () => Promise<void>) {
+    if (actionBusy) return
     setActionBusy(true)
     setActionError('')
     try { await action() }
@@ -209,7 +221,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
   return <div className={`native-calendar${english ? ` ${styles.calendar}` : ''}`} lang={english ? 'en' : undefined} data-role={role}>
     <div className="role-page-title">
       {!english ? <p className="kicker">Jadwal terintegrasi</p> : null}
-      <h2>{role === 'admin' ? 'Jadwal Mentoring' : role === 'mentor' ? 'Calendar' : 'Schedule'}</h2>
+      <h2>{role === 'mentor' ? 'Calendar' : 'Schedule'}</h2>
       {!english ? <p>{role === 'admin' ? 'Pantau seluruh sesi Strativate, Zoom room, dan sinkronisasi Google Calendar tanpa membuka detail kalender pribadi mentor atau mentee.' : 'Gabungkan sesi Strativate dengan agenda Google Calendar pribadi Anda. Link Zoom sesi tersedia pada detail jadwal.'}</p> : null}
     </div>
 
@@ -303,7 +315,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
       </> : null}
     </dialog>
 
-    <dialog ref={dialogRef} className="calendar-dialog" aria-labelledby="calendar-event-title" onCancel={event => { event.preventDefault(); setSelected(null) }} onClose={() => setSelected(null)}>
+    <dialog ref={dialogRef} className="calendar-dialog" aria-labelledby="calendar-event-title" onCancel={event => { event.preventDefault(); closeEventDetails() }} onClose={() => setSelected(null)}>
       {selected ? <>
         <div className="calendar-dialog__head">
           <div>
@@ -311,7 +323,7 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
             <h3 id="calendar-event-title">{eventDisplayTitle(selected, locale)}</h3>
             {selected.purchasedSessions ? <p>{english ? 'Session' : 'Sesi'} {selected.sessionNumber} {english ? 'of' : 'dari'} {selected.purchasedSessions}</p> : null}
           </div>
-          <button className="icon-button" type="button" onClick={() => setSelected(null)} aria-label={english ? 'Close details' : 'Tutup detail'}><X aria-hidden="true" /></button>
+          <button className="icon-button" type="button" disabled={actionBusy} onClick={closeEventDetails} aria-label={english ? 'Close details' : 'Tutup detail'}><X aria-hidden="true" /></button>
         </div>
         <dl className="calendar-detail-list">
           <div><dt>{english ? 'Time' : 'Waktu'}</dt><dd>{eventRangeLabel(selected, true, locale)}</dd></div>
@@ -322,9 +334,9 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
             <div><dt>Status</dt><dd>{readableStatus(selected.status, locale)}</dd></div>
             {role === 'admin' ? <>
               <div><dt>Mentee</dt><dd>{selected.menteeName || 'Mentee'}{selected.menteeEmail ? ` · ${selected.menteeEmail}` : ''}</dd></div>
-              <div><dt>Mentor</dt><dd>{selected.mentorName || 'Belum ditetapkan'}{selected.mentorTierName ? ` · ${selected.mentorTierName}` : ''}</dd></div>
-              <div><dt>Zoom room</dt><dd>{selected.zoomRoomName || (selected.manualMeetingUrl ? 'Link manual' : 'Belum ditetapkan')}</dd></div>
-              <div><dt>Sinkronisasi Google</dt><dd>{readableStatus(selected.googleSyncStatus || 'pending')}{selected.googleSyncError ? ` · ${selected.googleSyncError}` : ''}</dd></div>
+              <div><dt>Mentor</dt><dd>{selected.mentorName || 'Not assigned'}{selected.mentorTierName ? ` · ${selected.mentorTierName}` : ''}</dd></div>
+              <div><dt>Zoom room</dt><dd>{selected.zoomRoomName || (selected.manualMeetingUrl ? 'Manual link' : 'Not assigned')}</dd></div>
+              <div><dt>Google Calendar sync</dt><dd>{readableStatus(selected.googleSyncStatus || 'pending', locale)}{selected.googleSyncError ? ` · ${humanizeProviderError('calendar', selected.googleSyncError, 'en')}` : ''}</dd></div>
             </> : role === 'mentor'
               ? <div><dt>Mentee</dt><dd>{selected.menteeName || 'Mentee'}</dd></div>
               : <div><dt>Mentor</dt><dd>{selected.mentorName || (english ? 'Awaiting assignment' : 'Menunggu admin')}</dd></div>}
@@ -343,19 +355,19 @@ export function RoleCalendar({ role, onOpenAvailability }: { role: CalendarRole;
           {role === 'mentor' && selected.source === 'strativate' && onOpenAvailability ? <button className="button button-outline" type="button" onClick={() => { setSelected(null); onOpenAvailability() }}><Clock3 aria-hidden="true" />Set availability</button> : null}
           {role === 'admin' && selected.source === 'strativate' ? <>
             <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId} onClick={() => {
+              if (!closeEventDetails()) return
               setScheduleKind(selected.mentoringType === 'intensive' ? 'intensive' : 'private')
               setScheduleId(selected.sessionId || null)
-              setSelected(null)
-            }}>Ubah jadwal</button>
-            {selected.googleSyncStatus === 'failed' ? <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId} onClick={() => void runAction(() => retrySync(selected))}><RefreshCw aria-hidden="true" />Ulangi sinkronisasi Google</button> : null}
+            }}>Edit schedule</button>
+            {selected.googleSyncStatus === 'failed' ? <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId} onClick={() => { if (canDiscardMeetingDraft()) void runAction(() => retrySync(selected)) }}><RefreshCw aria-hidden="true" />Retry Google Calendar sync</button> : null}
           </> : null}
-          {english ? <button className="button button-ghost" type="button" onClick={() => setSelected(null)}>Close</button> : null}
+          {english ? <button className="button button-ghost" type="button" disabled={actionBusy} onClick={closeEventDetails}>Close</button> : null}
         </div>
         {role === 'admin' && selected.source === 'strativate' && selected.status === 'scheduled' ? <div className="meeting-override">
-          <label><span>Ganti link meeting (override)</span><input type="url" placeholder="https://…" value={meetingDraft} onChange={event => setMeetingDraft(event.target.value)} /></label>
+          <label><span>Override meeting link</span><input type="url" placeholder="https://…" value={meetingDraft} disabled={actionBusy} onChange={event => setMeetingDraft(event.target.value)} /></label>
           <div className="button-row">
-            <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId || !meetingDraft.trim()} onClick={() => void runAction(() => saveMeeting(selected, meetingDraft.trim()))}><Link2 aria-hidden="true" />Simpan link</button>
-            <button className="button button-ghost" type="button" disabled={actionBusy || !selected.sessionId || !selected.manualMeetingUrl || !selected.managedMeetingUrl} onClick={() => void runAction(() => saveMeeting(selected, null))}>Kembali ke link Zoom terkelola</button>
+            <button className="button button-outline" type="button" disabled={actionBusy || !selected.sessionId || !meetingDraft.trim()} onClick={() => void runAction(() => saveMeeting(selected, meetingDraft.trim()))}><Link2 aria-hidden="true" />Save link</button>
+            <button className="button button-ghost" type="button" disabled={actionBusy || !selected.sessionId || !selected.manualMeetingUrl || !selected.managedMeetingUrl} onClick={() => void runAction(() => saveMeeting(selected, null))}>Restore managed Zoom link</button>
           </div>
         </div> : null}
       </> : null}

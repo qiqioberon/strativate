@@ -95,44 +95,64 @@ export function AccountPasswordSecurity({ role, language = 'id' }: { role: 'admi
 
   async function submitPassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (passwordBusy) return
     setPasswordFormError(''); setPasswordNotice(''); setPasswordBusy(true)
-    const result = await requestPasswordChange(auth, secrets.password, secrets.confirmation)
-    setPasswordBusy(false)
-    if (result.status === 'invalid') { setPasswordFormError(accountMessage(result.message, language, 'Check your password and confirmation.')); return }
-    if (result.status === 'reauthentication-required') {
-      setReauthenticationRequired(true)
-      setSecrets(current => ({ ...current, confirmation: '', nonce: '' }))
-      setPasswordNotice(text('Verification is required before you can change your password.', 'Verifikasi ulang diperlukan sebelum kata sandi dapat diubah.'))
-      return
+    try {
+      const result = await requestPasswordChange(auth, secrets.password, secrets.confirmation)
+      if (result.status === 'invalid') { setPasswordFormError(accountMessage(result.message, language, 'Check your password and confirmation.')); return }
+      if (result.status === 'reauthentication-required') {
+        setReauthenticationRequired(true)
+        setSecrets(current => ({ ...current, confirmation: '', nonce: '' }))
+        setPasswordNotice(text('Verification is required before you can change your password.', 'Verifikasi ulang diperlukan sebelum kata sandi dapat diubah.'))
+        return
+      }
+      clearPasswordSecrets()
+      if (result.status === 'failed') { setPasswordFormError(accountFormError(result.error, language, 'Kata sandi belum dapat diperbarui. Coba lagi.', 'Your password could not be updated. Try again.')); return }
+      setPasswordNotice(text('Password updated.', 'Kata sandi berhasil diperbarui.'))
+      router.refresh()
+    } catch (error) {
+      setPasswordFormError(accountFormError(error, language, 'Kata sandi belum dapat diperbarui. Coba lagi.', 'Your password could not be updated. Check your connection and try again.'))
+    } finally {
+      setPasswordBusy(false)
     }
-    clearPasswordSecrets()
-    if (result.status === 'failed') { setPasswordFormError(accountFormError(result.error, language, 'Kata sandi belum dapat diperbarui. Coba lagi.', 'Your password could not be updated. Try again.')); return }
-    setPasswordNotice(text('Password updated.', 'Kata sandi berhasil diperbarui.'))
-    router.refresh()
   }
 
   async function sendNonce() {
+    if (passwordBusy) return
     setPasswordFormError(''); setPasswordNotice(''); setPasswordBusy(true)
-    const result = await requestPasswordReauthentication(auth)
-    setPasswordBusy(false)
-    if (result.status === 'failed') {
+    try {
+      const result = await requestPasswordReauthentication(auth)
+      if (result.status === 'failed') {
+        clearPasswordSecrets()
+        setPasswordFormError(accountFormError(result.error, language, 'Kode verifikasi belum dapat dikirim. Mulai kembali perubahan kata sandi.', 'The verification code could not be sent. Start the password change again.'))
+        return
+      }
+      setPasswordNotice(text('A verification code has been sent to your account email.', `Kode verifikasi telah dikirim ke email akun ${role === 'admin' ? 'Admin' : role === 'mentor' ? 'Mentor' : 'Mentee'}.`))
+    } catch (error) {
       clearPasswordSecrets()
-      setPasswordFormError(accountFormError(result.error, language, 'Kode verifikasi belum dapat dikirim. Mulai kembali perubahan kata sandi.', 'The verification code could not be sent. Start the password change again.'))
-      return
+      setPasswordFormError(accountFormError(error, language, 'Kode verifikasi belum dapat dikirim. Mulai kembali perubahan kata sandi.', 'The verification code could not be sent. Start the password change again.'))
+    } finally {
+      setPasswordBusy(false)
     }
-    setPasswordNotice(text('A verification code has been sent to your account email.', `Kode verifikasi telah dikirim ke email akun ${role === 'admin' ? 'Admin' : role === 'mentor' ? 'Mentor' : 'Mentee'}.`))
   }
 
   async function confirmNonce(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (passwordBusy) return
     setPasswordFormError(''); setPasswordNotice(''); setPasswordBusy(true)
-    const result = await confirmPasswordChange(auth, secrets.password, secrets.nonce)
-    setPasswordBusy(false)
-    if (result.status === 'invalid') { setPasswordFormError(accountMessage(result.message, language, 'Enter the verification code from your email.')); return }
-    clearPasswordSecrets()
-    if (result.status === 'failed') { setPasswordFormError(accountFormError(result.error, language, 'Kode tidak valid atau sudah kedaluwarsa. Mulai kembali perubahan kata sandi.', 'The code is invalid or has expired. Start the password change again.')); return }
-    setPasswordNotice(text('Password updated.', 'Kata sandi berhasil diperbarui.'))
-    router.refresh()
+    try {
+      const result = await confirmPasswordChange(auth, secrets.password, secrets.nonce)
+      if (result.status === 'invalid') { setPasswordFormError(accountMessage(result.message, language, 'Enter the verification code from your email.')); return }
+      clearPasswordSecrets()
+      if (result.status === 'failed') { setPasswordFormError(accountFormError(result.error, language, 'Kode tidak valid atau sudah kedaluwarsa. Mulai kembali perubahan kata sandi.', 'The code is invalid or has expired. Start the password change again.')); return }
+      setPasswordNotice(text('Password updated.', 'Kata sandi berhasil diperbarui.'))
+      router.refresh()
+    } catch (error) {
+      clearPasswordSecrets()
+      setPasswordFormError(accountFormError(error, language, 'Kode tidak valid atau sudah kedaluwarsa. Mulai kembali perubahan kata sandi.', 'Your password could not be updated. Start the password change again.'))
+    } finally {
+      setPasswordBusy(false)
+    }
   }
 
   function cancelPasswordChange() {

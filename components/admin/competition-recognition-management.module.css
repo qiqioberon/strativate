@@ -4,14 +4,14 @@
   place-items: center;
   gap: 10px;
   padding: 28px;
-  border: 1px solid #e1e5e8;
+  border: 1px solid #e8dfd6;
   border-radius: 16px;
-  background: #fff;
+  background: #fffdf9;
   color: #68727d;
   text-align: center;
 }
 .stateCard svg { color: var(--primary); }
-.stateCard p { max-width: 680px; font-size: 11px; line-height: 1.6; }
+.stateCard p { max-width: 680px; font-size: 13px; line-height: 1.6; }
 
 .tableWrap {
   width: 100%;
@@ -19,14 +19,14 @@
   overflow-x: auto;
   border: 1px solid #e7eaed;
   border-radius: 12px;
-  background: #fff;
+  background: #fffdf9;
 }
 .table {
   width: 100%;
   min-width: 760px;
   border-collapse: collapse;
   color: #28323b;
-  font-size: 10px;
+  font-size: 13px;
   text-align: left;
 }
 .table th,
@@ -37,9 +37,9 @@
 }
 .table thead th {
   color: #78828b;
-  background: #fafbfc;
-  font-size: 9px;
-  font-weight: 800;
+  background: #faf8f5;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: .035em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -56,7 +56,7 @@
   overflow: hidden;
   border: 1px solid #e3e7ea;
   border-radius: 9px;
-  background: #fff;
+  background: #fffdf9;
 }
 .logoPreview img {
   width: 100%;
@@ -67,10 +67,10 @@
 .nameCell strong {
   display: block;
   color: #1f2932;
-  font-size: 10px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
-.nameCell small { display: block; margin-top: 4px; color: #7a848d; font-size: 9px; }
+.nameCell small { display: block; margin-top: 4px; color: #7a848d; font-size: 12px; }
 
 .orderCell { white-space: nowrap; }
 .orderControls {
@@ -83,8 +83,8 @@
   min-width: 28px;
   place-items: center;
   color: #5f6972;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 600;
 }
 .iconButton,
 .manageButton,
@@ -93,10 +93,10 @@
   min-height: 32px;
   border: 1px solid #dfe4e8;
   border-radius: 8px;
-  background: #fff;
+  background: #fffdf9;
   color: #53606b;
-  font-size: 9px;
-  font-weight: 750;
+  font-size: 12px;
+  font-weight: 600;
 }
 .iconButton {
   display: inline-grid;
@@ -137,8 +137,8 @@
   display: grid;
   gap: 7px;
   color: #525e68;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 600;
 }
 .formGrid input[type='text'],
 .mediaSection input[type='file'] {
@@ -148,9 +148,9 @@
   border-radius: 9px;
   outline: 0;
   color: #27313a;
-  background: #fff;
+  background: #fffdf9;
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
 }
 .formGrid input[type='text'] { padding: 0 11px; }
 .mediaSection input[type='file'] { padding: 8px; }
@@ -163,9 +163,9 @@
   align-items: center;
   gap: 9px;
   padding: 0 12px;
-  border: 1px solid #e4e8eb;
+  border: 1px solid #e8dfd6;
   border-radius: 9px;
-  background: #fafbfc;
+  background: #faf8f5;
   white-space: nowrap;
 }
 .activeToggle input { accent-color: #ff7a00; }
@@ -192,9 +192,9 @@
     overflow: hidden;
     border: 1px solid #e7eaed;
     border-radius: 12px;
-    background: #fff;
+    background: #fffdf9;
   }
-  .table tbody tr:hover { background: #fff; }
+  .table tbody tr:hover { background: #fffdf9; }
   .table td {
     display: grid;
     grid-template-columns: 88px minmax(0, 1fr);
@@ -206,8 +206,8 @@
   .table td::before {
     color: #89929a;
     content: attr(data-label);
-    font-size: 8px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 600;
     letter-spacing: .03em;
     text-transform: uppercase;
   }

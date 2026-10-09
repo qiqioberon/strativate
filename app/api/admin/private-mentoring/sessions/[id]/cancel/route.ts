@@ -1,3 +1,4 @@
+import { adminFormError } from '@/lib/auth/errors'
 import { NextResponse } from 'next/server'
 
 import { requireAccount } from '@/lib/auth/server'
@@ -13,11 +14,11 @@ export async function POST(_request:Request,{params}:{params:Promise<{id:string}
       session:result.session,
       sync:{
         status:result.sync.status,
-        error:'error' in result.sync&&result.sync.error?result.sync.error:undefined,
+        error:'error' in result.sync&&result.sync.error?adminFormError({message:result.sync.error},'The session was cancelled, but Google Calendar could not be synced.'):undefined,
       },
     })
   } catch(error) {
     console.error('Admin mentoring cancellation failed',{sessionId:id,error})
-    return NextResponse.json({error:'Sesi belum dapat dibatalkan. Coba lagi beberapa saat kemudian.'},{status:409})
+    return NextResponse.json({error:'Unable to cancel the session. Please try again shortly.'},{status:409})
   }
 }

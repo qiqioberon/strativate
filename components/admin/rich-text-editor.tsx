@@ -18,7 +18,7 @@ import {
   Undo2,
   Unlink,
 } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import {
   editorDocumentToRichText,
@@ -28,6 +28,7 @@ import {
 } from '@/lib/content/rich-text'
 
 type Props = {
+  disabled?: boolean
   initialValue: RichTextDocument
   onChange: (value: RichTextDocument) => void
 }
@@ -139,7 +140,7 @@ function ToolbarButton({
   >{children}</button>
 }
 
-export function RichTextEditor({ initialValue, onChange }: Props) {
+export function RichTextEditor({ initialValue, onChange, disabled = false }: Props) {
   const [linkDraft, setLinkDraft] = useState<LinkDraft | null>(null)
   const [linkError, setLinkError] = useState('')
   const [, setToolbarRevision] = useState(0)
@@ -190,6 +191,8 @@ export function RichTextEditor({ initialValue, onChange }: Props) {
     onSelectionUpdate: () => setToolbarRevision(value => value + 1),
     onTransaction: () => setToolbarRevision(value => value + 1),
   })
+
+  useEffect(() => { editor?.setEditable(!disabled) }, [disabled, editor])
 
   if (!editor) return <div className="rich-editor rich-editor--loading" aria-busy="true" />
   const activeEditor = editor

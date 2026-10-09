@@ -32,7 +32,7 @@ export function SortableTableHeader({ label, sortKey, activeKey, direction, onSo
   }
 
   return <th scope="col" aria-sort={ariaSort} className={className}>
-    <button type="button" className={styles.button} onClick={changeSort} aria-label={`${label}: ${active ? ariaSort : 'tidak diurutkan'}`}>
+    <button type="button" className={styles.button} onClick={changeSort} aria-label={`${label}: ${active ? ariaSort : 'not sorted'}`}>
       <span>{label}</span><Icon aria-hidden="true" size={13} />
     </button>
   </th>

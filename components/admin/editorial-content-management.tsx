@@ -35,6 +35,8 @@ import {
   richTextToPlainText,
   type RichTextDocument,
 } from '@/lib/content/rich-text'
+import dataStyles from './data-management.module.css'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import { PHOTO_SOURCE_BUCKET, cropRectFromJson, sourceExtension, type NormalizedCropRect } from '@/lib/media/image-crop'
 import type {
@@ -125,7 +127,7 @@ function fileToDataUrl(file: File) {
 
 function formatShortDate(value: string | null) {
   if (!value) return 'No date'
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`))
+  return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`))
 }
 
 export function EditorialContentManagement({ initialKind = 'publications' }: { initialKind?: EditorialKind }) {
@@ -176,7 +178,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       ?? competitionResult.error
       ?? publicationCategoryResult.error
       ?? competitionCategoryResult.error
-    if (loadError) setError(loadError.message)
+    if (loadError) setError(formError(loadError, 'Unable to load editorial content.'))
     setPublications(publicationResult.data ?? [])
     setCompetitions(competitionResult.data ?? [])
     setPublicationCategories(publicationCategoryResult.data ?? [])
@@ -462,11 +464,11 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       let savedNotice = `${kind === 'publications' ? 'Publication' : 'Competition'} saved.`
       if (originalCoverPath && originalCoverPath !== nextCoverPath && originalCoverPath.startsWith(`${kind}/`)) {
         const cleanup = await supabase.storage.from('marketing-editorial').remove([originalCoverPath])
-        if (cleanup.error) savedNotice += ` Old cover cleanup needs attention: ${cleanup.error.message}`
+        if (cleanup.error) savedNotice += ` Old cover cleanup needs attention: ${formError(cleanup.error, 'Review the stored file manually.')}`
       }
       if (originalCoverSourcePath && originalCoverSourcePath !== nextSourcePath && originalCoverSourcePath.startsWith(`${kind}/`)) {
         const cleanup = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([originalCoverSourcePath])
-        if (cleanup.error) savedNotice += ` Old original cleanup needs attention: ${cleanup.error.message}`
+        if (cleanup.error) savedNotice += ` Old original cleanup needs attention: ${formError(cleanup.error, 'Review the stored file manually.')}`
       }
 
       setNotice(savedNotice)
@@ -502,7 +504,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
         if (coverFile && uploadedPath && uploadedPath !== originalCoverPath) await supabase.storage.from('marketing-editorial').remove([uploadedPath])
         if (uploadedSourcePath && uploadedSourcePath !== originalCoverSourcePath) await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([uploadedSourcePath])
       }
-      setError((saveError instanceof Error ? saveError.message : 'Content could not be saved.') + cleanupWarning)
+      setError(formError(saveError, 'Content could not be saved. Check the required fields and try again.') + cleanupWarning)
     } finally {
       setBusy(false)
     }
@@ -520,7 +522,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       }
       await load()
     } catch (orderError) {
-      setError(orderError instanceof Error ? orderError.message : 'Editorial order could not be saved.')
+      setError(formError(orderError, 'Editorial order could not be saved.'))
     } finally {
       setBusy(false)
     }
@@ -558,7 +560,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       : await supabase.from('competitions').delete().eq('id', target.id)
 
     if (result.error) {
-      setError(result.error.message)
+      setError(formError(result.error, 'Content could not be deleted.'))
       setBusy(false)
       return
     }
@@ -566,11 +568,11 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     let cleanupWarning = ''
     if (target.cover_path?.startsWith(`${kind}/`)) {
       const cleanup = await supabase.storage.from('marketing-editorial').remove([target.cover_path])
-      if (cleanup.error) cleanupWarning = ` Cover cleanup needs attention: ${cleanup.error.message}`
+      if (cleanup.error) cleanupWarning = ` Cover cleanup needs attention: ${formError(cleanup.error, 'Review the stored file manually.')}`
     }
     if (target.cover_source_path?.startsWith(`${kind}/`)) {
       const cleanup = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([target.cover_source_path])
-      if (cleanup.error) cleanupWarning += ` Original source cleanup needs attention: ${cleanup.error.message}`
+      if (cleanup.error) cleanupWarning += ` Original source cleanup needs attention: ${formError(cleanup.error, 'Review the stored file manually.')}`
     }
 
     const remaining = (rows as EditorialRow[]).filter(item => item.id !== target.id)
@@ -631,7 +633,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
       }
     } catch (previewError) {
       previewWindow?.close()
-      setError(previewError instanceof Error ? previewError.message : 'Preview could not be prepared.')
+      setError(formError(previewError, 'Preview could not be prepared.'))
     }
   }
 
@@ -642,11 +644,8 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
   return <section className="editorial-admin" data-testid="admin-editorial-content-section">
     <div className="editorial-admin__heading">
       <div className="role-page-title">
-        <p className="kicker">Editorial CMS</p>
         <h2>{kind === 'publications' ? 'Publications' : 'Competitions'}</h2>
-        <p>{kind === 'publications'
-          ? 'Kelola artikel, kategori, prioritas editorial, status publikasi, dan cover.'
-          : 'Kelola peluang kompetisi, kategori, status, tautan, prioritas editorial, dan cover.'}</p>
+
       </div>
       <button className="button button-primary" type="button" onClick={beginCreate}><Plus aria-hidden="true" size={16} /> Add {singular}</button>
     </div>
@@ -751,10 +750,10 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
     </div> : null}
 
     <dialog ref={editorDialogRef} className="editorial-admin__dialog" data-testid="editorial-content-dialog" onCancel={event => { event.preventDefault(); requestCloseEditor() }}>
-      <form onSubmit={save} className="editorial-editor">
+      <form onSubmit={save} className="editorial-editor"><fieldset className={dataStyles.editableFields} disabled={busy}>
         <header className="editorial-editor__header">
           <div>
-            <p className="kicker">{editingId === 'new' ? 'Create' : 'Edit'} {singular}</p>
+
             <h3>{editingId === 'new' ? `Create ${singular}` : `Edit ${singular}`}</h3>
             {editingId !== 'new' && draft.title ? <p>{draft.title}</p> : null}
           </div>
@@ -802,7 +801,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
 
           {kind === 'publications' ? <section className="editorial-editor-section">
             <div className="editorial-editor-section__heading"><span>02</span><div><h4>Article content</h4><p>Structured article body. The page title remains the only H1.</p></div></div>
-            <RichTextEditor key={editorVersion} initialValue={draft.bodyDocument} onChange={bodyDocument => setDraft(current => ({ ...current, bodyDocument }))} />
+            <RichTextEditor disabled={busy} key={editorVersion} initialValue={draft.bodyDocument} onChange={bodyDocument => setDraft(current => ({ ...current, bodyDocument }))} />
           </section> : <section className="editorial-editor-section">
             <div className="editorial-editor-section__heading"><span>02</span><div><h4>Competition information</h4><p>Optional URLs and timing used by the public opportunity page.</p></div></div>
             <div className="editorial-field-grid">
@@ -875,7 +874,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
             <button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" /> {busy ? 'Saving…' : 'Save changes'}</button>
           </div>
         </footer>
-      </form>
+      </fieldset></form>
     </dialog>
 
     <EditorialCoverCropper {...coverImage.cropperProps} onApply={result => {
@@ -893,7 +892,7 @@ export function EditorialContentManagement({ initialKind = 'publications' }: { i
 
     <dialog ref={discardDialogRef} className="editorial-discard-dialog" aria-labelledby="editorial-discard-title" onCancel={event => { event.preventDefault(); setDiscardOpen(false) }}>
       <h3 id="editorial-discard-title">Discard unsaved changes?</h3>
-      <p>Perubahan yang belum disimpan akan hilang.</p>
+      <p>Your unsaved changes will be lost.</p>
       <div>
         <button type="button" className="button button-outline button-compact" onClick={() => setDiscardOpen(false)}>Keep editing</button>
         <button type="button" className="button button-danger button-compact" onClick={closeEditor}>Discard changes</button>

@@ -209,7 +209,6 @@ export function DirectImageCropper({
   >
     <div className="direct-crop-dialog__header">
       <div>
-        <p className="kicker">Image crop</p>
         <h3 id={titleId}>{title}</h3>
         <p>{description ?? `Drag the crop or its corners. Final output: ${outputWidth} × ${outputHeight}.`}</p>
       </div>

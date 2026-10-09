@@ -7,7 +7,7 @@ export default function AdminMarketingPage() {
     <main className="admin-marketing-page">
       <Link className="admin-marketing-back" href="/admin">
         <ArrowLeft aria-hidden="true" size={16} />
-        Kembali ke dashboard admin
+        Back to Admin dashboard
       </Link>
       <HeroPosterManagement />
     </main>

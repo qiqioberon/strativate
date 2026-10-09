@@ -8,11 +8,11 @@ export function parseMentorInvitationInput(emailInput: unknown, tierIdInput: unk
   | { error: string } {
   const email = typeof emailInput === 'string' ? emailInput.trim().toLowerCase() : ''
   if (email.length > 254 || !emailPattern.test(email)) {
-    return { error: 'Masukkan email mentor yang valid.' }
+    return { error: 'Enter a valid mentor email.' }
   }
   const tierId = typeof tierIdInput === 'string' ? tierIdInput.trim() : ''
   if (!uuidPattern.test(tierId)) {
-    return { error: 'Pilih tier mentor yang aktif.' }
+    return { error: 'Select an active mentor tier.' }
   }
   return { email, tierId }
 }

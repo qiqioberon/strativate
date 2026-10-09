@@ -18,7 +18,7 @@ import {
 
 import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
 import { useAdminImageUpload, type AdminImageUpload } from '@/components/admin/use-admin-image-upload'
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import {
   isAboutFeaturedStorySetupRequired,
   isCompleteAboutFeaturedStory,
@@ -218,6 +218,13 @@ export function AboutFeaturedStoryManagement() {
     setNotice('')
   }
 
+  function requestCloseEditor() {
+    if (busy) return
+    const dirty = JSON.stringify(draft) !== JSON.stringify(selected ? draftFromStory(selected) : emptyDraft) || Boolean(primaryImage.processedFile || secondaryImage.processedFile || primaryImage.cropperProps.sourceFile || secondaryImage.cropperProps.sourceFile)
+    if (dirty && !window.confirm('Discard unsaved changes? Your edits and selected images will be lost.')) return
+    resetEditor()
+  }
+
   async function stageImage(
     image: AdminImageUpload,
     previous: ImageRefs,
@@ -399,9 +406,7 @@ export function AboutFeaturedStoryManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Content · About Us</p>
-        <h2>Featured Stories</h2>
-        <p>Manage the two fixed success-story placements used by the approved About Us layout.</p>
+        <h3>Featured Stories</h3>
       </div>
       <span className={dataStyles.countPill}><Images aria-hidden="true" />2 fixed slots</span>
     </header>
@@ -500,21 +505,21 @@ export function AboutFeaturedStoryManagement() {
         className={dialogStyles.dialog}
         data-testid="about-featured-story-editor-dialog"
         aria-labelledby="about-featured-story-editor-heading"
-        onCancel={event => { if (busy) event.preventDefault(); else resetEditor() }}
+        onCancel={event => { event.preventDefault(); requestCloseEditor() }}
         onClose={() => { if (!busy && editorOpen) resetEditor() }}
-        onClick={event => { if (event.target === event.currentTarget && !busy) resetEditor() }}
+        onClick={event => { if (event.target === event.currentTarget) requestCloseEditor() }}
       >
         <div className={dialogStyles.panel}>
           <header className={dialogStyles.header}>
             <div>
-              <p className="kicker">{selectedMeta.label}</p>
+
               <h2 id="about-featured-story-editor-heading">Manage {selectedMeta.label}</h2>
               <p className={styles.dialogLayoutHint}>{selectedMeta.layoutLabel}</p>
             </div>
-            <button type="button" className={'role-close ' + dialogStyles.closeButton} onClick={resetEditor} disabled={busy} aria-label="Close Featured Story editor"><X aria-hidden="true" /></button>
+            <button type="button" className={'role-close ' + dialogStyles.closeButton} onClick={requestCloseEditor} disabled={busy} aria-label="Close Featured Story editor"><X aria-hidden="true" /></button>
           </header>
           <div className={dialogStyles.body}>
-            <form className={styles.form} onSubmit={save} noValidate>
+            <form className={styles.form} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
               <div className={styles.formGrid}>
                 <label className={styles.fullField}>
                   Story title / headline
@@ -593,10 +598,10 @@ export function AboutFeaturedStoryManagement() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" className="button button-outline" onClick={resetEditor} disabled={busy}>Cancel</button>
+                <button type="button" className="button button-outline" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
                 <button type="submit" className="button button-primary" disabled={busy}>{busyAction === 'save' ? 'Saving…' : 'Save changes'}</button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       </dialog>

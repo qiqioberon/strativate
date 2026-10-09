@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 type MentorOption = { id: string; name: string }
 
-export function SearchableMentorPicker({ mentors, value, onChange, label = 'Mentor', placeholder = 'Cari nama mentor', selectedLabel, disabled = false }: {
+export function SearchableMentorPicker({ mentors, value, onChange, label = 'Mentor', placeholder, selectedLabel, disabled = false, language = 'id' }: {
   mentors: readonly MentorOption[]
   value: string
   onChange: (id: string) => void
@@ -13,7 +13,9 @@ export function SearchableMentorPicker({ mentors, value, onChange, label = 'Ment
   placeholder?: string
   selectedLabel?: string | null
   disabled?: boolean
+  language?: 'id' | 'en'
 }) {
+  const english = language === 'en'
   const id = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -41,7 +43,7 @@ export function SearchableMentorPicker({ mentors, value, onChange, label = 'Ment
       <Search aria-hidden="true" size={15}/>
       <input id={id} role="combobox" autoComplete="off" aria-autocomplete="list" aria-expanded={open}
         aria-controls={id + '-options'} aria-activedescendant={open && options.length ? id + '-option-' + activeIndex : undefined}
-        disabled={disabled} placeholder={placeholder} value={open ? query : selectedName}
+        disabled={disabled} placeholder={placeholder ?? (english ? 'Search mentor name' : 'Cari nama mentor')} value={open ? query : selectedName}
         onFocus={() => { setOpen(true); setQuery(''); setActive(Math.max(0, mentors.findIndex(mentor => mentor.id === value))) }}
         onClick={() => { if (!open) { setOpen(true); setQuery(''); setActive(0) } }}
         onChange={event => { setQuery(event.target.value); setActive(0); setOpen(true) }}
@@ -62,8 +64,8 @@ export function SearchableMentorPicker({ mentors, value, onChange, label = 'Ment
         type="button" role="option" tabIndex={-1} aria-selected={mentor.id === value} data-active={index === activeIndex}
         className={index === activeIndex ? 'is-active' : ''} onMouseDown={event => event.preventDefault()} onClick={() => choose(mentor)}>
         <strong>{mentor.name}</strong>{mentor.id === value ? <Check aria-hidden="true" size={14}/> : null}
-      </button>) : <p>{mentors.length ? 'Tidak ada mentor yang cocok. Coba nama lain.' : 'Belum ada mentor yang tersedia.'}</p>}
+      </button>) : <p>{mentors.length ? (english ? 'No matching mentors. Try another name.' : 'Tidak ada mentor yang cocok. Coba nama lain.') : (english ? 'No mentors available.' : 'Belum ada mentor yang tersedia.')}</p>}
     </div> : null}
-    {value && selectedName ? <small className="mentor-picker__selected">Terpilih: {selectedName}</small> : null}
+    {value && selectedName ? <small className="mentor-picker__selected">{english ? 'Selected' : 'Terpilih'}: {selectedName}</small> : null}
   </div>
 }

@@ -6,6 +6,7 @@ import { BarChart3, GraduationCap, RefreshCw, School, Trophy, UsersRound } from 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { createClient } from '@/lib/supabase/client'
+import { adminFormError } from '@/lib/auth/errors'
 import styles from './mentee-community-analytics.module.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
@@ -19,32 +20,33 @@ const emptyStats:Stats={totalMentees:0,uniqueSchools:0,uniqueUniversities:0,uniq
 const integer=(value:unknown)=>Number.isFinite(Number(value))?Math.max(0,Math.trunc(Number(value))):0
 const items=(value:unknown):StatItem[]=>Array.isArray(value)?value.flatMap(item=>{if(!item||typeof item!=='object')return[];const row=item as Record<string,unknown>;const label=typeof row.label==='string'?row.label.trim():'';return label?[{label,count:integer(row.count)}]:[]}):[]
 function normalize(value:unknown):Stats{if(!value||typeof value!=='object')return emptyStats;const row=value as Record<string,unknown>;return{totalMentees:integer(row.totalMentees),uniqueSchools:integer(row.uniqueSchools),uniqueUniversities:integer(row.uniqueUniversities),uniqueInterests:integer(row.uniqueInterests),institutionTypes:items(row.institutionTypes),sma:items(row.sma),smk:items(row.smk),universities:items(row.universities),provinces:items(row.provinces),cities:items(row.cities),interests:items(row.interests),referrals:items(row.referrals),cohortYears:items(row.cohortYears)}}
-const chartOptions:ChartOptions<'bar'>={indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(75, 85, 95, .08)'}},y:{grid:{display:false},ticks:{autoSkip:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:context=>`${context.parsed.x??0} mentee`}}}}
+function wrapLabel(label:string){const lines:string[]=[];for(const word of label.split(/\s+/)){const last=lines.length-1;if(last>=0&&lines[last].length+word.length+1<=26)lines[last]+=' '+word;else lines.push(word)}return lines}
+const chartOptions:ChartOptions<'bar'>={indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(75, 85, 95, .08)'}},y:{grid:{display:false},ticks:{autoSkip:false,callback:function(value){return wrapLabel(this.getLabelForValue(Number(value)))}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:context=>`${context.parsed.x??0} mentees`}}}}
 const chartColors:Record<ChartAccent,string>={orange:'#d96b24',blue:'#4e7ca7',purple:'#735ea8',teal:'#3e887d',amber:'#b47a2a'}
 
 function DistributionChart({title,description,rows,note,accent}:{title:string;description:string;rows:StatItem[];note?:string;accent:ChartAccent}){
- const height=Math.max(190,rows.length*34+42)
- return <article className={styles.chartCard} data-accent={accent}><header className={styles.chartHeading}><span className={styles.chartIcon}><BarChart3 aria-hidden="true"/></span><div><h4>{title}</h4><p>{description}</p></div><strong>{rows.length} kategori</strong></header>{rows.length?<div className={styles.chartScroll}><div className={styles.chartCanvas} style={{height}}><Bar options={chartOptions} data={{labels:rows.map(row=>row.label),datasets:[{label:'Mentee',data:rows.map(row=>row.count),backgroundColor:chartColors[accent],borderRadius:6,borderSkipped:false,maxBarThickness:22}]}}/></div></div>:<div className={styles.empty}>Belum ada data terisi untuk distribusi ini.</div>}{note?<p className={styles.note}>{note}</p>:null}</article>
+ const height=Math.max(190,rows.length*Math.max(34,...rows.map(row=>wrapLabel(row.label).length*16+12))+42)
+ return <article className={styles.chartCard} data-accent={accent}><header className={styles.chartHeading}><span className={styles.chartIcon}><BarChart3 aria-hidden="true"/></span><div><h4>{title}</h4><p>{description}</p></div><strong>{rows.length} categories</strong></header>{rows.length?<div className={styles.chartScroll}><div className={styles.chartCanvas} style={{height}}><Bar options={chartOptions} data={{labels:rows.map(row=>row.label),datasets:[{label:'Mentee',data:rows.map(row=>row.count),backgroundColor:chartColors[accent],borderRadius:6,borderSkipped:false,maxBarThickness:22}]}}/></div></div>:<div className={styles.empty}>No data available for this distribution.</div>}{note?<p className={styles.note}>{note}</p>:null}</article>
 }
 
 export function AdminMenteeCommunityAnalytics(){
  const supabase=useMemo(()=>createClient(),[]),rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
  const[stats,setStats]=useState<Stats|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('')
- const load=useCallback(async()=>{setLoading(true);setError('');const{data,error:loadError}=await rpc.rpc<unknown>('get_admin_mentee_community_stats');if(loadError){setStats(null);setError(loadError.message||'Analitik mentee belum dapat dimuat.')}else setStats(normalize(data));setLoading(false)},[rpc])
+ const load=useCallback(async()=>{setLoading(true);setError('');try{const{data,error:loadError}=await rpc.rpc<unknown>('get_admin_mentee_community_stats');if(loadError)throw loadError;setStats(normalize(data))}catch(cause){setStats(null);setError(adminFormError(cause,'Unable to load mentee analytics.'))}finally{setLoading(false)}},[rpc])
  useEffect(()=>{void load()},[load])
- return <section className={styles.section} aria-labelledby="admin-mentee-analytics-title"><header className={styles.heading}><div><p className="kicker">Analitik mentee</p><h3 id="admin-mentee-analytics-title">Distribusi komunitas Strativate</h3><p>Agregat memakai data profil/onboarding yang tersedia. Nilai kosong dikeluarkan hanya dari chart terkait, sehingga total tiap chart tidak harus sama dengan Total Mentee.</p></div><button type="button" className="button button-outline button-compact" onClick={()=>void load()} disabled={loading}><RefreshCw aria-hidden="true"/>{loading?'Memuat…':'Muat ulang'}</button></header>
- {loading&&!stats?<div className={styles.state}>Memuat analitik mentee…</div>:null}
- {!loading&&error?<div className={styles.error}><strong>Analitik belum tersedia.</strong><span>{error}</span><button type="button" className="button button-outline button-compact" onClick={()=>void load()}>Coba lagi</button></div>:null}
- {!loading&&!error&&stats?.totalMentees===0?<div className={styles.state}>Belum ada akun mentee untuk dianalisis.</div>:null}
- {stats&&stats.totalMentees>0?<div className={styles.content}><div className={styles.kpis}><article data-accent="orange"><UsersRound aria-hidden="true"/><span>Total Mentee</span><strong>{stats.totalMentees}</strong><small>Semua akun mentee</small></article><article data-accent="orange"><School aria-hidden="true"/><span>Sekolah unik</span><strong>{stats.uniqueSchools}</strong><small>SMA + SMK terisi</small></article><article data-accent="orange"><GraduationCap aria-hidden="true"/><span>Universitas unik</span><strong>{stats.uniqueUniversities}</strong><small>Universitas terisi</small></article><article data-accent="purple"><Trophy aria-hidden="true"/><span>Minat kompetisi</span><strong>{stats.uniqueInterests}</strong><small>Kategori minat terpilih</small></article></div><div className={styles.grid}>
- <DistributionChart title="Tipe institusi" description="SMA, SMK, dan universitas berdasarkan institusi yang terisi." rows={stats.institutionTypes} accent="orange"/>
- <DistributionChart title="Asal SMA" description="Semua nama SMA beserta jumlah mentee." rows={stats.sma} accent="orange"/>
- <DistributionChart title="Asal SMK" description="Semua nama SMK beserta jumlah mentee." rows={stats.smk} accent="orange"/>
- <DistributionChart title="Asal universitas" description="Semua universitas beserta jumlah mentee." rows={stats.universities} accent="orange"/>
- <DistributionChart title="Provinsi institusi" description="Distribusi provinsi dari institusi mentee yang terisi." rows={stats.provinces} accent="blue"/>
- <DistributionChart title="Kota institusi" description="Distribusi kota dari institusi mentee yang terisi." rows={stats.cities} accent="blue"/>
- <DistributionChart title="Minat kompetisi" description="Jumlah mentee unik untuk setiap minat kompetisi." rows={stats.interests} accent="purple" note="Seorang mentee dapat memilih lebih dari satu minat, sehingga jumlah antar-kategori dapat melebihi Total Mentee."/>
- <DistributionChart title="Sumber referral" description="Sumber referral master; jawaban bebas lainnya digabung sebagai Lainnya." rows={stats.referrals} accent="teal"/>
- <DistributionChart title="Angkatan" description="Distribusi cohort/entry year, diurutkan berdasarkan tahun." rows={stats.cohortYears} accent="amber"/>
+ return <section className={styles.section} aria-labelledby="admin-mentee-analytics-title"><header className={styles.heading}><div><h3 id="admin-mentee-analytics-title">Community Analytics</h3><p>Charts use available profile data. Missing values are excluded from the relevant chart, so chart totals may differ from total mentees.</p></div><button type="button" className="button button-outline button-compact" onClick={()=>void load()} disabled={loading}><RefreshCw aria-hidden="true"/>{loading?'Loading…':'Refresh'}</button></header>
+ {loading&&!stats?<div className={styles.state}>Loading mentee analytics…</div>:null}
+ {!loading&&error?<div className={styles.error}><strong>Analytics unavailable.</strong><span>{error}</span><button type="button" className="button button-outline button-compact" onClick={()=>void load()}>Try again</button></div>:null}
+ {!loading&&!error&&stats?.totalMentees===0?<div className={styles.state}>No mentee accounts to analyse yet.</div>:null}
+ {stats&&stats.totalMentees>0?<div className={styles.content}><div className={styles.kpis}><article data-accent="orange"><UsersRound aria-hidden="true"/><span>Total mentees</span><strong>{stats.totalMentees}</strong><small>All mentee accounts</small></article><article data-accent="orange"><School aria-hidden="true"/><span>Unique schools</span><strong>{stats.uniqueSchools}</strong><small>Reported SMA and SMK schools</small></article><article data-accent="orange"><GraduationCap aria-hidden="true"/><span>Unique universities</span><strong>{stats.uniqueUniversities}</strong><small>Reported universities</small></article><article data-accent="purple"><Trophy aria-hidden="true"/><span>Competition interests</span><strong>{stats.uniqueInterests}</strong><small>Selected interest categories</small></article></div><div className={styles.grid}>
+ <DistributionChart title="Institution types" description="Reported SMA, SMK, and university institutions." rows={stats.institutionTypes} accent="orange"/>
+ <DistributionChart title="High school origins (SMA)" description="Mentees by high school." rows={stats.sma} accent="orange"/>
+ <DistributionChart title="Vocational school origins (SMK)" description="Mentees by vocational school." rows={stats.smk} accent="orange"/>
+ <DistributionChart title="University origins" description="Mentees by university." rows={stats.universities} accent="orange"/>
+ <DistributionChart title="Provinces" description="Reported institution provinces." rows={stats.provinces} accent="blue"/>
+ <DistributionChart title="Cities" description="Reported institution cities." rows={stats.cities} accent="blue"/>
+ <DistributionChart title="Competition interests" description="Unique mentees per competition interest." rows={stats.interests} accent="purple" note="Mentees can select multiple interests, so category totals may exceed total mentees."/>
+ <DistributionChart title="Referral sources" description="Free-text referral responses are grouped as Other." rows={stats.referrals} accent="teal"/>
+ <DistributionChart title="Cohorts" description="Entry cohorts, ordered by year." rows={stats.cohortYears} accent="amber"/>
  </div></div>:null}</section>
 }

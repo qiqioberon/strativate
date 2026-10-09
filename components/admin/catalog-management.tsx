@@ -37,9 +37,7 @@ export type CatalogManagementProps = {
 }
 
 export function CatalogManagement({
-  eyebrow = 'Editor',
   title,
-  description,
   items,
   selectedId,
   query,
@@ -47,12 +45,12 @@ export function CatalogManagement({
   onSelect,
   filters = [],
   editor,
-  emptyTitle = 'Belum ada item.',
-  emptyDescription = 'Konten untuk editor ini belum tersedia.',
-  listLabel = 'Semua item',
+  emptyTitle = 'No items yet.',
+  emptyDescription = 'Content is not available yet.',
+  listLabel = 'All items',
   itemNoun = 'item',
-  searchLabel = 'Cari',
-  searchPlaceholder = 'Cari judul atau metadata',
+  searchLabel = 'Search',
+  searchPlaceholder = 'Search titles or details',
 }: CatalogManagementProps) {
   const filteredItems = useMemo(() => {
     const term = query.trim().toLocaleLowerCase('id')
@@ -60,10 +58,10 @@ export function CatalogManagement({
   }, [items, query])
   const countLabel = filteredItems.length === items.length
     ? `${items.length} ${itemNoun}`
-    : `${filteredItems.length} dari ${items.length} ${itemNoun}`
+    : `${filteredItems.length} of ${items.length} ${itemNoun}`
 
   return <>
-    <div className="role-page-title"><p className="kicker">{eyebrow}</p><h2>{title}</h2><p>{description}</p></div>
+    <div className="role-page-title"><h2>{title}</h2></div>
     <div className="catalog-admin-layout">
       <section className="role-card catalog-admin-list">
         <div className="role-card-heading"><div><p className="kicker">{listLabel}</p><h2>{countLabel}</h2></div></div>
@@ -72,11 +70,11 @@ export function CatalogManagement({
           {filters.map(filter => <label key={filter.id}>{filter.label}<select value={filter.value} onChange={(event) => filter.onChange(event.target.value)}>{filter.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}
         </div>
         {!items.length && <div className="empty-state"><h3>{emptyTitle}</h3><p>{emptyDescription}</p></div>}
-        {!!items.length && !filteredItems.length && <p className="muted">Tidak ada item yang sesuai dengan pencarian.</p>}
+        {!!items.length && !filteredItems.length && <p className="muted">No items match your search.</p>}
         {filteredItems.map(item => <button type="button" className={`catalog-admin-product ${item.id === selectedId ? 'active' : ''}`} key={item.id} onClick={() => onSelect(item.id)}><span><strong>{item.title}</strong>{item.meta ? <small>{item.meta}</small> : null}</span><ChevronRight aria-hidden="true" /></button>)}
       </section>
       <section className="role-card catalog-admin-editor">
-        {editor ?? <div className="empty-state"><h3>Pilih item untuk mulai mengelola.</h3></div>}
+        {editor ?? <div className="empty-state"><h3>Select an item to manage.</h3></div>}
       </section>
     </div>
   </>

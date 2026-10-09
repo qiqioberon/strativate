@@ -4,8 +4,7 @@ import { Eye, RefreshCw, Search, UsersRound, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { formError } from '@/lib/auth/errors'
-import { displayLabel } from '@/lib/labels'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import dataStyles from './data-management.module.css'
 import { SortableTableHeader, type SortDirection } from './sortable-table-header'
@@ -13,7 +12,7 @@ import { TablePagination } from './table-pagination'
 import { AdminMenteeCommunityAnalytics } from './mentee-community-analytics'
 
 const PAGE_SIZE = 25
-const DATE = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' })
+const DATE = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' })
 
 type MenteeView = 'data' | 'analytics'
 type MenteeSortKey = 'name' | 'email' | 'whatsapp' | 'institution' | 'created_at'
@@ -47,8 +46,13 @@ function menteeName(row: MenteeRow) {
   return [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || row.email || row.user_id
 }
 
+function displayLabel(value: string) {
+  const labels: Record<string, string> = { university: 'University', sma: 'High school (SMA)', smk: 'Vocational school (SMK)', email: 'Email', google: 'Google', admin_manual: 'Added by admin', user_submitted: 'Submitted by user', import: 'Imported' }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
 function institutionLabel(row: MenteeRow) {
-  if (!row.institution_name) return 'Belum diisi'
+  if (!row.institution_name) return 'Not provided'
   const location = [row.institution_city, row.institution_province].filter(Boolean).join(', ')
   return location ? `${row.institution_name} · ${location}` : row.institution_name
 }
@@ -93,7 +97,7 @@ export function MenteeManagement() {
       setPeople(rows)
       setTotalPeople(nextTotal)
     } catch (caught) {
-      setError(formError(caught, 'Daftar mentee belum dapat dimuat.'))
+      setError(formError(caught, 'Unable to load mentees.'))
     } finally {
       setLoading(false)
     }
@@ -131,14 +135,14 @@ export function MenteeManagement() {
   return <section className={dataStyles.page} data-testid="participant-management">
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Pengguna · mentee</p>
-        <h2>Mentee</h2>
-        <p>Cari akun mentee, lihat kontak, dan buka detail onboarding tanpa memberi akses edit kepada admin.</p>
+        
+        <h2>Mentees</h2>
+        
       </div>
       <span className={dataStyles.countPill}><UsersRound aria-hidden="true" />{totalPeople} mentee</span>
     </header>
 
-    <div className={dataStyles.viewSwitcher} role="tablist" aria-label="Tampilan mentee" data-testid="mentee-view-switcher">
+    <div className={dataStyles.viewSwitcher} role="tablist" aria-label="Mentee views" data-testid="mentee-view-switcher">
       <button
         id="mentee-view-data"
         type="button"
@@ -148,7 +152,7 @@ export function MenteeManagement() {
         className={`${dataStyles.viewTab} ${activeView === 'data' ? dataStyles.viewTabActive : ''}`}
         onClick={() => changeView('data')}
       >
-        Data Mentee
+        Mentee Data
       </button>
       <button
         id="mentee-view-analytics"
@@ -169,26 +173,26 @@ export function MenteeManagement() {
     <div id="mentee-data-panel" className={dataStyles.surface} role="tabpanel" aria-labelledby="mentee-view-data">
       <div className={dataStyles.surfaceHeader}>
         <div className={dataStyles.surfaceHeaderCopy}>
-          <p className="kicker">Akun mentee</p>
-          <h3>Daftar mentee</h3>
-          <p>Email berasal dari Auth; profil, WhatsApp, dan data onboarding tetap dibaca dari source of truth masing-masing.</p>
+          
+          <h3>Mentees</h3>
+          <p>Mentee account information is read-only.</p>
         </div>
       </div>
 
       <div className={dataStyles.toolbar} data-testid="participant-management-toolbar">
-        <label className={dataStyles.searchField}>Cari mentee
+        <label className={dataStyles.searchField}>Search mentees
           <span className={dataStyles.searchControl}><Search aria-hidden="true" /><input
             type="search"
             value={query}
             onChange={event => { setQuery(event.target.value); setPage(0) }}
-            placeholder="Nama, username, email, WhatsApp, atau institusi"
+            placeholder="Name, username, email, WhatsApp, or institution"
           /></span>
         </label>
       </div>
 
       {error && <p role="alert" className={`${dataStyles.feedback} ${dataStyles.errorFeedback}`}>{error}</p>}
-      {loading && <p role="status">Memuat akun…</p>}
-      {!loading && !error && people.length === 0 && <div className={dataStyles.empty}>Tidak ada mentee yang sesuai dengan pencarian.</div>}
+      {loading && <p role="status">Loading accounts…</p>}
+      {!loading && !error && people.length === 0 && <div className={dataStyles.empty}>No mentees match your search.</div>}
 
       {!loading && people.length > 0 && <div className={dataStyles.tableScroll} data-testid="participant-table-scroll">
         <table className={`${dataStyles.table} ${dataStyles.peopleTable}`} data-testid="participant-table">
@@ -196,44 +200,44 @@ export function MenteeManagement() {
             <SortableTableHeader label="Mentee" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
             <SortableTableHeader label="Email" sortKey="email" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
             <SortableTableHeader label="WhatsApp" sortKey="whatsapp" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
-            <SortableTableHeader label="Institusi" sortKey="institution" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
-            <SortableTableHeader label="Bergabung" sortKey="created_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
-            <th scope="col" className={dataStyles.actionCell}>Aksi</th>
+            <SortableTableHeader label="Institution" sortKey="institution" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
+            <SortableTableHeader label="Joined" sortKey="created_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} />
+            <th scope="col" className={dataStyles.actionCell}>Actions</th>
           </tr></thead>
           <tbody>{people.map(person => {
             const name = menteeName(person)
             return <tr key={person.user_id}>
-              <td><div className={dataStyles.identity}><span className={dataStyles.avatar}>{name.slice(0, 2).toUpperCase()}</span><div className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{name}</strong><span className={dataStyles.secondaryText}>@{person.username || 'belum-diatur'}</span></div></div></td>
+              <td><div className={dataStyles.identity}><span className={dataStyles.avatar}>{name.slice(0, 2).toUpperCase()}</span><div className={dataStyles.identityText}><strong className={dataStyles.primaryText}>{name}</strong><span className={dataStyles.secondaryText}>@{person.username || 'not-set'}</span></div></div></td>
               <td><span className={dataStyles.secondaryText}>{person.email || '—'}</span></td>
-              <td><span className={dataStyles.secondaryText}>{person.whatsapp_number || 'Belum diisi'}</span></td>
+              <td><span className={dataStyles.secondaryText}>{person.whatsapp_number || 'Not provided'}</span></td>
               <td><span className={dataStyles.descriptionText}>{institutionLabel(person)}</span></td>
               <td><time className={dataStyles.dateCell} dateTime={person.created_at}>{DATE.format(new Date(person.created_at))}</time></td>
-              <td className={dataStyles.actionCell}><button type="button" className="ops-icon-button" onClick={() => setSelected(person)} aria-label={`Lihat detail ${name}`} title="Lihat detail"><Eye aria-hidden="true" size={16} /></button></td>
+              <td className={dataStyles.actionCell}><button type="button" className="ops-icon-button" onClick={() => setSelected(person)} aria-label={`View details for ${name}`} title="View details"><Eye aria-hidden="true" size={16} /></button></td>
             </tr>
           })}</tbody>
         </table>
       </div>}
 
-      <TablePagination page={page} pageSize={PAGE_SIZE} totalItems={totalPeople} onPageChange={setPage} disabled={loading} label="Pagination mentee" />
-      <div className={dataStyles.pagination}><button type="button" className={`text-link ${dataStyles.reload}`} onClick={() => void load()} disabled={loading}><RefreshCw size={14} aria-hidden="true" />Muat ulang</button></div>
+      <TablePagination language="en" page={page} pageSize={PAGE_SIZE} totalItems={totalPeople} onPageChange={setPage} disabled={loading} label="Mentee pagination" />
+      <div className={dataStyles.pagination}><button type="button" className={`text-link ${dataStyles.reload}`} onClick={() => void load()} disabled={loading}><RefreshCw size={14} aria-hidden="true" />Refresh</button></div>
     </div>
 
     <dialog ref={dialogRef} className="ops-dialog mentee-detail-dialog" aria-labelledby="mentee-detail-title" onClose={() => setSelected(null)} onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
       {selected ? <div className="ops-dialog__surface">
-        <header className="ops-dialog__header"><div><p className="kicker">Detail mentee · read-only</p><h2 id="mentee-detail-title">{menteeName(selected)}</h2><p>@{selected.username || 'belum-diatur'} · {selected.email}</p></div><button type="button" className="ops-icon-button" onClick={() => dialogRef.current?.close()} aria-label="Tutup detail mentee"><X aria-hidden="true" /></button></header>
+        <header className="ops-dialog__header"><div><h2 id="mentee-detail-title">{menteeName(selected)}</h2><p>@{selected.username || 'not-set'} · {selected.email}</p></div><button type="button" className="ops-icon-button" onClick={() => dialogRef.current?.close()} aria-label="Close mentee details"><X aria-hidden="true" /></button></header>
         <div className="ops-detail-grid">
           <div><span>Email</span><strong>{selected.email || '—'}</strong></div>
-          <div><span>WhatsApp</span><strong>{selected.whatsapp_number || 'Belum diisi'}</strong></div>
-          <div><span>Metode registrasi</span><strong>{displayLabel(selected.registration_method)}</strong></div>
-          <div><span>Bergabung</span><strong>{DATE.format(new Date(selected.created_at))}</strong></div>
-          <div><span>Status onboarding</span><strong>{selected.onboarding_completed_at ? 'Selesai' : `Langkah ${selected.onboarding_step} dari 4`}</strong></div>
-          <div><span>Institusi</span><strong>{selected.institution_name || 'Belum diisi'}</strong></div>
-          <div><span>Jurusan / fakultas</span><strong>{selected.major_or_faculty || 'Belum diisi'}</strong></div>
-          <div><span>Angkatan</span><strong>{selected.cohort_year ?? 'Belum diisi'}</strong></div>
+          <div><span>WhatsApp</span><strong>{selected.whatsapp_number || 'Not provided'}</strong></div>
+          <div><span>Registration method</span><strong>{displayLabel(selected.registration_method)}</strong></div>
+          <div><span>Joined</span><strong>{DATE.format(new Date(selected.created_at))}</strong></div>
+          <div><span>Onboarding status</span><strong>{selected.onboarding_completed_at ? 'Completed' : `Step ${selected.onboarding_step} of 4`}</strong></div>
+          <div><span>Institution</span><strong>{selected.institution_name || 'Not provided'}</strong></div>
+          <div><span>Major / faculty</span><strong>{selected.major_or_faculty || 'Not provided'}</strong></div>
+          <div><span>Cohorts</span><strong>{selected.cohort_year ?? 'Not provided'}</strong></div>
         </div>
-        <section className="ops-dialog__section"><h3>Institusi</h3><p>{institutionLabel(selected)}{selected.institution_type ? ` · ${displayLabel(selected.institution_type)}` : ''}</p></section>
-        <section className="ops-dialog__section"><h3>Sumber informasi</h3><p>{selected.referral_source_name || selected.referral_other_text || 'Belum diisi'}</p></section>
-        <section className="ops-dialog__section"><h3>Minat kompetisi</h3><p>{selected.interests.length ? selected.interests.join(', ') : 'Belum ada minat yang dipilih.'}</p>{selected.other_interest_text ? <p className="muted">Lainnya: {selected.other_interest_text}</p> : null}</section>
+        <section className="ops-dialog__section"><h3>Institution</h3><p>{institutionLabel(selected)}{selected.institution_type ? ` · ${displayLabel(selected.institution_type)}` : ''}</p></section>
+        <section className="ops-dialog__section"><h3>Referral source</h3><p>{selected.referral_source_name || selected.referral_other_text || 'Not provided'}</p></section>
+        <section className="ops-dialog__section"><h3>Competition interests</h3><p>{selected.interests.length ? selected.interests.join(', ') : 'No interests selected.'}</p>{selected.other_interest_text ? <p className="muted">Other: {selected.other_interest_text}</p> : null}</section>
       </div> : null}
     </dialog>
     </>}

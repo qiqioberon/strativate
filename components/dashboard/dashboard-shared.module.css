@@ -53,8 +53,24 @@
 .sidebarUtilities .signOut { border-color: #e7c8c4; background: #fff5f3; color: #b3151c; }
 .sidebarUtilities .signOut:hover { border-color: #cb9792; background: #ffe9e6; }
 .sidebarUtilities .sidebarLink:active, .sidebarUtilities .signOut:active { transform: translateY(1px); }
+.popover.adminNotifications { width: min(25rem, calc(100vw - 1.5rem)); max-height: min(34rem, calc(100dvh - 5.5rem)); padding: .4rem; border-radius: .85rem; box-shadow: 0 12px 36px #3d281b1c; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.adminNotifications .popoverHeader { padding: .75rem .7rem; border-bottom: 1px solid #eee6de; margin-bottom: .35rem; }
+.adminNotifications .notificationHeaderRow { align-items: center; gap: .5rem; }
+.adminNotifications .markAllButton { min-height: 32px; padding: .35rem .45rem; border-radius: 6px; font-size: .72rem; }
+.adminNotifications .markAllButton:hover { background: #f8f2eb; }
+.adminNotifications .notificationList { gap: .2rem; }
+.adminNotifications .notificationItem { grid-template-columns: 2rem minmax(0, 1fr); gap: .6rem; padding: .7rem .65rem; border-radius: .55rem; background: #fdfaf6; }
+.adminNotifications .notificationItem:hover { background: #faf2e8; }
+.adminNotifications .notificationUnread { box-shadow: inset 2px 0 0 #d49765; }
+.adminNotifications .notificationItem > .notificationIcon { width: 2rem; height: 2rem; border-color: #e9ded0; border-radius: .5rem; background: #f6efe5; color: #92633e; }
+.adminNotifications .notificationItem strong { font-size: .82rem; line-height: 1.4; }
+.adminNotifications .notificationItem span { font-size: .76rem; line-height: 1.45; }
+.adminNotifications .notificationItem small { margin-top: .3rem; font-size: .7rem; line-height: 1.4; color: #786c63; }
+.adminNotifications .notificationItem .unreadLabel { margin-bottom: .2rem; padding: .05rem .25rem; background: #f0e7dc; color: #795432; font-size: .62rem; }
 @media (max-width: 640px) {
   .accountButton { width: 2.5rem; height: 2.5rem; padding: .24rem; justify-content: center; }
   .accountName, .chevron { display: none; }
   .popover { position: fixed; top: 4.1rem; right: .75rem; left: .75rem; width: auto; max-height: calc(100dvh - 5rem); }
+  .popover.adminNotifications { width: auto; max-height: calc(100dvh - 5rem); padding-bottom: max(.4rem, env(safe-area-inset-bottom)); }
+  .adminNotifications .markAllButton { min-height: 44px; }
 }

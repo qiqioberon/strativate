@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import type { MentorTier } from '@/lib/supabase/database.types'
 
@@ -31,7 +31,7 @@ export function MentorTierSelect({ mentorId, mentorName, value, currentTierName,
       if (error) throw error
       onSaved(tierId)
     } catch (error) {
-      await onFailure(formError(error, 'Tier mentor belum dapat diperbarui.'))
+      await onFailure(formError(error, 'Unable to update the mentor tier.'))
     } finally {
       setBusy(false)
     }
@@ -46,10 +46,10 @@ export function MentorTierSelect({ mentorId, mentorName, value, currentTierName,
       aria-label={`Tier ${mentorName}`}
       onChange={event => void changeTier(event.target.value)}
     >
-      <option value="" disabled>Tier belum ditentukan</option>
-      {currentTierIsInactive && <option value={value!} disabled>{currentTierName || 'Tier nonaktif'} · Nonaktif</option>}
+      <option value="" disabled>Tier not assigned</option>
+      {currentTierIsInactive && <option value={value!} disabled>{currentTierName || 'Inactive tier'} · Inactive</option>}
       {tiers.map(tier => <option value={tier.id} key={tier.id}>{tier.name}</option>)}
     </select>
-    {busy && <small role="status">Menyimpan tier…</small>}
+    {busy && <small role="status">Saving tier…</small>}
   </div>
 }

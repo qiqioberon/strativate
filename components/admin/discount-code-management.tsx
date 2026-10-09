@@ -3,8 +3,10 @@
 import { Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { formatRupiah } from '@/lib/commerce/money'
 import { createClient } from '@/lib/supabase/client'
+import dataStyles from './data-management.module.css'
 import type { DigitalProduct, DiscountCategory, DiscountCode, DiscountScope, DiscountType } from '@/lib/supabase/database.types'
 
 type Draft = {
@@ -58,6 +60,7 @@ function scopeSummary(item: DiscountCode, categories: DiscountCategory[]) {
 export function DiscountCodeManagement() {
   const supabase = useMemo(() => createClient(), [])
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const initialDraftRef = useRef(JSON.stringify(emptyDraft))
   const [items, setItems] = useState<DiscountCode[]>([])
   const [categoriesByCode, setCategoriesByCode] = useState<Record<string, DiscountCategory[]>>({})
   const [products, setProducts] = useState<DigitalProduct[]>([])
@@ -69,21 +72,27 @@ export function DiscountCodeManagement() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [codeResult, categoryResult, productResult] = await Promise.all([
-      supabase.from('commerce_discount_codes').select('*').order('created_at', { ascending: false }),
-      supabase.from('commerce_discount_code_categories').select('*'),
-      supabase.from('digital_products').select('*').order('name'),
-    ])
-    const loadError = codeResult.error ?? categoryResult.error ?? productResult.error
-    if (loadError) setError(loadError.message)
-    setItems(codeResult.data ?? [])
-    setProducts(productResult.data ?? [])
-    const grouped: Record<string, DiscountCategory[]> = {}
-    for (const mapping of categoryResult.data ?? []) {
-      grouped[mapping.discount_code_id] = [...(grouped[mapping.discount_code_id] ?? []), mapping.category]
+    setError('')
+    try {
+      const [codeResult, categoryResult, productResult] = await Promise.all([
+        supabase.from('commerce_discount_codes').select('*').order('created_at', { ascending: false }),
+        supabase.from('commerce_discount_code_categories').select('*'),
+        supabase.from('digital_products').select('*').order('name'),
+      ])
+      const loadError = codeResult.error ?? categoryResult.error ?? productResult.error
+      if (loadError) throw loadError
+      setItems(codeResult.data ?? [])
+      setProducts(productResult.data ?? [])
+      const grouped: Record<string, DiscountCategory[]> = {}
+      for (const mapping of categoryResult.data ?? []) {
+        grouped[mapping.discount_code_id] = [...(grouped[mapping.discount_code_id] ?? []), mapping.category]
+      }
+      setCategoriesByCode(grouped)
+    } catch (caught) {
+      setError(formError(caught, 'Unable to load discount codes. Check your connection and try again.'))
+    } finally {
+      setLoading(false)
     }
-    setCategoriesByCode(grouped)
-    setLoading(false)
   }, [supabase])
 
   useEffect(() => { void load() }, [load])
@@ -95,31 +104,41 @@ export function DiscountCodeManagement() {
   }, [editingId])
 
   async function edit(item?: DiscountCode) {
+    if (busy) return
     setError('')
     if (!item) {
+      initialDraftRef.current = JSON.stringify(emptyDraft)
       setDraft(emptyDraft)
       setEditingId('new')
       return
     }
-    const categories = categoriesByCode[item.id] ?? ['digital_products']
-    const mappingResult = categories.includes('digital_products') && item.scope === 'selected_digital_products'
-      ? await supabase.from('commerce_discount_code_products').select('product_id').eq('discount_code_id', item.id)
-      : { data: [] as { product_id: string }[], error: null }
-    if (mappingResult.error) {
-      setError(mappingResult.error.message)
-      return
+    setBusy(true)
+    try {
+      const categories: DiscountCategory[] = categoriesByCode[item.id] ?? ['digital_products']
+      const mappingResult = categories.includes('digital_products') && item.scope === 'selected_digital_products'
+        ? await supabase.from('commerce_discount_code_products').select('product_id').eq('discount_code_id', item.id)
+        : { data: [] as { product_id: string }[], error: null }
+      if (mappingResult.error) throw mappingResult.error
+      const nextDraft: Draft = {
+        code: item.code, description: item.description ?? '', discountType: item.discount_type,
+        discountValue: item.discount_value, minimumSubtotal: item.minimum_subtotal_amount,
+        startsAt: toLocalDateInput(item.starts_at), endsAt: toLocalDateInput(item.ends_at),
+        maxRedemptions: item.max_redemptions?.toString() ?? '', scope: item.scope, categories,
+        selectedProductIds: (mappingResult.data ?? []).map(row => row.product_id), isActive: item.is_active,
+      }
+      initialDraftRef.current = JSON.stringify(nextDraft)
+      setDraft(nextDraft)
+      setEditingId(item.id)
+    } catch (caught) {
+      setError(formError(caught, 'Unable to load this discount code’s eligible products.'))
+    } finally {
+      setBusy(false)
     }
-    setDraft({
-      code: item.code, description: item.description ?? '', discountType: item.discount_type,
-      discountValue: item.discount_value, minimumSubtotal: item.minimum_subtotal_amount,
-      startsAt: toLocalDateInput(item.starts_at), endsAt: toLocalDateInput(item.ends_at),
-      maxRedemptions: item.max_redemptions?.toString() ?? '', scope: item.scope, categories,
-      selectedProductIds: (mappingResult.data ?? []).map(row => row.product_id), isActive: item.is_active,
-    })
-    setEditingId(item.id)
   }
 
   function closeEditor() {
+    if (busy) return
+    if (JSON.stringify(draft) !== initialDraftRef.current && !window.confirm('Discard unsaved discount code changes?')) return
     setEditingId(null)
     setDraft(emptyDraft)
     setError('')
@@ -139,7 +158,11 @@ export function DiscountCodeManagement() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!editingId) return
+    if (!editingId || busy) return
+    if (draft.startsAt && draft.endsAt && draft.startsAt > draft.endsAt) {
+      setError('The start date must be on or before the end date.')
+      return
+    }
     if (draft.categories.length === 0) {
       setError('Select at least one commerce category.')
       return
@@ -151,44 +174,53 @@ export function DiscountCodeManagement() {
 
     setBusy(true)
     setError('')
-    const { error: saveError } = await supabase.rpc('admin_save_discount_code', {
-      p_discount_code_id: editingId === 'new' ? null : editingId,
-      p_code: draft.code.trim().toUpperCase(), p_description: draft.description,
-      p_discount_type: draft.discountType, p_discount_value: draft.discountValue,
-      p_minimum_subtotal_amount: draft.minimumSubtotal,
-      p_starts_at: dateBoundaryIso(draft.startsAt, 'start'),
-      p_ends_at: dateBoundaryIso(draft.endsAt, 'end'),
-      p_max_redemptions: draft.maxRedemptions ? Number(draft.maxRedemptions) : null,
-      p_scope: draft.scope, p_is_active: draft.isActive, p_categories: draft.categories,
-      p_product_ids: draft.categories.includes('digital_products') && draft.scope === 'selected_digital_products' ? draft.selectedProductIds : [],
-    })
+    try {
+      const { error: saveError } = await supabase.rpc('admin_save_discount_code', {
+        p_discount_code_id: editingId === 'new' ? null : editingId,
+        p_code: draft.code.trim().toUpperCase(), p_description: draft.description,
+        p_discount_type: draft.discountType, p_discount_value: draft.discountValue,
+        p_minimum_subtotal_amount: draft.minimumSubtotal,
+        p_starts_at: dateBoundaryIso(draft.startsAt, 'start'),
+        p_ends_at: dateBoundaryIso(draft.endsAt, 'end'),
+        p_max_redemptions: draft.maxRedemptions ? Number(draft.maxRedemptions) : null,
+        p_scope: draft.scope, p_is_active: draft.isActive, p_categories: draft.categories,
+        p_product_ids: draft.categories.includes('digital_products') && draft.scope === 'selected_digital_products' ? draft.selectedProductIds : [],
+      })
 
-    if (saveError) {
-      setError(saveError.message)
+      if (saveError) throw saveError
+      setEditingId(null)
+      setDraft(emptyDraft)
+      await load()
+    } catch (caught) {
+      setError(formError(caught, 'Unable to save the discount code. Check its value and dates.'))
+    } finally {
       setBusy(false)
-      return
     }
-
-    closeEditor()
-    await load()
-    setBusy(false)
   }
 
   async function remove(item: DiscountCode) {
-    if (!window.confirm(`Delete discount code “${item.code}”?`)) return
-    const result = await supabase.from('commerce_discount_codes').delete().eq('id', item.id)
-    if (result.error) setError(result.error.message)
-    else await load()
+    if (busy || !window.confirm(`Delete discount code “${item.code}”?`)) return
+    setBusy(true)
+    setError('')
+    try {
+      const result = await supabase.from('commerce_discount_codes').delete().eq('id', item.id)
+      if (result.error) throw result.error
+      await load()
+    } catch (caught) {
+      setError(formError(caught, 'Unable to delete the discount code.'))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const hasDigitalProducts = draft.categories.includes('digital_products')
 
   return <section className="discount-admin" data-testid="admin-discount-code-section">
-    <div className="role-page-title"><p className="kicker">Commerce</p><h2>Discount codes</h2><p>Configure eligible commerce categories and promotion limits. Only successful paid orders count as redeemed.</p></div>
-    <div className="button-row"><button className="button button-primary" type="button" onClick={() => void edit()}><Plus aria-hidden="true" size={16}/> New code</button></div>
-    {!editingId && error ? <p className="form-error">{error}</p> : null}
+    <div className="role-page-title"><h2>Discount Codes</h2></div>
+    <div className="button-row"><button className="button button-primary" type="button" onClick={() => void edit()} disabled={busy}><Plus aria-hidden="true" size={16}/> New code</button></div>
+    {!editingId && error ? <><p className="form-error" role="alert">{error}</p><button type="button" className="button button-outline button-compact" disabled={busy || loading} onClick={() => void load()}>Refresh</button></> : null}
     {loading ? <p>Loading discount codes…</p> : <div className="discount-admin__list">{items.length ? items.map(item => {
-      const categories = categoriesByCode[item.id] ?? ['digital_products']
+      const categories: DiscountCategory[] = categoriesByCode[item.id] ?? ['digital_products']
       const discountLabel = item.discount_type === 'percentage' ? `${item.discount_value}% off` : `${formatRupiah(item.discount_value)} off`
       return <article className="discount-code-card" key={item.id}>
         <div className="discount-code-card__content">
@@ -203,14 +235,14 @@ export function DiscountCodeManagement() {
             <span>{scopeSummary(item, categories)}</span>
           </div>
         </div>
-        <div className="button-row discount-code-card__actions"><button className="button button-outline button-compact" type="button" onClick={() => void edit(item)}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)}><Trash2 aria-hidden="true" size={14}/> Delete</button></div>
+        <div className="button-row discount-code-card__actions"><button className="button button-outline button-compact" type="button" onClick={() => void edit(item)} disabled={busy}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)} disabled={busy}><Trash2 aria-hidden="true" size={14}/> Delete</button></div>
       </article>
     }) : <p>No discount codes yet.</p>}</div>}
 
-    <dialog ref={dialogRef} className="discount-dialog" data-testid="discount-code-dialog" onClose={closeEditor}>
-      <form className="discount-dialog__form" onSubmit={save}>
-        <button className="discount-dialog__close" type="button" onClick={closeEditor} aria-label="Close discount editor"><X aria-hidden="true"/></button>
-        <header className="discount-dialog__header"><p className="kicker">Discount code</p><h3>{editingId === 'new' ? 'Create a new code' : `Edit ${draft.code}`}</h3><p>Set the value, eligible items, validity, and redemption limits for this promotion.</p></header>
+    <dialog ref={dialogRef} className="discount-dialog" data-testid="discount-code-dialog" onClose={() => { if (!busy) setEditingId(null) }} onCancel={event => { event.preventDefault(); closeEditor() }} aria-labelledby="discount-code-heading">
+      <form className="discount-dialog__form" onSubmit={save}><fieldset className={dataStyles.editableFields} disabled={busy}>
+        <button className="discount-dialog__close" type="button" onClick={closeEditor} disabled={busy} aria-label="Close discount editor"><X aria-hidden="true"/></button>
+        <header className="discount-dialog__header"><h3 id="discount-code-heading">{editingId === 'new' ? 'Create a new code' : `Edit ${draft.code}`}</h3></header>
 
         <div className="discount-dialog__section discount-dialog__grid">
           <label className="discount-field">Code<input required pattern="[A-Za-z0-9_-]{3,64}" placeholder="WELCOME30" value={draft.code} onChange={event => setDraft({ ...draft, code: event.target.value.toUpperCase() })}/></label>
@@ -243,13 +275,13 @@ export function DiscountCodeManagement() {
             <label className="discount-field">Starts on<input type="date" value={draft.startsAt} onChange={event => setDraft({ ...draft, startsAt: event.target.value })}/><small>Starts at the beginning of this date. Leave empty to start immediately.</small></label>
             <label className="discount-field">Ends on<input type="date" value={draft.endsAt} onChange={event => setDraft({ ...draft, endsAt: event.target.value })}/><small>Valid through the selected date. Leave empty for no end date.</small></label>
           </div>
-          <label className="discount-field">Max paid redemptions<input type="number" min="1" placeholder="Unlimited" value={draft.maxRedemptions} onChange={event => setDraft({ ...draft, maxRedemptions: event.target.value })}/><small>Maximum number of successful paid redemptions. Leave empty for unlimited.</small></label>
+          <label className="discount-field">Max paid redemptions<input type="number" min="1" placeholder="Unlimited" value={draft.maxRedemptions} onChange={event => setDraft({ ...draft, maxRedemptions: event.target.value })}/><small>Only successful paid orders count as redeemed. Leave empty for unlimited.</small></label>
         </div>
 
         <label className="discount-active"><input type="checkbox" checked={draft.isActive} onChange={event => setDraft({ ...draft, isActive: event.target.checked })}/><span><strong>Active</strong><small>Customers can apply this code while its other conditions are valid.</small></span></label>
         {error ? <p className="form-error" role="alert">{error}</p> : null}
-        <div className="discount-dialog__actions"><button className="button button-outline" type="button" onClick={closeEditor}>Cancel</button><button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" size={16}/> {busy ? 'Saving…' : 'Save code'}</button></div>
-      </form>
+        <div className="discount-dialog__actions"><button className="button button-outline" type="button" onClick={closeEditor} disabled={busy}>Cancel</button><button className="button button-primary" type="submit" disabled={busy}><Save aria-hidden="true" size={16}/> {busy ? 'Saving…' : 'Save code'}</button></div>
+      </fieldset></form>
     </dialog>
   </section>
 }

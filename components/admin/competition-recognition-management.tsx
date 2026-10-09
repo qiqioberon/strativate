@@ -19,7 +19,7 @@ import {
   type FormEvent,
 } from 'react'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { AdminDeleteConfirmation } from '@/components/admin/admin-delete-confirmation'
 import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
 import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
@@ -154,6 +154,13 @@ export function CompetitionRecognitionManagement() {
     setFieldErrors({})
     setError('')
     setNotice('')
+  }
+
+  function requestCloseEditor() {
+    if (busy) return
+    const dirty = JSON.stringify(draft) !== JSON.stringify(selected ? draftFromRecognition(selected) : emptyDraft) || Boolean(image.processedFile || image.cropperProps.sourceFile)
+    if (dirty && !window.confirm('Discard unsaved changes? Your edits and selected images will be lost.')) return
+    resetEditor()
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -295,9 +302,7 @@ export function CompetitionRecognitionManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Content · Homepage</p>
         <h2>Competition Recognition</h2>
-        <p>Manage approved competition-finalist logos, homepage visibility, and display order.</p>
       </div>
       <span className={dataStyles.countPill}><Trophy aria-hidden="true" />{recognitions.length} recognitions</span>
     </header>
@@ -471,20 +476,20 @@ export function CompetitionRecognitionManagement() {
         aria-labelledby="competition-recognition-editor-heading"
         data-testid="competition-recognition-editor-dialog"
         onCancel={event => {
-          if (busy) event.preventDefault()
-          else resetEditor()
+          event.preventDefault()
+          requestCloseEditor()
         }}
         onClose={() => {
           if (!busy && editorOpen) resetEditor()
         }}
         onClick={event => {
-          if (event.target === event.currentTarget && !busy) resetEditor()
+          if (event.target === event.currentTarget) requestCloseEditor()
         }}
       >
         <div className={dialogStyles.panel}>
           <header className={dialogStyles.header}>
             <div>
-              <p className="kicker">{creating ? 'New recognition' : 'Manage recognition'}</p>
+
               <h2 id="competition-recognition-editor-heading">
                 {creating ? 'Add competition recognition' : selected?.competition_name}
               </h2>
@@ -492,7 +497,7 @@ export function CompetitionRecognitionManagement() {
             <button
               type="button"
               className={'role-close ' + dialogStyles.closeButton}
-              onClick={resetEditor}
+              onClick={requestCloseEditor}
               disabled={busy}
               aria-label="Close recognition editor"
             >
@@ -501,7 +506,7 @@ export function CompetitionRecognitionManagement() {
           </header>
 
           <div className={dialogStyles.body}>
-            <form className={styles.form} key={creating ? 'create' : selected?.id ?? 'idle'} onSubmit={save} noValidate>
+            <form className={styles.form} key={creating ? 'create' : selected?.id ?? 'idle'} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
               <div className={styles.formGrid}>
                 <label>
                   Competition name
@@ -545,9 +550,9 @@ export function CompetitionRecognitionManagement() {
                         ? 'Add recognition'
                         : 'Save changes'}
                 </button>
-                <button type="button" className="button button-outline" onClick={resetEditor} disabled={busy}>Cancel</button>
+                <button type="button" className="button button-outline" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       </dialog>

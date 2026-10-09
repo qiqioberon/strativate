@@ -8,7 +8,7 @@ export type HeroPosterSummary = {
   total: number
   active: number
   inactive: number
-  label: 'Fallback aktif' | 'Poster tunggal' | 'Carousel aktif'
+  label: 'Default artwork' | 'Single poster' | 'Active carousel'
   message: string
   tone: 'fallback' | 'single' | 'carousel'
 }
@@ -24,8 +24,8 @@ export function getHeroPosterSummary(posters: MarketingHeroPoster[]): HeroPoster
   if (active === 0) {
     return {
       ...counts,
-      label: 'Fallback aktif',
-      message: 'Beranda masih menggunakan visual brand bawaan.',
+      label: 'Default artwork',
+      message: 'No active posters are configured.',
       tone: 'fallback',
     }
   }
@@ -33,16 +33,16 @@ export function getHeroPosterSummary(posters: MarketingHeroPoster[]): HeroPoster
   if (active === 1) {
     return {
       ...counts,
-      label: 'Poster tunggal',
-      message: 'Poster akan tampil di hero, tetapi carousel tidak berpindah karena hanya ada satu poster aktif.',
+      label: 'Single poster',
+      message: 'One poster is active. Add another active poster to enable rotation.',
       tone: 'single',
     }
   }
 
   return {
     ...counts,
-    label: 'Carousel aktif',
-    message: `${active} poster aktif akan diputar otomatis di beranda.`,
+    label: 'Active carousel',
+    message: `${active} active posters are configured for rotation.`,
     tone: 'carousel',
   }
 }
@@ -77,24 +77,24 @@ export function validateHeroPosterDraft({
   hasStoredImage: boolean
 }): HeroPosterDraftErrors {
   const errors: HeroPosterDraftErrors = {}
-  if (!file && !hasStoredImage) errors.file = 'Pilih gambar poster untuk membuat entri baru.'
-  if (file && !HERO_POSTER_ALLOWED_TYPES.has(file.type)) errors.file = 'Gunakan gambar JPG, PNG, atau WebP.'
-  else if (file && file.size > HERO_POSTER_MAX_FILE_SIZE) errors.file = 'Ukuran gambar maksimal 5 MB.'
-  if (!altText.trim()) errors.altText = 'Teks alternatif wajib diisi.'
+  if (!file && !hasStoredImage) errors.file = 'Choose a poster image to create a new entry.'
+  if (file && !HERO_POSTER_ALLOWED_TYPES.has(file.type)) errors.file = 'Choose a JPG, PNG, or WebP image.'
+  else if (file && file.size > HERO_POSTER_MAX_FILE_SIZE) errors.file = 'Choose an image no larger than 5 MB.'
+  if (!altText.trim()) errors.altText = 'Enter alternative text.'
   const trimmedUrl = url.trim()
   if (trimmedUrl && (!trimmedUrl.startsWith('/') || trimmedUrl.startsWith('//'))) {
-    errors.url = 'Gunakan path internal yang diawali / dan bukan //.'
+    errors.url = 'Use an internal path beginning with /, not //.'
   } else if (trimmedUrl && !/^\/[A-Za-z0-9/?#&=._~-]*$/.test(trimmedUrl)) {
-    errors.url = 'Gunakan path internal tanpa spasi atau karakter yang tidak didukung.'
+    errors.url = 'Use an internal path without spaces or unsupported characters.'
   }
   if (position !== undefined) {
     const trimmedPosition = position.trim()
     const parsedPosition = Number(trimmedPosition)
     const maximum = posterCount ?? 0
     if (!trimmedPosition) {
-      errors.position = 'Posisi wajib diisi.'
+      errors.position = 'Enter a position.'
     } else if (!Number.isInteger(parsedPosition) || parsedPosition < 1 || parsedPosition > maximum) {
-      errors.position = `Posisi harus berupa bilangan bulat antara 1 dan ${maximum}.`
+      errors.position = `Enter a whole-number position between 1 and ${maximum}.`
     }
   }
   return errors

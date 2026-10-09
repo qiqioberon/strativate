@@ -4,7 +4,7 @@ import { Plus, RotateCcw, Save, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useOperationalInvalidation } from '@/components/realtime/operational-realtime-provider'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError, formError } from '@/lib/auth/errors'
 import {
   DAYS_OF_WEEK,
   availabilityRulesToDraft,
@@ -30,6 +30,7 @@ type AvailabilityConfigured = {
 type Props = {
   mentorId: string
   mode: 'mentor' | 'admin'
+  language?: 'en' | 'id'
   onSaved?: (configured: AvailabilityConfigured) => void
 }
 
@@ -79,8 +80,8 @@ function englishValidationMessage(message: string) {
   return 'Check the availability time ranges and try again.'
 }
 
-export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
-  const english = mode === 'mentor'
+export function MentorAvailabilityEditor({ mentorId, mode, onSaved, language }: Props) {
+  const english = language ? language === 'en' : mode === 'mentor'
   const text = (englishText: string, indonesianText: string) => english ? englishText : indonesianText
   const [rangesByWeek, setRangesByWeek] = useState<Record<string, AvailabilityDraftRange[]>>({})
   const [weeks, setWeeks] = useState<AvailabilityWeekOption[]>([])
@@ -139,7 +140,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       setDirty(false)
     } catch (caught) {
       if (showLoading) setLoadFailed(true)
-      setError(english ? 'Availability could not be loaded.' : formError(caught, 'Ketersediaan mentor belum dapat dimuat.'))
+      setError(english ? adminFormError(caught, 'Availability could not be loaded.') : formError(caught, 'Ketersediaan mentor belum dapat dimuat.'))
     } finally {
       if (showLoading) setLoading(false)
     }
@@ -218,7 +219,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
       })
     } catch (caught) {
       setError(english
-        ? 'Availability could not be saved. Your changes are still in the form.'
+        ? adminFormError(caught, 'Availability could not be saved. Your changes are still in the form.')
         : formError(caught, 'Ketersediaan belum dapat disimpan. Perubahan Anda tetap ada di formulir.'))
     } finally {
       setBusy(false)
@@ -234,7 +235,7 @@ export function MentorAvailabilityEditor({ mentorId, mode, onSaved }: Props) {
   )
 
   return (
-    <div className={`mentor-availability-editor ${mode} ${styles.editor}`}>
+    <div className={`mentor-availability-editor ${mode} ${styles.editor}`} data-unsaved={dirty ? 'true' : undefined} data-saving={busy ? 'true' : undefined}>
       <MentorDomainSummary tierName={tierName} timezone={timezone} language={english ? 'en' : 'id'} />
       <div className={`availability-week-switcher ${styles.weekSwitcher}`} role="group" aria-label={text('Select availability week', 'Pilih minggu ketersediaan')}>
         {weeks.map(week => (

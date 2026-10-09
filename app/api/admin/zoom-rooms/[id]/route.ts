@@ -1,3 +1,4 @@
+import { adminFormError } from '@/lib/auth/errors'
 import {NextResponse} from 'next/server'
 
 import {requireAccount} from '@/lib/auth/server'
@@ -9,6 +10,6 @@ export async function DELETE(_request:Request,{params}:{params:Promise<{id:strin
  const account=await requireAccount();if(account.profile.role!=='admin')return NextResponse.json({error:'Forbidden'},{status:403})
  const{id}=await params,supabase=await createClient()
  const{error}=await(supabase as unknown as RpcClient).rpc('admin_delete_mentoring_zoom_room',{p_id:id})
- if(error)return NextResponse.json({error:error.message},{status:409})
+ if(error)return NextResponse.json({error:adminFormError(error,'Unable to delete the Zoom room.')},{status:409})
  return NextResponse.json({deleted:true})
 }

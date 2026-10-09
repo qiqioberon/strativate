@@ -18,18 +18,21 @@
 }
 
 .pages { display:flex; min-width:0; align-items:center; justify-content:center; flex-wrap:wrap; gap:5px; }
-.pageButton { display:inline-grid; width:34px; height:34px; place-items:center; border:1px solid #e0e4e7; border-radius:9px; color:#56616a; background:#fff; font:inherit; font-size:9px; font-weight:800; cursor:pointer; }
+.pageButton { display:inline-grid; min-width:34px; height:34px; padding-inline:6px; place-items:center; border:1px solid #e0d7cf; border-radius:7px; color:#62564d; background:#fff; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
 .pageButton:hover:not(:disabled) { border-color:#f0bd95; background:#fff8f2; }
 .activePage { border-color:#ff7a00; color:#fff; background:#ff7a00; }
 .pageButton:disabled { cursor:default; opacity:.55; }
 .ellipsis { display:inline-grid; min-width:24px; height:34px; place-items:center; color:#8a949d; font-size:11px; }
-.edgeButton { min-height:34px !important; padding:7px 10px !important; font-size:9px !important; }
-.summary { grid-column:3; justify-self:end; color:#7a848d; font-size:9px; white-space:nowrap; }
+.pagination .controls .edgeButton { min-height:34px; padding:7px 10px; font-size:12px; font-weight:500; }
+.summary { grid-column:3; justify-self:end; color:#786c63; font-size:12px; white-space:normal; text-align:right; }
+.pageButton:focus-visible, .edgeButton:focus-visible { outline:2px solid #c16b2b; outline-offset:3px; }
 
 @media (max-width: 720px) {
   .pagination { grid-template-columns:1fr; align-items:stretch; }
   .controls { grid-column:1; width:100%; }
   .pages { order:3; width:100%; }
   .edgeButton { flex:1 1 calc(50% - 4px); justify-content:center; }
+  .pagination .controls .edgeButton { min-height:44px; }
+  .pageButton { min-width:40px; height:40px; }
   .summary { grid-column:1; justify-self:center; width:100%; text-align:center; }
 }

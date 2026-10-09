@@ -140,11 +140,11 @@ export function ImageFitEditor({
       {editable ? (
         <div className={styles.controls} data-testid={testId + '-controls'}>
           <div className={styles.meta}>
-            <span>Sesuaikan cover agar memenuhi frame card. Drag preview atau gunakan kontrol berikut.</span>
+            <span>Fit the cover to the card frame. Drag the preview or use the controls below.</span>
             <strong>{targetWidth} × {targetHeight} px · 4:5</strong>
           </div>
           <label>
-            Posisi horizontal
+            Horizontal position
             <input
               type="range"
               min="0"
@@ -154,7 +154,7 @@ export function ImageFitEditor({
             />
           </label>
           <label>
-            Posisi vertikal
+            Vertical position
             <input
               type="range"
               min="0"

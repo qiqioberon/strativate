@@ -10,35 +10,35 @@ export async function inviteMentor(emailInput: string, tierIdInput: string): Pro
   try {
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) return { error: 'Silakan masuk kembali.' }
+    if (userError || !user) return { error: 'Please sign in again.' }
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') return { error: 'Hanya admin yang dapat mengundang mentor.' }
+    if (profile?.role !== 'admin') return { error: 'Only admins can invite mentors.' }
     const base = process.env.APP_URL
-    if (!base || !/^https?:\/\//.test(base)) return { error: 'URL aplikasi belum dikonfigurasi oleh administrator.' }
+    if (!base || !/^https?:\/\//.test(base)) return { error: 'The application URL has not been configured.' }
     const admin = createAdminClient()
     const { data: tier, error: tierError } = await admin.from('mentor_tiers').select('id').eq('id', tierId).eq('is_active', true).maybeSingle()
-    if (tierError || !tier) return { error: 'Pilih tier mentor yang aktif.' }
+    if (tierError || !tier) return { error: 'Select an active mentor tier.' }
     const { error: registryError } = await admin.from('mentor_invites').insert({ email, invited_by: user.id, status: 'pending', tier_id: tierId })
     if (registryError) {
-      if (registryError.code !== '23505') return { error: 'Undangan belum dapat disiapkan. Coba lagi.' }
+      if (registryError.code !== '23505') return { error: 'Unable to prepare the invitation. Please try again.' }
       // Claim a failed invitation atomically. Sent/in-flight invitations cannot be duplicated.
       const { data: retry, error } = await admin.from('mentor_invites').update({ status: 'pending', invited_by: user.id, tier_id: tierId }).eq('email', email).eq('status', 'failed').is('user_id', null).select('email').maybeSingle()
-      if (error || !retry) return { error: 'Undangan sudah dikirim atau sedang diproses untuk email ini.' }
+      if (error || !retry) return { error: 'An invitation for this email has already been sent or is being processed.' }
     }
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: new URL('/auth/callback', base).href })
     if (error || !data.user) {
       await admin.from('mentor_invites').update({ status: 'failed' }).eq('email', email).eq('status', 'pending')
-      return { error: 'Undangan gagal dikirim. Periksa konfigurasi email atau gunakan alamat yang belum memiliki akun aktif.' }
+      return { error: 'Unable to send the invitation. Check email settings or use an email without an active account.' }
     }
     const [{ data: invitedProfile, error: profileError }, { data: mentorProfile, error: mentorProfileError }] = await Promise.all([
       admin.from('profiles').select('role').eq('id', data.user.id).single(),
       admin.from('mentor_profiles').select('tier_id').eq('user_id', data.user.id).single(),
     ])
     if (profileError || mentorProfileError || invitedProfile?.role !== 'mentor' || mentorProfile?.tier_id !== tierId) {
-      return { error: 'Email diproses, tetapi tier akun mentor belum terkonfirmasi. Hubungi administrator sebelum mencoba lagi.' }
+      return { error: 'Email processed, but the mentor account tier is unconfirmed. Contact an administrator before trying again.' }
     }
     const { error: sentError } = await admin.from('mentor_invites').update({ status: 'sent' }).eq('email', email).eq('user_id', data.user.id)
-    if (sentError) return { error: 'Undangan dikirim, tetapi statusnya belum tersimpan. Muat ulang daftar sebelum mengulang.' }
-    return { success: 'Undangan mentor telah dikirim.' }
-  } catch { return { error: 'Layanan undangan belum tersedia. Periksa konfigurasi server dan coba lagi.' } }
+    if (sentError) return { error: 'Invitation sent, but its status could not be saved. Refresh the list before trying again.' }
+    return { success: 'Mentor invitation sent.' }
+  } catch { return { error: 'The invitation service is unavailable. Check server settings and try again.' } }
 }

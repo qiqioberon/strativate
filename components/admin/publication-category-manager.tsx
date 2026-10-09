@@ -3,6 +3,8 @@
 import { ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
+import dataStyles from './data-management.module.css'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { createClient } from '@/lib/supabase/client'
 import type { Publication, PublicationCategory } from '@/lib/supabase/database.types'
 
@@ -47,14 +49,25 @@ export function PublicationCategoryManager({
     return result
   }, [categories, publications])
 
+  function requestClose() {
+    if (busy) return
+    const currentName = categories.find(category => category.id === editingId)?.name ?? ''
+    if ((newName.trim() || editingId && editingName !== currentName) && !window.confirm('Discard unsaved category changes?')) return
+    setNewName('')
+    setEditingId(null)
+    setEditingName('')
+    onClose()
+  }
+
   async function addCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (busy) return
     const name = newName.trim()
     if (!name) return
     setBusy(true)
     setError('')
     const result = await supabase.from('publication_categories').insert({ name, sort_order: categories.length + 1 })
-    if (result.error) setError(result.error.message)
+    if (result.error) setError(formError(result.error, 'Unable to update the publication category.'))
     else {
       setNewName('')
       await onChanged()
@@ -63,12 +76,13 @@ export function PublicationCategoryManager({
   }
 
   async function saveRename(id: string) {
+    if (busy) return
     const name = editingName.trim()
     if (!name) return
     setBusy(true)
     setError('')
     const result = await supabase.from('publication_categories').update({ name }).eq('id', id)
-    if (result.error) setError(result.error.message)
+    if (result.error) setError(formError(result.error, 'Unable to update the publication category.'))
     else {
       setEditingId(null)
       setEditingName('')
@@ -87,12 +101,13 @@ export function PublicationCategoryManager({
       }
       await onChanged()
     } catch (orderError) {
-      setError(orderError instanceof Error ? orderError.message : 'Category order could not be saved.')
+      setError(formError(orderError, 'Category order could not be saved.'))
     }
     setBusy(false)
   }
 
   function move(id: string, delta: number) {
+    if (busy) return
     const from = categories.findIndex(category => category.id === id)
     const to = from + delta
     if (from < 0 || to < 0 || to >= categories.length) return
@@ -103,6 +118,7 @@ export function PublicationCategoryManager({
   }
 
   function dropOn(targetId: string) {
+    if (busy) return
     if (!draggingId || draggingId === targetId) return
     const from = categories.findIndex(category => category.id === draggingId)
     const to = categories.findIndex(category => category.id === targetId)
@@ -115,6 +131,7 @@ export function PublicationCategoryManager({
   }
 
   async function removeCategory(category: PublicationCategory) {
+    if (busy) return
     const usedBy = usage.get(category.id) ?? []
     if (usedBy.length) {
       setBlockedDeleteId(category.id)
@@ -124,7 +141,7 @@ export function PublicationCategoryManager({
     setError('')
     const result = await supabase.from('publication_categories').delete().eq('id', category.id)
     if (result.error) {
-      setError(result.error.message)
+      setError(formError(result.error, 'Unable to update the publication category.'))
       setBusy(false)
     } else {
       setBlockedDeleteId(null)
@@ -136,17 +153,17 @@ export function PublicationCategoryManager({
     ref={dialogRef}
     className="editorial-category-dialog"
     aria-labelledby="publication-category-dialog-title"
-    onCancel={event => { event.preventDefault(); onClose() }}
+    onCancel={event => { event.preventDefault(); requestClose() }}
   >
     <div className="editorial-category-dialog__header">
       <div>
-        <p className="kicker">Publication taxonomy</p>
+
         <h3 id="publication-category-dialog-title">Manage categories</h3>
         <p>Rename once and every linked publication will show the new label.</p>
       </div>
-      <button type="button" className="editorial-icon-button" onClick={onClose} aria-label="Close category manager"><X aria-hidden="true" /></button>
+      <button type="button" className="editorial-icon-button" onClick={requestClose} disabled={busy} aria-label="Close category manager"><X aria-hidden="true" /></button>
     </div>
-    <div className="editorial-category-dialog__body">
+    <div className="editorial-category-dialog__body"><fieldset className={dataStyles.editableFields} disabled={busy}>
       <form className="editorial-category-add" onSubmit={addCategory}>
         <label><span>New category</span><input maxLength={80} value={newName} onChange={event => setNewName(event.target.value)} placeholder="e.g. Insights" /></label>
         <button type="submit" className="button button-primary button-compact" disabled={busy || !newName.trim()}><Plus aria-hidden="true" /> Add</button>
@@ -194,6 +211,6 @@ export function PublicationCategoryManager({
         })}
         {!categories.length ? <div className="editorial-compact-empty"><strong>No publication categories yet.</strong><span>Add the first category above.</span></div> : null}
       </div>
-    </div>
+    </fieldset></div>
   </dialog>
 }

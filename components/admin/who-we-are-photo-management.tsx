@@ -3,7 +3,7 @@
 import { CircleAlert, ImageIcon, Images, RefreshCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
 import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
 import {
@@ -87,11 +87,19 @@ export function WhoWeArePhotoManagement() {
     if (!activeRole && dialog.open) dialog.close()
   }, [activeRole])
 
-  function closeEditor() {
+  function resetEditor() {
     setActiveRole(null)
     setDraft(emptyDraft)
     image.reset()
     setFieldErrors({})
+  }
+
+  function closeEditor() {
+    if (busy) return
+    const original = { altText: selected?.alt_text ?? '', badgeText: selected?.badge_text ?? '', removeImage: false }
+    const dirty = JSON.stringify(draft) !== JSON.stringify(original) || Boolean(processedFile || image.cropperProps.sourceFile)
+    if (dirty && !window.confirm('Discard unsaved photo changes?')) return
+    resetEditor()
   }
 
   function beginManage(role: WhoWeArePhotoRole) {
@@ -188,7 +196,7 @@ export function WhoWeArePhotoManagement() {
         const { error: cleanupError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([selected.source_image_path])
         if (cleanupError) warning += ' The old original still needs manual Storage cleanup.'
       }
-      closeEditor()
+      resetEditor()
       setNotice('Who We Are photo slot updated.' + warning)
       await load()
     } catch (caught) {
@@ -216,9 +224,7 @@ export function WhoWeArePhotoManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Content · Homepage</p>
-        <h2>Who We Are Photos</h2>
-        <p>Manage the three fixed editorial photo roles. Homepage copy remains source-controlled.</p>
+        <h3>Who We Are Photos</h3>
       </div>
       <span className={dataStyles.countPill}><Images aria-hidden="true" />3 fixed slots</span>
     </header>
@@ -277,17 +283,17 @@ export function WhoWeArePhotoManagement() {
         className={dialogStyles.dialog}
         aria-labelledby="who-we-are-photo-editor-heading"
         data-testid="who-we-are-photo-editor-dialog"
-        onCancel={event => { if (busy) event.preventDefault(); else closeEditor() }}
-        onClose={() => { if (!busy && activeRole) closeEditor() }}
+        onCancel={event => { event.preventDefault(); closeEditor() }}
+        onClose={() => { if (!busy && activeRole) resetEditor() }}
         onClick={event => { if (event.target === event.currentTarget && !busy) closeEditor() }}
       >
         <div className={dialogStyles.panel}>
           <header className={dialogStyles.header}>
-            <div><p className="kicker">Manage fixed slot</p><h2 id="who-we-are-photo-editor-heading">{activeRole ? WHO_WE_ARE_PHOTO_TARGETS[activeRole].label : 'Photo slot'}</h2></div>
+            <div><h2 id="who-we-are-photo-editor-heading">{activeRole ? WHO_WE_ARE_PHOTO_TARGETS[activeRole].label : 'Photo slot'}</h2></div>
             <button type="button" className={'role-close ' + dialogStyles.closeButton} onClick={closeEditor} disabled={busy} aria-label="Close photo editor"><X aria-hidden="true" /></button>
           </header>
           <div className={dialogStyles.body}>
-            <form className={styles.form} key={activeRole ?? 'idle'} onSubmit={save} noValidate>
+            <form className={styles.form} key={activeRole ?? 'idle'} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
               <div className={styles.fields}>
                 <label>
                   Alt text
@@ -319,7 +325,7 @@ export function WhoWeArePhotoManagement() {
                 <button className="button button-primary" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button>
                 <button type="button" className="button button-outline" onClick={closeEditor} disabled={busy}>Cancel</button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       </dialog>

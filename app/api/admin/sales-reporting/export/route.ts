@@ -12,7 +12,7 @@ import {
   type SalesExportRequest,
   type SalesExportValue,
 } from '@/lib/admin/sales-export'
-import { CATEGORY_LABELS, isSalesDate, jakartaDate, previousSalesRange, salesDateRangeError, statusLabel, type SalesReport, type SalesTransaction } from '@/lib/admin/sales-reporting'
+import { CATEGORY_LABELS, isSalesDate, jakartaDate, paymentMethodLabel, previousSalesRange, salesDateRangeError, statusLabel, type SalesReport, type SalesTransaction } from '@/lib/admin/sales-reporting'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -25,7 +25,7 @@ const MAX_REQUEST_BYTES = 32 * 1024
 const MONEY_FORMAT = '"Rp" #,##0;[Red]"Rp" -#,##0'
 const DATE_FORMAT = 'dd/mm/yyyy hh:mm:ss'
 const PRIVATE_HEADERS = { 'Cache-Control': 'private, no-store, max-age=0', 'X-Content-Type-Options': 'nosniff' }
-const LIMIT_MESSAGE = 'Ekspor dibatasi 50.000 order, 100.000 item, dan file 64 MB. Persempit periode atau filter transaksi lalu coba lagi.'
+const LIMIT_MESSAGE = 'Exports are limited to 50,000 orders, 100,000 items and a 64 MB file. Narrow the period or transaction filters and try again.'
 type ExportSnapshot = { report: SalesReport; rows: SalesTransaction[]; total_count: number; item_count: number }
 
 class ExportError extends Error {
@@ -37,15 +37,15 @@ function record(value: unknown): value is Record<string, unknown> {
 }
 
 function allowKeys(value: Record<string, unknown>, keys: string[]) {
-  if (Object.keys(value).some(key => !keys.includes(key))) throw new ExportError('Parameter ekspor tidak dikenali.')
+  if (Object.keys(value).some(key => !keys.includes(key))) throw new ExportError('Unrecognized export parameter.')
 }
 
 function dateParameter(value: unknown) {
   if (value === null) return null
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new ExportError('Tanggal harus menggunakan format YYYY-MM-DD.')
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new ExportError('Dates must use the YYYY-MM-DD format.')
   const date = new Date(`${value}T00:00:00.000Z`)
   if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value || value.startsWith('0000') || value > '9999-12-30') {
-    throw new ExportError('Tanggal ekspor tidak valid.')
+    throw new ExportError('Invalid export date.')
   }
   return value
 }
@@ -57,10 +57,10 @@ function choice<T extends string>(value: unknown, choices: readonly T[], message
 
 async function readRequest(request: Request): Promise<SalesExportRequest> {
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    throw new ExportError('Permintaan ekspor harus berupa JSON.', 415)
+    throw new ExportError('Export requests must use JSON.', 415)
   }
   const reader = request.body?.getReader()
-  if (!reader) throw new ExportError('Pengaturan ekspor belum lengkap.')
+  if (!reader) throw new ExportError('Export settings are incomplete.')
   const chunks: Uint8Array[] = []
   let bytes = 0
   try {
@@ -70,67 +70,67 @@ async function readRequest(request: Request): Promise<SalesExportRequest> {
       bytes += chunk.value.byteLength
       if (bytes > MAX_REQUEST_BYTES) {
         await reader.cancel()
-        throw new ExportError('Pengaturan ekspor terlalu besar.', 413)
+        throw new ExportError('Export settings are too large.', 413)
       }
       chunks.push(chunk.value)
     }
   } finally { reader.releaseLock() }
   let body: unknown
   try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')) }
-  catch { throw new ExportError('Pengaturan ekspor tidak valid.') }
-  if (!record(body)) throw new ExportError('Pengaturan ekspor tidak valid.')
+  catch { throw new ExportError('Invalid export settings.') }
+  if (!record(body)) throw new ExportError('Invalid export settings.')
   allowKeys(body, ['format', 'dataset', 'from', 'to', 'scope', 'compareMode', 'compareFrom', 'compareTo', 'columns', 'filters'])
-  const format = choice(body.format, ['xlsx', 'csv'], 'Pilih format Excel atau CSV.')
-  const dataset = choice(body.dataset, ['orders', 'items', 'both'], 'Dataset ekspor tidak valid.')
-  if (format === 'csv' && dataset === 'both') throw new ExportError('CSV harus berisi satu dataset: Orders atau Items.')
+  const format = choice(body.format, ['xlsx', 'csv'], 'Choose Excel or CSV format.')
+  const dataset = choice(body.dataset, ['orders', 'items', 'both'], 'Invalid export dataset.')
+  if (format === 'csv' && dataset === 'both') throw new ExportError('CSV must contain one dataset: Orders or Items.')
   const from = dateParameter(body.from)
   // Capture the inclusive Jakarta end date once; the entire export uses this bound.
   const to = dateParameter(body.to) ?? jakartaDate()
   const rangeError = salesDateRangeError(from, to)
   if (rangeError) throw new ExportError(rangeError)
-  const scope = choice(body.scope, ['all', 'digital', 'private', 'intensive'], 'Kategori laporan tidak valid.')
-  const compareMode = choice(body.compareMode, ['none', 'previous', 'custom'], 'Pengaturan perbandingan tidak valid.')
+  const scope = choice(body.scope, ['all', 'digital', 'private', 'intensive'], 'Invalid reporting category.')
+  const compareMode = choice(body.compareMode, ['none', 'previous', 'custom'], 'Invalid comparison settings.')
   const compareFrom = dateParameter(body.compareFrom)
   const compareTo = dateParameter(body.compareTo)
-  if (!from && compareMode !== 'none') throw new ExportError('Pilih periode dengan tanggal awal untuk menggunakan perbandingan.')
+  if (!from && compareMode !== 'none') throw new ExportError('Choose a period with a start date to use comparison.')
   if (compareMode === 'custom') {
-    if (!compareFrom || !compareTo) throw new ExportError('Lengkapi tanggal awal dan akhir perbandingan.')
+    if (!compareFrom || !compareTo) throw new ExportError('Enter the comparison start and end dates.')
     const comparisonError = salesDateRangeError(compareFrom, compareTo, true)
     if (comparisonError) throw new ExportError(comparisonError)
   } else if (compareFrom !== null || compareTo !== null) {
-    throw new ExportError('Tanggal perbandingan hanya tersedia untuk rentang kustom.')
+    throw new ExportError('Comparison dates are only available for custom ranges.')
   }
   if (from && compareMode === 'previous') {
     const previous = previousSalesRange(from, to)
-    if (!isSalesDate(previous.from)) throw new ExportError('Periode sebelumnya berada di luar tanggal yang didukung. Pilih perbandingan kustom atau tanpa perbandingan.')
+    if (!isSalesDate(previous.from)) throw new ExportError('The previous period is outside the supported dates. Choose a custom comparison or no comparison.')
   }
   if (!Array.isArray(body.columns) || !body.columns.length || body.columns.length > SALES_EXPORT_FIELDS.length ||
     body.columns.some(column => typeof column !== 'string' || !SALES_EXPORT_FIELDS.some(field => field.key === column))) {
-    throw new ExportError('Pilih kolom ekspor yang tersedia.')
+    throw new ExportError('Choose available export columns.')
   }
   const columns = body.columns as string[]
-  if (new Set(columns).size !== columns.length) throw new ExportError('Kolom ekspor tidak boleh berulang.')
+  if (new Set(columns).size !== columns.length) throw new ExportError('Export columns must not be duplicated.')
   const datasets: Array<'orders' | 'items'> = dataset === 'both' ? ['orders', 'items'] : [dataset]
   if (datasets.some(selected => !salesExportFields(columns, selected).length) ||
     columns.some(key => !SALES_EXPORT_FIELDS.find(field => field.key === key)?.datasets.some(selected => datasets.includes(selected)))) {
-    throw new ExportError('Kolom yang dipilih tidak sesuai dengan dataset ekspor.')
+    throw new ExportError('Selected columns do not match the export dataset.')
   }
-  if (!record(body.filters)) throw new ExportError('Filter transaksi belum lengkap.')
+  if (!record(body.filters)) throw new ExportError('Transaction filters are incomplete.')
   allowKeys(body.filters, ['query', 'status', 'payment', 'sort', 'direction'])
   const { query } = body.filters
   const payment = body.filters.payment === '' ? 'all' : body.filters.payment
   const status = body.filters.status === '' ? 'all' : body.filters.status
-  if (typeof query !== 'string' || query.length > 200 || /[\u0000-\u001f]/u.test(query)) throw new ExportError('Pencarian transaksi maksimal 200 karakter.')
+  if (typeof query !== 'string' || query.length > 200 || /[\u0000-\u001f]/u.test(query)) throw new ExportError('Transaction search is limited to 200 characters.')
   // Payment methods are provider-defined values from the report, not SQL identifiers.
-  if (typeof payment !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(payment)) throw new ExportError('Metode pembayaran tidak valid.')
+  if (typeof payment !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(payment)) throw new ExportError('Invalid payment method.')
   return {
     format, dataset, from, to, scope, compareMode, compareFrom, compareTo, columns,
     filters: {
       query,
       payment,
-      status: choice(status, ['all', 'paid', 'pending_payment', 'payment_failed', 'expired', 'cancelled'], 'Status order tidak valid.'),
-      sort: choice(body.filters.sort, ['created', 'paid', 'net', 'customer', 'status', 'invoice'], 'Urutan transaksi tidak valid.'),
-      direction: choice(body.filters.direction, ['asc', 'desc'], 'Arah urutan transaksi tidak valid.'),
+      status: choice(status, ['all', 'paid', 'pending_payment', 'payment_failed', 'expired', 'cancelled'], 'Invalid order status.'),
+      sort: choice(body.filters.sort, ['created', 'paid', 'net', 'customer', 'status', 'invoice'], 'Invalid transaction sort order.'),
+      direction: choice(body.filters.direction, ['asc', 'desc'], 'Invalid transaction sort direction.'),
     },
   }
 }
@@ -138,7 +138,7 @@ async function readRequest(request: Request): Promise<SalesExportRequest> {
 function safeCell(value: SalesExportValue): SalesExportValue {
   if (typeof value !== 'string') return value
   const text = sanitizeSalesExportText(value)
-  if (text.length > 32_767) throw new ExportError('Ada teks yang melebihi batas sel Excel (32.767 karakter). Hubungi pengelola data.', 422)
+  if (text.length > 32_767) throw new ExportError('Text exceeds the Excel cell limit of 32,767 characters. Contact the data administrator.', 422)
   return text
 }
 
@@ -163,36 +163,36 @@ function appendRow(sheet: Worksheet, values: SalesExportValue[], fields?: SalesE
 }
 
 function addSummary(workbook: ExcelJS.stream.xlsx.WorkbookWriter, snapshot: ExportSnapshot, options: SalesExportRequest, generated: Date) {
-  const sheet = workbook.addWorksheet('Ringkasan', { views: [{ state: 'frozen', ySplit: 1 }] })
+  const sheet = workbook.addWorksheet('Summary', { views: [{ state: 'frozen', ySplit: 1 }] })
   sheet.columns = [{ width: 42 }, { width: 38 }, { width: 25 }, { width: 25 }, { width: 22 }, { width: 22 }]
-  const heading = sheet.addRow(['Laporan Penjualan Strativate'])
+  const heading = sheet.addRow(['Strativate Sales Report'])
   styleHeader(heading)
   heading.commit()
   const range = snapshot.report.range
   const comparison = snapshot.report.previous
-  const comparisonLabels = { none: 'Tidak dibandingkan', previous: 'Periode sebelumnya', custom: 'Rentang kustom' }
+  const comparisonLabels = { none: 'No comparison', previous: 'Previous period', custom: 'Custom date range' }
   const info: Array<[string, SalesExportValue]> = [
-    ['Dibuat (Asia/Jakarta)', salesExportDate(generated.toISOString())],
-    ['Periode utama dari (inklusif)', range.from ?? 'Semua waktu'], ['Periode utama sampai (inklusif)', range.to],
-    ['Mode perbandingan', comparisonLabels[range.compare_mode]],
+    ['Generated (Asia/Jakarta)', salesExportDate(generated.toISOString())],
+    ['Main period from (inclusive)', range.from ?? 'All time'], ['Main period to (inclusive)', range.to],
+    ['Comparison mode', comparisonLabels[range.compare_mode]],
     ...(comparison ? [
-      ['Perbandingan dari (inklusif)', range.previous_from],
-      ['Perbandingan sampai (inklusif)', range.previous_to],
+      ['Comparison from (inclusive)', range.previous_from],
+      ['Comparison to (inclusive)', range.previous_to],
     ] as Array<[string, SalesExportValue]> : []),
-    ['Kategori', options.scope === 'all' ? 'Semua penjualan' : CATEGORY_LABELS[options.scope]],
-    ['Pencarian transaksi', options.filters.query || 'Semua'],
-    ['Status transaksi', options.filters.status === 'all' ? 'Semua' : statusLabel(options.filters.status)],
-    ['Metode pembayaran transaksi', options.filters.payment === 'all' ? 'Semua' : options.filters.payment],
-    ['Urutan transaksi', `${options.filters.sort} (${options.filters.direction})`],
-    ['Order dalam ekspor', snapshot.total_count],
-    ['Item sesuai kategori dalam ekspor', snapshot.rows.reduce((sum, order) => sum + order.items.filter(item => salesExportItemMatchesScope(item, options.scope)).length, 0)],
-    ['Metodologi KPI', 'Order lunas berdasarkan paid_at dalam Asia/Jakarta; fallback legacy menggunakan recognized_at.'],
-    ['Cakupan KPI', 'KPI memakai periode dan kategori laporan. Pencarian, status, dan metode pembayaran hanya memfilter sheet transaksi.'],
-    ['Periode transaksi ekspor', 'Orders dan Items hanya memakai periode utama. Perbandingan hanya ditampilkan pada metadata dan KPI Ringkasan.'],
-    ['Cakupan Orders', 'Satu baris per order. Nilai order utuh, termasuk item kategori lain pada order campuran.'],
-    ['Cakupan Items', 'Satu baris per item sesuai kategori terpilih. Nilai keuangan hanya milik item; total order tidak diulang.'],
-    ['Pengakuan pendapatan', 'Nilai transaksi belum lunas bukan pendapatan yang diakui. Waktu pengakuan legacy tersedia pada kolom opsional.'],
-    ['Order legacy tanpa paid_at', snapshot.report.legacy_paid_orders],
+    ['Category', options.scope === 'all' ? 'All sales' : CATEGORY_LABELS[options.scope]],
+    ['Transaction search', options.filters.query || 'All'],
+    ['Transaction status', options.filters.status === 'all' ? 'All' : statusLabel(options.filters.status)],
+    ['Transaction payment method', options.filters.payment === 'all' ? 'All' : paymentMethodLabel(options.filters.payment)],
+    ['Transaction sort order', `${({ created: 'Created date', paid: 'Payment date', net: 'Net amount', customer: 'Customer', status: 'Status', invoice: 'Invoice' })[options.filters.sort]} (${options.filters.direction === 'asc' ? 'ascending' : 'descending'})`],
+    ['Orders in export', snapshot.total_count],
+    ['Items in selected category in export', snapshot.rows.reduce((sum, order) => sum + order.items.filter(item => salesExportItemMatchesScope(item, options.scope)).length, 0)],
+    ['KPI methodology', 'Paid orders use paid_at in Asia/Jakarta; historical fallback uses recognized_at.'],
+    ['KPI coverage', 'KPIs use the reporting period and category. Search, status and payment method filter only the transaction worksheets.'],
+    ['Export transaction period', 'Orders and Items use only the main period. Comparison appears only in the Summary metadata and KPIs.'],
+    ['Orders coverage', 'One row per order. Full order amounts include other categories in mixed orders.'],
+    ['Items coverage', 'One row per item in the selected category. Financial amounts belong to the item; order totals are not repeated.'],
+    ['Revenue recognition', 'Unpaid transaction amounts are not recognized revenue. Historical recognition dates are available in an optional column.'],
+    ['Historical orders without paid_at', snapshot.report.legacy_paid_orders],
   ]
   for (const [label, value] of info) {
     const row = sheet.addRow([label, safeCell(value)])
@@ -203,21 +203,21 @@ function addSummary(workbook: ExcelJS.stream.xlsx.WorkbookWriter, snapshot: Expo
   }
   appendRow(sheet, [])
   const metricHeader = sheet.addRow(comparison
-    ? ['Metrik laporan', 'Periode utama', range.compare_mode === 'custom' ? 'Perbandingan kustom' : 'Periode sebelumnya', 'Selisih', 'Perubahan']
-    : ['Metrik laporan', 'Periode utama'])
+    ? ['Report metric', 'Main period', range.compare_mode === 'custom' ? 'Custom comparison' : 'Previous period', 'Difference', 'Change']
+    : ['Report metric', 'Main period'])
   styleHeader(metricHeader)
   metricHeader.commit()
   const metrics = [
-    ['Pendapatan bersih (IDR)', 'net', true], ['Penjualan bruto (IDR)', 'gross', true],
-    ['Diskon (IDR)', 'discount', true], ['Order lunas', 'orders', false],
-    ['Unit terjual', 'units', false], ['Pembeli unik', 'buyers', false], ['Rata-rata order lunas (IDR)', 'aov', true],
+    ['Net revenue (IDR)', 'net', true], ['Gross sales (IDR)', 'gross', true],
+    ['Discounts (IDR)', 'discount', true], ['Paid orders', 'orders', false],
+    ['Units sold', 'units', false], ['Unique customers', 'buyers', false], ['Average paid order value (IDR)', 'aov', true],
   ] as const
   for (const [label, key, money] of metrics) {
     const current = snapshot.report.totals[key]
     const values: SalesExportValue[] = [label, current]
     if (comparison) {
       const previous = comparison[key]
-      const change = previous === 0 ? (current === 0 ? 0 : 'Baru pada periode ini') : (current - previous) / previous
+      const change = previous === 0 ? (current === 0 ? 0 : 'New in this period') : (current - previous) / previous
       values.push(previous, current - previous, change)
     }
     const row = sheet.addRow(values.map(safeCell))
@@ -229,11 +229,11 @@ function addSummary(workbook: ExcelJS.stream.xlsx.WorkbookWriter, snapshot: Expo
     row.commit()
   }
   appendRow(sheet, [])
-  const categoryHeader = sheet.addRow(['Kategori penjualan lunas', 'Bruto (IDR)', 'Diskon (IDR)', 'Bersih (IDR)', 'Unit', 'Order lunas'])
+  const categoryHeader = sheet.addRow(['Paid sales category', 'Gross (IDR)', 'Discounts (IDR)', 'Net (IDR)', 'Unit', 'Paid orders'])
   styleHeader(categoryHeader)
   categoryHeader.commit()
   for (const category of snapshot.report.categories) {
-    const row = sheet.addRow([safeCell(category.label), category.gross, category.discount, category.net, category.units, category.orders])
+    const row = sheet.addRow([safeCell(CATEGORY_LABELS[category.key] ?? 'Other'), category.gross, category.discount, category.net, category.units, category.orders])
     for (const index of [2, 3, 4]) row.getCell(index).numFmt = MONEY_FORMAT
     row.commit()
   }
@@ -324,9 +324,9 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: auth, error: authError } = await supabase.auth.getUser()
-    if (authError || !auth.user) throw new ExportError('Silakan masuk kembali untuk mengekspor laporan.', 401)
+    if (authError || !auth.user) throw new ExportError('Sign in again to export reports.', 401)
     const { data: admin, error: adminError } = await supabase.rpc('is_admin')
-    if (adminError || admin !== true) throw new ExportError('Ekspor laporan hanya tersedia untuk admin.', 403)
+    if (adminError || admin !== true) throw new ExportError('Report exports are only available to administrators.', 403)
     const options = await readRequest(request)
     const { data, error } = await supabase.rpc('get_admin_sales_export_v2', {
       p_from: options.from, p_to: options.to, p_scope: options.scope,
@@ -336,16 +336,16 @@ export async function POST(request: Request) {
       p_max_orders: MAX_ORDERS, p_max_items: MAX_ITEMS,
     })
     if (error?.code === '54000') throw new ExportError(LIMIT_MESSAGE, 413)
-    if (error?.code === '22023') throw new ExportError('Periode atau filter ekspor tidak dapat diproses. Persempit periode lalu coba lagi.')
-    if (error) throw new ExportError('Data ekspor belum dapat dimuat. Persempit periode atau coba lagi sebentar.', 503)
+    if (error?.code === '22023') throw new ExportError('Unable to process the export period or filters. Narrow the period and try again.')
+    if (error) throw new ExportError('Unable to load export data. Narrow the period or try again shortly.', 503)
     const snapshot = data
     if (!snapshot?.report || !Array.isArray(snapshot.rows) || !Number.isSafeInteger(snapshot.total_count) ||
       snapshot.total_count !== snapshot.rows.length || !Number.isSafeInteger(snapshot.item_count)) {
-      throw new ExportError('Data ekspor belum lengkap. Muat ulang laporan lalu coba lagi.', 503)
+      throw new ExportError('Export data is incomplete. Refresh the report and try again.', 503)
     }
     const itemCount = snapshot.rows.reduce((sum, order) => sum + order.items.length, 0)
     if (snapshot.total_count > MAX_ORDERS || itemCount > MAX_ITEMS || snapshot.item_count > MAX_ITEMS) throw new ExportError(LIMIT_MESSAGE, 413)
-    if (itemCount !== snapshot.item_count) throw new ExportError('Data ekspor belum lengkap. Muat ulang laporan lalu coba lagi.', 503)
+    if (itemCount !== snapshot.item_count) throw new ExportError('Export data is incomplete. Refresh the report and try again.', 503)
     const generated = new Date()
     const buffer = options.format === 'xlsx' ? await createWorkbook(snapshot, options, generated) : await createCsv(snapshot, options)
     const prefix = options.format === 'xlsx' ? 'sales' : options.dataset
@@ -360,7 +360,7 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     return Response.json(
-      { message: error instanceof ExportError ? error.message : 'File ekspor belum dapat disiapkan. Coba lagi sebentar.' },
+      { message: error instanceof ExportError ? error.message : 'Unable to prepare the export file. Try again shortly.' },
       { status: error instanceof ExportError ? error.status : 500, headers: PRIVATE_HEADERS },
     )
   }

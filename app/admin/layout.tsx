@@ -6,9 +6,11 @@ import { requireAccount } from '@/lib/auth/server'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<BrandedRouteLoading label="Menyiapkan dashboard admin" />}>
-      <AdminAccountBoundary>{children}</AdminAccountBoundary>
-    </Suspense>
+    <div lang="en">
+      <Suspense fallback={<BrandedRouteLoading label="Preparing Admin dashboard" />}>
+        <AdminAccountBoundary>{children}</AdminAccountBoundary>
+      </Suspense>
+    </div>
   )
 }
 

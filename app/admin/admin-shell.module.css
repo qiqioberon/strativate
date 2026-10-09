@@ -1,0 +1,80 @@
+.shell {
+  --admin-border: #e8dfd6;
+  --admin-muted: #786c63;
+  min-height: 100dvh;
+  background: #f8f6f2;
+  color: #2c2723;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+.shell :global(.role-main),
+.shell :global(.role-content),
+.shell :global(.role-content) > * { min-width: 0; }
+.shell :global(.role-main) { margin-left: 246px; }
+.shell :global(.role-content) { width: calc(100% - 48px); max-width: 1600px; padding-block: 26px 48px; }
+.shell :global(.role-sidebar) { width: 246px; height: 100dvh; max-height: 100dvh; gap: 18px; padding: 22px 14px 16px; border-color: var(--admin-border); background: #fffdf9; overflow-y: auto; overscroll-behavior: contain; }
+.shell :global(.role-brand) { flex: 0 0 auto; min-height: 28px; padding-inline: 4px; }
+.shell :global(.role-person) { flex: 0 0 auto; min-width: 0; margin-inline: 4px; padding: 12px 10px; gap: 10px; border-radius: 12px; border-color: var(--admin-border); background: #fffaf4; }
+.shell :global(.role-person) > div { min-width: 0; }
+.shell :global(.role-person strong) { font-size: .8rem; font-weight: 600; overflow-wrap: anywhere; }
+.shell :global(.role-person small) { font-size: .7rem; line-height: 1.4; }
+.shell :global(.role-avatar) { flex: 0 0 auto; }
+.shell :global(.role-sidebar nav) { flex: 1 0 auto; gap: 14px; overflow: visible; }
+.shell :global(.nav-group) { display: grid; gap: 3px; margin-bottom: 0; }
+.shell :global(.nav-group) > small { padding: 0 12px 5px; color: var(--admin-muted); font-size: .7rem; font-weight: 600; letter-spacing: .025em; }
+.shell :global(.role-sidebar nav button) { min-height: 38px; gap: 10px; padding: 9px 12px; border-radius: 9px; color: #6c6057; font-size: .78rem; font-weight: 500; line-height: 1.4; text-align: left; }
+.shell :global(.role-sidebar nav button:hover) { color: #5c3216; background: #fff7ee; }
+.shell :global(.role-sidebar nav button.active) { color: #71370d; background: #fff0df; font-weight: 600; }
+.shell :global(.role-sidebar nav button.active::before) { display: none; }
+.shell :global(.role-sidebar nav svg) { width: 17px; height: 17px; flex: 0 0 auto; }
+.shell :global(.role-sidebar-bottom) { flex: 0 0 auto; margin-top: auto; padding-top: 16px; border-color: var(--admin-border); }
+.shell :global(.role-topbar) { min-height: 62px; height: auto; padding: 10px 24px; gap: 12px; border-color: var(--admin-border); background: #fffdf9; }
+.shell :global(.role-actions) { margin-left: auto; min-width: 0; }
+.shell :global(.role-page-title) { margin-bottom: 18px; }
+.shell :global(.role-page-title h2),
+.shell :global(.admin-heading h2) { margin: 0; font-size: clamp(1.75rem, 2.6vw, 2.25rem); font-weight: 700; line-height: 1.18; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.shell :global(.button-row) { flex-wrap: wrap; }
+.shell :global(.ops-status) { max-width: 100%; padding: 4px 8px; border-radius: 6px; font-size: .7rem; font-weight: 600; line-height: 1.35; white-space: normal; }
+.shell :global(.ops-field) { min-width: 0; }
+.shell :global(.ops-field) > span { font-size: .75rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.shell :global(.ops-field input),
+.shell :global(.ops-field select) { font-size: .8rem; }
+.shell :global(.ops-filter-bar) { gap: 10px; padding: 12px; border-radius: 12px; }
+.shell :global(.ops-table) { font-size: .78rem; }
+.shell :global(.ops-table th) { padding: 10px 12px; font-size: .72rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.shell :global(.ops-table td) { padding: 10px 12px; }
+.shell :global(.ops-table td small) { font-size: .7rem; overflow-wrap: anywhere; }
+.shell :global(.ops-table td strong) { overflow-wrap: anywhere; }
+.shell :global(.ops-table .button) { min-height: 34px; font-size: .75rem; }
+.shell :global(.ops-detail-grid span),
+.shell :global(.ops-readonly-field span),
+.shell :global(.ops-payment-detail dt) { font-size: .72rem; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.shell :global(.ops-detail-grid strong),
+.shell :global(.ops-readonly-field strong),
+.shell :global(.ops-payment-detail dd) { font-size: .8rem; }
+.shell :global(.ops-quick-actions button) { min-height: 44px; padding: 10px 12px; border-radius: 10px; }
+.shell :global(.ops-quick-actions button strong) { font-size: .85rem; font-weight: 600; }
+.shell :global(.ops-quick-actions button svg) { width: 18px; height: 18px; }
+.shell :global(.role-menu),
+.shell :global(.role-close) { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 9px; margin: 0; }
+.shell :global(.role-sidebar button:focus-visible),
+.shell :global(.role-menu:focus-visible),
+.shell :global(.ops-icon-button:focus-visible),
+.shell :global(.ops-quick-actions button:focus-visible) { outline: 3px solid #ff7a0060; outline-offset: 2px; }
+
+@media (max-width: 1100px) {
+  .shell :global(.role-content) { width: calc(100% - 36px); }
+}
+@media (max-width: 800px) {
+  .shell :global(.role-main) { margin-left: 0; }
+  .shell :global(.role-sidebar) { width: min(286px, calc(100vw - 48px)); }
+  .shell :global(.role-topbar) { padding-inline: 16px; }
+  .shell :global(.role-content) { width: calc(100% - 32px); padding-block: 22px 40px; }
+  .shell :global(.role-sidebar nav button) { min-height: 44px; }
+  .shell :global(.ops-table .button) { min-height: 40px; }
+}
+@media (max-width: 480px) {
+  .shell :global(.role-content) { width: calc(100% - 24px); }
+  .shell :global(.role-topbar) { padding-inline: 12px; }
+}

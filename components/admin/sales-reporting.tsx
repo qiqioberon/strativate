@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/commerce/money'
 import {
   comparisonLabel, comparisonText, count, displayDate, isSalesDate, jakartaDate,
-  previousSalesRange, salesDateRangeError, shiftDate,
+  previousSalesRange, salesDateRangeError, salesReportPresentation, shiftDate,
   type SalesComparisonMode, type SalesGranularity, type SalesReport, type SalesScope, type SalesView,
 } from '@/lib/admin/sales-reporting'
 import { SalesAnalytics } from './sales-reporting-analytics'
@@ -16,10 +16,10 @@ import { SalesMix, SalesPerformanceChart, SalesProductRanking, SalesStatusSnapsh
 import { SalesTransactions } from './sales-reporting-transactions'
 import styles from './sales-reporting.module.css'
 
-const VIEWS: Array<[SalesView, string]> = [['summary', 'Ringkasan'], ['analytics', 'Analitik'], ['transactions', 'Transaksi & Ekspor']]
-const PRESETS = [['7', '7 hari'], ['30', '30 hari'], ['90', '90 hari'], ['year', 'Tahun ini'], ['all', 'Semua waktu'], ['custom', 'Kustom']]
-const SCOPES: Array<[SalesScope, string]> = [['all', 'Semua penjualan'], ['digital', 'Produk Digital'], ['private', 'Private Mentoring'], ['intensive', 'Intensive Mentoring']]
-const COMPARISONS: Array<[SalesComparisonMode, string]> = [['none', 'Tidak dibandingkan'], ['previous', 'Periode sebelumnya'], ['custom', 'Rentang kustom']]
+const VIEWS: Array<[SalesView, string]> = [['summary', 'Summary'], ['analytics', 'Analytics'], ['transactions', 'Transactions & Export']]
+const PRESETS = [['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['year', 'This year'], ['all', 'All time'], ['custom', 'Custom']]
+const SCOPES: Array<[SalesScope, string]> = [['all', 'All sales'], ['digital', 'Digital Products'], ['private', 'Private Mentoring'], ['intensive', 'Intensive Mentoring']]
+const COMPARISONS: Array<[SalesComparisonMode, string]> = [['none', 'No comparison'], ['previous', 'Previous period'], ['custom', 'Custom date range']]
 function presetStart(preset: string, today: string) {
   return preset === 'year' ? `${today.slice(0, 4)}-01-01` : shiftDate(today, -(Number(preset) - 1))
 }
@@ -49,7 +49,7 @@ export function AdminSalesReporting() {
   const previousRange = validRange && from ? previousSalesRange(from, to) : null
   const compareError = compareMode === 'custom' ? salesDateRangeError(compareFrom, compareTo ?? '', true)
     : compareMode === 'previous' && previousRange && !isSalesDate(previousRange.from)
-      ? 'Periode sebelumnya berada di luar tanggal yang didukung. Pilih rentang kustom atau tanpa perbandingan.' : ''
+      ? 'The previous period is outside the supported dates. Choose a custom range or no comparison.' : ''
   const validComparison = !compareError
   const [granularity, setGranularity] = useState<SalesGranularity>('auto')
   // Interval changes keep chart controls mounted while the same financial range refreshes.
@@ -93,10 +93,10 @@ export function AdminSalesReporting() {
           p_compare_from: compareFrom ?? undefined, p_compare_to: compareTo ?? undefined, p_granularity: granularity,
         })
         if (!current) return
-        if (result.error || !result.data) setError('Laporan belum dapat dimuat. Silakan coba lagi.')
-        else { setReport(result.data); setLoadedFor(filterKey) }
+        if (result.error || !result.data) setError('Unable to load the report. Please try again.')
+        else { setReport(salesReportPresentation(result.data)); setLoadedFor(filterKey) }
       } catch {
-        if (current) setError('Laporan belum dapat dimuat. Periksa koneksi lalu coba lagi.')
+        if (current) setError('Unable to load the report. Check your connection and try again.')
       } finally { if (current) setLoading(false) }
     }, 250)
     return () => { current = false; clearTimeout(timer) }
@@ -126,19 +126,19 @@ export function AdminSalesReporting() {
     window.print()
   }
 
-  const rangeLabel = validRange ? `${from ? displayDate(from) : 'Sejak awal'} – ${displayDate(to)}` : 'Rentang laporan belum valid'
+  const rangeLabel = validRange ? `${from ? displayDate(from) : 'All time'} – ${displayDate(to)}` : 'Invalid reporting period'
   const comparisonRange = compareMode === 'custom' ? { from: compareFrom, to: compareTo } : previousRange
-  const comparisonSummary = compareMode === 'none' ? 'Tidak dibandingkan'
-    : !validComparison || !validRange ? 'Rentang perbandingan belum valid'
-      : `${compareMode === 'previous' ? 'Periode sebelumnya' : 'Rentang kustom'}: ${displayDate(comparisonRange?.from ?? null)} – ${displayDate(comparisonRange?.to ?? null)}`
+  const comparisonSummary = compareMode === 'none' ? 'No comparison'
+    : !validComparison || !validRange ? 'Invalid comparison period'
+      : `${compareMode === 'previous' ? 'Previous period' : 'Custom date range'}: ${displayDate(comparisonRange?.from ?? null)} – ${displayDate(comparisonRange?.to ?? null)}`
   const scopeLabel = SCOPES.find(([key]) => key === scope)![1]
   return <div className={styles.workspace} data-sales-report>
     <header className={styles.pageHeader}>
-      <div><p className={styles.eyebrow}>Bisnis · Shared Commerce</p><h2>Laporan Penjualan</h2><p>Pendapatan, perilaku pembelian, dan transaksi dalam satu ruang laporan.</p></div>
-      {view !== 'transactions' ? <button type="button" className={styles.button} onClick={printReport} disabled={loading || !report || !validRange || !validComparison || Boolean(error)}><Printer size={15} aria-hidden="true" />Cetak laporan</button> : null}
+      <div><h2>Reports</h2></div>
+      {view !== 'transactions' ? <button type="button" className={styles.button} onClick={printReport} disabled={loading || !report || !validRange || !validComparison || Boolean(error)}><Printer size={15} aria-hidden="true" />Print report</button> : null}
     </header>
-    <div className={styles.printMetadata}><strong>{rangeLabel} · {scopeLabel} · WIB</strong><span>{comparisonSummary}</span><span>Dicetak: <span ref={printedAt} /> WIB</span><span>Penjualan lunas mengikuti waktu pembayaran; status mengikuti waktu order dibuat. Bruto − diskon = bersih.</span>{view === 'transactions' ? <span>Hanya halaman transaksi yang sedang ditampilkan. Gunakan ekspor untuk seluruh data.</span> : null}</div>
-    <nav className={styles.tabs} role="tablist" aria-label="Tampilan laporan">
+    <div className={styles.printMetadata}><strong>{rangeLabel} · {scopeLabel} · WIB</strong><span>{comparisonSummary}</span><span>Printed: <span ref={printedAt} /> WIB</span><span>Paid sales follow the payment date; order statuses follow the creation date. Gross − discount = net.</span>{view === 'transactions' ? <span>Only the current transaction page is shown. Export to include all matching data.</span> : null}</div>
+    <nav className={styles.tabs} role="tablist" aria-label="Report views">
       {VIEWS.map(([key, label], index) => <button key={key} type="button" id={`report-tab-${key}`} role="tab" aria-selected={view === key} aria-controls={`report-panel-${key}`} tabIndex={view === key ? 0 : -1} onClick={() => updateParams({ reportView: key }, true)} onKeyDown={event => {
         let next: number | null = null
         if (event.key === 'ArrowRight') next = (index + 1) % VIEWS.length
@@ -150,35 +150,35 @@ export function AdminSalesReporting() {
       }}>{label}</button>)}
     </nav>
     <div className={styles.filterBar}>
-      <label className={styles.field}><span>Periode</span><select value={preset} onChange={event => choosePreset(event.target.value)}>{PRESETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-      <label className={styles.field}><span>Dari</span>{preset === 'all' ? <input type="text" value="Sejak awal" disabled aria-label="Dari: sejak awal" /> : <input type="date" value={from ?? ''} aria-invalid={!validRange} aria-describedby={rangeError ? 'report-range-error' : undefined} onChange={event => updateParams({ reportRange: 'custom', reportFrom: event.target.value, reportTo: to })} />}</label>
-      <label className={styles.field}><span>Sampai</span><input type="date" value={to} aria-invalid={!validRange} aria-describedby={rangeError ? 'report-range-error' : undefined} onChange={event => updateParams({ reportRange: preset === 'all' ? 'all' : 'custom', reportFrom: from ?? '', reportTo: event.target.value })} /></label>
-      <label className={styles.field}><span>Lingkup bisnis</span><select value={scope} onChange={event => updateParams({ reportScope: event.target.value })}>{SCOPES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-      <label className={styles.field}><span>Bandingkan dengan</span><select value={compareMode} disabled={preset === 'all'} onChange={event => chooseComparison(event.target.value as SalesComparisonMode)}>{COMPARISONS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-      <button type="button" className={styles.iconButton} aria-label="Muat ulang laporan" title="Muat ulang laporan" disabled={loading || !validRange || !validComparison} onClick={() => setRevision(value => value + 1)}><RefreshCw size={16} aria-hidden="true" /></button>
+      <label className={styles.field}><span>Period</span><select value={preset} onChange={event => choosePreset(event.target.value)}>{PRESETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <label className={styles.field}><span>From</span>{preset === 'all' ? <input type="text" value="All time" disabled aria-label="From: all time" /> : <input type="date" value={from ?? ''} aria-invalid={!validRange} aria-describedby={rangeError ? 'report-range-error' : undefined} onChange={event => updateParams({ reportRange: 'custom', reportFrom: event.target.value, reportTo: to })} />}</label>
+      <label className={styles.field}><span>To</span><input type="date" value={to} aria-invalid={!validRange} aria-describedby={rangeError ? 'report-range-error' : undefined} onChange={event => updateParams({ reportRange: preset === 'all' ? 'all' : 'custom', reportFrom: from ?? '', reportTo: event.target.value })} /></label>
+      <label className={styles.field}><span>Business scope</span><select value={scope} onChange={event => updateParams({ reportScope: event.target.value })}>{SCOPES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <label className={styles.field}><span>Compare with</span><select value={compareMode} disabled={preset === 'all'} onChange={event => chooseComparison(event.target.value as SalesComparisonMode)}>{COMPARISONS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <button type="button" className={styles.iconButton} aria-label="Refresh report" title="Refresh report" disabled={loading || !validRange || !validComparison} onClick={() => setRevision(value => value + 1)}><RefreshCw size={16} aria-hidden="true" /></button>
       {compareMode === 'custom' ? <div className={styles.comparisonFields}>
-        <label className={styles.field}><span>Perbandingan dari</span><input type="date" value={compareFrom ?? ''} aria-invalid={!validComparison} aria-describedby={compareError ? 'report-comparison-error' : undefined} onChange={event => updateParams({ reportCompareFrom: event.target.value })} /></label>
-        <label className={styles.field}><span>Perbandingan sampai</span><input type="date" value={compareTo ?? ''} aria-invalid={!validComparison} aria-describedby={compareError ? 'report-comparison-error' : undefined} onChange={event => updateParams({ reportCompareTo: event.target.value })} /></label>
+        <label className={styles.field}><span>Comparison from</span><input type="date" value={compareFrom ?? ''} aria-invalid={!validComparison} aria-describedby={compareError ? 'report-comparison-error' : undefined} onChange={event => updateParams({ reportCompareFrom: event.target.value })} /></label>
+        <label className={styles.field}><span>Comparison to</span><input type="date" value={compareTo ?? ''} aria-invalid={!validComparison} aria-describedby={compareError ? 'report-comparison-error' : undefined} onChange={event => updateParams({ reportCompareTo: event.target.value })} /></label>
       </div> : null}
     </div>
     <div className={styles.rangeMetadata}>
-      <div className={styles.metadataLine}><span>{rangeLabel} · WIB{report ? ` · ${report.range.granularity === 'day' ? 'Harian' : report.range.granularity === 'week' ? 'Mingguan' : 'Bulanan'}` : ''}</span>
-        <details ref={methodology} className={styles.methodology} onKeyDown={event => { if (event.key === 'Escape' && methodology.current) { methodology.current.open = false; methodology.current.querySelector('summary')?.focus() } }}><summary><Info size={13} aria-hidden="true" />Cara perhitungan</summary><div className={styles.methodologyPanel}><p>Penjualan hanya mencakup order lunas berdasarkan waktu pembayaran. Status order dihitung berdasarkan waktu dibuat. {scope !== 'all' ? 'KPI dan analitik menjumlahkan item sesuai lingkup; tabel transaksi menampilkan nilai order lengkap.' : 'Pendapatan bersih = subtotal − diskon.'} Subtotal historis yang kosong memakai nilai bersih + diskon. Pembeli berulang memiliki lebih dari satu order lunas sampai akhir periode. {report?.legacy_paid_orders ? `${count(report.legacy_paid_orders)} order historis menggunakan waktu upaya pembayaran lunas, lalu waktu pembaruan order jika waktu bayar tidak tersedia.` : ''} Semua waktu memakai Asia/Jakarta.</p></div></details>
+      <div className={styles.metadataLine}><span>{rangeLabel} · WIB{report ? ` · ${report.range.granularity === 'day' ? 'Daily' : report.range.granularity === 'week' ? 'Weekly' : 'Monthly'}` : ''}</span>
+        <details ref={methodology} className={styles.methodology} onKeyDown={event => { if (event.key === 'Escape' && methodology.current) { methodology.current.open = false; methodology.current.querySelector('summary')?.focus() } }}><summary><Info size={13} aria-hidden="true" />How totals are calculated</summary><div className={styles.methodologyPanel}><p>Sales include paid orders by payment date. Order statuses are counted by creation date. {scope !== 'all' ? 'KPIs and analytics total items in the selected scope; the transaction table shows full order amounts.' : 'Net revenue = subtotal − discount.'} Missing historical subtotals use net amount + discount. Repeat customers have more than one paid order by the end of the period. {report?.legacy_paid_orders ? `${count(report.legacy_paid_orders)} historical orders use the paid payment-attempt date, then the order update date when a payment date is unavailable.` : ''} All times use Asia/Jakarta.</p></div></details>
       </div>
-      <p className={styles.comparisonNote}>{comparisonSummary}{preset === 'all' ? ' · Perbandingan memerlukan tanggal awal yang terbatas.' : ''}</p>
+      <p className={styles.comparisonNote}>{comparisonSummary}{preset === 'all' ? ' · Comparison requires a defined start date.' : ''}</p>
     </div>
     {rangeError ? <p id="report-range-error" className={styles.error} role="alert">{rangeError}</p> : null}
     {compareError ? <p id="report-comparison-error" className={styles.error} role="alert">{compareError}</p> : null}
-    {error && validRange && validComparison ? <div className={styles.error} role="alert">{error}<button type="button" className={styles.button} onClick={() => setRevision(value => value + 1)}>Coba lagi</button></div> : null}
-    {loading && validRange && validComparison ? <p className={styles.loading} role="status">{report ? 'Menyegarkan laporan…' : 'Memuat laporan penjualan…'}</p> : null}
+    {error && validRange && validComparison ? <div className={styles.error} role="alert">{error}<button type="button" className={styles.button} onClick={() => setRevision(value => value + 1)}>Try again</button></div> : null}
+    {loading && validRange && validComparison ? <p className={styles.loading} role="status">{report ? 'Refreshing report…' : 'Loading sales report…'}</p> : null}
     {VIEWS.map(([panel]) => <section key={panel} id={`report-panel-${panel}`} role="tabpanel" aria-labelledby={`report-tab-${panel}`} aria-busy={loading} tabIndex={0} className={styles.panel} hidden={view !== panel}>
       {view === panel ? <>
       {view === 'transactions' ? <SalesTransactions from={from} to={to} scope={scope} compareMode={compareMode} compareFrom={compareFrom} compareTo={compareTo} revision={revision} validRange={validRange} validComparison={validComparison} rangeLabel={rangeLabel} comparisonLabel={comparisonSummary} report={report} onPrint={printReport} /> : report ? view === 'analytics' ? <SalesAnalytics report={report} granularity={granularity} onGranularityChange={setGranularity} /> : <>
         <SalesKpis report={report} />
-        {!report.totals.orders ? <p className={styles.empty}>Belum ada order lunas pada periode ini.</p> : null}
+        {!report.totals.orders ? <p className={styles.empty}>No paid orders in this period.</p> : null}
         <div className={styles.summaryMain}><SalesPerformanceChart report={report} granularity={granularity} onGranularityChange={setGranularity} /><SalesMix report={report} /></div>
         <div className={styles.summaryBottom}><SalesProductRanking products={report.products} compact /><SalesStatusSnapshot report={report} /></div>
-      </> : !loading && !error && validRange && validComparison ? <p className={styles.empty}>Belum ada transaksi pada periode ini.</p> : null}
+      </> : !loading && !error && validRange && validComparison ? <p className={styles.empty}>No transactions in this period.</p> : null}
       </> : null}
     </section>)}
   </div>
@@ -186,12 +186,12 @@ export function AdminSalesReporting() {
 
 function SalesKpis({ report }: { report: SalesReport }) {
   const cards = [
-    { key: 'net' as const, label: 'Pendapatan bersih', note: 'Nilai lunas setelah diskon', money: true },
-    { key: 'gross' as const, label: 'Penjualan bruto', note: 'Subtotal sebelum diskon', money: true },
-    { key: 'discount' as const, label: 'Diskon', note: 'Potongan pada order lunas', money: true },
-    { key: 'orders' as const, label: 'Order lunas', note: `${count(report.totals.units)} item terjual`, money: false },
-    { key: 'aov' as const, label: 'Rata-rata nilai order', note: 'Pendapatan bersih / order lunas', money: true },
-    { key: 'buyers' as const, label: 'Pembeli unik', note: `${count(report.customers.repeat)} pembeli berulang`, money: false },
+    { key: 'net' as const, label: 'Net revenue', note: 'Paid amount after discounts', money: true },
+    { key: 'gross' as const, label: 'Gross sales', note: 'Subtotal before discounts', money: true },
+    { key: 'discount' as const, label: 'Discount', note: 'Discounts on paid orders', money: true },
+    { key: 'orders' as const, label: 'Paid orders', note: `${count(report.totals.units)} items sold`, money: false },
+    { key: 'aov' as const, label: 'Average order value', note: 'Net revenue / paid orders', money: true },
+    { key: 'buyers' as const, label: 'Unique customers', note: `${count(report.customers.repeat)} repeat customers`, money: false },
   ]
   const wideValue = cards.some(card => (card.money ? formatRupiah(Math.round(report.totals[card.key])) : count(report.totals[card.key])).length > 17)
   return <div className={styles.kpis} data-wide-value={wideValue}>{cards.map(card => {

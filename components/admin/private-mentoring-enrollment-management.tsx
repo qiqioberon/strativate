@@ -22,16 +22,16 @@ type EligibleMentor={mentor_id:string;mentor_name:string;tier_id:string;timezone
 type RpcClient={rpc<T=unknown>(name:string,args?:Record<string,unknown>):Promise<{data:T|null;error:{message:string}|null}>}
 type EnrollmentSortKey='user'|'email'|'package'|'purchased_at'|'progress'|'status'
 
-const DATE=new Intl.DateTimeFormat('id-ID',{dateStyle:'medium'})
-const DATE_TIME=new Intl.DateTimeFormat('id-ID',{dateStyle:'full',timeStyle:'short'})
-const SHORT_DATE_TIME=new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'})
+const DATE=new Intl.DateTimeFormat('en-GB',{dateStyle:'medium'})
+const DATE_TIME=new Intl.DateTimeFormat('en-GB',{dateStyle:'full',timeStyle:'short'})
+const SHORT_DATE_TIME=new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short'})
 
 function enrollmentStatus(row:EnrollmentRow){
-  if(row.completed_sessions===row.purchased_sessions)return'Selesai'
-  if(row.awaiting_focus_sessions>0)return'Menunggu review admin'
-  if(row.awaiting_scheduling_sessions>0)return'Perlu dijadwalkan'
-  if(row.configured_sessions===row.purchased_sessions)return'Semua sesi sudah diatur'
-  return'Berjalan'
+  if(row.completed_sessions===row.purchased_sessions)return'Completed'
+  if(row.awaiting_focus_sessions>0)return'Awaiting admin review'
+  if(row.awaiting_scheduling_sessions>0)return'Needs scheduling'
+  if(row.configured_sessions===row.purchased_sessions)return'All sessions arranged'
+  return'In progress'
 }
 function enrollmentStatusClass(row:EnrollmentRow){
   if(row.completed_sessions===row.purchased_sessions)return'ops-status--success'
@@ -40,11 +40,11 @@ function enrollmentStatusClass(row:EnrollmentRow){
   return'ops-status--info'
 }
 function sessionStatus(value:string){
-  if(value==='awaiting_focus')return'Menunggu preferensi'
-  if(value==='awaiting_scheduling')return'Belum dijadwalkan'
-  if(value==='scheduled')return'Terjadwal'
-  if(value==='completed')return'Selesai'
-  if(value==='cancelled')return'Dibatalkan'
+  if(value==='awaiting_focus')return'Awaiting preferences'
+  if(value==='awaiting_scheduling')return'Not scheduled'
+  if(value==='scheduled')return'Scheduled'
+  if(value==='completed')return'Completed'
+  if(value==='cancelled')return'Cancelled'
   return value.replaceAll('_',' ')
 }
 function sessionStatusClass(value:string){
@@ -55,14 +55,14 @@ function sessionStatusClass(value:string){
   return'ops-status--neutral'
 }
 function topicStatus(value:SessionRow['topic_status']){
-  if(value==='pending_review')return'Belum ditinjau'
-  if(value==='confirmed')return'Sudah ditinjau'
-  return'Belum diajukan'
+  if(value==='pending_review')return'Not reviewed'
+  if(value==='confirmed')return'Reviewed'
+  return'Not submitted'
 }
 function preferenceActionLabel(value:SessionRow['topic_status']){
-  if(value==='confirmed')return'Edit preferensi'
-  if(value==='pending_review')return'Review preferensi'
-  return'Lengkapi preferensi'
+  if(value==='confirmed')return'Edit preferences'
+  if(value==='pending_review')return'Review preferences'
+  return'Add preferences'
 }
 function topicStatusClass(value:SessionRow['topic_status']){
   if(value==='confirmed')return'ops-status--success'
@@ -71,7 +71,7 @@ function topicStatusClass(value:SessionRow['topic_status']){
 }
 function packageLabel(pkg:PrivateMentoringPackage,tiers:MentorTier[]){
   const tier=tiers.find(item=>item.id===pkg.mentor_tier_id)
-  return(tier?.name??'Private Mentoring')+' · '+pkg.session_count+' sesi'
+  return(tier?.name??'Private Mentoring')+' · '+pkg.session_count+' sessions'
 }
 function compactPackageName(row:EnrollmentRow){
   const withoutCount=row.package_name.replace(new RegExp('\\s*[–—-]\\s*'+row.purchased_sessions+'\\s*(?:sessions?|sesi)\\s*$','i'),'').trim()
@@ -80,10 +80,10 @@ function compactPackageName(row:EnrollmentRow){
 function compactPackageMeta(row:EnrollmentRow){
   const label=compactPackageName(row).toLocaleLowerCase('id-ID')
   const tier=row.mentor_tier_name.trim()
-  return tier&&!label.includes(tier.toLocaleLowerCase('id-ID'))?tier+' · '+row.purchased_sessions+' sesi':row.purchased_sessions+' sesi'
+  return tier&&!label.includes(tier.toLocaleLowerCase('id-ID'))?tier+' · '+row.purchased_sessions+' sessions':row.purchased_sessions+' sessions'
 }
 function sessionHeadline(session:SessionRow){
-  return session.resolved_topic||session.focus_name||session.mentee_topic_request||'Preferensi opsional belum diisi'
+  return session.resolved_topic||session.focus_name||session.mentee_topic_request||'Optional preferences not provided'
 }
 function selectInitialSession(sessions:SessionRow[],preferredId?:string|null){
   if(preferredId&&sessions.some(session=>session.session_id===preferredId))return preferredId
@@ -108,6 +108,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const rpc=useMemo(()=>supabase as unknown as RpcClient,[supabase])
   const dialogRef=useRef<HTMLDialogElement>(null)
   const handledTargetRef=useRef<string|null>(null)
+  const activeEnrollmentRef=useRef<string|null>(null)
 
   const[query,setQuery]=useState('')
   const[packageId,setPackageId]=useState('')
@@ -137,6 +138,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const[primaryMentorId,setPrimaryMentorId]=useState('')
   const[mentorReason,setMentorReason]=useState('')
   const[editingPrimaryMentor,setEditingPrimaryMentor]=useState(false)
+  const editingPrimaryRef=useRef(false)
+  editingPrimaryRef.current=editingPrimaryMentor
   const[scheduleId,setScheduleId]=useState<string|null>(null)
   const[cancelTarget,setCancelTarget]=useState<SessionRow|null>(null)
   const[completeTarget,setCompleteTarget]=useState<SessionRow|null>(null)
@@ -147,7 +150,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       supabase.from('private_mentoring_packages').select('*').order('sort_order').order('id'),
       supabase.from('mentor_tiers').select('*').eq('is_active',true).order('sort_order').order('name'),
     ])
-    if(p.error||t.error){setError('Catalog Private Mentoring belum dapat dimuat.');return}
+    if(p.error||t.error){setError('Unable to load the Private Mentoring catalog.');return}
     setPackages(p.data??[])
     setTiers(t.data??[])
   },[supabase])
@@ -158,7 +161,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       p_query:query.trim(),p_package_id:packageId||null,p_tier_id:tierId||null,p_progress:progress,
       p_from:fromDate||null,p_to:toDate||null,p_limit:pageSize,p_offset:page*pageSize,
     })
-    if(e){setError('Daftar pesanan Private Mentoring belum dapat dimuat.');setLoading(false);return}
+    if(e){setError('Unable to load Private Mentoring enrollments.');setLoading(false);return}
     const next=data??[]
     if(next.length===0&&page>0){setPage(value=>Math.max(0,value-1));setLoading(false);return}
     setRows(next)
@@ -169,11 +172,11 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
 
   const loadSessions=useCallback(async(enrollmentId:string)=>{
     const{data,error:e}=await rpc.rpc<SessionRow[]>('get_admin_private_mentoring_enrollment_sessions',{p_enrollment_id:enrollmentId})
-    if(e){setError('Detail sesi belum dapat dimuat.');setSessions([]);setActiveSessionId(null);return}
+    if(activeEnrollmentRef.current!==enrollmentId)return
+    if(e){setError('Unable to load session details.');setSessions([]);setActiveSessionId(null);return}
     const next=[...(data??[])].sort((a,b)=>a.session_number-b.session_number)
     setSessions(next)
-    setPrimaryMentorId(next[0]?.primary_mentor_id??'')
-    setEditingPrimaryMentor(false)
+    if(!editingPrimaryRef.current)setPrimaryMentorId(next[0]?.primary_mentor_id??'')
     setActiveSessionId(current=>{
       if(focusSessionId&&next.some(session=>session.session_id===focusSessionId))return focusSessionId
       if(current&&next.some(session=>session.session_id===current))return current
@@ -184,7 +187,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const loadEligibleMentors=useCallback(async(enrollmentId:string,purchased:number)=>{
     if(purchased<5){setEligibleMentors([]);return}
     const{data,error:e}=await rpc.rpc<EligibleMentor[]>('list_eligible_private_mentoring_enrollment_mentors',{p_enrollment_id:enrollmentId})
-    if(e){setWarning('Daftar mentor yang eligible belum dapat dimuat.');setEligibleMentors([]);return}
+    if(activeEnrollmentRef.current!==enrollmentId)return
+    if(e){setWarning('Unable to load eligible mentors.');setEligibleMentors([]);return}
     setEligibleMentors(data??[])
   },[rpc])
 
@@ -212,7 +216,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     if(!focusTarget||loading||handledTargetRef.current===focusTarget||rows.length===0)return
     const row=rows[0]
     handledTargetRef.current=focusTarget
-    setSelected(row);setSessions([]);setActiveSessionId(null);setMessage('');setWarning('');setError('');setMentorReason('')
+    activeEnrollmentRef.current=row.enrollment_id
+    setSelected(row);setEditingPrimaryMentor(false);setSessions([]);setActiveSessionId(null);setMessage('');setWarning('');setError('');setMentorReason('')
     void Promise.all([loadSessions(row.enrollment_id),loadEligibleMentors(row.enrollment_id,row.purchased_sessions)])
   },[focusTarget,loadEligibleMentors,loadSessions,loading,rows])
 
@@ -232,7 +237,8 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   function resetFilters(){setQuery('');setPackageId('');setTierId('');setProgress('all');setFromDate('');setToDate('');setPage(0)}
 
   async function open(row:EnrollmentRow){
-    setSelected(row);setSessions([]);setActiveSessionId(null);setMeetingState(null);setMessage('');setWarning('');setError('');setMentorReason('')
+    activeEnrollmentRef.current=row.enrollment_id
+    setSelected(row);setEditingPrimaryMentor(false);setSessions([]);setActiveSessionId(null);setMeetingState(null);setMessage('');setWarning('');setError('');setMentorReason('')
     await Promise.all([loadSessions(row.enrollment_id),loadEligibleMentors(row.enrollment_id,row.purchased_sessions)])
   }
 
@@ -244,17 +250,19 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   useOperationalInvalidation(['mentoring','provider'],()=>{void refresh()})
 
   async function setPrimaryMentor(){
-    if(!selected||selected.purchased_sessions<5||!primaryMentorId)return
+    if(!selected||selected.purchased_sessions<5||!primaryMentorId||busyId)return
     const current=sessions[0]?.primary_mentor_id??null
-    if(current&&current!==primaryMentorId&&!mentorReason.trim()){setError('Alasan wajib diisi saat mengganti mentor utama.');return}
+    if(current&&current!==primaryMentorId&&!mentorReason.trim()){setError('A reason is required when changing the dedicated mentor.');return}
     setBusyId('mentor:'+selected.enrollment_id);setError('')
+    try{
     const{error:e}=await rpc.rpc('admin_set_private_mentoring_primary_mentor',{p_enrollment_id:selected.enrollment_id,p_mentor_id:primaryMentorId,p_reason:mentorReason.trim()||null})
-    if(e)setError('Mentor utama belum dapat disimpan. Coba lagi.')
+    if(e)setError('Unable to save the dedicated mentor. Please try again.')
     else{
-      setMessage(current?'Mentor utama berhasil diganti dan riwayat perubahan disimpan.':'Mentor utama berhasil ditetapkan untuk enrollment ini.')
+      setMessage(current?'Dedicated mentor changed and recorded in the audit history.':'Dedicated mentor assigned to this enrollment.')
       setMentorReason('');setEditingPrimaryMentor(false);await refresh()
     }
-    setBusyId(null)
+    }catch{setError('Unable to save the dedicated mentor. Your changes are still in the form.')}
+    finally{setBusyId(null)}
   }
 
   async function cancelSession(session:SessionRow){
@@ -262,29 +270,32 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     try{
       const response=await fetch('/api/admin/private-mentoring/sessions/'+session.session_id+'/cancel',{method:'POST'})
       const result=await response.json() as{error?:string;sync?:{status?:string;error?:string}}
-      if(!response.ok)throw new Error(result.error||'Sesi belum dapat dibatalkan.')
+      if(!response.ok)throw new Error(result.error||'Unable to cancel the session.')
       setCancelTarget(null)
-      if(result.sync?.status==='failed')setWarning(result.sync.error||'Sesi dibatalkan, tetapi Google Calendar belum berhasil disinkronkan.')
-      else setMessage('Sesi dibatalkan, Zoom room dilepas, dan Google Calendar diperbarui.')
+      if(result.sync?.status==='failed')setWarning(result.sync.error||'Session cancelled. Google Calendar could not be synced.')
+      else setMessage('Session cancelled, Zoom room released, and Google Calendar updated.')
       await refresh()
     }catch{
-      setError('Sesi belum dapat dibatalkan. Coba lagi beberapa saat kemudian.')
+      setError('Unable to cancel the session. Please try again shortly.')
     }finally{
       setBusyId(null)
     }
   }
 
   async function completeSession(session:SessionRow){
+    if(busyId)return
     setBusyId(session.session_id);setError('');setMessage('')
     const reopening=session.status==='completed'
+    try{
     const{error:e}=await rpc.rpc('admin_set_private_mentoring_session_status',{p_session_id:session.session_id,p_status:reopening?'scheduled':'completed'})
-    if(e)setError(reopening?'Tanda selesai belum dapat dibatalkan. Coba lagi.':'Sesi belum dapat ditandai selesai. Coba lagi.')
+    if(e)setError(reopening?'Unable to reopen the session. Please try again.':'Unable to mark the session as completed. Please try again.')
     else{
       setCompleteTarget(null)
-      setMessage(reopening?'Sesi kembali terjadwal dan progress enrollment diperbarui.':'Sesi ditandai selesai dan progress enrollment diperbarui.')
+      setMessage(reopening?'Session reopened as scheduled and enrollment progress updated.':'Session completed and enrollment progress updated.')
       await refresh()
     }
-    setBusyId(null)
+    }catch{setError('Unable to update session status. Please try again.')}
+    finally{setBusyId(null)}
   }
 
   async function retryCancellation(session:SessionRow){
@@ -292,116 +303,130 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
     try{
       const response=await fetch('/api/admin/private-mentoring/sessions/'+session.session_id+'/sync',{method:'POST'})
       const result=await response.json() as{error?:string;status?:string}
-      if(!response.ok)throw new Error(result.error||'Sinkronisasi belum berhasil.')
-      if(result.status==='failed')setWarning('Google Calendar masih belum berhasil disinkronkan.')
-      else setMessage('Pembatalan Google Calendar sudah disinkronkan.')
+      if(!response.ok)throw new Error(result.error||'Unable to sync.')
+      if(result.status==='failed')setWarning('Google Calendar could not be synced.')
+      else setMessage('Google Calendar cancellation synced.')
       await refresh()
     }catch{
-      setError('Sinkronisasi pembatalan belum berhasil. Coba lagi.')
+      setError('Unable to sync the cancellation. Please try again.')
     }finally{
       setBusyId(null)
     }
   }
 
   const currentPrimary=sessions[0]?.primary_mentor_id??null
-  const currentPrimaryName=sessions[0]?.primary_mentor_name??'Belum ditetapkan'
+  const currentPrimaryName=sessions[0]?.primary_mentor_name??'Not assigned'
   const selectedSession=sessions.find(session=>session.session_id===activeSessionId)??sessions[0]??null
   const selectedClosed=selectedSession?.status==='completed'||selectedSession?.status==='cancelled'
   const selectedCanSchedule=Boolean(selectedSession&&selectedSession.topic_status==='confirmed'&&(selectedSession.status==='awaiting_scheduling'||selectedSession.status==='scheduled'))
   const selectedCalendarIssue=Boolean(selectedSession&&(selectedSession.google_sync_status==='failed'||meetingState?.calendarSyncStatus==='failed'))
+
+  function closeWorkspace(){
+    const dialog=dialogRef.current
+    if(busyId||scheduleId||cancelTarget||completeTarget||dialog?.querySelector('[data-saving="true"]'))return
+    const mentorDirty=editingPrimaryMentor&&(primaryMentorId!==(currentPrimary??'')||Boolean(mentorReason.trim()))
+    if((mentorDirty||dialog?.querySelector('[data-unsaved="true"]'))&&!window.confirm('Discard unsaved enrollment changes?'))return
+    activeEnrollmentRef.current=null
+    setSelected(null);setEditingPrimaryMentor(false)
+  }
+  function chooseSession(id:string){
+    if(id===activeSessionId)return
+    const panel=dialogRef.current?.querySelector('#mentoring-selected-session-panel')
+    if(busyId||panel?.querySelector('[data-saving="true"]'))return
+    if(panel?.querySelector('[data-unsaved="true"]')&&!window.confirm('Discard unsaved session changes?'))return
+    setActiveSessionId(id)
+  }
 
   const handleMeetingState=useCallback((next:AdminMeetingState|null)=>{
     if(!next||next.sessionId===activeSessionId)setMeetingState(next)
   },[activeSessionId])
 
   return <div className="ops-page mentoring-enrollment-page">
-    <div className="role-page-title"><p className="kicker">Operasional · Private Mentoring</p><h2>Mentoring Sessions</h2><p>Kelola enrollment, review preferensi sesi, mentor, jadwal, Zoom, dan Calendar dari satu workspace operasional.</p></div>
-
     <div className="ops-filter-bar mentoring-enrollment-filters">
-      <label className="ops-field ops-field--wide"><span>Cari user / Session ID</span><div className="ops-input-with-icon"><Search size={15} aria-hidden="true"/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(0)}} placeholder="Nama, email, paket, atau full Session ID"/></div></label>
-      <label className="ops-field"><span>Paket</span><select value={packageId} onChange={event=>{setPackageId(event.target.value);setPage(0)}}><option value="">Semua paket</option>{packages.map(pkg=><option value={pkg.id} key={pkg.id}>{packageLabel(pkg,tiers)}</option>)}</select></label>
-      <label className="ops-field"><span>Tier</span><select value={tierId} onChange={event=>{setTierId(event.target.value);setPage(0)}}><option value="">Semua tier</option>{tiers.map(tier=><option key={tier.id} value={tier.id}>{tier.name}</option>)}</select></label>
-      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">Semua</option><option value="needs_focus">Menunggu review admin</option><option value="needs_scheduling">Perlu dijadwalkan</option><option value="configured">Semua sesi sudah diatur</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option></select></label>
-      <label className="ops-field"><span>Dari tanggal beli</span><input type="date" value={fromDate} onChange={event=>{setFromDate(event.target.value);setPage(0)}}/></label>
-      <label className="ops-field"><span>Sampai</span><input type="date" value={toDate} onChange={event=>{setToDate(event.target.value);setPage(0)}}/></label>
+      <label className="ops-field ops-field--wide"><span>Search mentee / Session ID</span><div className="ops-input-with-icon"><Search size={15} aria-hidden="true"/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(0)}} placeholder="Name, email, package, or full Session ID"/></div></label>
+      <label className="ops-field"><span>Package</span><select value={packageId} onChange={event=>{setPackageId(event.target.value);setPage(0)}}><option value="">All packages</option>{packages.map(pkg=><option value={pkg.id} key={pkg.id}>{packageLabel(pkg,tiers)}</option>)}</select></label>
+      <label className="ops-field"><span>Tier</span><select value={tierId} onChange={event=>{setTierId(event.target.value);setPage(0)}}><option value="">All tiers</option>{tiers.map(tier=><option key={tier.id} value={tier.id}>{tier.name}</option>)}</select></label>
+      <label className="ops-field"><span>Progress</span><select value={progress} onChange={event=>{setProgress(event.target.value);setPage(0)}}><option value="all">All</option><option value="needs_focus">Awaiting admin review</option><option value="needs_scheduling">Needs scheduling</option><option value="configured">All sessions arranged</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></label>
+      <label className="ops-field"><span>Purchased from</span><input type="date" value={fromDate} onChange={event=>{setFromDate(event.target.value);setPage(0)}}/></label>
+      <label className="ops-field"><span>To</span><input type="date" value={toDate} onChange={event=>{setToDate(event.target.value);setPage(0)}}/></label>
       <button className="button button-outline ops-reset-action" type="button" onClick={resetFilters}><RotateCcw aria-hidden="true"/>Reset</button>
     </div>
 
     {error&&!selected?<p className="form-error" role="alert">{error}</p>:null}
     <section className="role-card ops-table-section">
-      <div className="ops-section-heading"><div><p className="kicker">Pesanan mentoring</p><h3>{total} paket</h3><p>Satu row mewakili satu enrollment. Search Session ID menemukan parent enrollment yang tepat.</p></div></div>
-      <div className="ops-table-wrap"><table className="ops-table mentoring-enrollment-table"><thead><tr><SortableTableHeader label="User / Username" sortKey="user" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Email" sortKey="email" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Paket" sortKey="package" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Tanggal beli" sortKey="purchased_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Progress" sortKey="progress" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><th>Aksi</th></tr></thead><tbody>{visibleRows.map(row=><tr key={row.enrollment_id}>
-        <td data-label="User"><strong>{row.mentee_name}</strong><small className="ops-table-secondary">@{row.mentee_username||'username-belum-diatur'}</small></td>
+      <div className="ops-section-heading"><div><h3>{total} packages</h3><p>Search by Session ID to find its enrollment.</p></div></div>
+      <div className="ops-table-wrap"><table className="ops-table mentoring-enrollment-table"><thead><tr><SortableTableHeader label="User / Username" sortKey="user" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Email" sortKey="email" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Package" sortKey="package" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Purchase date" sortKey="purchased_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Progress" sortKey="progress" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><th>Actions</th></tr></thead><tbody>{visibleRows.map(row=><tr key={row.enrollment_id}>
+        <td data-label="User"><strong>{row.mentee_name}</strong><small className="ops-table-secondary">@{row.mentee_username||'username-not-set'}</small></td>
         <td data-label="Email">{row.mentee_email}</td>
-        <td data-label="Paket" title={row.package_name}><strong>{compactPackageName(row)}</strong><small className="ops-table-secondary">{compactPackageMeta(row)}</small></td>
-        <td data-label="Tanggal beli">{DATE.format(new Date(row.purchased_at))}</td>
-        <td data-label="Progress"><strong>{row.configured_sessions}/{row.purchased_sessions} diatur</strong><small className="ops-table-secondary">{row.completed_sessions} selesai</small></td>
+        <td data-label="Package" title={row.package_name}><strong>{compactPackageName(row)}</strong><small className="ops-table-secondary">{compactPackageMeta(row)}</small></td>
+        <td data-label="Purchase date">{DATE.format(new Date(row.purchased_at))}</td>
+        <td data-label="Progress"><strong>{row.configured_sessions}/{row.purchased_sessions} arranged</strong><small className="ops-table-secondary">{row.completed_sessions} completed</small></td>
         <td data-label="Status"><span className={'ops-status '+enrollmentStatusClass(row)}>{enrollmentStatus(row)}</span></td>
-        <td data-label="Aksi"><button className="icon-button mentoring-manage-session-button" type="button" onClick={()=>void open(row)} title="Kelola sesi" aria-label={'Kelola sesi '+row.mentee_name}><Eye aria-hidden="true"/></button></td>
-      </tr>)}</tbody></table>{!loading&&visibleRows.length===0?<p className="calendar-empty">Tidak ada enrollment yang cocok.</p>:null}{loading?<p className="calendar-loading">Memuat…</p>:null}</div>
-      <TablePagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} disabled={loading} label="Pagination enrollment Private Mentoring"/>
+        <td data-label="Actions"><button className="icon-button mentoring-manage-session-button" type="button" onClick={()=>void open(row)} title="Manage sessions" aria-label={'Manage sessions for '+row.mentee_name}><Eye aria-hidden="true"/></button></td>
+      </tr>)}</tbody></table>{!loading&&visibleRows.length===0?<p className="calendar-empty">No enrollments match these filters.</p>:null}{loading?<p className="calendar-loading">Loading…</p>:null}</div>
+      <TablePagination language="en" page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} disabled={loading} label="Private Mentoring enrollment pagination"/>
     </section>
 
-    <dialog ref={dialogRef} className="calendar-dialog mentoring-session-workspace-dialog" onCancel={event=>{event.preventDefault();setSelected(null)}} onClose={()=>setSelected(null)} aria-labelledby="mentoring-enrollment-dialog-title">
+    <dialog ref={dialogRef} className="calendar-dialog mentoring-session-workspace-dialog" onCancel={event=>{event.preventDefault();closeWorkspace()}} onClose={()=>setSelected(null)} aria-labelledby="mentoring-enrollment-dialog-title">
       {selected?<div className="mentoring-workspace-shell">
-        <header className="calendar-dialog__head mentoring-workspace-modal-head"><div><p className="kicker">Kelola enrollment</p><h3 id="mentoring-enrollment-dialog-title">{selected.mentee_name}</h3><p>{selected.mentee_email} · Private Mentoring</p></div><button type="button" className="icon-button dialog-close-button" onClick={()=>setSelected(null)} aria-label="Tutup detail enrollment"><X aria-hidden="true"/></button></header>
+        <header className="calendar-dialog__head mentoring-workspace-modal-head"><div><h3 id="mentoring-enrollment-dialog-title">{selected.mentee_name}</h3><p>{selected.mentee_email} · Private Mentoring</p></div><button type="button" className="icon-button dialog-close-button" onClick={closeWorkspace} disabled={Boolean(busyId)} aria-label="Close enrollment details"><X aria-hidden="true"/></button></header>
 
-        <section className="mentoring-enrollment-summary-panel" aria-label="Ringkasan enrollment">
+        <section className="mentoring-enrollment-summary-panel" aria-label="Enrollment summary">
           <div className="mentoring-enrollment-summary-grid">
-            <div><span>Paket</span><strong>{compactPackageName(selected)}</strong><small>{compactPackageMeta(selected)}</small></div>
-            <div><span>Progress</span><strong>{selected.configured_sessions}/{selected.purchased_sessions} sesi diatur</strong><small>{selected.completed_sessions} selesai</small></div>
-            {selected.purchased_sessions>=5?<div className="mentoring-summary-dedicated-mentor"><span>Dedicated Mentor</span><div className="mentoring-summary-inline-value"><strong>{currentPrimaryName}</strong>{!editingPrimaryMentor?<button className="mentoring-summary-icon-action" type="button" onClick={()=>setEditingPrimaryMentor(true)} aria-label={currentPrimary?'Ganti mentor':'Tetapkan mentor'} title={currentPrimary?'Ganti mentor':'Tetapkan mentor'}><Pencil aria-hidden="true"/></button>:null}</div></div>:null}
-            <MentoringCompetitionEditor kind="private" parentId={selected.enrollment_id} compact summary/>
+            <div><span>Package</span><strong>{compactPackageName(selected)}</strong><small>{compactPackageMeta(selected)}</small></div>
+            <div><span>Progress</span><strong>{selected.configured_sessions}/{selected.purchased_sessions} sessions arranged</strong><small>{selected.completed_sessions} completed</small></div>
+            {selected.purchased_sessions>=5?<div className="mentoring-summary-dedicated-mentor"><span>Dedicated Mentor</span><div className="mentoring-summary-inline-value"><strong>{currentPrimaryName}</strong>{!editingPrimaryMentor?<button className="mentoring-summary-icon-action" type="button" onClick={()=>setEditingPrimaryMentor(true)} aria-label={currentPrimary?'Change mentor':'Assign mentor'} title={currentPrimary?'Change mentor':'Assign mentor'}><Pencil aria-hidden="true"/></button>:null}</div></div>:null}
+            <MentoringCompetitionEditor confirmDiscard language="en" kind="private" parentId={selected.enrollment_id} compact summary/>
           </div>
           {selected.purchased_sessions>=5&&editingPrimaryMentor?<div className="mentoring-summary-mentor-editor">
-            <SearchableMentorPicker mentors={eligibleMentors.map(mentor=>({id:mentor.mentor_id,name:mentor.mentor_name}))} value={primaryMentorId} onChange={setPrimaryMentorId} label={currentPrimary?'Ganti mentor':'Set mentor utama'} placeholder="Cari mentor sesuai tier" selectedLabel={primaryMentorId===currentPrimary?currentPrimaryName:null} disabled={busyId==='mentor:'+selected.enrollment_id}/>
-            {currentPrimary&&primaryMentorId&&primaryMentorId!==currentPrimary?<label className="ops-field"><span>Alasan perubahan (wajib)</span><textarea rows={2} value={mentorReason} onChange={event=>setMentorReason(event.target.value)} placeholder="Alasan operasional perubahan mentor"/></label>:null}
-            <div className="button-row"><button className="button button-primary" type="button" disabled={!primaryMentorId||primaryMentorId===currentPrimary||Boolean(currentPrimary&&!mentorReason.trim())||busyId==='mentor:'+selected.enrollment_id} onClick={()=>void setPrimaryMentor()}><Save aria-hidden="true"/>{currentPrimary?'Simpan pergantian mentor':'Simpan mentor utama'}</button><button className="button button-outline" type="button" disabled={busyId==='mentor:'+selected.enrollment_id} onClick={()=>{setEditingPrimaryMentor(false);setPrimaryMentorId(currentPrimary??'');setMentorReason('')}}><X aria-hidden="true"/>Batal</button></div>
+            <SearchableMentorPicker language="en" mentors={eligibleMentors.map(mentor=>({id:mentor.mentor_id,name:mentor.mentor_name}))} value={primaryMentorId} onChange={setPrimaryMentorId} label={currentPrimary?'Change mentor':'Assign dedicated mentor'} placeholder="Search mentors in this tier" selectedLabel={primaryMentorId===currentPrimary?currentPrimaryName:null} disabled={busyId==='mentor:'+selected.enrollment_id}/>
+            {currentPrimary&&primaryMentorId&&primaryMentorId!==currentPrimary?<label className="ops-field"><span>Reason for change (required)</span><textarea rows={2} value={mentorReason} onChange={event=>setMentorReason(event.target.value)} placeholder="Reason for the mentor change"/></label>:null}
+            <div className="button-row"><button className="button button-primary" type="button" disabled={!primaryMentorId||primaryMentorId===currentPrimary||Boolean(currentPrimary&&!mentorReason.trim())||busyId==='mentor:'+selected.enrollment_id} onClick={()=>void setPrimaryMentor()}><Save aria-hidden="true"/>{currentPrimary?'Save mentor change':'Save dedicated mentor'}</button><button className="button button-outline" type="button" disabled={busyId==='mentor:'+selected.enrollment_id} onClick={()=>{setEditingPrimaryMentor(false);setPrimaryMentorId(currentPrimary??'');setMentorReason('')}}><X aria-hidden="true"/>Cancel</button></div>
           </div>:null}
         </section>
 
         <div className="mentoring-workspace-main">
-          <aside className="mentoring-session-navigator" aria-label="Navigasi sesi">
-            <div className="mentoring-session-navigator__head"><strong>Sesi</strong><span>{sessions.length}</span></div>
+          <aside className="mentoring-session-navigator" aria-label="Session navigation">
+            <div className="mentoring-session-navigator__head"><strong>Session</strong><span>{sessions.length}</span></div>
             <div className="mentoring-session-navigator__list" role="tablist" aria-orientation="vertical">{sessions.map(session=>{
               const calendarIssue=session.google_sync_status==='failed'
               const muted=session.status==='completed'||session.status==='cancelled'
-              return <button key={session.session_id} id={'mentoring-session-tab-'+session.session_id} aria-controls="mentoring-selected-session-panel" type="button" role="tab" aria-selected={session.session_id===selectedSession?.session_id} className={'mentoring-session-nav-item'+(session.session_id===selectedSession?.session_id?' is-active':'')+(muted?' is-muted':'')+(session.status==='cancelled'?' is-cancelled':'')} onClick={()=>setActiveSessionId(session.session_id)}>
-                <span className="mentoring-session-nav-item__title"><strong>Sesi {session.session_number}</strong>{calendarIssue?<AlertTriangle aria-label="Calendar perlu perhatian"/>:null}</span>
+              return <button key={session.session_id} id={'mentoring-session-tab-'+session.session_id} aria-controls="mentoring-selected-session-panel" type="button" role="tab" aria-selected={session.session_id===selectedSession?.session_id} className={'mentoring-session-nav-item'+(session.session_id===selectedSession?.session_id?' is-active':'')+(muted?' is-muted':'')+(session.status==='cancelled'?' is-cancelled':'')} onClick={()=>chooseSession(session.session_id)}>
+                <span className="mentoring-session-nav-item__title"><strong>Session {session.session_number}</strong>{calendarIssue?<AlertTriangle aria-label="Calendar needs attention"/>:null}</span>
                 <span className="mentoring-session-nav-item__badges"><span className={'ops-status '+topicStatusClass(session.topic_status)}>{topicStatus(session.topic_status)}</span><span className={'ops-status '+sessionStatusClass(session.status)}>{sessionStatus(session.status)}</span></span>
                 <small>{session.scheduled_start_at?SHORT_DATE_TIME.format(new Date(session.scheduled_start_at)):sessionHeadline(session)}</small>
               </button>
             })}</div>
           </aside>
 
-          <label className="mentoring-session-mobile-select"><span>Pilih sesi</span><select value={selectedSession?.session_id??''} onChange={event=>setActiveSessionId(event.target.value)} aria-label="Pilih sesi">{sessions.map(session=><option key={session.session_id} value={session.session_id}>Sesi {session.session_number} · {topicStatus(session.topic_status)} · {sessionStatus(session.status)}</option>)}</select></label>
+          <label className="mentoring-session-mobile-select"><span>Select a session</span><select value={selectedSession?.session_id??''} onChange={event=>chooseSession(event.target.value)} aria-label="Select a session">{sessions.map(session=><option key={session.session_id} value={session.session_id}>Session {session.session_number} · {topicStatus(session.topic_status)} · {sessionStatus(session.status)}</option>)}</select></label>
 
-          <section id="mentoring-selected-session-panel" role="tabpanel" aria-labelledby={selectedSession?'mentoring-session-tab-'+selectedSession.session_id:undefined} className={'mentoring-selected-session-workspace'+(selectedSession?.status==='completed'?' is-completed':'')+(selectedSession?.status==='cancelled'?' is-cancelled':'')} aria-label="Workspace sesi terpilih">
+          <section id="mentoring-selected-session-panel" role="tabpanel" aria-labelledby={selectedSession?'mentoring-session-tab-'+selectedSession.session_id:undefined} className={'mentoring-selected-session-workspace'+(selectedSession?.status==='completed'?' is-completed':'')+(selectedSession?.status==='cancelled'?' is-cancelled':'')} aria-label="Selected session workspace">
             {selectedSession?<div className="mentoring-selected-session-inner">
               <div className="mentoring-selected-session-sticky">
                 <div className="mentoring-selected-session-header">
-                  <div className="mentoring-selected-session-header__copy"><p className="kicker">Sesi {selectedSession.session_number} / {selectedSession.purchased_sessions}</p><h3>{sessionHeadline(selectedSession)}</h3><p>{selectedSession.mentor_name||selectedSession.primary_mentor_name||'Mentor belum ditetapkan'} · {selectedSession.scheduled_start_at?DATE_TIME.format(new Date(selectedSession.scheduled_start_at)):'Belum terjadwal'}</p></div>
+                  <div className="mentoring-selected-session-header__copy"><p className="kicker">Session {selectedSession.session_number} / {selectedSession.purchased_sessions}</p><h3>{sessionHeadline(selectedSession)}</h3><p>{selectedSession.mentor_name||selectedSession.primary_mentor_name||'Mentor not assigned'} · {selectedSession.scheduled_start_at?DATE_TIME.format(new Date(selectedSession.scheduled_start_at)):'Not scheduled'}</p></div>
                   <div className="mentoring-selected-session-header__badges"><span className={'ops-status '+topicStatusClass(selectedSession.topic_status)}>{topicStatus(selectedSession.topic_status)}</span><span className={'ops-status '+sessionStatusClass(selectedSession.status)}>{sessionStatus(selectedSession.status)}</span>{meetingState?.manualMeetingUrl?<span className="ops-status mentoring-manual-override-badge"><Pencil aria-hidden="true"/>Manual override</span>:null}</div>
                 </div>
                 <div className="mentoring-selected-session-meta">
                   {meetingState?.assignedZoomRoomName?<span className="mentoring-session-meta-chip">{meetingState.assignedZoomRoomName}</span>:null}
-                  {selectedCalendarIssue?<span className="mentoring-session-meta-chip is-warning"><AlertTriangle aria-hidden="true"/>Calendar perlu perhatian</span>:null}
-                  <div className="mentoring-session-id-meta"><span>Session ID</span><code title={selectedSession.session_id}>{selectedSession.session_id}</code><CopyTextButton value={selectedSession.session_id} label="Salin ID" copiedLabel="ID disalin"/></div>
+                  {selectedCalendarIssue?<span className="mentoring-session-meta-chip is-warning"><AlertTriangle aria-hidden="true"/>Calendar needs attention</span>:null}
+                  <div className="mentoring-session-id-meta"><span>Session ID</span><code title={selectedSession.session_id}>{selectedSession.session_id}</code><CopyTextButton value={selectedSession.session_id} label="Copy ID" copiedLabel="ID copied"/></div>
                 </div>
                 <div className="mentoring-session-action-bar">
                   <div className="mentoring-session-action-bar__primary">
                     {!selectedClosed?<button className="button button-outline" type="button" onClick={()=>setPreferenceEditRequest(value=>value+1)}><Pencil aria-hidden="true"/>{preferenceActionLabel(selectedSession.topic_status)}</button>:null}
-                    {selectedCanSchedule?<button className={selectedSession.status==='scheduled'?'button button-outline':'button button-primary'} type="button" onClick={()=>setScheduleId(selectedSession.session_id)}><CalendarDays aria-hidden="true"/>{selectedSession.status==='scheduled'?'Ubah jadwal':'Jadwalkan sesi'}</button>:null}
-                    {selectedSession.status==='scheduled'?<button className="button button-primary mentoring-complete-trigger" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><CheckCircle2 aria-hidden="true"/>Tandai selesai</button>:null}
-                    {selectedSession.status==='completed'?<button className="button button-outline" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><RotateCcw aria-hidden="true"/>Batalkan tanda selesai</button>:null}
-                    {selectedSession.status==='cancelled'&&selectedSession.google_sync_status==='failed'?<button className="button button-outline" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>void retryCancellation(selectedSession)}><RefreshCw aria-hidden="true"/>Sinkronkan pembatalan</button>:null}
+                    {selectedCanSchedule?<button className={selectedSession.status==='scheduled'?'button button-outline':'button button-primary'} type="button" onClick={()=>setScheduleId(selectedSession.session_id)}><CalendarDays aria-hidden="true"/>{selectedSession.status==='scheduled'?'Reschedule':'Schedule session'}</button>:null}
+                    {selectedSession.status==='scheduled'?<button className="button button-primary mentoring-complete-trigger" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><CheckCircle2 aria-hidden="true"/>Mark as completed</button>:null}
+                    {selectedSession.status==='completed'?<button className="button button-outline" type="button" onClick={()=>{setError('');setCompleteTarget(selectedSession)}}><RotateCcw aria-hidden="true"/>Reopen session</button>:null}
+                    {selectedSession.status==='cancelled'&&selectedSession.google_sync_status==='failed'?<button className="button button-outline" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>void retryCancellation(selectedSession)}><RefreshCw aria-hidden="true"/>Sync cancellation</button>:null}
                   </div>
-                  {selectedSession.status==='scheduled'?<button className="button button-outline mentoring-session-cancel-trigger" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>{setError('');setCancelTarget(selectedSession)}}><Ban aria-hidden="true"/>Batalkan sesi</button>:null}
+                  {selectedSession.status==='scheduled'?<button className="button button-outline mentoring-session-cancel-trigger" type="button" disabled={busyId===selectedSession.session_id} onClick={()=>{setError('');setCancelTarget(selectedSession)}}><Ban aria-hidden="true"/>Cancel session</button>:null}
                 </div>
               </div>
 
               <div className="mentoring-selected-session-scroll">
-                <MentoringSessionPreferences key={selectedSession.session_id+'-'+selectedSession.status} kind="private" sessionId={selectedSession.session_id} role="admin" title="Preferensi Sesi" showCompetitionContext={false} showReviewStatus={false} auditMode="request-only" hideEditButton editRequestKey={preferenceEditRequest} onChanged={refresh}/>
+                <MentoringSessionPreferences language="en" key={selectedSession.session_id+'-'+selectedSession.status} kind="private" sessionId={selectedSession.session_id} role="admin" title="Session preferences" showCompetitionContext={false} showReviewStatus={false} auditMode="request-only" hideEditButton editRequestKey={preferenceEditRequest} onChanged={refresh}/>
 
                 <AdminSessionOperations key={'operations-'+selectedSession.session_id} sessionId={selectedSession.session_id} status={selectedSession.status} menteeName={selected.mentee_name} sessionNumber={selectedSession.session_number} mentorName={selectedSession.mentor_name||selectedSession.primary_mentor_name} scheduledStartAt={selectedSession.scheduled_start_at} onChanged={refresh} showSessionReference={false} showCompletionActions={false} showContextSummary={false} onStateChange={handleMeetingState}/>
 
@@ -409,21 +434,21 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
                 {warning?<p className="calendar-warning mentoring-workspace-feedback" role="status">{warning}</p>:null}
                 {message?<p className="form-success mentoring-workspace-feedback" role="status">{message}</p>:null}
               </div>
-            </div>:<div className="calendar-empty">Belum ada sesi pada enrollment ini.</div>}
+            </div>:<div className="calendar-empty">No sessions in this enrollment yet.</div>}
           </section>
         </div>
       </div>:null}
     </dialog>
 
-    <MentoringConfirmDialog open={Boolean(completeTarget)} eyebrow="Konfirmasi status sesi" title={completeTarget?.status==='completed'?'Batalkan tanda selesai sesi '+completeTarget.session_number+'?':'Tandai sesi '+(completeTarget?.session_number??'')+' selesai?'}
-      confirmLabel={completeTarget?.status==='completed'?'Ya, buka kembali':'Ya, tandai selesai'} confirmIcon={completeTarget?.status==='completed'?<RotateCcw aria-hidden="true"/>:<CheckCircle2 aria-hidden="true"/>} busy={Boolean(completeTarget&&busyId===completeTarget.session_id)} onClose={()=>setCompleteTarget(null)} onConfirm={()=>{if(completeTarget)void completeSession(completeTarget)}}>
-      <p>{completeTarget?.status==='completed'?'Sesi kembali terjadwal, Zoom room direservasi kembali sesuai ketersediaan, dan progress enrollment dihitung ulang.':'Progress enrollment akan dihitung ulang dan sesi masuk ke riwayat selesai.'}</p>
+    <MentoringConfirmDialog language="en" open={Boolean(completeTarget)} eyebrow="Confirm session status" title={completeTarget?.status==='completed'?'Reopen session '+completeTarget.session_number+'?':'Mark session '+(completeTarget?.session_number??'')+' as completed?'}
+      confirmLabel={completeTarget?.status==='completed'?'Yes, reopen':'Yes, mark as completed'} confirmIcon={completeTarget?.status==='completed'?<RotateCcw aria-hidden="true"/>:<CheckCircle2 aria-hidden="true"/>} busy={Boolean(completeTarget&&busyId===completeTarget.session_id)} onClose={()=>setCompleteTarget(null)} onConfirm={()=>{if(completeTarget)void completeSession(completeTarget)}}>
+      <p>{completeTarget?.status==='completed'?'The session returns to scheduled. A Zoom room is reserved subject to availability and enrollment progress is recalculated.':'Enrollment progress will be recalculated and the session moved to completed history.'}</p>
       {error?<p className="form-error" role="alert">{error}</p>:null}
     </MentoringConfirmDialog>
 
-    <MentoringConfirmDialog open={Boolean(cancelTarget)} eyebrow="Konfirmasi pembatalan" title={'Batalkan sesi '+(cancelTarget?.session_number??'')+'?'}
-      confirmLabel="Ya, batalkan sesi" confirmIcon={<Ban aria-hidden="true"/>} destructive busy={Boolean(cancelTarget&&busyId===cancelTarget.session_id)} onClose={()=>setCancelTarget(null)} onConfirm={()=>{if(cancelTarget)void cancelSession(cancelTarget)}}>
-      <p>Sesi dibatalkan, reservasi Zoom room dilepas, dan undangan Google Calendar terkait dibatalkan atau diperbarui.</p>
+    <MentoringConfirmDialog language="en" open={Boolean(cancelTarget)} eyebrow="Confirm cancellation" title={'Cancel session '+(cancelTarget?.session_number??'')+'?'}
+      confirmLabel="Yes, cancel session" confirmIcon={<Ban aria-hidden="true"/>} destructive busy={Boolean(cancelTarget&&busyId===cancelTarget.session_id)} onClose={()=>setCancelTarget(null)} onConfirm={()=>{if(cancelTarget)void cancelSession(cancelTarget)}}>
+      <p>The session will be cancelled, its Zoom reservation released, and related Google Calendar invitations cancelled or updated.</p>
       {error?<p className="form-error" role="alert">{error}</p>:null}
     </MentoringConfirmDialog>
 

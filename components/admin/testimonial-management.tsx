@@ -15,10 +15,9 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
-import { formError } from '@/lib/auth/errors'
+import { adminFormError as formError } from '@/lib/auth/errors'
 import { DirectImageCropper } from '@/components/admin/direct-image-cropper'
 import {
-  buildTestimonialAltText,
   buildTestimonialPayload,
   getNextTestimonialSortOrder,
   isTestimonialSetupRequired,
@@ -110,7 +109,7 @@ export function TestimonialManagement() {
       if (isTestimonialSetupRequired(loadError)) setSetupRequired(true)
       else {
         setLoadFailed(true)
-        setError(formError(loadError, 'Testimoni belum dapat dimuat. Periksa koneksi lalu coba lagi.'))
+        setError(formError(loadError, 'Unable to load testimonials. Check your connection and try again.'))
       }
     } else {
       setItems(data ?? [])
@@ -248,6 +247,13 @@ export function TestimonialManagement() {
     }
   }
 
+  function requestCloseEditor() {
+    if (busy) return
+    const dirty = JSON.stringify(draft) !== JSON.stringify(selected ? draftFromItem(selected) : emptyDraft) || Boolean(selectedFile || processedFile || cropSourceFile)
+    if (dirty && !window.confirm('Discard unsaved changes? Your edits and selected images will be lost.')) return
+    resetEditor()
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
@@ -322,22 +328,22 @@ export function TestimonialManagement() {
         const { error: cleanupError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
           .remove([selected.image_path])
-        if (cleanupError) cleanupWarning = ' Gambar lama masih perlu ditinjau manual di Storage.'
+        if (cleanupError) cleanupWarning = ' The old image requires manual storage cleanup.'
       }
       if (selected?.image_source_path && uploadedSourcePath && selected.image_source_path !== uploadedSourcePath) {
         const { error: cleanupError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([selected.image_source_path])
-        if (cleanupError) cleanupWarning += ' Sumber asli lama masih perlu ditinjau manual di Storage.'
+        if (cleanupError) cleanupWarning += ' The old original source requires manual storage cleanup.'
       }
 
       const wasEditing = Boolean(selected)
       resetEditor()
-      setNotice(`${wasEditing ? 'Testimoni berhasil diperbarui.' : 'Testimoni berhasil ditambahkan.'}${cleanupWarning}`)
+      setNotice(`${wasEditing ? 'Testimonial updated.' : 'Testimonial added.'}${cleanupWarning}`)
       await load()
     } catch (caught) {
       let cleanupWarning = ''
       if (uploadedPath || uploadedSourcePath) {
         const { data: persistedRows, error: reconciliationError } = await supabase.rpc('admin_list_marketing_testimonials')
-        if (reconciliationError) cleanupWarning = ' Berkas baru dipertahankan karena status database belum dapat dipastikan.'
+        if (reconciliationError) cleanupWarning = ' New files were retained because the database save status could not be confirmed.'
         else {
           if (uploadedPath && !persistedRows?.some(row => row.image_path === uploadedPath)) {
             await supabase.storage.from(TESTIMONIAL_IMAGE_BUCKET).remove([uploadedPath])
@@ -347,7 +353,7 @@ export function TestimonialManagement() {
           }
         }
       }
-      setError(`${formError(caught, 'Testimoni belum dapat disimpan.')}${cleanupWarning}`)
+      setError(`${formError(caught, 'Unable to save the testimonial.')}${cleanupWarning}`)
     } finally {
       setBusyAction(null)
     }
@@ -364,10 +370,10 @@ export function TestimonialManagement() {
         .update({ is_published: !item.is_published })
         .eq('id', item.id)
       if (updateError) throw updateError
-      setNotice(item.is_published ? 'Testimoni dipindahkan ke Draft.' : 'Testimoni dipublikasikan.')
+      setNotice(item.is_published ? 'Testimonial moved to draft.' : 'Testimonial published.')
       await load()
     } catch (caught) {
-      setError(formError(caught, 'Status testimoni belum dapat diperbarui.'))
+      setError(formError(caught, 'Unable to update the testimonial status.'))
     } finally {
       setBusyAction(null)
     }
@@ -383,10 +389,10 @@ export function TestimonialManagement() {
     try {
       const { error: reorderError } = await supabase.rpc('reorder_marketing_testimonials', { p_ids: ids })
       if (reorderError) throw reorderError
-      setNotice('Urutan testimonial berhasil diperbarui.')
+      setNotice('Testimonial order updated.')
       await load()
     } catch (caught) {
-      setError(formError(caught, 'Urutan testimonial belum dapat diperbarui.'))
+      setError(formError(caught, 'Unable to update the testimonial order.'))
     } finally {
       setBusyAction(null)
     }
@@ -406,25 +412,25 @@ export function TestimonialManagement() {
         const { error: storageError } = await supabase.storage
           .from(TESTIMONIAL_IMAGE_BUCKET)
           .remove([item.image_path])
-        if (storageError) warning = ' Gambar Storage perlu ditinjau manual.'
+        if (storageError) warning = ' The stored image requires manual cleanup.'
       }
       if (item.image_source_path) {
         const { error: storageError } = await supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([item.image_source_path])
-        if (storageError) warning += ' Sumber asli Storage perlu ditinjau manual.'
+        if (storageError) warning += ' The stored original source requires manual cleanup.'
       }
 
       const remainingIds = items.filter(candidate => candidate.id !== item.id).map(candidate => candidate.id)
       if (remainingIds.length) {
         const { error: reorderError } = await supabase.rpc('reorder_marketing_testimonials', { p_ids: remainingIds })
-        if (reorderError) warning += ' Urutan item yang tersisa perlu ditinjau.'
+        if (reorderError) warning += ' Review the display order of the remaining items.'
       }
 
       if (selectedId === item.id) resetEditor()
       setDeleteTarget(null)
-      setNotice(`Testimoni berhasil dihapus.${warning}`)
+      setNotice(`Testimonial deleted.${warning}`)
       await load()
     } catch (caught) {
-      setError(formError(caught, 'Testimoni belum dapat dihapus.'))
+      setError(formError(caught, 'Unable to delete the testimonial.'))
     } finally {
       setBusyAction(null)
     }
@@ -446,24 +452,24 @@ export function TestimonialManagement() {
   const pageHeader = (
     <header className={dataStyles.pageHeader}>
       <div className={dataStyles.pageHeaderCopy}>
-        <p className="kicker">Konten · Beranda</p>
+
         <h2>Testimonials</h2>
-        <p>Kelola cerita peserta, pencapaian kompetisi, gambar galeri, urutan tampil, dan status publikasi.</p>
+
       </div>
-      <span className={dataStyles.countPill}><MessageSquareQuote aria-hidden="true" />{items.length} cerita</span>
+      <span className={dataStyles.countPill}><MessageSquareQuote aria-hidden="true" />{items.length} stories</span>
     </header>
   )
 
   if (loading) {
-    return <section className={dataStyles.page} data-testid="testimonial-management" aria-busy="true">{pageHeader}<div className={styles.stateCard}><RefreshCw aria-hidden="true" /> Memuat testimonial…</div></section>
+    return <section className={dataStyles.page} data-testid="testimonial-management" aria-busy="true">{pageHeader}<div className={styles.stateCard}><RefreshCw aria-hidden="true" /> Loading testimonials…</div></section>
   }
 
   if (setupRequired) {
-    return <section className={dataStyles.page} data-testid="testimonial-management">{pageHeader}<div className={styles.stateCard} role="alert"><strong>Setup database diperlukan.</strong><p>Jalankan migration <code>{migrationName}</code>, lalu seed <code>supabase/seed/marketing_testimonials.sql</code>.</p><button type="button" className="button button-outline" onClick={() => void load()}>Coba lagi</button></div></section>
+    return <section className={dataStyles.page} data-testid="testimonial-management">{pageHeader}<div className={styles.stateCard} role="alert"><strong>Database setup required.</strong><p>Apply migration <code>{migrationName}</code>, then seed <code>supabase/seed/marketing_testimonials.sql</code>.</p><button type="button" className="button button-outline" onClick={() => void load()}>Try again</button></div></section>
   }
 
   if (loadFailed) {
-    return <section className={dataStyles.page} data-testid="testimonial-management">{pageHeader}<div className={styles.stateCard} role="alert"><strong>Testimonial belum dapat dimuat.</strong><p>{error}</p><button type="button" className="button button-outline" onClick={() => void load()}>Coba lagi</button></div></section>
+    return <section className={dataStyles.page} data-testid="testimonial-management">{pageHeader}<div className={styles.stateCard} role="alert"><strong>Unable to load testimonials.</strong><p>{error}</p><button type="button" className="button button-outline" onClick={() => void load()}>Try again</button></div></section>
   }
 
   return (
@@ -475,27 +481,27 @@ export function TestimonialManagement() {
       <div className={dataStyles.surface}>
         <div className={dataStyles.surfaceHeader}>
           <div className={dataStyles.surfaceHeaderCopy}>
-            <p className="kicker">Cerita peserta</p>
-            <h3>{items.length} testimonial</h3>
-            <p>Seed awal sudah mengisi copy. Item baru tampil di beranda setelah Published dan memiliki gambar.</p>
+            <p className="kicker">Participant stories</p>
+            <h3>{items.length} testimonials</h3>
+            <p>Only published testimonials with an image appear on the homepage.</p>
           </div>
           <button type="button" className="button button-primary" onClick={beginCreate} disabled={busy}>
-            <Plus aria-hidden="true" /> Testimoni baru
+            <Plus aria-hidden="true" /> Add testimonial
           </button>
         </div>
 
         <div className={dataStyles.toolbar}>
           <label className={dataStyles.searchField}>
-            Cari testimonial
+            Search testimonials
             <span className={dataStyles.searchControl}>
               <Search aria-hidden="true" />
-              <input value={query} type="search" onChange={event => setQuery(event.target.value)} placeholder="Cari kompetisi, pencapaian, atau isi testimoni" />
+              <input value={query} type="search" onChange={event => setQuery(event.target.value)} placeholder="Competition, achievement, or testimonial text" />
             </span>
           </label>
         </div>
 
         {filtered.length === 0 ? (
-          <div className={dataStyles.empty}>Tidak ada testimonial yang sesuai.</div>
+          <div className={dataStyles.empty}>No testimonials match your search.</div>
         ) : (
           <div className={styles.list}>
             {filtered.map(item => {
@@ -512,18 +518,18 @@ export function TestimonialManagement() {
                     <div className={styles.rowTitle}>
                       <strong>{item.competition_name}</strong>
                       <span className={`${dataStyles.badge} ${item.is_published && hasImage ? dataStyles.successBadge : dataStyles.warningBadge}`}>
-                        {item.is_published ? hasImage ? 'Published' : 'Menunggu gambar' : 'Draft'}
+                        {item.is_published ? hasImage ? 'Published' : 'Awaiting image' : 'Draft'}
                       </span>
                     </div>
                     <span className={styles.achievement}>{item.achievement}</span>
                     <p>{item.testimonial}</p>
                   </div>
                   <div className={styles.rowActions}>
-                    <button type="button" onClick={() => void move(sourceIndex, -1)} disabled={busy || sourceIndex === 0} aria-label={`Naikkan ${item.competition_name}`}><ArrowUp aria-hidden="true" size={15} /></button>
-                    <button type="button" onClick={() => void move(sourceIndex, 1)} disabled={busy || sourceIndex === items.length - 1} aria-label={`Turunkan ${item.competition_name}`}><ArrowDown aria-hidden="true" size={15} /></button>
+                    <button type="button" onClick={() => void move(sourceIndex, -1)} disabled={busy || sourceIndex === 0} aria-label={`Move ${item.competition_name} up`}><ArrowUp aria-hidden="true" size={15} /></button>
+                    <button type="button" onClick={() => void move(sourceIndex, 1)} disabled={busy || sourceIndex === items.length - 1} aria-label={`Move ${item.competition_name} down`}><ArrowDown aria-hidden="true" size={15} /></button>
                     <button type="button" onClick={() => void togglePublished(item)} disabled={busy}>{item.is_published ? 'Draft' : 'Publish'}</button>
-                    <button type="button" onClick={() => beginEdit(item)} disabled={busy}>Kelola</button>
-                    <button type="button" className={styles.deleteButton} onClick={() => setDeleteTarget(item)} disabled={busy} aria-label={`Hapus ${item.competition_name}`}><Trash2 aria-hidden="true" size={15} /></button>
+                    <button type="button" onClick={() => beginEdit(item)} disabled={busy}>Manage</button>
+                    <button type="button" className={styles.deleteButton} onClick={() => setDeleteTarget(item)} disabled={busy} aria-label={`Delete ${item.competition_name}`}><Trash2 aria-hidden="true" size={15} /></button>
                   </div>
                 </article>
               )
@@ -537,36 +543,36 @@ export function TestimonialManagement() {
         className={dialogStyles.dialog}
         aria-labelledby="testimonial-editor-heading"
         onCancel={event => {
-          if (busy) event.preventDefault()
-          else resetEditor()
+          event.preventDefault()
+          requestCloseEditor()
         }}
         onClose={() => {
           if (!busy && editorOpen) resetEditor()
         }}
         onClick={event => {
-          if (event.target === event.currentTarget && !busy) resetEditor()
+          if (event.target === event.currentTarget) requestCloseEditor()
         }}
       >
         <div className={dialogStyles.panel}>
           <header className={dialogStyles.header}>
             <div>
-              <p className="kicker">{creating ? 'Testimoni baru' : 'Kelola testimonial'}</p>
-              <h2 id="testimonial-editor-heading">{creating ? 'Tambahkan cerita peserta' : selected?.competition_name}</h2>
+
+              <h2 id="testimonial-editor-heading">{creating ? 'Add testimonial' : selected?.competition_name}</h2>
             </div>
-            <button type="button" className={`role-close ${dialogStyles.closeButton}`} onClick={resetEditor} disabled={busy} aria-label="Tutup editor"><X aria-hidden="true" /></button>
+            <button type="button" className={`role-close ${dialogStyles.closeButton}`} onClick={requestCloseEditor} disabled={busy} aria-label="Close editor"><X aria-hidden="true" /></button>
           </header>
           <div className={dialogStyles.body}>
-            <form className={styles.form} onSubmit={save} noValidate>
+            <form className={styles.form} onSubmit={save} noValidate><fieldset className={dataStyles.editableFields} disabled={busy}>
               <div className={styles.formGrid}>
-                <label>Nama kompetisi<input value={draft.competitionName} maxLength={180} onChange={event => updateCompetitionName(event.target.value)} aria-invalid={Boolean(fieldErrors.competitionName)} />{fieldErrors.competitionName ? <small className="form-error">{fieldErrors.competitionName}</small> : null}</label>
-                <label>Pencapaian<input value={draft.achievement} maxLength={160} onChange={event => { setDraft(current => ({ ...current, achievement: event.target.value })); setFieldErrors(current => ({ ...current, achievement: undefined })) }} aria-invalid={Boolean(fieldErrors.achievement)} />{fieldErrors.achievement ? <small className="form-error">{fieldErrors.achievement}</small> : null}</label>
-                <label className={styles.wideField}>Isi testimoni<textarea rows={8} maxLength={5000} value={draft.testimonial} onChange={event => { setDraft(current => ({ ...current, testimonial: event.target.value })); setFieldErrors(current => ({ ...current, testimonial: undefined })) }} aria-invalid={Boolean(fieldErrors.testimonial)} />{fieldErrors.testimonial ? <small className="form-error">{fieldErrors.testimonial}</small> : null}</label>
+                <label>Competition name<input value={draft.competitionName} maxLength={180} onChange={event => updateCompetitionName(event.target.value)} aria-invalid={Boolean(fieldErrors.competitionName)} />{fieldErrors.competitionName ? <small className="form-error">{fieldErrors.competitionName}</small> : null}</label>
+                <label>Achievement<input value={draft.achievement} maxLength={160} onChange={event => { setDraft(current => ({ ...current, achievement: event.target.value })); setFieldErrors(current => ({ ...current, achievement: undefined })) }} aria-invalid={Boolean(fieldErrors.achievement)} />{fieldErrors.achievement ? <small className="form-error">{fieldErrors.achievement}</small> : null}</label>
+                <label className={styles.wideField}>Testimonial<textarea rows={8} maxLength={5000} value={draft.testimonial} onChange={event => { setDraft(current => ({ ...current, testimonial: event.target.value })); setFieldErrors(current => ({ ...current, testimonial: undefined })) }} aria-invalid={Boolean(fieldErrors.testimonial)} />{fieldErrors.testimonial ? <small className="form-error">{fieldErrors.testimonial}</small> : null}</label>
               </div>
 
               <section className={styles.mediaSection}>
                 <div>
-                  <label>Gambar testimonial<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { chooseImage(event.target.files?.[0] ?? null); event.target.value = '' }} /></label>
-                  <small>{selected?.image_path ? 'Biarkan kosong jika tidak ingin mengganti gambar. ' : ''}JPG, PNG, atau WebP · maksimal 5 MB. File baru otomatis disimpan dalam format 5:4.</small>
+                  <label>Testimonial image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { chooseImage(event.target.files?.[0] ?? null); event.target.value = '' }} /></label>
+                  <small>{selected?.image_path ? 'Leave empty to keep the current image. ' : ''}JPG, PNG, or WebP · maximum 5 MB. New files are saved in a 5:4 frame.</small>
                   {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
                   <div className={styles.cropControls} data-testid="testimonial-crop-controls">
                     <div className={styles.cropMeta}><span>Direct crop</span><strong>{TESTIMONIAL_IMAGE_WIDTH} × {TESTIMONIAL_IMAGE_HEIGHT} px · 5:4</strong></div>
@@ -579,25 +585,25 @@ export function TestimonialManagement() {
                   {editorPreviewUrl
                     ? <Image
                         src={editorPreviewUrl}
-                        alt={buildTestimonialAltText(draft.competitionName)}
+                        alt={draft.competitionName ? `Participants in ${draft.competitionName}` : 'Testimonial image preview'}
                         fill
                         sizes="280px"
                         unoptimized
                       />
-                    : <div><ImagePlus aria-hidden="true" /><span>Seed belum memiliki gambar. Upload foto kompetisi di sini.</span></div>}
+                    : <div><ImagePlus aria-hidden="true" /><span>No image yet. Upload an approved competition photo here.</span></div>}
                 </div>
               </section>
 
               <label className={styles.publishToggle}>
                 <input type="checkbox" checked={draft.isPublished} onChange={event => setDraft(current => ({ ...current, isPublished: event.target.checked }))} />
-                <span><strong>Published</strong><small>Beranda hanya menampilkan testimonial Published yang sudah memiliki gambar.</small></span>
+                <span><strong>Published</strong><small>Only published testimonials with an image appear on the homepage.</small></span>
               </label>
 
               <div className={styles.formActions}>
-                <button className="button button-primary" disabled={busy}>{busyAction === 'save' ? 'Menyimpan…' : creating ? 'Buat testimoni' : 'Simpan perubahan'}</button>
-                <button type="button" className="button button-outline" onClick={resetEditor} disabled={busy}>Batal</button>
+                <button className="button button-primary" disabled={busy}>{busyAction === 'save' ? 'Saving…' : creating ? 'Create testimonial' : 'Save changes'}</button>
+                <button type="button" className="button button-outline" onClick={requestCloseEditor} disabled={busy}>Cancel</button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       </dialog>
@@ -612,8 +618,8 @@ export function TestimonialManagement() {
         onCancel={() => { setCropSourceFile(null); setCropInitial(null); setCropUsesStoredSource(false) }}
         onApply={applyImageCrop}
       />
-      <dialog ref={deleteDialogRef} className="editorial-delete-dialog" aria-labelledby="testimonial-delete-title" onCancel={event => { event.preventDefault(); setDeleteTarget(null) }}>
-        {deleteTarget ? <><div className="editorial-delete-dialog__icon"><Trash2 aria-hidden="true" /></div><h3 id="testimonial-delete-title">Hapus “{deleteTarget.competition_name}”?</h3><p>Testimoni dan file foto miliknya akan dihapus permanen.</p><div><button type="button" className="button button-outline" onClick={() => setDeleteTarget(null)} disabled={busy}>Batal</button><button type="button" className="button button-danger" onClick={() => void remove(deleteTarget)} disabled={busy}><Trash2 aria-hidden="true" />{busy ? 'Menghapus…' : 'Hapus permanen'}</button></div></> : null}
+      <dialog ref={deleteDialogRef} className="editorial-delete-dialog" aria-labelledby="testimonial-delete-title" onCancel={event => { event.preventDefault(); if (!busy) setDeleteTarget(null) }}>
+        {deleteTarget ? <><div className="editorial-delete-dialog__icon"><Trash2 aria-hidden="true" /></div><h3 id="testimonial-delete-title">Delete “{deleteTarget.competition_name}”?</h3><p>The testimonial and its image files will be permanently deleted.</p><div><button type="button" className="button button-outline" onClick={() => setDeleteTarget(null)} disabled={busy}>Cancel</button><button type="button" className="button button-danger" onClick={() => void remove(deleteTarget)} disabled={busy}><Trash2 aria-hidden="true" />{busy ? 'Deleting…' : 'Delete permanently'}</button></div></> : null}
       </dialog>
     </section>
   )
