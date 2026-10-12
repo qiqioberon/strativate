@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CheckCircle2, GraduationCap, MessageCircle, Trophy } from 'lucide-react'
+import { ArrowRight, Building2, CheckCircle2, GraduationCap, MessageCircle, Route, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
 import { MarketingShell } from '@/components/marketing/marketing-shell'
@@ -62,12 +62,61 @@ export default function ProgramPage() {
             </div>
           </section>
 
-          <section className="marketing-section program-paths" data-reveal data-testid="program-mentoring-path-section">
+          <section className="marketing-section program-paths" aria-labelledby="mentoring-path-heading" data-reveal data-testid="program-mentoring-path-section">
             <div className="marketing-container">
-              <div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Choose Your Mentoring Path</p><h2>Personalized guidance, in the format that fits your goal.</h2></div><p className="marketing-section-head__copy">Both options provide personalized guidance. Choose the format that fits your goals and preparation needs.</p></div>
+              <div className="program-paths__head">
+                <h2 id="mentoring-path-heading">Choose Your Mentoring Path</h2>
+                <p>Personalized guidance, in the format that fits your goal. Get focused support for your next challenge or build momentum with structured, ongoing preparation.</p>
+              </div>
               <div className="program-path-grid">
-                <article><span>01</span><h3>Private Mentoring</h3><p>Focused support for a specific goal. Book flexible sessions to learn competition fundamentals, improve a deliverable, or get feedback on a particular challenge.</p><Link href="/program/private-mentoring">Start Your Learning Journey <ArrowRight aria-hidden="true" size={16} /></Link></article>
-                <article><span>02</span><h3>Intensive Mentoring</h3><p>Structured, ongoing guidance to help you prepare for competitions and build practical skills.</p><Link href="/program/intensive-mentoring">Explore Intensive Mentoring <ArrowRight aria-hidden="true" size={16} /></Link></article>
+                <article className="program-path-card program-path-card--private" aria-labelledby="private-path-heading">
+                  <div className="program-path-card__header">
+                    <div className="program-path-card__icon" aria-hidden="true"><Target size={28} strokeWidth={1.7} /></div>
+                    <h3 id="private-path-heading">Private Mentoring</h3>
+                    <p>Focused guidance for your next step.</p>
+                  </div>
+                  <div className="program-path-card__body">
+                    <p className="program-path-card__description">Learn competition fundamentals, sharpen a deliverable, or work through a specific challenge with flexible, targeted support—not a long structured program.</p>
+                    <dl className="program-path-card__details">
+                      <div><dt>Session rhythm</dt><dd>A flexible number of sessions based on your current needs.</dd></div>
+                      <div><dt>Mentor support</dt><dd>Matched to your topic and mentor availability.</dd></div>
+                    </dl>
+                    <div className="program-path-card__benefits">
+                      <h4>Support where you need it</h4>
+                      <ul>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Direct consultation and targeted, actionable feedback</span></li>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Proposal or deck review and specific analysis</span></li>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Pitching practice or a short, focused consultation</span></li>
+                      </ul>
+                    </div>
+                    <div className="program-path-card__fit"><h4>Ideal for</h4><p>A specific topic, a single deliverable, or an immediate challenge.</p></div>
+                    <Link className={buttonVariants({ variant: 'dark', size: 'marketing', className: 'program-path-card__cta' })} href="/program/private-mentoring">Start Your Learning Journey <ArrowRight aria-hidden="true" size={17} data-icon="arrow" /></Link>
+                  </div>
+                </article>
+                <article className="program-path-card program-path-card--intensive" aria-labelledby="intensive-path-heading">
+                  <div className="program-path-card__header">
+                    <div className="program-path-card__icon" aria-hidden="true"><Route size={28} strokeWidth={1.7} /></div>
+                    <h3 id="intensive-path-heading">Intensive Mentoring</h3>
+                    <p>A clear structure. Continuous progress.</p>
+                  </div>
+                  <div className="program-path-card__body">
+                    <p className="program-path-card__description">Prepare for competitions and build practical skills through connected stages, with structured, ongoing guidance from one consistent mentor throughout your program.</p>
+                    <dl className="program-path-card__details">
+                      <div><dt>Session rhythm</dt><dd>Regular or weekly mentoring, with multiple sessions per month tailored to your support needs.</dd></div>
+                      <div><dt>Mentor support</dt><dd>One dedicated mentor for continuity throughout your preparation.</dd></div>
+                    </dl>
+                    <div className="program-path-card__benefits">
+                      <h4>Build momentum at every stage</h4>
+                      <ul>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>End-to-end guidance across connected preparation stages</span></li>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Regular review and feedback across multiple deliverables</span></li>
+                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Progress monitoring and long-term skill development</span></li>
+                      </ul>
+                    </div>
+                    <div className="program-path-card__fit"><h4>Ideal for</h4><p>Full competition preparation, multiple deliverables, and sustained skill development.</p></div>
+                    <Link className={buttonVariants({ variant: 'dark', size: 'marketing', className: 'program-path-card__cta' })} href="/program/intensive-mentoring">Explore Intensive Mentoring <ArrowRight aria-hidden="true" size={17} data-icon="arrow" /></Link>
+                  </div>
+                </article>
               </div>
             </div>
           </section>
