@@ -75,7 +75,7 @@ export default function ProgramPage() {
                   <div className="program-path-card__header">
                     <div className="program-path-card__icon" aria-hidden="true">🎯</div>
                     <h3 id="private-path-heading">Private Mentoring</h3>
-                    <p>Focused guidance for your next step.</p>
+                    <p>Focused help for what you’re working on.</p>
                   </div>
                   <div className="program-path-card__body">
                     <p className="program-path-card__description">Learn competition fundamentals, sharpen a deliverable, or work through a specific challenge with flexible, targeted support—not a long structured program.</p>
@@ -84,14 +84,14 @@ export default function ProgramPage() {
                       <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">🤝</span>Mentor support</dt><dd>Matched to your topic and mentor availability.</dd></div>
                     </dl>
                     <div className="program-path-card__benefits">
-                      <h4>Support where you need it</h4>
+                      <h4>What you can work on</h4>
                       <ul>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Direct consultation and targeted, actionable feedback</span></li>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Proposal or deck review and specific analysis</span></li>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Pitching practice or a short, focused consultation</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">💬</span><span><strong>Talk it through</strong>Direct consultation and targeted, actionable feedback.</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">📝</span><span><strong>Review your work</strong>Proposal or deck review and specific analysis.</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">🎤</span><span><strong>Practise your pitch</strong>Pitching practice or a short, focused consultation.</span></li>
                       </ul>
                     </div>
-                    <div className="program-path-card__fit"><h4>Ideal for</h4><p>A specific topic, a single deliverable, or an immediate challenge.</p></div>
+                    <div className="program-path-card__fit"><h4>A good fit if you need…</h4><p>Help with a specific topic, a single deliverable, or an immediate challenge.</p></div>
                     <Link className={buttonVariants({ variant: 'primary', size: 'marketing', className: 'program-path-card__cta' })} href="/program/private-mentoring">Explore Private Mentoring <ArrowRight aria-hidden="true" size={17} data-icon="arrow" /></Link>
                   </div>
                 </article>
@@ -99,7 +99,7 @@ export default function ProgramPage() {
                   <div className="program-path-card__header">
                     <div className="program-path-card__icon" aria-hidden="true">🧭</div>
                     <h3 id="intensive-path-heading">Intensive Mentoring</h3>
-                    <p>A clear structure. Continuous progress.</p>
+                    <p>Ongoing support throughout your preparation.</p>
                   </div>
                   <div className="program-path-card__body">
                     <p className="program-path-card__description">Prepare for competitions and build practical skills through connected stages, with structured, ongoing guidance from one consistent mentor throughout your program.</p>
@@ -108,14 +108,14 @@ export default function ProgramPage() {
                       <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">🤝</span>Mentor support</dt><dd>One dedicated mentor for continuity throughout your preparation.</dd></div>
                     </dl>
                     <div className="program-path-card__benefits">
-                      <h4>Build momentum at every stage</h4>
+                      <h4>Support that stays connected</h4>
                       <ul>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>End-to-end guidance across connected preparation stages</span></li>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Regular review and feedback across multiple deliverables</span></li>
-                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Progress monitoring and long-term skill development</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">🧩</span><span><strong>Connected preparation</strong>End-to-end guidance across your preparation stages.</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">📝</span><span><strong>Feedback along the way</strong>Regular review across multiple deliverables.</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">🌱</span><span><strong>Room to keep growing</strong>Progress monitoring and long-term skill development.</span></li>
                       </ul>
                     </div>
-                    <div className="program-path-card__fit"><h4>Ideal for</h4><p>Full competition preparation, multiple deliverables, and sustained skill development.</p></div>
+                    <div className="program-path-card__fit"><h4>A good fit if you need…</h4><p>Full competition preparation, support across multiple deliverables, and sustained skill development.</p></div>
                     <Link className={buttonVariants({ variant: 'primary', size: 'marketing', className: 'program-path-card__cta' })} href="/program/intensive-mentoring">Explore Intensive Mentoring <ArrowRight aria-hidden="true" size={17} data-icon="arrow" /></Link>
                   </div>
                 </article>
