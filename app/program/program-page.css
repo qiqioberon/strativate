@@ -90,6 +90,7 @@
   align-items: stretch;
 }
 .program-page .program-path-card {
+  --program-path-gradient: linear-gradient(90deg, #ff991a, #dc0d16);
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -120,9 +121,7 @@
   padding: clamp(25px, 3vw, 36px);
   border-bottom: 1px solid rgb(255 255 255 / .22);
   color: #fffaf4;
-  background:
-    radial-gradient(ellipse at 100% 0, rgb(255 231 157 / .4), transparent 65%),
-    linear-gradient(125deg, #b84400, #e95708 58%, var(--marketing-orange));
+  background: var(--program-path-gradient);
 }
 .program-page .program-path-card__header::after {
   position: absolute;
@@ -146,7 +145,12 @@
   color: var(--marketing-orange-dark);
   background: linear-gradient(145deg, #fffdfa, #fff0e4);
   box-shadow: inset 0 1px 0 #fff, 0 4px 0 rgb(118 45 9 / .09), 0 10px 22px rgb(92 31 4 / .1);
+  font-size: 28px;
+  line-height: 1;
 }
+.program-page .program-path-card__icon,
+.program-page .program-path-card__detail-emoji,
+.program-page .program-path-card__benefit-emoji { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
 .program-page .program-path-card h3 {
   margin: 24px 0 0;
   color: inherit;
@@ -163,16 +167,13 @@
   line-height: 1.7;
 }
 .program-page .program-path-card__header > p { margin-top: 10px; color: #fffaf4; }
-.program-page .program-path-card--intensive .program-path-card__header {
-  background:
-    radial-gradient(ellipse at 100% 0, rgb(255 122 0 / .55), transparent 70%),
-    linear-gradient(125deg, var(--marketing-orange-dark), #dc0d16 58%, #ed5d16);
+.program-page .program-path-card--intensive {
+  --program-path-gradient: linear-gradient(90deg, #ffcc00, #ff6b00);
 }
 .program-page .program-path-card--intensive .program-path-card__header::after {
   border-color: rgb(255 231 157 / .2);
   box-shadow: 0 0 0 28px rgb(255 231 157 / .055), 0 0 0 56px rgb(255 231 157 / .035);
 }
-.program-page .program-path-card--intensive .program-path-card__header > p { color: #ffe7d4; }
 .program-page .program-path-card__body {
   display: flex;
   flex: 1;
@@ -207,7 +208,7 @@
   line-height: 1.5;
 }
 .program-page .program-path-card dt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.program-page .program-path-card dt svg { flex: 0 0 auto; color: var(--marketing-orange-dark); }
+.program-page .program-path-card__detail-emoji { flex: 0 0 auto; font-size: 17px; line-height: 1; }
 .program-page .program-path-card__benefits > h4 { display: flex; align-items: center; gap: 10px; }
 .program-page .program-path-card__benefits > h4::before {
   width: 22px;
@@ -242,14 +243,14 @@
 .program-page .program-path-card li + li { border-top: 1px solid #f3e8df; }
 .program-page .program-path-card li:first-child { padding-top: 0; }
 .program-page .program-path-card li:last-child { padding-bottom: 0; }
-.program-page .program-path-card li svg {
+.program-page .program-path-card__benefit-emoji {
   flex: 0 0 auto;
-  box-sizing: content-box;
   margin-top: 1px;
   padding: 5px;
   border-radius: 9px;
-  color: var(--marketing-orange-dark);
   background: #fff0e4;
+  font-size: 18px;
+  line-height: 1;
 }
 .program-page .program-path-card__fit {
   margin-top: auto;
@@ -269,6 +270,7 @@
   margin-top: 0;
   padding: 14px 18px;
   color: var(--primary-foreground);
+  background-image: var(--program-path-gradient);
   font-size: .85rem;
   font-weight: 650;
   line-height: 1.5;

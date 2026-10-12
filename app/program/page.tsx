@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CalendarDays, CheckCircle2, GraduationCap, MessageCircle, Route, Target, Trophy, UsersRound } from 'lucide-react'
+import { ArrowRight, Building2, CheckCircle2, GraduationCap, MessageCircle, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
 import { MentoringPathShapeGrid } from '@/components/marketing/hero-shape-grid'
@@ -73,22 +73,22 @@ export default function ProgramPage() {
               <div className="program-path-grid">
                 <article className="program-path-card program-path-card--private" aria-labelledby="private-path-heading">
                   <div className="program-path-card__header">
-                    <div className="program-path-card__icon" aria-hidden="true"><Target size={28} strokeWidth={1.7} /></div>
+                    <div className="program-path-card__icon" aria-hidden="true">🎯</div>
                     <h3 id="private-path-heading">Private Mentoring</h3>
                     <p>Focused guidance for your next step.</p>
                   </div>
                   <div className="program-path-card__body">
                     <p className="program-path-card__description">Learn competition fundamentals, sharpen a deliverable, or work through a specific challenge with flexible, targeted support—not a long structured program.</p>
                     <dl className="program-path-card__details">
-                      <div><dt><CalendarDays aria-hidden="true" size={17} />Session rhythm</dt><dd>A flexible number of sessions based on your current needs.</dd></div>
-                      <div><dt><UsersRound aria-hidden="true" size={17} />Mentor support</dt><dd>Matched to your topic and mentor availability.</dd></div>
+                      <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">📅</span>Session rhythm</dt><dd>A flexible number of sessions based on your current needs.</dd></div>
+                      <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">🤝</span>Mentor support</dt><dd>Matched to your topic and mentor availability.</dd></div>
                     </dl>
                     <div className="program-path-card__benefits">
                       <h4>Support where you need it</h4>
                       <ul>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Direct consultation and targeted, actionable feedback</span></li>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Proposal or deck review and specific analysis</span></li>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Pitching practice or a short, focused consultation</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Direct consultation and targeted, actionable feedback</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Proposal or deck review and specific analysis</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Pitching practice or a short, focused consultation</span></li>
                       </ul>
                     </div>
                     <div className="program-path-card__fit"><h4>Ideal for</h4><p>A specific topic, a single deliverable, or an immediate challenge.</p></div>
@@ -97,22 +97,22 @@ export default function ProgramPage() {
                 </article>
                 <article className="program-path-card program-path-card--intensive" aria-labelledby="intensive-path-heading">
                   <div className="program-path-card__header">
-                    <div className="program-path-card__icon" aria-hidden="true"><Route size={28} strokeWidth={1.7} /></div>
+                    <div className="program-path-card__icon" aria-hidden="true">🧭</div>
                     <h3 id="intensive-path-heading">Intensive Mentoring</h3>
                     <p>A clear structure. Continuous progress.</p>
                   </div>
                   <div className="program-path-card__body">
                     <p className="program-path-card__description">Prepare for competitions and build practical skills through connected stages, with structured, ongoing guidance from one consistent mentor throughout your program.</p>
                     <dl className="program-path-card__details">
-                      <div><dt><CalendarDays aria-hidden="true" size={17} />Session rhythm</dt><dd>Regular or weekly mentoring, with multiple sessions per month tailored to your support needs.</dd></div>
-                      <div><dt><UsersRound aria-hidden="true" size={17} />Mentor support</dt><dd>One dedicated mentor for continuity throughout your preparation.</dd></div>
+                      <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">📅</span>Session rhythm</dt><dd>Regular or weekly mentoring, with multiple sessions per month tailored to your support needs.</dd></div>
+                      <div><dt><span className="program-path-card__detail-emoji" aria-hidden="true">🤝</span>Mentor support</dt><dd>One dedicated mentor for continuity throughout your preparation.</dd></div>
                     </dl>
                     <div className="program-path-card__benefits">
                       <h4>Build momentum at every stage</h4>
                       <ul>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>End-to-end guidance across connected preparation stages</span></li>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Regular review and feedback across multiple deliverables</span></li>
-                        <li><CheckCircle2 aria-hidden="true" size={18} /><span>Progress monitoring and long-term skill development</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>End-to-end guidance across connected preparation stages</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Regular review and feedback across multiple deliverables</span></li>
+                        <li><span className="program-path-card__benefit-emoji" aria-hidden="true">✅</span><span>Progress monitoring and long-term skill development</span></li>
                       </ul>
                     </div>
                     <div className="program-path-card__fit"><h4>Ideal for</h4><p>Full competition preparation, multiple deliverables, and sustained skill development.</p></div>
