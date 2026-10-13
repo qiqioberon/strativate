@@ -274,7 +274,7 @@ function ShapeGrid({
   )
 }
 
-export function HeroShapeGrid() {
+export function HeroShapeGrid({ className = 'homepage-shape-grid', testId = 'hero-shape-grid' }: { className?: string; testId?: string } = {}) {
   return (
     <ShapeGrid
       direction="diagonal"
@@ -283,6 +283,8 @@ export function HeroShapeGrid() {
       squareSize={48}
       shape="square"
       fadeColor="rgba(104,26,0,.16)"
+      className={className}
+      testId={testId}
     />
   )
 }
@@ -304,14 +306,8 @@ export function RecognitionShapeGrid() {
 
 export function MentoringPathShapeGrid() {
   return (
-    <ShapeGrid
-      direction="diagonal"
-      speed={0.16}
-      borderColor="rgba(255,248,238,.22)"
-      squareSize={72}
-      shape="square"
-      fadeColor="rgba(173,48,0,.12)"
-      className="program-paths__shape-grid"
+    <HeroShapeGrid
+      className="homepage-shape-grid program-paths__shape-grid"
       testId="mentoring-path-shape-grid"
     />
   )
