@@ -42,8 +42,19 @@
 :is(.program-page, .faq-reference-page) .program-faq__list details[open] .program-faq__toggle { color: #fff; background: var(--marketing-orange); }
 :is(.program-page, .faq-reference-page) .program-faq__list details[open] .program-faq__toggle svg { transform: rotate(180deg); }
 :is(.program-page, .faq-reference-page) .program-faq__list details > p { margin: 0; padding: 4px 28px 28px; color: #55575e; font-size: 1rem; line-height: 1.8; }
+.faq-reference-page .program-faq__list .faq-answer__steps {
+  margin: 0;
+  padding: 4px 28px 28px 52px;
+  color: #55575e;
+  font-size: 1rem;
+  line-height: 1.8;
+  list-style: decimal outside;
+}
+.faq-reference-page .faq-answer__steps > li { padding-left: 4px; }
+.faq-reference-page .faq-answer__steps > li + li { margin-top: 12px; }
 @media (max-width: 760px) {
   :is(.program-page, .faq-reference-page) .program-faq__list { grid-template-columns: 1fr; gap: 20px; }
   :is(.program-page, .faq-reference-page) .program-faq__list summary { min-height: 88px; gap: 16px; padding: 22px 20px; font-size: 1rem; }
   :is(.program-page, .faq-reference-page) .program-faq__list details > p { padding: 0 20px 24px; font-size: .94rem; }
+  .faq-reference-page .program-faq__list .faq-answer__steps { padding: 0 20px 24px 44px; font-size: .94rem; }
 }

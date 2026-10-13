@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 
+import { FaqAnswer } from '@/components/marketing/faq-answer'
 import { faqPreview } from '@/lib/content/marketing-content'
 
 export function FaqDirectory() {
@@ -11,7 +12,7 @@ export function FaqDirectory() {
             <span>{item.question}</span>
             <span className="program-faq__toggle" aria-hidden="true"><ChevronDown size={20} /></span>
           </summary>
-          <p data-testid={`faq-answer-${index + 1}`}>{item.answer}</p>
+          <FaqAnswer answer={item.answer} testId={`faq-answer-${index + 1}`} />
         </details>
       ))}
     </div>
