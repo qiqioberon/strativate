@@ -1,11 +1,9 @@
 'use client'
 
-import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 
-import { formatRupiah } from '@/lib/commerce/money'
+import { DigitalProductCard } from '@/components/digital-products/digital-product-card'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { Card, CardSwap } from './card-swap'
 
@@ -29,12 +27,12 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
       <div className="digital-product-card-swap__stage">
         <div className="digital-product-card-swap__scene">
           <CardSwap
-            width={480}
-            height={570}
-            cardDistance={24}
+            width="var(--swap-card-width, 312px)"
+            height="calc(var(--swap-card-width, 312px) * 1.25)"
+            cardDistance={0}
             verticalDistance={34}
             delay={3200}
-            skewAmount={4}
+            skewAmount={0}
             easing="elastic"
             pauseOnHover
             activeIndex={requestedIndex}
@@ -46,26 +44,7 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
           >
             {products.map(product => (
               <Card key={product.id} customClass="digital-product-swap-card">
-                <Link
-                  href={`/produk-digital/${product.slug}`}
-                  data-testid={`digital-product-detail-link-${product.slug}`}
-                  aria-label={`View details for ${product.name}`}
-                >
-                  <div className="digital-product-swap-card__media">
-                    <Image
-                      src={product.imageUrl}
-                      alt={`Cover ${product.name}`}
-                      fill
-                      sizes="(max-width: 700px) 76vw, 480px"
-                    />
-                  </div>
-                  <div className="digital-product-swap-card__copy">
-                    <span>Digital Product · {product.reference_price_amount != null ? <><del>{formatRupiah(product.reference_price_amount)}</del> </> : null}{formatRupiah(product.price_amount)}</span>
-                    <h3>{product.name}</h3>
-                    <p>{product.description}</p>
-                    <strong>View details <ArrowUpRight aria-hidden="true" size={17} /></strong>
-                  </div>
-                </Link>
+                <DigitalProductCard product={product} headingLevel="h3" linkTestId={`digital-product-detail-link-${product.slug}`} />
               </Card>
             ))}
           </CardSwap>
