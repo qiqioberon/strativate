@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CheckCircle2, GraduationCap, MessageCircle, Trophy } from 'lucide-react'
+import { ArrowRight, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
 import { MentoringPathShapeGrid } from '@/components/marketing/hero-shape-grid'
@@ -13,17 +13,10 @@ import { buildWhatsAppHref } from '@/lib/marketing/whatsapp'
 import './program-page.css'
 import './program-layout-fix.css'
 
-const intensiveFit = [
-  'You want regular support from a dedicated mentor',
-  'You’re preparing for a specific competition',
-  'You want to improve your proposal, analysis, or pitch',
-  'You’re looking for a clear plan and steady progress',
-]
-
 const organizationServices = [
-  { title: 'Workshops', description: 'Interactive sessions that build skills in business planning, accounting, research, and presentation.', icon: GraduationCap },
-  { title: 'Competition Mentoring & Judging', description: 'Mentors guide competition preparation while judges provide evaluation and feedback.', icon: Trophy },
-  { title: 'Enrichment Programs', description: 'Structured learning with practical assignments and mock competitions to strengthen student skills.', icon: Building2 },
+  { title: 'Workshops', description: 'Interactive sessions that build skills in business planning, accounting, research, and presentation.', emoji: '🎓' },
+  { title: 'Competition Mentoring & Judging', description: 'Mentors guide competition preparation while judges provide evaluation and feedback.', emoji: '🏆' },
+  { title: 'Enrichment Programs', description: 'Structured learning with practical assignments and mock competitions to strengthen student skills.', emoji: '🌱' },
 ]
 
 const programFaq = [
@@ -50,7 +43,7 @@ export default function ProgramPage() {
         <ProgramKineticSurface>
           <section className="marketing-page-section program-directory" data-reveal data-testid="program-directory-section">
             <div className="marketing-container">
-              <div className="program-section-heading program-overview-heading"><p className="marketing-kicker">Our services for Students</p><h2>Programs designed for individual students and small teams preparing for business competitions.</h2></div>
+              <div className="program-section-heading program-overview-heading"><h2>Our Services for Students</h2><p>Programs designed for individual students and small teams preparing for business competitions.</p></div>
               <div className="marketing-services-hierarchy">
                 <section className="marketing-services-primary" data-testid="program-primary-services" aria-label="Core programs">
                   {primaryServices.map(service => <ServiceCard service={service} index={services.indexOf(service)} variant="primary" key={service.id} />)}
@@ -123,12 +116,18 @@ export default function ProgramPage() {
             </div>
           </section>
 
-          <section className="marketing-section program-fit" data-reveal data-testid="program-perfect-fit-section">
-            <div className="marketing-container program-fit__grid"><div><p className="marketing-kicker">Intensive Mentoring</p><h2>Perfect for you if</h2><p>Choose ongoing support when you want a clearer preparation rhythm and steady feedback.</p></div><div className="program-fit__list">{intensiveFit.map(item => <div key={item}><CheckCircle2 aria-hidden="true" size={20} /><span>{item}</span></div>)}</div></div>
-          </section>
-
           <section className="marketing-section program-organizations" data-reveal data-testid="program-organizations-section">
-            <div className="marketing-container"><div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Schools & Organizations</p><h2>Our Services for Schools & Organizations</h2></div><p className="marketing-section-head__copy">Comprehensive programs that help students build business skills and prepare for competitions.</p></div><div className="program-organization-grid">{organizationServices.map(({ title, description, icon: Icon }) => <article key={title}><Icon aria-hidden="true" size={24} /><h3>{title}</h3><p>{description}</p></article>)}</div></div>
+            <div className="marketing-container">
+              <div className="program-organizations__head"><p className="marketing-kicker">Schools & Organizations</p><h2>Our Services for Schools & Organizations</h2><p>Comprehensive programs that help students build business skills and prepare for competitions.</p></div>
+              <div className="program-organization-grid">
+                {organizationServices.map(({ title, description, emoji }, index) => (
+                  <article key={title}>
+                    <div className="program-organization__marker"><span aria-hidden="true">{emoji}</span><span className="program-organization__number" aria-hidden="true">0{index + 1}</span></div>
+                    <h3>{title}</h3><p>{description}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
           </section>
 
           <section className="marketing-section program-faq" data-reveal data-testid="program-faq-section">
@@ -136,7 +135,7 @@ export default function ProgramPage() {
           </section>
 
           <section className="marketing-consultation-band program-consultation" data-reveal data-testid="program-final-cta-section">
-            <div className="marketing-container"><div><p className="marketing-kicker">Ready Start Your Journey</p><h2>Get personalized guidance from our experienced mentors</h2></div><a href={buildWhatsAppHref('Hello Strativate, I would like help choosing the right program.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">Contact us <ArrowRight aria-hidden="true" size={17} /></a></div>
+            <div className="marketing-container"><div><h2>Ready to Start Your Journey?</h2><p>Get personalized guidance from our experienced mentors</p></div><a href={buildWhatsAppHref('Hello Strativate, I would like help choosing the right program.')} target="_blank" rel="noreferrer" data-testid="program-page-whatsapp-link">Contact us <ArrowRight aria-hidden="true" size={17} /></a></div>
           </section>
         </ProgramKineticSurface>
       </main>
