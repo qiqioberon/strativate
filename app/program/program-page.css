@@ -39,16 +39,19 @@
 }
 .program-directory { padding-top: clamp(62px, 6vw, 90px); }
 
-/* Reuse the orange gradient family from the homepage Why Us section. */
+/* Share the homepage Why Us orange gradient across the mentoring and contact sections. */
+.program-page .program-paths,
+.program-page .program-consultation {
+  background:
+    radial-gradient(circle at 8% 5%, rgba(177, 43, 0, .48) 0%, rgba(224, 65, 0, .24) 27%, transparent 50%),
+    radial-gradient(circle at 91% 88%, rgba(255, 215, 164, .46) 0%, rgba(255, 187, 103, .14) 31%, transparent 58%),
+    linear-gradient(148deg, #e95708 0%, #f86a08 38%, #ff861c 69%, #f9a34f 100%);
+}
 .program-page .program-paths {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   padding-block: clamp(72px, 7vw, 112px);
-  background:
-    radial-gradient(circle at 8% 5%, rgba(177, 43, 0, .48) 0%, rgba(224, 65, 0, .24) 27%, transparent 50%),
-    radial-gradient(circle at 91% 88%, rgba(255, 215, 164, .46) 0%, rgba(255, 187, 103, .14) 31%, transparent 58%),
-    linear-gradient(148deg, #e95708 0%, #f86a08 38%, #ff861c 69%, #f9a34f 100%);
 }
 .program-page .program-paths__shape-grid {
   position: absolute;
@@ -475,8 +478,7 @@
 .program-page .marketing-service-card--compact .marketing-service-card__copy > p { font-size: .63rem; }
 
 .program-page .program-overview-heading { margin-inline: auto; text-align: center; }
-.program-page .program-overview-heading h2 { margin-top: 0; }
-.program-page .program-overview-heading > p { max-width: 620px; margin: 18px auto 0; color: var(--marketing-muted); font-size: 1rem; line-height: 1.75; }
+.program-page .program-overview-heading h2 { margin-top: 16px; }
 
 .program-page .program-organizations { background: #fff8f1; }
 .program-page .program-organizations__head { max-width: 760px; margin: 0 auto 52px; text-align: center; }
@@ -491,11 +493,13 @@
 .program-page .program-organization-grid h3 { max-width: 300px; margin-top: 28px; color: #632f19; font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.25; text-wrap: balance; }
 .program-page .program-organization-grid p { margin-top: 16px; color: #67574c; font-size: .94rem; line-height: 1.85; }
 
-.program-page .program-consultation { padding: clamp(64px, 7vw, 96px) 0; color: #fff; background: linear-gradient(110deg, #c20e1b, #df2914 52%, #ef6315); }
-.program-page .program-consultation > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; padding: 0 24px; border-radius: 0; background: transparent; text-align: center; }
-.program-page .program-consultation h2 { max-width: 800px; margin: 0 auto; font-size: clamp(2.1rem, 4vw, 3.75rem); font-weight: 630; letter-spacing: -.04em; line-height: 1.15; text-wrap: balance; }
-.program-page .program-consultation p { max-width: 620px; margin: 18px auto 0; color: #fff8f0; font-size: 1rem; line-height: 1.75; }
-.program-page .program-consultation a { min-height: 52px; gap: 14px; padding: 0 24px; border: 1px solid #fff; border-radius: 10px; color: #a51e11; background: #fffdf9; font-size: .9rem; font-weight: 600; transition: background-color 180ms ease; }
+.program-page .program-consultation { padding: clamp(72px, 8vw, 112px) 0; color: #fff; }
+.program-page .program-consultation > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding: 0 24px; border-radius: 0; background: transparent; text-align: center; }
+.program-page .program-consultation h2 { max-width: 800px; margin: 0 auto; font-size: clamp(2.2rem, 4.8vw, 4.5rem); font-weight: 630; letter-spacing: -.045em; line-height: 1.18; text-wrap: balance; }
+.program-page .program-consultation h2 span { display: block; width: fit-content; margin-inline: auto; text-decoration: underline; text-decoration-color: #ffe79d; text-decoration-thickness: 2px; text-underline-offset: .15em; }
+.program-page .program-consultation p { max-width: 460px; margin: 28px auto 0; color: #fffaf4; font-size: 1rem; line-height: 1.75; }
+.program-page .program-consultation a { min-height: 56px; gap: 24px; padding: 0 24px; border: 1px solid #fff; border-radius: 8px; color: #853000; background: #fffdf9; font-size: .94rem; font-weight: 600; transition: background-color 180ms ease; }
+.program-page .program-consultation a svg { box-sizing: content-box; padding-left: 20px; border-left: 1px solid #ead5c2; }
 .program-page .program-consultation a:hover { background: #fff1e2; }
 .program-page .program-consultation a:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
 
