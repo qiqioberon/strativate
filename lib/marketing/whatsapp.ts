@@ -15,8 +15,8 @@ export function whatsappMessageForPath(pathname: string) {
   if (pathname.startsWith('/program/intensive-mentoring')) return messages.intensive
   if (pathname.startsWith('/program')) return messages.program
   if (pathname.startsWith('/mentor')) return messages.mentor
-  if (pathname.startsWith('/tentang-kami')) return messages.about
-  if (pathname.startsWith('/tanya-jawab')) return messages.faq
+  if (pathname.startsWith('/about-us')) return messages.about
+  if (pathname.startsWith('/faq')) return messages.faq
   return messages.home
 }
 

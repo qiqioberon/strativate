@@ -9,8 +9,8 @@ const footerLinks = [
   { label: 'Mentors', href: '/mentor', icon: Users },
   { label: 'Publications', href: '/publications', icon: Newspaper },
   { label: 'Competitions', href: '/competitions', icon: Trophy },
-  { label: 'About Us', href: '/tentang-kami', icon: Sparkles },
-  { label: 'FAQ', href: '/tanya-jawab', icon: HelpCircle },
+  { label: 'About Us', href: '/about-us', icon: Sparkles },
+  { label: 'FAQ', href: '/faq', icon: HelpCircle },
 ]
 
 export function SiteFooter() {

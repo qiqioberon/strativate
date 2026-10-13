@@ -11,7 +11,13 @@ const nextConfig = {
       : [],
   },
   async redirects() {
-    return [{ source: '/explore', destination: '/program', permanent: true }]
+    return [
+      { source: '/explore', destination: '/program', permanent: true },
+      { source: '/tanya-jawab', destination: '/faq', permanent: true },
+      { source: '/tentang-kami', destination: '/about-us', permanent: true },
+      { source: '/produk-digital/:path*', destination: '/digital-products/:path*', permanent: true },
+      { source: '/dashboard/produk-digital/:path*', destination: '/dashboard/digital-products/:path*', permanent: true },
+    ]
   },
 }
 
