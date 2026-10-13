@@ -479,6 +479,7 @@
 
 .program-page .program-overview-heading { margin-inline: auto; text-align: center; }
 .program-page .program-overview-heading h2 { margin-top: 16px; }
+.program-page .program-overview-heading > p:last-child { max-width: 620px; margin: 18px auto 0; color: var(--marketing-muted); font-size: 1rem; line-height: 1.75; }
 
 .program-page .program-organizations { background: #fff8f1; }
 .program-page .program-organizations__head { max-width: 760px; margin: 0 auto 52px; text-align: center; }
@@ -496,11 +497,10 @@
 .program-page .program-consultation { padding: clamp(72px, 8vw, 112px) 0; color: #fff; }
 .program-page .program-consultation > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding: 0 24px; border-radius: 0; background: transparent; text-align: center; }
 .program-page .program-consultation h2 { max-width: 800px; margin: 0 auto; font-size: clamp(2.2rem, 4.8vw, 4.5rem); font-weight: 630; letter-spacing: -.045em; line-height: 1.18; text-wrap: balance; }
-.program-page .program-consultation h2 span { display: block; width: fit-content; margin-inline: auto; text-decoration: underline; text-decoration-color: #ffe79d; text-decoration-thickness: 2px; text-underline-offset: .15em; }
+.program-page .program-consultation h2 span { display: block; }
 .program-page .program-consultation p { max-width: 460px; margin: 28px auto 0; color: #fffaf4; font-size: 1rem; line-height: 1.75; }
-.program-page .program-consultation a { min-height: 56px; gap: 24px; padding: 0 24px; border: 1px solid #fff; border-radius: 8px; color: #853000; background: #fffdf9; font-size: .94rem; font-weight: 600; transition: background-color 180ms ease; }
-.program-page .program-consultation a svg { box-sizing: content-box; padding-left: 20px; border-left: 1px solid #ead5c2; }
-.program-page .program-consultation a:hover { background: #fff1e2; }
+.program-page .program-consultation a { min-height: 56px; justify-content: center; padding: 0 32px; border: 1px solid #fff; border-radius: 999px; color: #fff; background: transparent; font-size: .94rem; font-weight: 600; transition: background-color 180ms ease, color 180ms ease; }
+.program-page .program-consultation a:is(:hover, :focus-visible) { color: #853000; background: #fffdf9; }
 .program-page .program-consultation a:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
 
 @media (max-width: 900px) {
