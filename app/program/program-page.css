@@ -534,14 +534,26 @@
 .program-page .program-organizations__head { max-width: 760px; margin: 0 auto 52px; text-align: center; }
 .program-page .program-organizations__head h2 { margin-top: 16px; font-size: clamp(2rem, 3.5vw, 3.25rem); font-weight: 630; letter-spacing: -.04em; line-height: 1.15; text-wrap: balance; }
 .program-page .program-organizations__head > p:last-child { max-width: 590px; margin: 20px auto 0; color: var(--marketing-muted); line-height: 1.75; }
-.program-page .program-organization-grid { gap: 0; border-block: 1px solid #dfc6b3; }
-.program-page .program-organization-grid article { min-width: 0; padding: 36px clamp(22px, 3vw, 44px) 40px; border: 0; border-radius: 0; background: transparent; }
-.program-page .program-organization-grid article + article { border-left: 1px solid #dfc6b3; }
+.program-page .program-organization-grid { gap: 24px; border: 0; }
+.program-page .program-organization-grid article {
+  --organization-accent: var(--marketing-orange);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 32px clamp(24px, 2.5vw, 36px) 30px;
+  border: 1px solid #e9d9ca;
+  border-radius: 16px;
+  background: #fffdf9;
+  box-shadow: 0 4px 12px rgb(99 47 25 / .04);
+}
+.program-page .program-organization-grid article:nth-child(2) { --organization-accent: #dc0d16; background: #fffdfc; }
+.program-page .program-organization-grid article:nth-child(3) { --organization-accent: #ffcc00; background: #fffef8; }
+.program-page .program-organization-grid article::after { content: ''; width: 48px; height: 3px; margin-top: 28px; border-radius: 2px; background: var(--organization-accent); }
 .program-page .program-organization__marker { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.program-page .program-organization__marker > span:first-child { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 40px; line-height: 1.2; }
-.program-page .program-organization__number { color: #b87b4d; font-family: var(--font-mono); font-size: .78rem; }
-.program-page .program-organization-grid h3 { max-width: 300px; margin-top: 28px; color: #632f19; font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.25; text-wrap: balance; }
-.program-page .program-organization-grid p { margin-top: 16px; color: #67574c; font-size: .94rem; line-height: 1.85; }
+.program-page .program-organization__marker > span:first-child { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 44px; line-height: 1.2; }
+.program-page .program-organization__number { color: #8b7564; font-family: var(--font-mono); font-size: .75rem; }
+.program-page .program-organization-grid h3 { min-height: 2.5em; margin-top: 26px; color: #492d20; font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.25; text-wrap: balance; }
+.program-page .program-organization-grid p { flex-grow: 1; margin-top: 16px; color: #67574c; font-size: .94rem; line-height: 1.85; }
 
 .program-page .program-consultation { padding: clamp(72px, 8vw, 112px) 0; color: #fff; }
 .program-page .program-consultation > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding: 0 24px; border-radius: 0; background: transparent; text-align: center; }
@@ -554,9 +566,9 @@
 
 @media (max-width: 900px) {
   .program-page .program-organization-grid { grid-template-columns: 1fr; }
-  .program-page .program-organization-grid article { padding: 28px 8px 32px; }
-  .program-page .program-organization-grid article + article { border-top: 1px solid #dfc6b3; border-left: 0; }
-  .program-page .program-organization-grid h3 { max-width: none; margin-top: 20px; }
+  .program-page .program-organization-grid { gap: 20px; }
+  .program-page .program-organization-grid article { padding: 28px 24px; }
+  .program-page .program-organization-grid h3 { min-height: 0; margin-top: 22px; }
 }
 @media (max-width: 1080px) {
   .program-page .marketing-services-supporting { grid-template-columns: repeat(3, minmax(0, 1fr)); }
