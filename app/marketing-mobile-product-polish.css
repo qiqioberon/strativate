@@ -1,9 +1,7 @@
 /* Late-loading layout corrections for the public header and homepage Digital Product editorial showcase. */
 .marketing-product-library {
   overflow: hidden;
-  background:
-    radial-gradient(circle at 82% 20%, rgba(255, 122, 0, .08), transparent 30%),
-    #fff;
+  background: #f8f9fa;
 }
 
 .marketing-product-library__grid {

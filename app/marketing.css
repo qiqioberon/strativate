@@ -934,7 +934,7 @@
 .stakeholder-section { position: relative; }
 .stakeholder-section--proof { background: var(--marketing-surface-warm); }
 .stakeholder-section--who, .stakeholder-products { background: transparent; }
-.homepage-products { padding: clamp(64px, 6vw, 90px) 0 clamp(78px, 7vw, 110px); }
+.homepage-products { padding: calc(clamp(64px, 6vw, 90px) - 16px) 0 clamp(78px, 7vw, 110px); }
 .stakeholder-split, .stakeholder-product-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: clamp(44px, 8vw, 130px); align-items: start; }
 .stakeholder-split h2, .stakeholder-product-grid h2 { max-width: 720px; margin-top: 16px; font-size: clamp(2.8rem, 5.4vw, 5.2rem); font-weight: 640; letter-spacing: var(--marketing-display-tracking); line-height: var(--marketing-display-leading); text-wrap: balance; }
 .marketing-product-library__copy > .marketing-kicker {
