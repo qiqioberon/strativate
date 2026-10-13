@@ -112,7 +112,7 @@
   align-items: end;
   gap: 14px;
 }
-.digital-product-card__heading h2 {
+.digital-product-card__heading :is(h2, h3) {
   min-width: 0;
   overflow-wrap: anywhere;
   color: #fff;
@@ -125,7 +125,7 @@
   flex: 0 0 auto;
   margin-bottom: 2px;
 }
-.marketing-products-directory .digital-product-card__description-preview {
+:is(.marketing-products-directory, .digital-product-card) .digital-product-card__description-preview {
   display: -webkit-box;
   margin-top: 10px;
   overflow: hidden;
