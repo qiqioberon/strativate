@@ -1,4 +1,4 @@
-import { ArrowRight, MessageCircle } from 'lucide-react'
+import { ArrowRight, ChevronDown, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
 import { MentoringPathShapeGrid } from '@/components/marketing/hero-shape-grid'
@@ -131,7 +131,7 @@ export default function ProgramPage() {
           </section>
 
           <section className="marketing-section program-faq" data-reveal data-testid="program-faq-section">
-            <div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">FAQ</p><h2>Questions before you start?</h2></div></div><div className="program-faq__list">{programFaq.map(([question, answer], index) => <details key={question} open={index === 0}><summary>{question}</summary><p>{answer}</p></details>)}</div></div>
+            <div className="marketing-container"><div className="marketing-section-head"><div><p className="marketing-kicker">FAQ</p><h2>Questions before you start?</h2></div></div><div className="program-faq__list">{programFaq.map(([question, answer], index) => <details key={question} open={index === 0}><summary><span>{question}</span><span className="program-faq__toggle" aria-hidden="true"><ChevronDown size={20} /></span></summary><p>{answer}</p></details>)}</div></div>
           </section>
 
           <section className="marketing-consultation-band program-consultation" data-reveal data-testid="program-final-cta-section">
