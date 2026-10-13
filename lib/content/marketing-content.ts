@@ -7,19 +7,19 @@ export const marketingNavigationItems = [
   { label: 'Home', href: '/', icon: 'house' },
   { label: 'Programs', href: '/program', icon: 'compass' },
   { label: 'Mentors', href: '/mentor', icon: 'users' },
-  { label: 'Digital Products', href: '/produk-digital', icon: 'library' },
+  { label: 'Digital Products', href: '/digital-products', icon: 'library' },
   { label: 'Publications', href: '/publications', icon: 'newspaper' },
   { label: 'Competitions', href: '/competitions', icon: 'trophy' },
-  { label: 'About Us', href: '/tentang-kami', icon: 'sparkles' },
-  { label: 'FAQ', href: '/tanya-jawab', icon: 'help' },
+  { label: 'About Us', href: '/about-us', icon: 'sparkles' },
+  { label: 'FAQ', href: '/faq', icon: 'help' },
 ] as const satisfies ReadonlyArray<{ label: string; href: string; icon: NavigationIcon }>
 
 export type MarketingNavigationItem =
-  (typeof marketingNavigationItems)[number]
+  Omit<(typeof marketingNavigationItems)[number], 'href'> & { href: string }
 
-export function getMarketingNavigation(digitalProductsEnabled: boolean) {
+export function getMarketingNavigation(digitalProductsEnabled: boolean): MarketingNavigationItem[] {
   return marketingNavigationItems.filter(
-    item => digitalProductsEnabled || item.href !== '/produk-digital',
+    item => digitalProductsEnabled || item.href !== '/digital-products',
   )
 }
 

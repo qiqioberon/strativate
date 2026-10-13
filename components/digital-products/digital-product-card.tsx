@@ -10,7 +10,7 @@ export function DigitalProductCard({ product, headingLevel = 'h2', linkTestId }:
   const ratingCount = product.ratingCount ?? 0
 
   return <article className="digital-product-card">
-    <Link className="digital-product-card__link" href={`/produk-digital/${product.slug}`} aria-label={`View details for ${product.name}`} data-testid={linkTestId}>
+    <Link className="digital-product-card__link" href={`/digital-products/${product.slug}`} aria-label={`View details for ${product.name}`} data-testid={linkTestId}>
       <div className="digital-product-card__cover">
         {product.imageUrl ? (
           // Public product covers are marketing assets served by Supabase Storage.

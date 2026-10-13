@@ -30,6 +30,7 @@ import './admin-mentoring-scheduling.css'
 import './mentee-mentor-availability.css'
 import './marketing-mobile-product-polish.css'
 import './editorial.css'
+import './faq-accordion.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://strativate.id'),

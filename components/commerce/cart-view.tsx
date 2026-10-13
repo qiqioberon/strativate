@@ -89,7 +89,7 @@ export function CartView({ cart, embedded = false, onBack, language = 'id' }: { 
           <p>{text('Items you add from the website or a Cart Link will appear here before checkout.', 'Item yang kamu pilih melalui website atau Cart Link akan tampil di sini sebelum checkout.')}</p>
           <div className="button-row commerce-empty-actions">
             <Link className={buttonVariants({ variant: 'primary', size: 'marketing' })} href="/program">{text('Browse programs', 'Lihat Program')} <ArrowRight aria-hidden="true" size={16} /></Link>
-            <Link className={cn(buttonVariants({ variant: 'outline', size: 'marketing' }), en && styles.secondaryAction)} href="/produk-digital"><BookOpen aria-hidden="true" size={16} />{text('Digital products', 'Produk Digital')}</Link>
+            <Link className={cn(buttonVariants({ variant: 'outline', size: 'marketing' }), en && styles.secondaryAction)} href="/digital-products"><BookOpen aria-hidden="true" size={16} />{text('Digital products', 'Produk Digital')}</Link>
           </div>
         </section>
       </div>
@@ -112,7 +112,7 @@ export function CartView({ cart, embedded = false, onBack, language = 'id' }: { 
                 <div className="commerce-cart-item__content">
                   <span>{commerceItemLabel(item.item_kind, language)}</span>
                   <h2>{item.name ? commerceItemName(item.name, language) : text('Item unavailable', 'Item tidak tersedia')}</h2>
-                  {item.item_kind === 'digital_product' && item.slug ? <Link href={`/produk-digital/${item.slug}`}>{text('View details', 'Lihat detail')}</Link> : null}
+              {item.item_kind === 'digital_product' && item.slug ? <Link href={`/digital-products/${item.slug}`}>{text('View details', 'Lihat detail')}</Link> : null}
                   {unavailable ? <p className="commerce-cart-item__warning"><AlertTriangle aria-hidden="true" size={14} /> {text('This item is unavailable. Remove it to continue to checkout.', 'Item ini sudah tidak tersedia. Hapus item untuk melanjutkan checkout.')}</p> : null}
                 </div>
                 <div className="commerce-cart-item__actions">

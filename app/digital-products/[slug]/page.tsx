@@ -43,7 +43,7 @@ export default async function DigitalProductDetailPage({ params }: { params: Pro
           </div>
 
           <section className="digital-product-detail__content">
-            <Link className="marketing-text-link digital-product-detail__back" href="/produk-digital">
+            <Link className="marketing-text-link digital-product-detail__back" href="/digital-products">
               <ArrowLeft aria-hidden="true" size={16} /> Back to Digital Products
             </Link>
             <div className="digital-product-detail__copy">

@@ -59,7 +59,7 @@ export function DigitalProductCarousel({ products }: { products: PublicDigitalPr
             style={{ transform: `translateX(${(index - activeIndex) * 100}%)` }}
           >
             <Link
-              href={`/produk-digital/${product.slug}`}
+              href={`/digital-products/${product.slug}`}
               tabIndex={index === activeIndex ? 0 : -1}
               data-testid={`digital-product-detail-link-${product.slug}`}
             >
