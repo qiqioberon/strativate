@@ -27,12 +27,12 @@ export function DigitalProductCardSwap({ products }: { products: PublicDigitalPr
       <div className="digital-product-card-swap__stage">
         <div className="digital-product-card-swap__scene">
           <CardSwap
-            width="var(--swap-card-width, 312px)"
-            height="calc(var(--swap-card-width, 312px) * 1.25)"
-            cardDistance={0}
+            width={480}
+            height={600}
+            cardDistance={24}
             verticalDistance={34}
             delay={3200}
-            skewAmount={0}
+            skewAmount={4}
             easing="elastic"
             pauseOnHover
             activeIndex={requestedIndex}

@@ -300,9 +300,9 @@
 }
 .digital-product-card-swap__scene {
   position: relative;
-  /* 570px card height + 34px for the 480px-wide card's 4deg skew.
+  /* 600px (4:5) card height + 34px for the 480px-wide card's 4deg skew.
      The stage scale mirrors the existing Card Swap transforms below. */
-  height: calc((570px + 34px) * var(--swap-scale));
+  height: calc((600px + 34px) * var(--swap-scale));
   min-width: 0;
   overflow: visible;
 }
