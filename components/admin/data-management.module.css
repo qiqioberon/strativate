@@ -341,8 +341,8 @@
 .institutionLocationColumn { width: 145px; }
 .institutionStatusColumn { width: 105px; }
 .institutionSourceColumn { width: 135px; }
-.institutionActionColumn { width: 435px; }
-.compactMasterTable.institutionTable { min-width: 1160px; }
+.institutionActionColumn { width: 310px; }
+.compactMasterTable.institutionTable { min-width: 1000px; }
 .compactMasterTable.institutionTable td { overflow-wrap: anywhere; }
 .masterActionCell { text-align: right; white-space: nowrap; }
 .masterActionGroup {
@@ -550,4 +550,20 @@
   .dialogFooter :global(.button) { width: 100%; min-width: 0; white-space: normal; }
   .pagination :global(.button) { flex: 1 1 calc(50% - 4px); }
   .reload { flex-basis: 100%; justify-content: flex-start; margin-top: 3px; }
+}
+
+/* Institution actions and cards are isolated from other master-data tables. */
+@media (max-width: 1280px) {
+  .institutionActionColumn { width: 115px; }
+  .compactMasterTable.institutionTable { min-width: 800px; }
+}
+@media (max-width: 680px) {
+  .compactMasterTable.institutionTable { display:block; min-width:0; table-layout:auto; border-collapse:separate; }
+  .institutionTable colgroup,.institutionTable thead { display:none; }
+  .institutionTable tbody { display:grid; gap:10px; }
+  .institutionTable tbody tr { display:block; min-width:0; border:1px solid #e7eaed; border-radius:10px; overflow:hidden; }
+  .compactMasterTable.institutionTable td { display:block; min-width:0; width:auto; text-align:left; white-space:normal; border-bottom:1px solid #edf0f2; }
+  .compactMasterTable.institutionTable td[data-label] { display:grid; grid-template-columns:80px minmax(0,1fr); align-items:center; gap:10px; }
+  .institutionTable td[data-label]::before { content:attr(data-label); color:#89929a; font-size:11px; font-weight:600; }
+  .institutionTable td:last-child { border-bottom:0; }
 }

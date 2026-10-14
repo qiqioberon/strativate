@@ -8,28 +8,21 @@ import { useOperationalInvalidation } from '@/components/realtime/operational-re
 import { createClient } from '@/lib/supabase/client'
 import { adminFormError } from '@/lib/auth/errors'
 import { menteeMentoringError, menteeReviewStatus } from '@/lib/mentoring-presentation'
+import {
+  isHttpMaterialLink,
+  MAX_SUPPORTING_MATERIAL_LENGTH,
+  MAX_SUPPORTING_MATERIALS,
+  readSupportingMaterials,
+  supportingMaterialInput,
+  validateSupportingMaterials,
+  type MentoringSessionPreference as Preference,
+  type SupportingMaterialCategory,
+  type SupportingMaterialEntry,
+} from '@/lib/mentoring/supporting-materials'
 import styles from '@/components/dashboard/mentee-mentoring.module.css'
+import materialStyles from './mentoring-session-preferences.module.css'
 
-type Preference={
-  sessionId:string
-  parentId:string
-  kind:'private'|'intensive'
-  status:'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled'
-  topicStatus:'needs_input'|'pending_review'|'confirmed'
-  requestedFocusId:string|null
-  requestedFocusName:string|null
-  requestedCustomFocus:string|null
-  requestedTopic:string|null
-  focusId:string|null
-  focusName:string|null
-  customFocus:string|null
-  topic:string|null
-  supportingMaterials:string[]
-  mentorNotes:string|null
-  competitionNames:string[]
-}
 type Focus={id:string;name:string}
-type RpcClient={rpc:<T>(name:string,args:Record<string,unknown>)=>PromiseLike<{data:T|null;error:{message:string}|null}>}
 
 type MentoringSessionPreferencesProps={
   kind:'private'|'intensive'
@@ -45,8 +38,13 @@ type MentoringSessionPreferencesProps={
   onChanged?:()=>void|Promise<void>
 }
 
-const isUrl=(value:string)=>/^https?:\/\/\S+$/i.test(value)
 const reviewLabel=(status:Preference['topicStatus'],language:'en'|'id'='id')=>language==='en'?(status==='confirmed'?'Reviewed':status==='pending_review'?'Awaiting admin review':'Not reviewed'):(status==='confirmed'?'Sudah ditinjau':status==='pending_review'?'Menunggu review admin':'Belum ditinjau')
+
+function MaterialReference({item}: {item:SupportingMaterialEntry}) {
+  return item.kind==='link'&&isHttpMaterialLink(item.value)
+    ?<a className={materialStyles.reference} href={item.value} target="_blank" rel="noopener noreferrer">{item.value}<ExternalLink aria-hidden="true"/></a>
+    :<span>{item.value}</span>
+}
 
 export function MentoringSessionPreferences({
   kind,
@@ -62,7 +60,6 @@ export function MentoringSessionPreferences({
   onChanged,
 }:MentoringSessionPreferencesProps){
   const supabase=useMemo(()=>createClient(),[])
-  const rpc=supabase as unknown as RpcClient
   const mentee=role==='mentee'
   const english=language?language==='en':role!=='admin'
   const copy=(englishCopy:string,indonesian:string)=>english?englishCopy:indonesian
@@ -74,7 +71,7 @@ export function MentoringSessionPreferences({
   const[focusChoice,setFocusChoice]=useState('')
   const[customFocus,setCustomFocus]=useState('')
   const[topic,setTopic]=useState('')
-  const[materials,setMaterials]=useState<string[]>([])
+  const[materials,setMaterials]=useState<SupportingMaterialEntry[]>([])
   const[notes,setNotes]=useState('')
   const[busy,setBusy]=useState(false)
   const[message,setMessage]=useState('')
@@ -84,6 +81,8 @@ export function MentoringSessionPreferences({
 
   const readOnly=role==='mentor'
   const closed=data?.status==='completed'||data?.status==='cancelled'
+  const pastScheduled=data?.status==='scheduled'&&Boolean(data.scheduledStartAt&&Date.parse(data.scheduledStartAt)<=Date.now())
+  const editUnavailable=closed||pastScheduled
 
   const hydrate=useCallback((next:Preference)=>{
     setData(next)
@@ -92,7 +91,7 @@ export function MentoringSessionPreferences({
     setFocusChoice(focusId??(custom?'custom':''))
     setCustomFocus(custom??'')
     setTopic((role==='mentee'?next.requestedTopic:next.topic)??'')
-    setMaterials(next.supportingMaterials??[])
+    setMaterials(readSupportingMaterials(next.supportingMaterialEntries,next.supportingMaterials))
     setNotes(next.mentorNotes??'')
   },[role])
 
@@ -101,7 +100,7 @@ export function MentoringSessionPreferences({
     setLoadError(false)
     try {
       const[result,catalog]=await Promise.all([
-        rpc.rpc<Preference>('get_mentoring_session_preferences',{p_kind:kind,p_session_id:sessionId}),
+        supabase.rpc('get_mentoring_session_preferences',{p_kind:kind,p_session_id:sessionId}),
         supabase.from('private_mentoring_session_focuses').select('id,name').eq('is_active',true).order('sort_order'),
       ])
       if(sequence!==loadSequence.current)return
@@ -111,7 +110,7 @@ export function MentoringSessionPreferences({
     } catch {
       if(sequence===loadSequence.current)setLoadError(true)
     }
-  },[hydrate,kind,rpc,sessionId,supabase])
+  },[hydrate,kind,sessionId,supabase])
 
   useEffect(()=>{void load();return()=>{loadSequence.current+=1}},[load])
   useEffect(()=>{setEditing(false);setMessage('')},[sessionId])
@@ -120,25 +119,28 @@ export function MentoringSessionPreferences({
   useEffect(()=>{
     if(editRequestKey===lastEditRequest.current)return
     lastEditRequest.current=editRequestKey
-    if(!readOnly&&!closed)setEditing(true)
-  },[closed,editRequestKey,readOnly])
+    if(!readOnly&&!editUnavailable)setEditing(true)
+  },[editUnavailable,editRequestKey,readOnly])
 
   async function save({handOff=false}:{handOff?:boolean}={}){
-    if(busy)return
+    if(busy||readOnly||editUnavailable)return
+    const entries=handOff?[]:materials.map(item=>({...item,value:item.value.trim()})).filter(item=>item.category==='additional'||Boolean(item.value))
+    const materialError=validateSupportingMaterials(entries)
+    if(materialError){setMessage(english?materialError:'Periksa materi: maksimal 20 item, tanpa duplikat atau isian kosong, dan gunakan tautan http:// atau https://.');return}
     setBusy(true)
     setMessage('')
     const payload=handOff
-      ?{p_focus_id:null,p_custom_focus:null,p_topic:null,p_supporting_materials:[],p_mentor_notes:null}
+      ?{p_focus_id:null,p_custom_focus:null,p_topic:null,p_supporting_material_entries:[],p_mentor_notes:null}
       :{
         p_focus_id:focusChoice&&focusChoice!=='custom'?focusChoice:null,
         p_custom_focus:focusChoice==='custom'?customFocus.trim()||null:null,
         p_topic:topic.trim()||null,
-        p_supporting_materials:materials.map(item=>item.trim()).filter(Boolean),
+        p_supporting_material_entries:entries,
         p_mentor_notes:role==='admin'?notes.trim()||null:null,
       }
     let result:{data:Preference|null;error:{message:string}|null}
     try {
-      result=await rpc.rpc<Preference>('save_mentoring_session_preferences',{p_kind:kind,p_session_id:sessionId,...payload})
+      result=await supabase.rpc('save_mentoring_session_preferences_v2',{p_kind:kind,p_session_id:sessionId,...payload})
     } catch {
       setBusy(false)
       setMessage(copy('Unable to save session preferences. Please try again.','Preferensi sesi belum dapat disimpan.'))
@@ -156,7 +158,17 @@ export function MentoringSessionPreferences({
   }
 
   function patchMaterial(index:number,value:string){
-    setMaterials(current=>current.map((item,itemIndex)=>itemIndex===index?value:item))
+    setMaterials(current=>current.map((item,itemIndex)=>itemIndex===index?supportingMaterialInput(value,'additional'):item))
+  }
+
+  function patchPrimaryMaterial(category:SupportingMaterialCategory,value:string){
+    setMaterials(current=>{
+      const index=current.findIndex(item=>item.category===category)
+      if(!value)return current.filter(item=>item.category!==category)
+      const next=supportingMaterialInput(value,category)
+      if(index<0)return current.length<MAX_SUPPORTING_MATERIALS?[...current,next]:current
+      return current.map((item,itemIndex)=>itemIndex===index?next:item)
+    })
   }
 
   const finalFocus=data?.focusName||data?.customFocus||null
@@ -165,20 +177,26 @@ export function MentoringSessionPreferences({
   const cardClass='mentoring-preference-card'+(mentee?' '+styles.preferences:'')
   if(!data||data.sessionId!==sessionId)return <section className={cardClass} aria-busy={!loadError}><p className="muted" role={loadError?'alert':'status'}>{loadError?copy('Unable to load session preferences.','Preferensi sesi belum dapat dimuat.'):copy('Loading session preferences…','Memuat preferensi sesi…')}</p>{loadError?<button className="button button-outline button-compact" type="button" onClick={()=>void load()}>{copy('Try again','Coba lagi')}</button>:null}</section>
 
-  if(!editing||closed)return <section className={cardClass}>
+  const savedMaterials=readSupportingMaterials(data.supportingMaterialEntries,data.supportingMaterials)
+  if(!editing||editUnavailable)return <section className={cardClass}>
     {title?<div className="mentoring-preference-section-title"><h4>{title}</h4></div>:null}
     <div className="mentoring-preference-card__head">
       <div><span>{copy('Session focus (optional)','Fokus sesi (opsional)')}</span><strong>{finalFocus||requestedFocus||copy('Not selected','Belum ditentukan')}</strong></div>
-      {!readOnly&&!closed&&!hideEditButton?<button className="button button-outline button-compact" type="button" onClick={()=>setEditing(true)}><Pencil aria-hidden="true"/>{copy('Edit preferences','Edit preferensi')}</button>:null}
+      {!readOnly&&!editUnavailable&&!hideEditButton?<button className="button button-outline button-compact" type="button" onClick={()=>setEditing(true)}><Pencil aria-hidden="true"/>{copy('Edit preferences','Edit preferensi')}</button>:null}
     </div>
     {showCompetitionContext?<MentoringCompetitionEditor confirmDiscard={role==='admin'} key={data.parentId} kind={kind} parentId={data.parentId} readOnly compact language={english?'en':'id'}/>:null}
     <div className="mentoring-preference-grid">
       <div><span>{copy('Topic / scope (optional)','Topik / scope (opsional)')}</span><strong>{data.topic||data.requestedTopic||copy('Not provided','Belum ditentukan')}</strong></div>
-      <div><span>{copy('Supporting files (optional)','File pendukung (opsional)')}</span>{data.supportingMaterials.length?<ul className="mentoring-material-list">{data.supportingMaterials.map((item,index)=><li key={item+'-'+index}>{isUrl(item)?<a href={item} target="_blank" rel="noopener noreferrer">{copy('Open file','Buka file')} <ExternalLink aria-hidden="true"/></a>:item}</li>)}</ul>:<strong>{copy('No files added','Belum ada')}</strong>}</div>
+      <div className={materialStyles.summary}><dl className={materialStyles.categories}>{(['guidebook','pitch_deck','additional'] as const).map(category=>{
+        const items=savedMaterials.filter(item=>item.category===category)
+        const label=category==='guidebook'?'Guidebook':category==='pitch_deck'?'Pitch Deck':copy('Additional Materials','Materi Tambahan')
+        return <div key={category}><dt>{label}</dt><dd>{items.length?<ul className="mentoring-material-list">{items.map((item,index)=><li key={category+'-'+index}><MaterialReference item={item}/></li>)}</ul>:copy('Not provided','Belum ditambahkan')}</dd></div>
+      })}</dl></div>
     </div>
     {data.mentorNotes?<div className="mentoring-session-note"><span>{copy('Mentor notes','Catatan untuk mentor')}</span><p>{data.mentorNotes}</p></div>:null}
     {showReviewStatus?<div className="mentoring-preference-review"><span>{copy('Review status','Status review')}</span><span className={`ops-status ops-status--${data.topicStatus==='confirmed'?'positive':data.topicStatus==='pending_review'?'warning':'neutral'}`}>{data.topicStatus==='confirmed'?<Check aria-hidden="true" size={13}/>:<Clock3 aria-hidden="true" size={13}/>}<strong>{mentee?menteeReviewStatus(data.topicStatus):reviewLabel(data.topicStatus,english?'en':'id')}</strong></span></div>:null}
     {closed?<small className="muted">{copy('This session is closed. Preferences cannot be edited.','Sesi yang sudah selesai atau dibatalkan disimpan sebagai riwayat dan tidak dapat diubah.')}</small>:null}
+    {pastScheduled?<small className="muted">{copy('Preferences can only be changed before the scheduled session.','Preferensi hanya dapat diubah sebelum jadwal sesi dimulai.')}</small>:null}
     {role==='admin'&&auditMode==='request-only'?<details className="mentoring-audit-details"><summary>{copy('Initial request','Permintaan awal')}</summary>{requestedFocus||data.requestedTopic?<dl><div><dt>{copy('Requested focus','Fokus yang diajukan')}</dt><dd>{requestedFocus||copy('None','Tidak ada')}</dd></div><div><dt>{copy('Requested topic / scope','Topik / scope yang diajukan')}</dt><dd>{data.requestedTopic||copy('None','Tidak ada')}</dd></div></dl>:<p className="muted">{copy('No initial preferences submitted.','Tidak ada preferensi awal yang diajukan.')}</p>}</details>:null}
     {role==='admin'&&auditMode==='full'?<details className="mentoring-audit-details"><summary>{copy('Initial request & session details','Permintaan awal & detail teknis')}</summary><dl><div><dt>{copy('Requested focus','Fokus yang diajukan')}</dt><dd>{requestedFocus||copy('None','Tidak ada')}</dd></div><div><dt>{copy('Requested topic','Topik yang diajukan')}</dt><dd>{data.requestedTopic||copy('None','Tidak ada')}</dd></div><div><dt>{copy('Review status','Status review')}</dt><dd>{reviewLabel(data.topicStatus,english?'en':'id')}</dd></div><div><dt>Session ID</dt><dd><code>{data.sessionId}</code></dd></div><div><dt>{copy('Mentor notes','Catatan mentor')}</dt><dd>{data.mentorNotes||copy('None','Tidak ada')}</dd></div></dl></details>:null}
     {message?<small role="status">{message}</small>:null}
@@ -186,7 +204,7 @@ export function MentoringSessionPreferences({
 
   const initialFocus=mentee?data.requestedFocusId:data.focusId
   const initialCustom=mentee?data.requestedCustomFocus:data.customFocus
-  const dirty=focusChoice!==(initialFocus??(initialCustom?'custom':''))||customFocus!==(initialCustom??'')||topic!==((mentee?data.requestedTopic:data.topic)??'')||JSON.stringify(materials)!==JSON.stringify(data.supportingMaterials??[])||notes!==(data.mentorNotes??'')
+  const dirty=focusChoice!==(initialFocus??(initialCustom?'custom':''))||customFocus!==(initialCustom??'')||topic!==((mentee?data.requestedTopic:data.topic)??'')||JSON.stringify(materials)!==JSON.stringify(savedMaterials)||notes!==(data.mentorNotes??'')
   function cancelEdit(){if(busy)return;if(role==='admin'&&dirty&&!window.confirm(copy('Discard unsaved session preferences?','Batalkan perubahan preferensi sesi?')))return;hydrate(data!);setEditing(false);setMessage('')}
   return <section className={cardClass+' is-editing'} data-unsaved={dirty?'true':undefined} data-saving={busy?'true':undefined}>
     {title?<div className="mentoring-preference-section-title"><h4>{title}</h4></div>:null}
@@ -197,7 +215,17 @@ export function MentoringSessionPreferences({
         <label className="ops-field"><span>{copy('Topic / scope (optional)','Topik / scope (opsional)')}</span><textarea rows={3} value={topic} maxLength={3000} onChange={event=>setTopic(event.target.value)} placeholder={copy('Session topic or goal','Topik atau tujuan sesi')}/></label>
         {role==='admin'?<label className="ops-field"><span>{copy('Mentor notes (optional)','Catatan untuk mentor (opsional)')}</span><textarea rows={3} maxLength={3000} value={notes} onChange={event=>setNotes(event.target.value)} placeholder={copy('Additional context for the mentor','Konteks tambahan untuk mentor')}/></label>:null}
       </div>
-      <section className="mentoring-material-editor" aria-label={copy('Supporting files (optional)','File pendukung (opsional)')}><div className="mentoring-material-editor__head"><h5>{copy('Supporting files (optional)','File pendukung (opsional)')}</h5><p>{copy('Document links or notes · up to 20 files','Link dokumen, deck, atau materi sesi. Maksimal 20 file.')}</p></div>{materials.map((item,index)=><div className="mentoring-material-row" key={index}><input aria-label={copy('Supporting file ','File pendukung ')+(index+1)} value={item} maxLength={1000} onChange={event=>patchMaterial(index,event.target.value)} placeholder={copy('https://… or a material note','https://… atau catatan materi')}/><button type="button" className="ops-icon-button" onClick={()=>setMaterials(current=>current.filter((_,itemIndex)=>itemIndex!==index))} aria-label={copy('Remove supporting file ','Hapus file pendukung ')+(index+1)}><Trash2 aria-hidden="true"/></button></div>)}<button className="button button-outline button-compact" type="button" disabled={materials.length>=20} onClick={()=>setMaterials(current=>[...current,''])}><Plus aria-hidden="true"/>{copy('Add file','Tambah file pendukung')}</button></section>
+      <section className={materialStyles.editor} aria-label={copy('Supporting materials','Materi pendukung')}>
+        <div className={materialStyles.primaryLinks}>{(['guidebook','pitch_deck'] as const).map(category=>{
+          const item=materials.find(entry=>entry.category===category)
+          return <label className="ops-field" key={category}><span>{category==='guidebook'?'Guidebook':'Pitch Deck'}</span><input type="url" inputMode="url" value={item?.value??''} maxLength={MAX_SUPPORTING_MATERIAL_LENGTH} disabled={!item&&materials.length>=MAX_SUPPORTING_MATERIALS} onChange={event=>patchPrimaryMaterial(category,event.target.value)} placeholder="https://…"/></label>
+        })}</div>
+        <div className={materialStyles.additional}>
+          <div className={materialStyles.additionalHeader}><h5>{copy('Additional Materials','Materi Tambahan')}</h5><small>{materials.length}/{MAX_SUPPORTING_MATERIALS} {copy('materials','materi')}</small></div>
+          {materials.map((item,index)=>item.category==='additional'?<div className={materialStyles.materialRow} key={index}><label className="ops-field"><span className="sr-only">{copy('Additional material ','Materi tambahan ')+(index+1)}</span><input value={item.value} maxLength={MAX_SUPPORTING_MATERIAL_LENGTH} onChange={event=>patchMaterial(index,event.target.value)} placeholder={copy('https://… or a short note','https://… atau catatan singkat')}/></label><button type="button" className="ops-icon-button" onClick={()=>setMaterials(current=>current.filter((_,itemIndex)=>itemIndex!==index))} aria-label={copy('Remove additional material ','Hapus materi tambahan ')+(index+1)}><Trash2 aria-hidden="true"/></button></div>:null)}
+          <button className={'button button-outline button-compact '+materialStyles.addButton} type="button" disabled={materials.length>=MAX_SUPPORTING_MATERIALS} onClick={()=>setMaterials(current=>[...current,{category:'additional',kind:'note',value:''}])}><Plus aria-hidden="true"/>{copy('Add Material','Tambah Materi')}</button>
+        </div>
+      </section>
       <div className="button-row"><button className="button button-primary" type="button" disabled={busy} onClick={()=>void save()}>{role==='admin'?<Save aria-hidden="true"/>:<Send aria-hidden="true"/>}{busy?copy('Saving…','Menyimpan…'):role==='admin'?copy('Save & mark reviewed','Simpan & tandai ditinjau'):copy('Submit preferences','Kirim preferensi')}</button>{mentee?<button className="button button-outline" type="button" disabled={busy} onClick={()=>void save({handOff:true})}><UserRound aria-hidden="true"/>Let admin decide</button>:null}<button className="button button-outline" type="button" disabled={busy} onClick={cancelEdit}><X aria-hidden="true"/>{copy('Cancel','Batal')}</button></div>
       {message?<small className="form-error" role="alert">{message}</small>:null}
     </fieldset>

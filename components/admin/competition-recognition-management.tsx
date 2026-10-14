@@ -5,6 +5,7 @@ import {
   ArrowUp,
   CircleAlert,
   Plus,
+  Pencil,
   RefreshCw,
   Trash2,
   Trophy,
@@ -395,7 +396,7 @@ export function CompetitionRecognitionManagement() {
                     </td>
                     <td className={styles.nameCell} data-label="Competition">
                       <strong>{recognition.competition_name}</strong>
-                      <small>{recognition.logo_path}</small>
+                      <small title={recognition.logo_path}>{recognition.logo_path.split('/').at(-1)}</small>
                     </td>
                     <td className={styles.orderCell} data-label="Position">
                       <span className={styles.orderControls}>
@@ -448,7 +449,7 @@ export function CompetitionRecognitionManagement() {
                           disabled={busy}
                           data-testid={'competition-recognition-' + recognition.id + '-edit-button'}
                         >
-                          Manage
+                          <Pencil aria-hidden="true" size={15} /> Manage
                         </button>
                         <button
                           type="button"

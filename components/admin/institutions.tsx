@@ -1,6 +1,6 @@
 'use client'
 
-import { Archive, Check, Copy, Pencil, Plus, Search, X, XCircle } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { SortableTableHeader, type SortDirection } from '@/components/admin/sortable-table-header'
@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { ApprovalStatus, Institution, InstitutionType } from '@/lib/supabase/database.types'
 
 import dataStyles from './data-management.module.css'
+import { InstitutionRowActions } from './institution-row-actions'
 
 const types: { value: InstitutionType; label: string }[] = [{ value: 'university', label: 'University' }, { value: 'sma', label: 'High school (SMA)' }, { value: 'smk', label: 'Vocational high school (SMK)' }]
 const statuses: { value: ApprovalStatus; label: string }[] = [
@@ -42,8 +43,10 @@ export function InstitutionManagement() {
   const editorDialogRef = useRef<HTMLDialogElement>(null)
   const initialFormRef = useRef('')
   const mergeDialogRef = useRef<HTMLDialogElement>(null)
+  const loadVersion = useRef(0)
 
   const load = useCallback(async () => {
+    const version = ++loadVersion.current
     setLoading(true)
     setError('')
     try {
@@ -58,6 +61,7 @@ export function InstitutionManagement() {
         request = request.order('created_at', { ascending: false }).order('id')
       }
       const { data, error: loadError, count } = await request.range(page * pageSize, page * pageSize + pageSize - 1)
+      if (version !== loadVersion.current) return
       if (loadError) throw loadError
       const nextTotal = Number(count ?? 0)
       const lastPage = Math.max(0, Math.ceil(nextTotal / pageSize) - 1)
@@ -65,13 +69,13 @@ export function InstitutionManagement() {
       setRecords(data || [])
       setTotal(nextTotal)
     } catch (caught) {
-      setError(formError(caught, 'Unable to load institutions.'))
+      if (version === loadVersion.current) setError(formError(caught, 'Unable to load institutions.'))
     } finally {
-      setLoading(false)
+      if (version === loadVersion.current) setLoading(false)
     }
   }, [page, pageSize, query, sortDirection, sortKey, status, type])
 
-  useEffect(() => { const timer = setTimeout(() => { void load() }, 250); return () => clearTimeout(timer) }, [load])
+  useEffect(() => { const timer = setTimeout(() => { void load() }, 250); return () => { clearTimeout(timer); loadVersion.current += 1 } }, [load])
   useEffect(() => {
     const dialog = editorDialogRef.current
     if (!dialog) return
@@ -227,17 +231,12 @@ export function InstitutionManagement() {
           <colgroup><col /><col className={dataStyles.institutionTypeColumn} /><col className={dataStyles.institutionLocationColumn} /><col className={dataStyles.institutionStatusColumn} /><col className={dataStyles.institutionSourceColumn} /><col className={dataStyles.institutionActionColumn} /></colgroup>
           <thead><tr><SortableTableHeader label="Institution" sortKey="name" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Type" sortKey="type" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Location" sortKey="location" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><SortableTableHeader label="Source" sortKey="source" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort} /><th className={dataStyles.masterActionCell}>Actions</th></tr></thead>
           <tbody>{loading ? <tr><td colSpan={6}><div className={dataStyles.empty}>Loading institutions…</div></td></tr> : records.length === 0 ? <tr><td colSpan={6}><div className={dataStyles.empty}>No institutions found.</div></td></tr> : records.map(record => <tr key={record.id}>
-            <td><span className={dataStyles.primaryName}>{record.name}</span></td>
-            <td>{types.find(item => item.value === record.type)?.label}</td>
-            <td>{[record.city, record.province].filter(Boolean).join(', ') || '—'}</td>
-            <td><span className={`${dataStyles.badge} ${statusClass(record.approval_status)}`}>{statusLabel(record.approval_status)}</span></td>
-            <td>{record.source === 'admin_manual' ? 'Added by admin' : record.source === 'user_submitted' ? 'User submitted' : record.source === 'import' ? 'Imported' : record.source === 'bima_kemdiktisaintek' ? 'BIMA Kemdiktisaintek' : record.source === 'school_pdf' ? 'School directory' : record.source.replaceAll('_', ' ')}</td>
-            <td className={dataStyles.masterActionCell}><div className={dataStyles.masterActionGroup}>
-              <button type="button" className={`button button-outline ${dataStyles.actionButton}`} disabled={busy} onClick={() => openEditor(record)}><Pencil aria-hidden="true" size={14} />Edit</button>
-              {record.approval_status === 'pending' ? <><button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.positiveAction}`} disabled={busy} onClick={() => void moderate(record, 'approved')}><Check aria-hidden="true" size={14} />Approve</button><button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.dangerAction}`} disabled={busy} onClick={() => void moderate(record, 'rejected')}><XCircle aria-hidden="true" size={14} />Reject</button></> : null}
-              {record.approval_status !== 'archived' ? <button type="button" className={`button button-outline ${dataStyles.actionButton} ${dataStyles.warningAction}`} disabled={busy} onClick={() => void moderate(record, 'archived')}><Archive aria-hidden="true" size={14} />Archive</button> : null}
-              <button type="button" className={`button button-outline ${dataStyles.actionButton}`} disabled={busy} onClick={() => openMerge(record)}><Copy aria-hidden="true" size={14} />Merge duplicate</button>
-            </div></td>
+            <td data-label="Institution"><span className={dataStyles.primaryName}>{record.name}</span></td>
+            <td data-label="Type">{types.find(item => item.value === record.type)?.label}</td>
+            <td data-label="Location">{[record.city, record.province].filter(Boolean).join(', ') || '—'}</td>
+            <td data-label="Status"><span className={`${dataStyles.badge} ${statusClass(record.approval_status)}`}>{statusLabel(record.approval_status)}</span></td>
+            <td data-label="Source">{record.source === 'admin_manual' ? 'Added by admin' : record.source === 'user_submitted' ? 'User submitted' : record.source === 'import' ? 'Imported' : record.source === 'bima_kemdiktisaintek' ? 'BIMA Kemdiktisaintek' : record.source === 'school_pdf' ? 'School directory' : record.source.replaceAll('_', ' ')}</td>
+            <td data-label="Actions" className={dataStyles.masterActionCell}><InstitutionRowActions name={record.name} status={record.approval_status} busy={busy} onEdit={() => openEditor(record)} onApprove={() => void moderate(record, 'approved')} onReject={() => void moderate(record, 'rejected')} onArchive={() => void moderate(record, 'archived')} onMerge={() => openMerge(record)} /></td>
           </tr>)}</tbody>
         </table>
       </div>

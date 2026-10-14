@@ -8,6 +8,7 @@ import { formatRupiah } from '@/lib/commerce/money'
 import { commerceItemLabel, commerceItemName, commerceOrderStatus, type CommerceLanguage } from '@/lib/commerce/presentation'
 import type { OrderWithItems } from '@/lib/commerce/types'
 import styles from './user-order-history.module.css'
+import { PaymentReceiptActions } from './payment-receipt-actions'
 
 type SortMode='newest'|'oldest'|'total_desc'|'total_asc'
 
@@ -110,6 +111,7 @@ export function UserOrderHistory({
         <div className="ops-detail-grid"><div><span>{text('Order status', 'Status order')}</span><strong>{statusLabel(selected.status)}</strong></div><div><span>{text('Payment status', 'Status pembayaran')}</span><strong>{selected.status === 'paid' ? text('Verified', 'Terverifikasi') : statusLabel(selected.status)}</strong></div><div><span>{text('Item count', 'Jumlah item')}</span><strong>{selected.items.length}</strong></div><div><span>Total</span><strong>{formatRupiah(selected.total_amount)}</strong></div></div>
         <section className="ops-dialog__section"><h3>{text('Order items', 'Item pesanan')}</h3>{selected.items.map(item => <div className="ops-line-item" key={item.id}><div><strong>{commerceItemName(item.name_snapshot, language)}</strong><span>{kindLabel(item.item_kind_snapshot)} · Qty 1</span></div><div><span>{formatRupiah(item.unit_price_amount)} / item</span><strong>{formatRupiah(item.unit_price_amount)}</strong></div></div>)}</section>
         <div className="ops-total-row"><span>Total</span><strong>{formatRupiah(selected.total_amount)}</strong></div>
+        {selected.status === 'paid' ? <PaymentReceiptActions key={selected.id} orderId={selected.id} language={language} /> : null}
         {selected.status === 'pending_payment' ? <a className="button button-primary" href={`/checkout?order=${encodeURIComponent(selected.id)}`}>{text('Continue payment', 'Lanjutkan Pembayaran')} <ArrowRight aria-hidden="true" size={16} /></a> : null}
       </div> : null}
     </dialog>

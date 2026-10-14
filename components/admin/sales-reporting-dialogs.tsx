@@ -6,6 +6,7 @@ import { formatRupiah } from '@/lib/commerce/money'
 import { SALES_EXPORT_DEFAULT_COLUMNS, SALES_EXPORT_FIELDS } from '@/lib/admin/sales-export'
 import { displayDate, itemKindLabel, paymentMethodLabel, statusLabel, type SalesComparison, type SalesScope, type SalesTransaction, type SalesTransactionFilters } from '@/lib/admin/sales-reporting'
 import styles from './sales-reporting.module.css'
+import { PaymentReceiptActions } from '@/components/commerce/payment-receipt-actions'
 
 let scrollLocks = 0
 let previousBodyOverflow = ''
@@ -102,6 +103,7 @@ export function SalesOrderDialog({ order, onClose }: { order: SalesTransaction |
             </dl>
           </details>
         </section>
+        {order.status === 'paid' ? <PaymentReceiptActions key={order.order_id} orderId={order.order_id} /> : null}
       </div>
       <footer className={styles.dialogFooter}><span>Order net total</span><strong>{formatRupiah(order.net)}</strong></footer>
     </div> : null}

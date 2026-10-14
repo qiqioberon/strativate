@@ -1,17 +1,23 @@
 'use client'
 
 import { Pencil, Plus, Save, Trash2, X } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { adminFormError as formError } from '@/lib/auth/errors'
 import { formatRupiah } from '@/lib/commerce/money'
 import { createClient } from '@/lib/supabase/client'
 import dataStyles from './data-management.module.css'
-import type { DigitalProduct, DiscountCategory, DiscountCode, DiscountScope, DiscountType } from '@/lib/supabase/database.types'
+import { DiscountCodeAnalytics } from './discount-code-analytics'
+import analyticsStyles from './discount-code-analytics.module.css'
+import type { DigitalProduct, DiscountCategory, DiscountCode, DiscountScope, DiscountType, TrustedPartner } from '@/lib/supabase/database.types'
 
 type Draft = {
   code: string
   description: string
+  campaignName: string
+  collaborationLabel: string
+  trustedPartnerId: string
   discountType: DiscountType
   discountValue: number
   minimumSubtotal: number
@@ -25,7 +31,7 @@ type Draft = {
 }
 
 const emptyDraft: Draft = {
-  code: '', description: '', discountType: 'percentage', discountValue: 10, minimumSubtotal: 0,
+  code: '', description: '', campaignName: '', collaborationLabel: '', trustedPartnerId: '', discountType: 'percentage', discountValue: 10, minimumSubtotal: 0,
   startsAt: '', endsAt: '', maxRedemptions: '', scope: 'digital_products',
   categories: ['digital_products'], selectedProductIds: [], isActive: true,
 }
@@ -59,11 +65,19 @@ function scopeSummary(item: DiscountCode, categories: DiscountCategory[]) {
 
 export function DiscountCodeManagement() {
   const supabase = useMemo(() => createClient(), [])
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const view = searchParams.get('discountView') === 'analytics' ? 'analytics' : 'codes'
   const dialogRef = useRef<HTMLDialogElement>(null)
   const initialDraftRef = useRef(JSON.stringify(emptyDraft))
+  const mounted = useRef(true)
+  const loadSequence = useRef(0)
   const [items, setItems] = useState<DiscountCode[]>([])
   const [categoriesByCode, setCategoriesByCode] = useState<Record<string, DiscountCategory[]>>({})
   const [products, setProducts] = useState<DigitalProduct[]>([])
+  const [partners, setPartners] = useState<TrustedPartner[]>([])
+  const [partnerError, setPartnerError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [loading, setLoading] = useState(true)
@@ -71,31 +85,36 @@ export function DiscountCodeManagement() {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
+    const sequence = ++loadSequence.current
     setLoading(true)
     setError('')
     try {
-      const [codeResult, categoryResult, productResult] = await Promise.all([
+      const [codeResult, categoryResult, productResult, partnerResult] = await Promise.all([
         supabase.from('commerce_discount_codes').select('*').order('created_at', { ascending: false }),
         supabase.from('commerce_discount_code_categories').select('*'),
         supabase.from('digital_products').select('*').order('name'),
+        supabase.rpc('admin_list_trusted_partners'),
       ])
+      if (!mounted.current || sequence !== loadSequence.current) return
       const loadError = codeResult.error ?? categoryResult.error ?? productResult.error
       if (loadError) throw loadError
       setItems(codeResult.data ?? [])
       setProducts(productResult.data ?? [])
+      if (partnerResult.error) setPartnerError('Trusted Partner choices are unavailable. Existing relationships are retained; refresh to try again.')
+      else { setPartners(partnerResult.data ?? []); setPartnerError('') }
       const grouped: Record<string, DiscountCategory[]> = {}
       for (const mapping of categoryResult.data ?? []) {
         grouped[mapping.discount_code_id] = [...(grouped[mapping.discount_code_id] ?? []), mapping.category]
       }
       setCategoriesByCode(grouped)
     } catch (caught) {
-      setError(formError(caught, 'Unable to load discount codes. Check your connection and try again.'))
+      if (mounted.current && sequence === loadSequence.current) setError(formError(caught, 'Unable to load discount codes. Check your connection and try again.'))
     } finally {
-      setLoading(false)
+      if (mounted.current && sequence === loadSequence.current) setLoading(false)
     }
   }, [supabase])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { mounted.current = true; void load(); return () => { mounted.current = false; loadSequence.current++ } }, [load])
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -118,9 +137,11 @@ export function DiscountCodeManagement() {
       const mappingResult = categories.includes('digital_products') && item.scope === 'selected_digital_products'
         ? await supabase.from('commerce_discount_code_products').select('product_id').eq('discount_code_id', item.id)
         : { data: [] as { product_id: string }[], error: null }
+      if (!mounted.current) return
       if (mappingResult.error) throw mappingResult.error
       const nextDraft: Draft = {
-        code: item.code, description: item.description ?? '', discountType: item.discount_type,
+        code: item.code, description: item.description ?? '', campaignName: item.campaign_name ?? '',
+        collaborationLabel: item.collaboration_label ?? '', trustedPartnerId: item.trusted_partner_id ?? '', discountType: item.discount_type,
         discountValue: item.discount_value, minimumSubtotal: item.minimum_subtotal_amount,
         startsAt: toLocalDateInput(item.starts_at), endsAt: toLocalDateInput(item.ends_at),
         maxRedemptions: item.max_redemptions?.toString() ?? '', scope: item.scope, categories,
@@ -130,9 +151,9 @@ export function DiscountCodeManagement() {
       setDraft(nextDraft)
       setEditingId(item.id)
     } catch (caught) {
-      setError(formError(caught, 'Unable to load this discount code’s eligible products.'))
+      if (mounted.current) setError(formError(caught, 'Unable to load this discount code’s eligible products.'))
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
@@ -175,7 +196,7 @@ export function DiscountCodeManagement() {
     setBusy(true)
     setError('')
     try {
-      const { error: saveError } = await supabase.rpc('admin_save_discount_code', {
+      const { error: saveError } = await supabase.rpc('admin_save_discount_code_with_metadata', {
         p_discount_code_id: editingId === 'new' ? null : editingId,
         p_code: draft.code.trim().toUpperCase(), p_description: draft.description,
         p_discount_type: draft.discountType, p_discount_value: draft.discountValue,
@@ -185,16 +206,20 @@ export function DiscountCodeManagement() {
         p_max_redemptions: draft.maxRedemptions ? Number(draft.maxRedemptions) : null,
         p_scope: draft.scope, p_is_active: draft.isActive, p_categories: draft.categories,
         p_product_ids: draft.categories.includes('digital_products') && draft.scope === 'selected_digital_products' ? draft.selectedProductIds : [],
+        p_campaign_name: draft.campaignName.trim() || null,
+        p_collaboration_label: draft.collaborationLabel.trim() || null,
+        p_trusted_partner_id: draft.trustedPartnerId || null,
       })
 
+      if (!mounted.current) return
       if (saveError) throw saveError
       setEditingId(null)
       setDraft(emptyDraft)
       await load()
     } catch (caught) {
-      setError(formError(caught, 'Unable to save the discount code. Check its value and dates.'))
+      if (mounted.current) setError(formError(caught, 'Unable to save the discount code. Check its value and dates.'))
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
@@ -204,19 +229,32 @@ export function DiscountCodeManagement() {
     setError('')
     try {
       const result = await supabase.from('commerce_discount_codes').delete().eq('id', item.id)
+      if (!mounted.current) return
       if (result.error) throw result.error
       await load()
     } catch (caught) {
-      setError(formError(caught, 'Unable to delete the discount code.'))
+      if (mounted.current) setError(formError(caught, 'Unable to delete the discount code.'))
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
   const hasDigitalProducts = draft.categories.includes('digital_products')
+  function changeView(nextView: 'codes' | 'analytics') {
+    if (busy || editingId) return
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('reportView')
+    params.set('discountView', nextView)
+    router.replace(`${pathname}?${params}`, { scroll: false })
+  }
 
   return <section className="discount-admin" data-testid="admin-discount-code-section">
     <div className="role-page-title"><h2>Discount Codes</h2></div>
+    <div className={analyticsStyles.switcher} role="group" aria-label="Discount code workspace">
+      <button type="button" aria-pressed={view === 'codes'} onClick={() => changeView('codes')} disabled={busy || Boolean(editingId)}>Manage Codes</button>
+      <button type="button" aria-pressed={view === 'analytics'} onClick={() => changeView('analytics')} disabled={busy || Boolean(editingId)}>Analytics</button>
+    </div>
+    {view === 'analytics' ? <DiscountCodeAnalytics codes={items} /> : <>
     <div className="button-row"><button className="button button-primary" type="button" onClick={() => void edit()} disabled={busy}><Plus aria-hidden="true" size={16}/> New code</button></div>
     {!editingId && error ? <><p className="form-error" role="alert">{error}</p><button type="button" className="button button-outline button-compact" disabled={busy || loading} onClick={() => void load()}>Refresh</button></> : null}
     {loading ? <p>Loading discount codes…</p> : <div className="discount-admin__list">{items.length ? items.map(item => {
@@ -230,6 +268,8 @@ export function DiscountCodeManagement() {
           </div>
           <h3>{item.code}</h3>
           {item.description ? <p className="discount-code-card__description">{item.description}</p> : null}
+          {item.campaign_name ? <p className="discount-code-card__description">Campaign: {item.campaign_name}</p> : null}
+          {item.trusted_partner_id || item.collaboration_label ? <p className="discount-code-card__description">Collaboration: {partners.find(partner => partner.id === item.trusted_partner_id)?.organization_name ?? item.collaboration_label ?? 'Recorded relationship; label unavailable'}</p> : null}
           <div className="discount-code-card__meta">
             <span><strong>{item.redemption_count}</strong> paid redemption{item.redemption_count === 1 ? '' : 's'}</span>
             <span>{scopeSummary(item, categories)}</span>
@@ -238,6 +278,7 @@ export function DiscountCodeManagement() {
         <div className="button-row discount-code-card__actions"><button className="button button-outline button-compact" type="button" onClick={() => void edit(item)} disabled={busy}><Pencil aria-hidden="true" size={14}/> Edit</button><button className="button button-danger button-compact" type="button" onClick={() => void remove(item)} disabled={busy}><Trash2 aria-hidden="true" size={14}/> Delete</button></div>
       </article>
     }) : <p>No discount codes yet.</p>}</div>}
+    </>}
 
     <dialog ref={dialogRef} className="discount-dialog" data-testid="discount-code-dialog" onClose={() => { if (!busy) setEditingId(null) }} onCancel={event => { event.preventDefault(); closeEditor() }} aria-labelledby="discount-code-heading">
       <form className="discount-dialog__form" onSubmit={save}><fieldset className={dataStyles.editableFields} disabled={busy}>
@@ -247,6 +288,13 @@ export function DiscountCodeManagement() {
         <div className="discount-dialog__section discount-dialog__grid">
           <label className="discount-field">Code<input required pattern="[A-Za-z0-9_-]{3,64}" placeholder="WELCOME30" value={draft.code} onChange={event => setDraft({ ...draft, code: event.target.value.toUpperCase() })}/></label>
           <label className="discount-field discount-field--wide">Description <span className="discount-field__optional">Optional</span><input placeholder="New customer promotion" value={draft.description} onChange={event => setDraft({ ...draft, description: event.target.value })}/><small>Optional internal description for this promotion.</small></label>
+        </div>
+
+        <div className="discount-dialog__section discount-dialog__grid">
+          <label className="discount-field">Campaign name <span className="discount-field__optional">Optional</span><input maxLength={200} value={draft.campaignName} onChange={event => setDraft({ ...draft, campaignName: event.target.value })} /><small>Internal current code metadata. Leave unknown campaign attribution empty.</small></label>
+          <label className="discount-field">Trusted Partner <span className="discount-field__optional">Optional</span><select value={draft.trustedPartnerId} onChange={event => setDraft({ ...draft, trustedPartnerId: event.target.value })}><option value="">No recorded partner relationship</option>{draft.trustedPartnerId && !partners.some(partner => partner.id === draft.trustedPartnerId) ? <option value={draft.trustedPartnerId}>Recorded relationship (label unavailable)</option> : null}{partners.map(partner => <option key={partner.id} value={partner.id}>{partner.organization_name}{partner.is_active ? '' : ' (inactive)'}</option>)}</select><small>Use an existing confirmed relationship when recorded. Customer institution is separate.</small></label>
+          <label className="discount-field discount-field--wide">Collaboration label <span className="discount-field__optional">Optional</span><input maxLength={200} value={draft.collaborationLabel} onChange={event => setDraft({ ...draft, collaborationLabel: event.target.value })} /><small>Ad-hoc internal label, or fallback when the linked partner is removed. A linked partner’s name takes priority.</small></label>
+          {partnerError ? <p className="discount-field--wide form-error" role="status">{partnerError}</p> : null}
         </div>
 
         <fieldset className="discount-dialog__section discount-dialog__fieldset">

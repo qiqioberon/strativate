@@ -1,0 +1,122 @@
+.summary {
+  min-width: 0;
+}
+
+.categories {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+}
+
+.categories > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.categories dt {
+  color: #806c63;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.categories dd {
+  min-width: 0;
+  margin: 0;
+  color: #30221d;
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+
+.categories a.reference {
+  display: inline;
+  color: #b84317;
+  overflow-wrap: anywhere;
+}
+
+.categories li > span {
+  color: inherit;
+  font: inherit;
+}
+
+.categories .reference svg {
+  display: inline;
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.editor {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e5d4ca;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.primaryLinks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.primaryLinks label,
+.additional,
+.materialRow label {
+  min-width: 0;
+}
+
+.additional {
+  display: grid;
+  gap: 8px;
+}
+
+.additionalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.additionalHeader h5 {
+  margin: 0;
+  color: #62554e;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.additionalHeader small {
+  color: #81756d;
+  font-size: .7rem;
+}
+
+.materialRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.materialRow button {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 1px;
+}
+
+.addButton {
+  justify-self: start;
+  max-width: 100%;
+}
+
+@media (max-width: 540px) {
+  .primaryLinks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

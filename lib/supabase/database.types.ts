@@ -1,4 +1,8 @@
 import type { LegacySalesReport, SalesComparisonMode, SalesReport, SalesTransaction, SalesTransactionPage } from '@/lib/admin/sales-reporting'
+import type { MentoringReportingFunctions } from '@/lib/admin/mentoring-reporting-rpc-types'
+import type { DiscountReport, DiscountUsagePage, DiscountExport, DiscountRpcFilters } from '@/lib/admin/discount-reporting'
+import type { MentoringSessionPreference } from '@/lib/mentoring/supporting-materials'
+import type { PaymentReceipt } from '@/lib/commerce/payment-receipt'
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 export type AppRole = "admin" | "mentor" | "mentee"
@@ -34,7 +38,7 @@ export type CartStatus = "active" | "converted"
 export type DiscountType = 'percentage'|'fixed'
 export type DiscountScope = 'digital_products'|'selected_digital_products'
 export type DiscountCategory = 'digital_products'|'private_mentoring'|'intensive_mentoring'
-export type DiscountCode = { id:string; code:string; description:string|null; discount_type:DiscountType; discount_value:number; minimum_subtotal_amount:number; starts_at:string|null; ends_at:string|null; max_redemptions:number|null; redemption_count:number; scope:DiscountScope; is_active:boolean; created_at:string; updated_at:string }
+export type DiscountCode = { id:string; code:string; description:string|null; campaign_name:string|null; collaboration_label:string|null; trusted_partner_id:string|null; discount_type:DiscountType; discount_value:number; minimum_subtotal_amount:number; starts_at:string|null; ends_at:string|null; max_redemptions:number|null; redemption_count:number; scope:DiscountScope; is_active:boolean; created_at:string; updated_at:string }
 export type Cart = { id:string; user_id:string; status:CartStatus; discount_code_id:string|null; discount_code_snapshot:string|null; discount_amount:number; created_at:string; updated_at:string }
 export type CartItem = { id:string; cart_id:string; commerce_item_id:string; created_at:string }
 export type CartItemView = { cart_id:string; cart_item_id:string; commerce_item_id:string; item_kind:string; name:string|null; slug:string|null; image_path:string|null; price_amount:number|null; reference_price_amount?:number|null; is_available:boolean; created_at:string }
@@ -66,7 +70,7 @@ export type CommerceCartLink = { id:string; mentee_id:string; token_hash:string;
 export type CommerceCartLinkItem = { cart_link_id:string; commerce_item_id:string; created_at:string }
 export type PrivateMentoringEnrollment = { id:string; mentee_id:string; order_item_id:string; package_id:string; purchased_sessions:number; learning_path_id:string|null; competition_category_id:string|null; competition_name?:string|null; competition_updated_at?:string|null; status:'active'|'completed'; created_at:string; updated_at:string }
 export type PrivateMentoringSessionStatus = 'awaiting_focus'|'awaiting_scheduling'|'scheduled'|'completed'|'cancelled'
-export type PrivateMentoringSession = { id:string; enrollment_id:string; session_number:number; session_focus_id:string|null; mentor_id:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; status:PrivateMentoringSessionStatus; created_at:string; updated_at:string }
+export type PrivateMentoringSession = { id:string; enrollment_id:string; session_number:number; session_focus_id:string|null; mentor_id:string|null; scheduled_start_at:string|null; scheduled_end_at:string|null; status:PrivateMentoringSessionStatus; supporting_materials:string[]; supporting_material_entries:Json|null; created_at:string; updated_at:string }
 export type MentoringZoomRoom = { id:string; name:string; meeting_url:string; is_active:boolean; sort_order:number; created_at:string; updated_at:string }
 export type MentoringZoomRoomAllocation = { id:string; zoom_room_id:string; private_session_id:string|null; intensive_session_id:string|null; starts_at:string; ends_at:string; released_at:string|null; created_at:string; updated_at:string }
 export type CartLinkMentee = { user_id:string; email:string; display_name:string|null }
@@ -134,7 +138,14 @@ export type Database = {
       operational_invalidation_versions: Table<OperationalInvalidationVersion>
     }
     Views: { [_ in never]: never }
-    Functions: {
+    Functions: MentoringReportingFunctions & {
+      get_payment_receipt: { Args:{p_order_id:string}; Returns:PaymentReceipt }
+      get_mentoring_session_preferences: { Args:{p_kind:'private'|'intensive';p_session_id:string}; Returns:MentoringSessionPreference }
+      save_mentoring_session_preferences_v2: { Args:{p_kind:'private'|'intensive';p_session_id:string;p_focus_id:string|null;p_custom_focus:string|null;p_topic:string|null;p_supporting_material_entries:Json;p_mentor_notes:string|null}; Returns:MentoringSessionPreference }
+      get_admin_discount_report: { Args:DiscountRpcFilters & {p_limit?:number;p_offset?:number}; Returns:DiscountReport }
+      list_admin_discount_usage: { Args:DiscountRpcFilters & {p_limit?:number;p_offset?:number}; Returns:DiscountUsagePage }
+      get_admin_discount_export: { Args:DiscountRpcFilters; Returns:DiscountExport }
+      admin_save_discount_code_with_metadata: { Args:{p_discount_code_id:string|null;p_code:string;p_description:string;p_discount_type:DiscountType;p_discount_value:number;p_minimum_subtotal_amount:number;p_starts_at:string|null;p_ends_at:string|null;p_max_redemptions:number|null;p_scope:DiscountScope;p_is_active:boolean;p_categories:DiscountCategory[];p_product_ids:string[];p_campaign_name:string|null;p_collaboration_label:string|null;p_trusted_partner_id:string|null}; Returns:DiscountCode }
       get_admin_sales_report: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare?:boolean;p_granularity?:string}; Returns:LegacySalesReport }
       get_admin_sales_report_v2: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_compare_mode?:SalesComparisonMode;p_compare_from?:string|null;p_compare_to?:string|null;p_granularity?:string}; Returns:SalesReport }
       list_admin_sales_transactions: { Args:{p_from?:string|null;p_to?:string|null;p_scope?:string;p_query?:string;p_status?:string;p_payment?:string;p_sort?:string;p_direction?:string;p_limit?:number;p_offset?:number}; Returns:SalesTransactionPage }

@@ -2,6 +2,7 @@
 
 import { Download, Eye, Printer } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/commerce/money'
 import { count, displayDate, paymentMethodLabel, statusLabel, type SalesComparison, type SalesReport, type SalesScope, type SalesTransaction, type SalesTransactionFilters, type SalesTransactionPage } from '@/lib/admin/sales-reporting'
@@ -14,6 +15,8 @@ type Props = SalesComparison & { from: string | null; to: string; scope: SalesSc
 
 export function SalesTransactions({ from, to, scope, compareMode, compareFrom, compareTo, revision, validRange, validComparison, rangeLabel, comparisonLabel, report, onPrint }: Props) {
   const client = useMemo(() => createClient(), [])
+  const params = useSearchParams(), pathname = usePathname(), router = useRouter()
+  const focusOrderId = params.get('reportOrder')
   const [filters, setFilters] = useState<SalesTransactionFilters>(DEFAULT_FILTERS)
   const [page, setPage] = useState(0), [pageSize, setPageSize] = useState(25)
   const [storedData, setData] = useState<SalesTransactionPage>({ rows: [], total_count: 0 })
@@ -23,6 +26,26 @@ export function SalesTransactions({ from, to, scope, compareMode, compareFrom, c
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [retry, setRetry] = useState(0)
   const [selected, setSelected] = useState<SalesTransaction | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
+  useEffect(() => {
+    if (!focusOrderId || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(focusOrderId)) return
+    let current = true
+    setSelected(null)
+    void Promise.resolve(client.rpc('list_admin_sales_transactions', { p_query: focusOrderId, p_limit: 1 })).then(result => {
+      if (!current) return
+      const order = result.data?.rows.find(row => row.order_id === focusOrderId.toLowerCase())
+      if (result.error || !order) setError('Unable to open the requested order.')
+      else setSelected(order)
+    }).catch(() => { if (current) setError('Unable to open the requested order.') })
+    return () => { current = false }
+  }, [client, focusOrderId])
+  function closeDetail() {
+    setSelected(null)
+    if (focusOrderId) {
+      const next = new URLSearchParams(params.toString())
+      next.delete('reportOrder')
+      router.replace(`${pathname}?${next}`, { scroll: false })
+    }
+  }
   function updateFilters(next: Partial<SalesTransactionFilters>) { setFilters(current => ({ ...current, ...next })); setPage(0) }
   useEffect(() => { setPage(0) }, [from, to, scope])
   useEffect(() => {
@@ -83,7 +106,7 @@ export function SalesTransactions({ from, to, scope, compareMode, compareFrom, c
       </tr>)}
     </tbody></table></div>
     <div className={styles.pagination}><TablePagination language="en" page={page} pageSize={pageSize} totalItems={data.total_count} onPageChange={setPage} disabled={loading} label="Report transaction pages" /></div>
-    <SalesOrderDialog order={selected} onClose={() => setSelected(null)} />
+    <SalesOrderDialog order={selected} onClose={closeDetail} />
     <SalesExportDialog open={exportOpen && validRange && validComparison} onClose={() => setExportOpen(false)} from={from} to={to} scope={scope} compareMode={compareMode} compareFrom={compareFrom} compareTo={compareTo} filters={filters} rangeLabel={rangeLabel} comparisonLabel={comparisonLabel} />
   </section>
 }

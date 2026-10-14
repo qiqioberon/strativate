@@ -14,14 +14,21 @@ import {
 import { SalesAnalytics } from './sales-reporting-analytics'
 import { SalesMix, SalesPerformanceChart, SalesProductRanking, SalesStatusSnapshot, useSalesChartPrinting } from './sales-reporting-charts'
 import { SalesTransactions } from './sales-reporting-transactions'
+import { WeeklyMentoringSummary } from './weekly-mentoring-summary'
+import { mentoringWeek } from '@/lib/admin/mentoring-reporting'
 import styles from './sales-reporting.module.css'
 
 const VIEWS: Array<[SalesView, string]> = [['summary', 'Summary'], ['analytics', 'Analytics'], ['transactions', 'Transactions & Export']]
-const PRESETS = [['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['year', 'This year'], ['all', 'All time'], ['custom', 'Custom']]
+const PRESETS = [['week', 'This week'], ['previous_week', 'Previous week'], ['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['year', 'This year'], ['all', 'All time'], ['custom', 'Custom']]
 const SCOPES: Array<[SalesScope, string]> = [['all', 'All sales'], ['digital', 'Digital Products'], ['private', 'Private Mentoring'], ['intensive', 'Intensive Mentoring']]
 const COMPARISONS: Array<[SalesComparisonMode, string]> = [['none', 'No comparison'], ['previous', 'Previous period'], ['custom', 'Custom date range']]
 function presetStart(preset: string, today: string) {
+  if (preset === 'week') return mentoringWeek(today)
+  if (preset === 'previous_week') return shiftDate(mentoringWeek(today), -7)
   return preset === 'year' ? `${today.slice(0, 4)}-01-01` : shiftDate(today, -(Number(preset) - 1))
+}
+function presetEnd(preset: string, today: string) {
+  return preset === 'week' ? shiftDate(mentoringWeek(today), 6) : preset === 'previous_week' ? shiftDate(mentoringWeek(today), -1) : today
 }
 
 export function AdminSalesReporting() {
@@ -37,7 +44,7 @@ export function AdminSalesReporting() {
   const scope: SalesScope = SCOPES.some(([key]) => key === rawScope) ? rawScope as SalesScope : 'all'
   // Empty custom inputs stay empty in the URL; they never silently become presets.
   const from = preset === 'all' ? null : params.get('reportFrom') ?? (preset === 'custom' ? '' : presetStart(preset, today))
-  const to = params.get('reportTo') ?? (preset === 'custom' ? '' : today)
+  const to = params.get('reportTo') ?? (preset === 'custom' ? '' : presetEnd(preset, today))
   const rangeError = salesDateRangeError(from, to)
   const validRange = !rangeError
   const rawCompareMode = params.get('reportCompareMode')
@@ -66,6 +73,7 @@ export function AdminSalesReporting() {
   function updateParams(values: Record<string, string>, push = false) {
     const next = new URLSearchParams(params.toString())
     next.delete('view'); next.delete('cartView'); next.delete('reportCompare')
+    next.delete('mentoringView'); next.delete('discountView')
     next.set('reportView', view)
     next.set('reportRange', preset); next.set('reportFrom', from ?? ''); next.set('reportTo', to)
     next.set('reportCompareMode', compareMode)
@@ -73,7 +81,7 @@ export function AdminSalesReporting() {
     router[push ? 'push' : 'replace'](`${pathname}?${next.toString()}`, { scroll: false })
   }
   function choosePreset(value: string) {
-    updateParams({ reportRange: value, reportFrom: value === 'all' ? '' : value === 'custom' ? from ?? '' : presetStart(value, today), reportTo: value === 'custom' ? to : today })
+    updateParams({ reportRange: value, reportFrom: value === 'all' ? '' : value === 'custom' ? from ?? '' : presetStart(value, today), reportTo: value === 'custom' ? to : presetEnd(value, today) })
   }
   function chooseComparison(value: SalesComparisonMode) {
     updateParams({ reportCompareMode: value, ...(value === 'custom' ? {
@@ -181,6 +189,7 @@ export function AdminSalesReporting() {
       </> : !loading && !error && validRange && validComparison ? <p className={styles.empty}>No transactions in this period.</p> : null}
       </> : null}
     </section>)}
+    {view !== 'transactions' && validRange && scope !== 'digital' ? <WeeklyMentoringSummary from={from} to={to} kind={scope === 'private' || scope === 'intensive' ? scope : 'all'} /> : null}
   </div>
 }
 
@@ -191,7 +200,7 @@ function SalesKpis({ report }: { report: SalesReport }) {
     { key: 'discount' as const, label: 'Discount', note: 'Discounts on paid orders', money: true },
     { key: 'orders' as const, label: 'Paid orders', note: `${count(report.totals.units)} items sold`, money: false },
     { key: 'aov' as const, label: 'Average order value', note: 'Net revenue / paid orders', money: true },
-    { key: 'buyers' as const, label: 'Unique customers', note: `${count(report.customers.repeat)} repeat customers`, money: false },
+    { key: 'buyers' as const, label: 'Customers who purchased', note: 'Each paying customer counted once', money: false },
   ]
   const wideValue = cards.some(card => (card.money ? formatRupiah(Math.round(report.totals[card.key])) : count(report.totals[card.key])).length > 17)
   return <div className={styles.kpis} data-wide-value={wideValue}>{cards.map(card => {

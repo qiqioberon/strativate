@@ -7,6 +7,7 @@ import {
   type SalesBreakdown, type SalesGranularity, type SalesReport,
 } from '@/lib/admin/sales-reporting'
 import { formatRupiah } from '@/lib/commerce/money'
+import Link from 'next/link'
 import {
   SalesBreakdownChart, SalesFinancialComparison, SalesOrderVolumeChart,
   SalesPerformanceChart, SalesProductRanking,
@@ -67,7 +68,7 @@ function CustomerSnapshot({ report }: { report: SalesReport }) {
   return <article className={styles.card} aria-labelledby={`${id}-title`}>
     <header className={styles.cardHeader}><div><h3 id={`${id}-title`}>New & repeat customers</h3><p>Unique paying customers in this period and scope.</p></div></header>
     <div className={styles.stats}>
-      <div className={styles.stat}><span>Unique customers</span><strong>{count(report.totals.buyers)}</strong><small>Each person counts once, regardless of item count.</small></div>
+      <div className={styles.stat}><span>Customers who purchased</span><strong>{count(report.totals.buyers)}</strong><small>Each paying customer counts once.</small></div>
       <div className={styles.stat}><span>First-time customers</span><strong>{count(report.customers.first_time)}</strong><small>One paid order across their history by the end of the period.</small></div>
       <div className={styles.stat}><span>Repeat customers</span><strong>{count(report.customers.repeat)}</strong><small>{percent(report.customers.repeat_share)} of customers in this period.</small></div>
     </div>
@@ -90,7 +91,7 @@ function PrivateAnalytics({ report }: { report: SalesReport }) {
     {knownUnits > 0 ? <div className={styles.stats} data-wide-value={currency(knownRevenue / purchasedSessions).length > 17}>
       <div className={styles.stat}><span>Sessions purchased</span><strong>{count(purchasedSessions)}</strong><small>From items with a known historical session count.</small></div>
       <div className={styles.stat}><span>Average purchase size</span><strong>{new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(purchasedSessions / knownUnits)} sessions</strong><small>Session count / purchase units with session metadata.</small></div>
-      <div className={styles.stat}><span>Average net price per session</span><strong>{currency(knownRevenue / purchasedSessions)}</strong><small>Revenue from items with session metadata / sessions purchased.</small></div>
+      <div className={styles.stat}><span>Average paid price per purchased session</span><strong>{currency(knownRevenue / purchasedSessions)}</strong><small>Purchase revenue / sessions purchased; separate from completed sessions.</small></div>
     </div> : null}
     <div className={styles.grid}>
       <article className={styles.card}>
@@ -119,6 +120,7 @@ function IntensiveAnalytics({ report }: { report: SalesReport }) {
 }
 
 function PaymentDiscountAnalytics({ report }: { report: SalesReport }) {
+  const discountHref = `/admin?${new URLSearchParams({ discountView: 'analytics', discountFrom: report.range.from ?? '', discountTo: report.range.to })}`
   const lifecycleRows: SalesBreakdown[] = report.statuses.map(row => ({
     key: row.key, label: statusLabel(row.key), orders: row.orders, net: row.amount,
     gross: 0, discount: 0, units: 0, buyers: 0, aov: 0,
@@ -137,7 +139,7 @@ function PaymentDiscountAnalytics({ report }: { report: SalesReport }) {
     <div className={styles.grid}>
       <SalesFinancialComparison report={report} overTime/>
       <article className={styles.card}>
-        <header className={styles.cardHeader}><div><h3>Discount code performance</h3><p>Top 10 codes by net revenue from paid sales.</p></div></header>
+        <header className={styles.cardHeader}><div><h3>Discount code performance</h3><p>Top 10 codes by net revenue from paid sales.</p></div><Link href={discountHref}>Detailed discount usage</Link></header>
         {codes.length ? <div className={styles.tableScroll}><table className={styles.table}><caption className={styles.visuallyHidden}>Historical discount code usage and amounts on paid orders</caption><thead><tr><th scope="col">Code</th><th scope="col" className={styles.numeric}>Orders</th><th scope="col" className={styles.numeric}>Gross</th><th scope="col" className={styles.numeric}>Discount</th><th scope="col" className={styles.numeric}>Net</th><th scope="col" className={styles.numeric}>Average</th></tr></thead><tbody>{codes.map(row => <tr key={row.code}><th scope="row"><span className={styles.productName} title={row.code}>{row.code}</span></th><td className={styles.numeric}>{count(row.orders)}</td><td className={styles.numeric}>{currency(row.gross)}</td><td className={styles.numeric}>{currency(row.discount)}</td><td className={styles.numeric}>{currency(row.net)}</td><td className={styles.numeric}>{currency(row.average_discount)}</td></tr>)}</tbody></table></div> : <p className={styles.empty}>No paid orders used a discount code in this period.</p>}
         <p className={styles.note}>Amounts come from order snapshots. Reserved or released discounts do not count as usage.</p>
       </article>

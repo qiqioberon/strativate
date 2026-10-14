@@ -147,7 +147,9 @@ export default function AdminDashboard() {
   const hasMenteeView = menteeView === 'data' || menteeView === 'analytics'
   const hasCartView = searchParams.has('cartView')
   const hasReportView = searchParams.has('reportView')
-  const [section, setSection] = useState<Section>(() => hasReportView ? 'Reports' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
+  const hasMentoringView = searchParams.has('mentoringView')
+  const hasDiscountView = searchParams.has('discountView')
+  const [section, setSection] = useState<Section>(() => hasReportView ? 'Reports' : hasMentoringView ? 'Mentoring Sessions' : hasDiscountView ? 'Discount Codes' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees' : 'Overview')
   const [mobile, setMobile] = useState(false)
   const [narrowScreen, setNarrowScreen] = useState(false)
   const [profileDirty, setProfileDirty] = useState(false)
@@ -213,8 +215,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const current = sectionRef.current
-    const next: Section = hasReportView ? 'Reports' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees'
-      : current === 'Cart Links' || current === 'Mentees' || current === 'Reports' ? 'Overview' : current
+    const next: Section = hasReportView ? 'Reports' : hasMentoringView ? 'Mentoring Sessions' : hasDiscountView ? 'Discount Codes' : hasCartView ? 'Cart Links' : hasMenteeView ? 'Mentees'
+      : current === 'Cart Links' || current === 'Mentees' || current === 'Reports' || current === 'Mentoring Sessions' || current === 'Discount Codes' ? 'Overview' : current
     if (next !== current && current === 'Profile' && profileDirtyRef.current) {
       if (!window.confirm('Discard unsaved profile changes?')) {
         router.replace(acceptedHrefRef.current, { scroll: false })
@@ -224,9 +226,9 @@ export default function AdminDashboard() {
     }
     acceptedHrefRef.current = `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ''}`
     setSection(next)
-  }, [hasCartView, hasMenteeView, hasReportView, searchParams, pathname, router])
+  }, [hasCartView, hasMenteeView, hasReportView, hasMentoringView, hasDiscountView, searchParams, pathname, router])
 
-  const navigate = (value: Section) => {
+  const navigate = (value: Section, values: Record<string, string> = {}) => {
     if (value !== section && section === 'Profile' && profileDirty && !window.confirm('Discard unsaved profile changes?')) return
     if (value !== section) setProfileDirty(false)
     setSection(value)
@@ -234,6 +236,13 @@ export default function AdminDashboard() {
 
     const params = new URLSearchParams(searchParams.toString())
     if (value !== 'Reports') params.delete('reportView')
+    if (value !== 'Mentoring Sessions') params.delete('mentoringView')
+    if (value !== 'Discount Codes') params.delete('discountView')
+    if (value === 'Mentoring Sessions') {
+      params.set('mentoringView', 'sessions')
+      params.delete('mentoringSession'); params.delete('mentoringEntity')
+    }
+    if (value === 'Discount Codes') params.set('discountView', params.get('discountView') === 'analytics' ? 'analytics' : 'codes')
     if (value === 'Mentees') {
       params.delete('cartView')
       const view = params.get('view')
@@ -252,10 +261,11 @@ export default function AdminDashboard() {
       params.delete('cartView')
     }
 
+    Object.entries(values).forEach(([key, value]) => params.set(key, value))
     const nextQuery = params.toString()
     if (nextQuery === searchParams.toString()) return
     const href = nextQuery ? `${pathname}?${nextQuery}` : pathname
-    if (value === 'Mentees' || value === 'Cart Links' || value === 'Reports' || hasReportView) router.push(href, { scroll: false })
+    if (value === 'Mentees' || value === 'Cart Links' || value === 'Reports' || value === 'Mentoring Sessions' || value === 'Discount Codes' || hasReportView || hasMentoringView || hasDiscountView) router.push(href, { scroll: false })
     else router.replace(href, { scroll: false })
   }
   const navigateOperational = (target: string) => {
@@ -266,7 +276,10 @@ export default function AdminDashboard() {
   const openNotification = (item: Notification) => {
     setRelatedTarget({ entity: item.related_entity, id: item.related_entity_id })
     if (item.related_entity === 'order') navigate('Orders')
-    else if (item.related_entity === 'session' || item.related_entity === 'enrollment' || item.related_entity === 'intensive_mentoring_session' || item.related_entity === 'intensive_mentoring_engagement') navigate('Mentoring Sessions')
+    else if (item.related_entity === 'session' || item.related_entity === 'enrollment' || item.related_entity === 'intensive_mentoring_session' || item.related_entity === 'intensive_mentoring_engagement') navigate('Mentoring Sessions', {
+      mentoringKind: item.related_entity.startsWith('intensive_') ? 'intensive' : 'private',
+      ...(item.related_entity_id && (item.related_entity === 'session' || item.related_entity === 'intensive_mentoring_session') ? { mentoringSession: item.related_entity_id, mentoringEntity: item.related_entity } : {}),
+    })
     else navigate('Overview')
   }
   const currentLabel = groups.flatMap(group => group.items).find(item => item.id === section)?.label ?? section

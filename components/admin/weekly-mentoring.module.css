@@ -1,0 +1,60 @@
+.workspace,.summary{display:grid;gap:16px;min-width:0;color:#302a25}
+.workspace *,.summary *{box-sizing:border-box}
+.toolbar,.weekControls,.actions,.sectionHeading,.distribution,.pagination,.pagination>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.toolbar,.sectionHeading,.pagination{justify-content:space-between}
+.workspace button,.summary button,.detailLink{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:7px 11px;border:1px solid #ded8cf;border-radius:9px;background:#fffdfa;color:#443830;font:inherit;font-size:12px;font-weight:600;line-height:1.3;text-decoration:none;cursor:pointer;white-space:normal}
+.workspace button:hover,.summary button:hover,.detailLink:hover{border-color:#e79a71;background:#fff5ee}
+.workspace button:disabled,.summary button:disabled{opacity:.5;cursor:default}
+.workspace :is(button,input,select,a):focus-visible,.summary :is(button,a):focus-visible,.viewTabs button:focus-visible,.backLink:focus-visible,.tableScroll:focus-visible{outline:2px solid #d9743a;outline-offset:3px}
+.weekControls label,.filters label,.distribution label{display:grid;gap:5px;color:#75685d;font-size:11px;font-weight:600;min-width:0}
+.weekControls label{display:flex;align-items:center;flex-wrap:wrap}
+.workspace input,.workspace select{width:100%;max-width:100%;min-width:0;border:1px solid #ddd5cb;border-radius:8px;background:#fffdfa;padding:8px 10px;color:#302a25;font:inherit;font-size:12px;min-height:35px}
+.weekControls input{width:145px}
+.range{margin:0;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.range span{font-size:11px;font-weight:400;color:#86766a;white-space:normal}
+.filters{display:grid;grid-template-columns:minmax(220px,1.6fr) repeat(4,minmax(125px,1fr));gap:10px;min-width:0}
+.search>div{display:flex;align-items:center;gap:6px;border:1px solid #ddd5cb;border-radius:8px;background:#fffdfa;padding-left:9px}
+.search input{border:0;background:transparent;outline-offset:0}
+.search svg{flex-shrink:0;color:#918071}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:0}
+.kpis>div{min-width:0;border:1px solid #e4ded5;background:#fffdfa;border-radius:11px;padding:13px 12px}
+.kpis dt{font-size:11px;line-height:1.5;color:#7d6d60}
+.kpis dd{font-size:23px;font-weight:650;line-height:1.4;letter-spacing:-.6px;margin:4px 0 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.distribution{gap:10px 18px;font-size:12px;color:#7d6d60}
+.distribution strong{color:#49372a}
+.distribution label{display:flex;align-items:center;margin-left:auto}
+.distribution select{width:auto}
+.section,.summary{min-width:0;border:1px solid #e5ded5;border-radius:12px;padding:15px;background:#fffdfa}
+.sectionHeading{margin-bottom:10px}
+.sectionHeading h3,.sectionHeading h4{font-size:14px;line-height:1.4;font-weight:650;margin:0;color:#3e3025}
+.sectionHeading h3 span{font-size:12px;color:#9b765c;margin-left:5px}
+.tableScroll{max-width:100%;overflow:auto;overscroll-behavior-x:contain;border:1px solid #eee7df;border-radius:9px}
+.table{width:100%;min-width:820px;border-collapse:collapse;text-align:left;font-size:12px;line-height:1.45}
+.table th{padding:10px 12px;background:#f7f4ef;color:#837263;font-size:11px;font-weight:600;white-space:nowrap;border-bottom:1px solid #e8e0d7}
+.table td{padding:11px 12px;border-bottom:1px solid #eee7df;vertical-align:top;max-width:240px;overflow-wrap:anywhere;word-break:normal}
+.table tr:last-child td{border-bottom:0}
+.table td strong{display:block;font-weight:600}
+.table td small{display:block;color:#8a7b6d;font-size:10px;margin-top:3px;overflow-wrap:anywhere}
+.table button,.table .detailLink{min-height:31px;padding:6px 9px;font-size:11px;white-space:nowrap}
+.status{display:inline-block;padding:4px 7px;border:1px solid #e5ddd4;background:#f5f1eb;border-radius:6px;font-size:10px;white-space:nowrap}
+.status[data-status=completed]{background:#edf5ef;color:#3e7450;border-color:#d9e9dc}
+.status[data-status=scheduled]{background:#fff3e4;color:#956128;border-color:#f1dfc4}
+.status[data-status=cancelled]{background:#f9edeb;color:#9b4b40;border-color:#eed5d0}
+.table .reviewText{color:#a7662c}
+.pagination{margin-top:11px;color:#8d7a68;font-size:11px}
+.pagination button{min-height:30px;padding:6px 9px}
+.empty{text-align:center;padding:24px 12px!important;font-size:12px;color:#958577;line-height:1.5}
+.note{font-size:11px;line-height:1.6;color:#877566;margin:0}
+.error{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #eed0c7;background:#fff6f3;color:#a45340;padding:10px 12px;border-radius:8px;font-size:12px;overflow-wrap:anywhere}
+.leaderboard{display:grid;gap:0;list-style:none;margin:0;padding:0;border:1px solid #eee7df;border-radius:9px;overflow:hidden}
+.leaderboard li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid #eee7df;padding:10px 12px;font-size:12px;min-width:0}
+.leaderboard li:last-child{border-bottom:0}
+.leaderboard li span{overflow-wrap:anywhere;min-width:0}
+.leaderboard li strong{white-space:nowrap;font-size:11px;color:#94542e;flex-shrink:0}
+.viewTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.viewTabs button{padding:9px 13px;min-height:37px;border:1px solid #e4dbd0;background:#fffdfa;border-radius:9px;color:#756454;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;cursor:pointer}
+.viewTabs button[aria-selected=true]{background:#fff0e6;color:#ad5e2c;border-color:#ebc1a7}
+.backLink{display:inline-flex;align-items:center;gap:6px;margin:0 0 13px;color:#b06436;font-size:12px;text-decoration:none}
+@media(max-width:1150px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.search{grid-column:span 2}.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:720px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.search{grid-column:1/-1}.toolbar{align-items:flex-start}.actions{width:100%;justify-content:flex-end}.section,.summary{padding:12px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis dd{font-size:22px}.distribution label{margin-left:0}.range span{display:block;margin-top:3px}.pagination{gap:10px}.leaderboard li{gap:8px}}
+@media(max-width:380px){.filters{grid-template-columns:minmax(0,1fr)}.search{grid-column:auto}.weekControls{gap:6px}.weekControls label{width:100%}}
