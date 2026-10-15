@@ -63,7 +63,9 @@ export async function generatePaymentReceipt(receipt: PaymentReceipt): Promise<U
   pdf.setCreator('Strativate')
   pdf.setProducer('Strativate transaction records')
   const width = PAGE.width - 2 * PAGE.margin
-  let page: PDFPage, y = 0
+  // newPage() assigns the page before any receipt drawing occurs.
+  let page!: PDFPage
+  let y = 0
 
   function text(value: string, x: number, baseline: number, size = 10, muted = false) {
     page.drawText(value, { x, y: baseline, size, font, color: muted ? MUTED : INK })
