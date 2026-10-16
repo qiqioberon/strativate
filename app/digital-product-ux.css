@@ -170,9 +170,10 @@
   font-size: .68rem;
   font-weight: 650;
 }
-.digital-product-card__title {
+.digital-product-card .digital-product-card__title {
   display: -webkit-box;
   min-width: 0;
+  margin: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
