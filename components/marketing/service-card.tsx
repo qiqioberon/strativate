@@ -1,11 +1,10 @@
-import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 import type { ServiceOverview } from '@/lib/content/services'
 
 type ServiceCardVariant = 'primary' | 'secondary' | 'compact'
 
-export function ServiceCard({ service, index, variant }: { service: ServiceOverview; index: number; variant: ServiceCardVariant }) {
+export function ServiceCard({ service, variant }: { service: ServiceOverview; variant: ServiceCardVariant }) {
   const Icon = service.icon
   return (
     <article
@@ -17,7 +16,6 @@ export function ServiceCard({ service, index, variant }: { service: ServiceOverv
       <span className="marketing-service-card__spotlight" aria-hidden="true" />
       <div className="marketing-service-card__top">
         <span className="marketing-service-card__icon"><Icon aria-hidden="true" size={22} /></span>
-        <span className="marketing-service-card__number">{String(index + 1).padStart(2, '0')}</span>
       </div>
       <div className="marketing-service-card__copy">
         <h2 data-testid={`service-${service.id}-title`}>{service.name}</h2>
@@ -26,10 +24,9 @@ export function ServiceCard({ service, index, variant }: { service: ServiceOverv
       {service.href ? (
         <Link className="marketing-service-card__action" href={service.href} data-testid={`service-${service.id}-link`}>
           <span>{service.detailLabel ?? 'View details'}</span>
-          <span className="marketing-service-card__action-icon" aria-hidden="true"><ArrowRight size={15} /></span>
         </Link>
       ) : (
-        <span className="marketing-service-card__overview"><span>Service overview</span><i aria-hidden="true" /></span>
+        <span className="marketing-service-card__overview">Coming soon</span>
       )}
     </article>
   )

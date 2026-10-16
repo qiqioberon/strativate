@@ -395,44 +395,53 @@
 }
 .program-page .marketing-service-card:hover .marketing-service-card__icon { box-shadow: 0 12px 28px rgb(181 59 0 / .18); transform: translateY(-2px) rotate(-2deg); }
 .program-page .marketing-service-card:hover .marketing-service-card__icon::after { opacity: .8; transform: rotate(7deg) scale(1); }
-.program-page .marketing-service-card__number { font-family: var(--font-mono); }
+.program-page .marketing-service-card__top { justify-content: flex-start; }
 .program-page .marketing-service-card__copy { position: relative; z-index: 2; display: grid; gap: 10px; }
 .program-page .marketing-service-card h2 { margin-top: 0; }
 .program-page .marketing-service-card__copy > p { margin-top: 0; }
 .program-page .marketing-service-card__action {
-  display: flex;
+  display: inline-flex;
+  width: fit-content;
+  min-height: 38px;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  justify-content: center;
   margin-top: auto;
-  padding-top: 24px;
+  padding: 9px 15px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
   color: #9b2f0b;
+  background: transparent;
   font-size: .67rem;
   font-weight: 800;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
-.marketing-service-card__action-icon {
-  display: grid;
-  width: 35px;
-  height: 35px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #edc7aa;
-  border-radius: 50%;
-  color: #9c3400;
-  background: rgb(255 250 245 / .9);
-  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+.program-page .marketing-service-card__action:is(:hover, :focus-visible) {
+  border-color: #9b2f0b;
+  color: #fff;
+  background: #9b2f0b;
 }
-.program-page .marketing-service-card__action:hover .marketing-service-card__action-icon { color: #fff; background: #ff7a00; transform: translateX(3px) rotate(-8deg); }
-.program-page .marketing-service-card__overview { display: flex; align-items: center; gap: 10px; }
-.program-page .marketing-service-card__overview i { width: 38px; height: 1px; background: #cdb5a5; transition: width 180ms ease, background-color 180ms ease; }
-.program-page .marketing-service-card:hover .marketing-service-card__overview i { width: 55px; background: #ff7a00; }
+.program-page .marketing-service-card__action:focus-visible {
+  outline: 3px solid rgb(155 47 11 / .22);
+  outline-offset: 3px;
+}
+.program-page .marketing-service-card__overview {
+  display: inline-block;
+  width: fit-content;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  color: #8c7e74;
+  background: transparent;
+  font-size: .62rem;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 
 .program-page .marketing-service-card--primary {
   min-height: 350px;
   padding: 30px;
   border-radius: 7px 28px 28px 28px;
-}
-.program-page .marketing-service-card--primary:nth-child(2) {
   background:
     linear-gradient(135deg, rgb(255 255 255 / .48), rgb(255 239 226 / .55)),
     #fff1e6;
@@ -466,14 +475,14 @@
 .program-page .marketing-service-card--secondary .marketing-service-card__top { grid-column: 1 / -1; }
 .program-page .marketing-service-card--secondary .marketing-service-card__copy { align-self: center; max-width: 650px; }
 .program-page .marketing-service-card--secondary h2 { font-size: clamp(1.55rem, 2.7vw, 2.5rem); }
-.program-page .marketing-service-card--secondary .marketing-service-card__overview { align-self: end; justify-self: end; padding: 17px 20px; border: 1px solid rgb(134 79 35 / .15); border-radius: 999px; background: rgb(255 255 255 / .58); }
+.program-page .marketing-service-card--secondary .marketing-service-card__overview { align-self: end; justify-self: start; }
 
 .program-page .marketing-service-card--compact {
   min-height: 245px;
   padding: 20px;
   border-radius: 7px 20px 20px 20px;
+  background: #fffdfa;
 }
-.program-page .marketing-service-card--compact:nth-child(3) { background: linear-gradient(150deg, #fff9d8, #fff6c2); }
 .program-page .marketing-service-card--compact h2 { margin-top: 20px; font-size: .98rem; }
 .program-page .marketing-service-card--compact .marketing-service-card__copy > p { font-size: .63rem; }
 
@@ -569,7 +578,7 @@
   .program-page .marketing-service-card { transform: none !important; transition: border-color 180ms ease, box-shadow 180ms ease; }
   .program-page .marketing-service-card__icon,
   .program-page .marketing-service-card__icon::after,
-  .program-page .marketing-service-card__action-icon,
+  .program-page .marketing-service-card__action,
   .program-journey__steps::before { transition: none; }
   .program-directory.is-visible .program-journey__steps::before { transform: none; }
 }

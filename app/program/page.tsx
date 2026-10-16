@@ -46,11 +46,11 @@ export default function ProgramPage() {
               <div className="program-section-heading program-overview-heading"><p className="marketing-kicker">Students</p><h2>Our Services for Students</h2><p>Programs designed for individual students and small teams preparing for business competitions.</p></div>
               <div className="marketing-services-hierarchy">
                 <section className="marketing-services-primary" data-testid="program-primary-services" aria-label="Core programs">
-                  {primaryServices.map(service => <ServiceCard service={service} index={services.indexOf(service)} variant="primary" key={service.id} />)}
+                  {primaryServices.map(service => <ServiceCard service={service} variant="primary" key={service.id} />)}
                 </section>
-                {secondaryService ? <section className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Big Class overview"><ServiceCard service={secondaryService} index={services.indexOf(secondaryService)} variant="secondary" /></section> : null}
+                {secondaryService ? <section className="marketing-services-secondary" data-testid="program-secondary-service" aria-label="Big Class overview"><ServiceCard service={secondaryService} variant="secondary" /></section> : null}
                 <section className="marketing-services-supporting" data-testid="program-supporting-services" aria-label="Supporting services">
-                  {supportingServices.map(service => <ServiceCard service={service} index={services.indexOf(service)} variant="compact" key={service.id} />)}
+                  {supportingServices.map(service => <ServiceCard service={service} variant="compact" key={service.id} />)}
                 </section>
               </div>
             </div>
