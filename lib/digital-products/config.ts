@@ -6,6 +6,9 @@ export const DIGITAL_PRODUCT_IMAGE_ALLOWED_TYPES = new Set<string>([
   'image/png',
   'image/webp',
 ])
+// Explicit list: private cover source/crop columns are not readable by anon or authenticated users.
+export const DIGITAL_PRODUCT_PUBLIC_COLUMNS = 'id,name,slug,description,image_path,price_amount,reference_price_amount,content_type,content_path,content_mime_type,content_file_name,content_size_bytes,page_count,duration_seconds,is_published,homepage_featured,homepage_featured_order,show_sales_count,show_rating,created_at,updated_at'
+export const DIGITAL_PRODUCT_COVER_SOURCE_PREFIX = 'digital-products/'
 export const DIGITAL_PRODUCT_COVER_WIDTH = 1000
 export const DIGITAL_PRODUCT_COVER_HEIGHT = 1250
 export const DIGITAL_PRODUCT_COVER_MIN_ZOOM = 1

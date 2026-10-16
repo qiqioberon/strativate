@@ -1,15 +1,15 @@
 'use client'
 
 import Image from 'next/image'
-import { FileText, ImagePlus, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Star, Trash2, X } from 'lucide-react'
+import { FileText, PackageOpen, PlayCircle, Plus, RefreshCw, Search, ShieldCheck, Star, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
-import { ImageFitEditor } from '@/components/admin/image-fit-editor'
+import { AdminImageUploadField } from '@/components/admin/admin-image-upload-field'
+import { useAdminImageUpload } from '@/components/admin/use-admin-image-upload'
 import { adminFormError as formError } from '@/lib/auth/errors'
 import {
   buildDigitalProductContentPath,
   buildDigitalProductContentPayload,
-  buildDigitalProductNormalizedImagePath,
   buildDigitalProductPayload,
   digitalProductMutationError,
   formatDigitalProductPrice,
@@ -24,14 +24,14 @@ import {
 import {
   DIGITAL_PRODUCT_CONTENT_BUCKET,
   DIGITAL_PRODUCT_COVER_HEIGHT,
-  DIGITAL_PRODUCT_COVER_MAX_DECODED_PIXELS,
-  DIGITAL_PRODUCT_COVER_MAX_ZOOM,
-  DIGITAL_PRODUCT_COVER_MIN_ZOOM,
-  DIGITAL_PRODUCT_COVER_WEBP_QUALITY,
+  DIGITAL_PRODUCT_COVER_SOURCE_PREFIX,
   DIGITAL_PRODUCT_COVER_WIDTH,
   DIGITAL_PRODUCT_IMAGE_BUCKET,
+  DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE,
+  DIGITAL_PRODUCT_IMAGE_NAMESPACE,
 } from '@/lib/digital-products/config'
-import { DEFAULT_IMAGE_FIT, fitImageToWebP, type ImageFit } from '@/lib/media/image-fit'
+import { persistAdminImage } from '@/lib/media/admin-image-storage'
+import { cropRectFromJson, PHOTO_SOURCE_BUCKET } from '@/lib/media/image-crop'
 import { createClient } from '@/lib/supabase/client'
 import type { DigitalProduct } from '@/lib/supabase/database.types'
 import dataStyles from './data-management.module.css'
@@ -41,8 +41,15 @@ import { SortableTableHeader, type SortDirection } from './sortable-table-header
 import { TablePagination } from './table-pagination'
 import { DigitalProductRatingManagement } from './digital-product-rating-management'
 
-const migrationName = '202610040002_digital_product_reference_pricing.sql'
+const migrationName = '202610170001_digital_product_cover_crop_sources.sql'
 const PRODUCT_PAGE_SIZE = 10
+const coverTarget = {
+  width: DIGITAL_PRODUCT_COVER_WIDTH,
+  height: DIGITAL_PRODUCT_COVER_HEIGHT,
+  maxBytes: DIGITAL_PRODUCT_IMAGE_MAX_FILE_SIZE,
+  title: 'Adjust product cover crop',
+  description: 'Covers use the same 4:5 frame as storefront cards.',
+}
 type ProductSortKey = 'product' | 'type' | 'price' | 'status' | 'homepage' | 'content' | 'updated_at'
 type Draft = { name:string; slug:string; description:string; price:string; referencePrice:string; contentType:DigitalProductContentType|''; isPublished:boolean; homepageFeatured:boolean; homepageOrder:string; showSalesCount:boolean }
 const emptyDraft: Draft = { name: '', slug: '', description: '', price: '', referencePrice: '', contentType: '', isPublished: false, homepageFeatured: false, homepageOrder: '0', showSalesCount: false }
@@ -60,13 +67,8 @@ export function DigitalProductManagement() {
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [coverFit, setCoverFit] = useState<ImageFit>({ ...DEFAULT_IMAGE_FIT })
   const [selectedContentFile, setSelectedContentFile] = useState<File | null>(null)
   const [contentError, setContentError] = useState('')
-  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
-  const [storedPreviewUrl, setStoredPreviewUrl] = useState<string | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [setupRequired, setSetupRequired] = useState(false)
@@ -77,10 +79,10 @@ export function DigitalProductManagement() {
   const [ratingProductId, setRatingProductId] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const initialDraftRef = useRef(JSON.stringify(emptyDraft))
+  const cover = useAdminImageUpload({ supabase, target: coverTarget, onError: setError })
 
   const selected = useMemo(() => products.find(product => product.id === selectedId) ?? null, [products, selectedId])
   const ratingProduct = useMemo(() => products.find(product => product.id === ratingProductId) ?? null, [products, ratingProductId])
-  const selectedImagePath = selected?.image_path ?? null
   const filteredProducts = useMemo(() => {
     const term = query.trim().toLocaleLowerCase('id-ID')
     if (!term) return products
@@ -110,7 +112,7 @@ export function DigitalProductManagement() {
 
   const load = useCallback(async () => {
     setLoading(true); setError(''); setSetupRequired(false); setLoadFailed(false)
-    const { data, error: loadError } = await supabase.from('digital_products').select('id,name,slug,description,image_path,price_amount,reference_price_amount,content_type,content_path,content_mime_type,content_file_name,content_size_bytes,page_count,duration_seconds,is_published,homepage_featured,homepage_featured_order,show_sales_count,show_rating,created_at,updated_at').order('name', { ascending: true }).order('id', { ascending: true })
+    const { data, error: loadError } = await supabase.rpc('admin_list_digital_products')
     if (loadError) {
       setProducts([])
       if (isDigitalProductSetupRequired(loadError)) setSetupRequired(true)
@@ -127,23 +129,8 @@ export function DigitalProductManagement() {
     const nextDraft: Draft = { name:selected.name, slug:selected.slug, description:selected.description, price:String(selected.price_amount), referencePrice:selected.reference_price_amount == null ? '' : String(selected.reference_price_amount), contentType:selected.content_type ?? '', isPublished:selected.is_published, homepageFeatured:selected.homepage_featured, homepageOrder:String(selected.homepage_featured_order), showSalesCount:selected.show_sales_count ?? false }
     initialDraftRef.current = JSON.stringify(nextDraft)
     setDraft(nextDraft)
-    setSlugManuallyEdited(true); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({})
+    setSlugManuallyEdited(true); setSelectedContentFile(null); setContentError(''); setFieldErrors({})
   }, [creating, selected])
-  useEffect(() => {
-    if (!selectedFile) { setLocalPreviewUrl(null); return }
-    const objectUrl = URL.createObjectURL(selectedFile); setLocalPreviewUrl(objectUrl); return () => URL.revokeObjectURL(objectUrl)
-  }, [selectedFile])
-  useEffect(() => {
-    let cancelled = false; setStoredPreviewUrl(null)
-    if (!selectedImagePath || creating) { setPreviewLoading(false); return () => { cancelled = true } }
-    setPreviewLoading(true)
-    void supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).createSignedUrl(selectedImagePath, 60 * 60).then(({ data, error: signedUrlError }) => {
-      if (cancelled) return
-      if (signedUrlError) { setError(formError(signedUrlError, 'The cover is saved, but its preview could not be loaded.')); return }
-      setStoredPreviewUrl(data.signedUrl)
-    }).finally(() => { if (!cancelled) setPreviewLoading(false) })
-    return () => { cancelled = true }
-  }, [creating, selectedImagePath, supabase])
   useEffect(() => { const dialog = dialogRef.current; if (!dialog) return; if (editorOpen && !dialog.open) dialog.showModal(); if (!editorOpen && dialog.open) dialog.close() }, [editorOpen])
   useEffect(() => {
     if (!editorOpen) return
@@ -154,64 +141,79 @@ export function DigitalProductManagement() {
   }, [editorOpen])
 
   function changeSort(key: string | null, direction: SortDirection) { setSortKey(key as ProductSortKey | null); setSortDirection(direction); setProductPage(0) }
-  function beginCreate() { initialDraftRef.current = JSON.stringify(emptyDraft); setCreating(true); setSelectedId(null); setDraft(emptyDraft); setSlugManuallyEdited(false); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
-  function beginEdit(id: string) { setCreating(false); setSelectedId(id); setSlugManuallyEdited(true); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
+  function beginCreate() { initialDraftRef.current = JSON.stringify(emptyDraft); setCreating(true); setSelectedId(null); setDraft(emptyDraft); setSlugManuallyEdited(false); cover.reset(); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
+  function beginEdit(id: string) { setCreating(false); setSelectedId(id); setSlugManuallyEdited(true); cover.reset(cropRectFromJson(products.find(product => product.id === id)?.image_crop ?? null)); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError(''); setNotice('') }
   function closeEditor() {
     if (busy) return
-    const dirty = JSON.stringify(draft) !== initialDraftRef.current || Boolean(selectedFile || selectedContentFile)
+    const dirty = JSON.stringify(draft) !== initialDraftRef.current || Boolean(cover.processedFile || cover.cropperProps.sourceFile || selectedContentFile)
     if (dirty && !window.confirm('Discard unsaved changes? Your edits and selected files will be lost.')) return
     dialogRef.current?.close()
   }
-  function resetEditorState() { setCreating(false); setSelectedId(null); setSelectedFile(null); setCoverFit({ ...DEFAULT_IMAGE_FIT }); setSelectedContentFile(null); setContentError(''); setStoredPreviewUrl(null); setFieldErrors({}); setError('') }
+  function resetEditorState() { setCreating(false); setSelectedId(null); cover.reset(); setSelectedContentFile(null); setContentError(''); setFieldErrors({}); setError('') }
   function updateName(name: string) { setDraft(current => ({ ...current, name, slug:creating && !slugManuallyEdited ? normalizeDigitalProductSlug(name) : current.slug })); setFieldErrors(current => ({ ...current, name:undefined, ...(creating && !slugManuallyEdited ? { slug:undefined } : {}) })) }
 
   async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (busy) return
+    event.preventDefault(); if (busy || cover.loadingSource) return
     const editing = creating ? null : selected
-    const validation = validateDigitalProductDraft({ name:draft.name, slug:draft.slug, description:draft.description, priceInput:draft.price, referencePriceInput:draft.referencePrice, file:selectedFile, hasStoredImage:Boolean(editing?.image_path) })
+    const validation = validateDigitalProductDraft({ name:draft.name, slug:draft.slug, description:draft.description, priceInput:draft.price, referencePriceInput:draft.referencePrice, file:cover.processedFile, hasStoredImage:Boolean(editing?.image_path) })
     const compatibleStoredContent = Boolean(editing?.content_path && editing.content_type === draft.contentType)
     const nextContentError = draft.contentType ? validateDigitalProductContentFile({ file:selectedContentFile, contentType:draft.contentType, hasStoredContent:compatibleStoredContent, publishing:draft.isPublished }) ?? '' : 'Select PDF or Video as the product type.'
     setFieldErrors(validation); setContentError(nextContentError); setError(''); setNotice('')
     if (Object.keys(validation).length > 0 || nextContentError) return
-    const oldImagePath = editing?.image_path ?? null
     const oldContentPath = compatibleStoredContent ? editing?.content_path ?? null : null
-    let uploadedImagePath: string | null = null, uploadedContentPath: string | null = null, databaseAttempted = false
+    let uploadedContentPath: string | null = null, contentPersisted = false, databaseError: unknown = null
+    let authoritativeId = editing?.id ?? null
     setBusy(true)
     try {
-      if (selectedFile) {
-        const normalizedCover = await fitImageToWebP(selectedFile, {
-          width: DIGITAL_PRODUCT_COVER_WIDTH,
-          height: DIGITAL_PRODUCT_COVER_HEIGHT,
-          minZoom: DIGITAL_PRODUCT_COVER_MIN_ZOOM,
-          maxZoom: DIGITAL_PRODUCT_COVER_MAX_ZOOM,
-          quality: DIGITAL_PRODUCT_COVER_WEBP_QUALITY,
-          maxDecodedPixels: DIGITAL_PRODUCT_COVER_MAX_DECODED_PIXELS,
-        }, coverFit)
-        uploadedImagePath = buildDigitalProductNormalizedImagePath(selectedFile.name)
-        const { error: uploadError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).upload(uploadedImagePath, normalizedCover, { cacheControl:'3600', contentType:'image/webp', upsert:false })
-        if (uploadError) throw uploadError
-      }
       if (selectedContentFile) { uploadedContentPath = buildDigitalProductContentPath(selectedContentFile.name); const { error: contentUploadError } = await supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).upload(uploadedContentPath, selectedContentFile, { cacheControl:'3600', upsert:false }); if (contentUploadError) throw contentUploadError }
-      const payload = {
-        ...buildDigitalProductPayload({ name:draft.name, slug:draft.slug, description:draft.description, priceInput:draft.price, referencePriceInput:draft.referencePrice, imagePath:uploadedImagePath, storedImagePath:oldImagePath }),
-        ...buildDigitalProductContentPayload({ contentType:draft.contentType || null, contentPath:uploadedContentPath, storedContentPath:oldContentPath, fileName:selectedContentFile?.name ?? null, storedFileName:compatibleStoredContent ? editing?.content_file_name ?? null : null, mimeType:selectedContentFile?.type ?? null, storedMimeType:compatibleStoredContent ? editing?.content_mime_type ?? null : null, fileSize:selectedContentFile?.size ?? null, storedFileSize:compatibleStoredContent ? editing?.content_size_bytes ?? null : null, isPublished:draft.isPublished }),
-        homepage_featured: draft.homepageFeatured,
-        homepage_featured_order: Math.min(9999, Math.max(0, Number.parseInt(draft.homepageOrder || '0', 10) || 0)),
-        show_sales_count: draft.showSalesCount,
-      }
-      databaseAttempted = true
-      let authoritativeId = editing?.id ?? null
-      if (editing) { const { data:updated, error:updateError } = await supabase.from('digital_products').update(payload).eq('id', editing.id).select('id').single(); if (updateError) throw updateError; authoritativeId = updated.id }
-      else { const { data:created, error:insertError } = await supabase.from('digital_products').insert(payload).select('id').single(); if (insertError) throw insertError; authoritativeId = created.id }
+      const saved = await persistAdminImage({
+        original: cover.originalFile,
+        derivative: cover.processedFile,
+        sourcePrefix: DIGITAL_PRODUCT_COVER_SOURCE_PREFIX,
+        derivativePrefix: `${DIGITAL_PRODUCT_IMAGE_NAMESPACE}/`,
+        derivativeBucket: DIGITAL_PRODUCT_IMAGE_BUCKET,
+        previous: { path: editing?.image_path ?? null, sourcePath: editing?.image_source_path ?? null },
+        upload: async (bucket, path, file) => {
+          const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: '3600', upsert: false })
+          if (uploadError) throw new Error(uploadError.message)
+        },
+        remove: async (bucket, path) => {
+          const { error: removeError } = await supabase.storage.from(bucket).remove([path])
+          if (removeError) throw new Error(removeError.message)
+        },
+        persist: async refs => {
+          const payload = {
+            ...buildDigitalProductPayload({ name:draft.name, slug:draft.slug, description:draft.description, priceInput:draft.price, referencePriceInput:draft.referencePrice, imagePath:refs.path, storedImagePath:editing?.image_path ?? null }),
+            ...buildDigitalProductContentPayload({ contentType:draft.contentType || null, contentPath:uploadedContentPath, storedContentPath:oldContentPath, fileName:selectedContentFile?.name ?? null, storedFileName:compatibleStoredContent ? editing?.content_file_name ?? null : null, mimeType:selectedContentFile?.type ?? null, storedMimeType:compatibleStoredContent ? editing?.content_mime_type ?? null : null, fileSize:selectedContentFile?.size ?? null, storedFileSize:compatibleStoredContent ? editing?.content_size_bytes ?? null : null, isPublished:draft.isPublished }),
+            image_source_path: refs.sourcePath,
+            image_crop: cover.crop,
+            homepage_featured: draft.homepageFeatured,
+            homepage_featured_order: Math.min(9999, Math.max(0, Number.parseInt(draft.homepageOrder || '0', 10) || 0)),
+            show_sales_count: draft.showSalesCount,
+          }
+          const result = editing
+            ? await supabase.from('digital_products').update(payload).eq('id', editing.id).select('id').single()
+            : await supabase.from('digital_products').insert(payload).select('id').single()
+          if (result.error) { databaseError = result.error; throw new Error(result.error.message) }
+          authoritativeId = result.data.id
+        },
+        reconcile: async () => {
+          const { data, error: reconcileError } = await supabase.rpc('admin_list_digital_products')
+          if (reconcileError) throw new Error(reconcileError.message)
+          const rows = data ?? []
+          const match = rows.find(row => row.slug === draft.slug.trim())
+          if (match) { authoritativeId = match.id; contentPersisted = !uploadedContentPath || match.content_path === uploadedContentPath }
+          return rows.map(row => ({ path: row.image_path, sourcePath: row.image_source_path ?? null }))
+        },
+      })
+      contentPersisted = true
       const cleanupWarnings: string[] = []
-      if (oldImagePath && uploadedImagePath && oldImagePath !== uploadedImagePath) { const { error:cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([oldImagePath]); if (cleanupError) cleanupWarnings.push('old cover') }
       if (editing?.content_path && uploadedContentPath && editing.content_path !== uploadedContentPath) { const { error:cleanupError } = await supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([editing.content_path]); if (cleanupError) cleanupWarnings.push('old content file') }
-      setSelectedFile(null); setSelectedContentFile(null); setSelectedId(authoritativeId); setNotice(`${editing ? 'Digital product updated.' : 'Digital product created.'}${cleanupWarnings.length ? ` Review the ${cleanupWarnings.join(' and ')} in storage; automatic cleanup did not complete.` : ''}`); await load(); setCreating(false)
+      cover.reset(cover.crop); setSelectedContentFile(null); setSelectedId(authoritativeId); setNotice(`${editing ? 'Digital product updated.' : 'Digital product created.'}${cleanupWarnings.length ? ` Review the ${cleanupWarnings.join(' and ')} in storage; automatic cleanup did not complete.` : ''}${saved.warning}`); await load(); setCreating(false)
     } catch (caught) {
-      let persisted = false
-      if (databaseAttempted) { const { data:authoritative } = await supabase.from('digital_products').select('id,image_path,content_path').eq('slug', draft.slug.trim()).maybeSingle(); persisted = Boolean(authoritative && (!uploadedImagePath || authoritative.image_path === uploadedImagePath) && (!uploadedContentPath || authoritative.content_path === uploadedContentPath)) }
-      if (!persisted) { const cleanup: PromiseLike<unknown>[] = []; if (uploadedImagePath) cleanup.push(supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([uploadedImagePath])); if (uploadedContentPath) cleanup.push(supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([uploadedContentPath])); await Promise.allSettled(cleanup) } else await load()
-      setError(databaseAttempted ? digitalProductMutationError(caught) : 'Unable to upload the file. Check its type, size, and storage permissions, then try again.')
+      const statusUnknown = caught instanceof Error && caught.message.includes('database status could not be confirmed')
+      if (uploadedContentPath && !contentPersisted && !statusUnknown) await supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([uploadedContentPath]).catch(() => undefined)
+      setError(digitalProductMutationError(databaseError && typeof databaseError === 'object' && 'code' in databaseError && String(databaseError.code) === '23505' ? databaseError : caught))
     } finally { setBusy(false) }
   }
 
@@ -220,16 +222,14 @@ export function DigitalProductManagement() {
     setBusy(true); setError(''); setNotice('')
     try {
       const { error:rowError } = await supabase.from('digital_products').delete().eq('id', product.id).select('id').single(); if (rowError) throw rowError
-      setCreating(false); setSelectedId(null); setDraft(emptyDraft); setSelectedFile(null); setSelectedContentFile(null); setFieldErrors({})
-      const removals = [supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([product.image_path])]; if (product.content_path) removals.push(supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([product.content_path]))
+      setCreating(false); setSelectedId(null); setDraft(emptyDraft); cover.reset(); setSelectedContentFile(null); setFieldErrors({})
+      const removals = [supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).remove([product.image_path])]; if (product.content_path) removals.push(supabase.storage.from(DIGITAL_PRODUCT_CONTENT_BUCKET).remove([product.content_path])); if (product.image_source_path) removals.push(supabase.storage.from(PHOTO_SOURCE_BUCKET).remove([product.image_source_path]))
       const results = await Promise.all(removals); setNotice(results.some(result => result.error) ? 'The digital product was deleted, but some stored files require manual cleanup.' : 'Digital product deleted.'); await load()
     } catch (caught) { setError(formError(caught, 'Unable to delete the digital product. Check your connection and try again.')) } finally { setBusy(false) }
   }
 
   const parsedPrice = parseDigitalProductPriceInput(draft.price)
   const parsedReferencePrice = draft.referencePrice.trim() ? parseDigitalProductPriceInput(draft.referencePrice) : null
-  const editorPreviewUrl = localPreviewUrl ?? storedPreviewUrl
-  const previewSource = localPreviewUrl ? 'local' : storedPreviewUrl ? 'stored' : 'empty'
   const showDedicatedEmptyState = !loading && !setupRequired && !loadFailed && !creating && products.length === 0
   const storedContentCompatible = Boolean(selected?.content_path && selected.content_type === draft.contentType)
   const pageHeader = <header className={dataStyles.pageHeader}><div className={dataStyles.pageHeaderCopy}><h2>Digital Products</h2></div>{!loading && !setupRequired && !loadFailed && products.length > 0 ? <span className={dataStyles.countPill}><PackageOpen aria-hidden="true" />{products.length} products</span> : null}</header>
@@ -242,49 +242,12 @@ export function DigitalProductManagement() {
         <h3 id="digital-product-cover-heading">Cover / poster</h3>
         <p>Covers use the same 4:5 frame as storefront cards. Paid PDF and video files are stored separately and privately.</p>
       </div>
-      <div className={styles.coverLayout}>
-        <div className={styles.coverInput}>
-          <label>
-            {selected ? 'Replace cover' : 'Select product cover'}
-            <input
-              data-testid="digital-product-file-input"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={event => {
-                setSelectedFile(event.target.files?.[0] ?? null)
-                setCoverFit({ ...DEFAULT_IMAGE_FIT })
-                setFieldErrors(current => ({ ...current, file:undefined }))
-              }}
-            />
-          </label>
-          <small className={styles.helper}>
-            {selected ? 'The saved cover is retained unless you select a new file. ' : ''}
-            JPG, PNG, or WebP · maximum 5 MB. New covers are saved as 1000 × 1250 px WebP images.
-          </small>
-          {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
-        </div>
-        <div className={styles.coverPreview} data-testid="digital-product-cover-preview" data-preview-source={previewSource} aria-label="Digital product cover preview">
-          {editorPreviewUrl ? (
-            <ImageFitEditor
-              src={editorPreviewUrl}
-              alt={draft.name ? `Cover ${draft.name}` : 'Digital product cover preview'}
-              fit={coverFit}
-              onFitChange={setCoverFit}
-              targetWidth={DIGITAL_PRODUCT_COVER_WIDTH}
-              targetHeight={DIGITAL_PRODUCT_COVER_HEIGHT}
-              minZoom={DIGITAL_PRODUCT_COVER_MIN_ZOOM}
-              maxZoom={DIGITAL_PRODUCT_COVER_MAX_ZOOM}
-              editable={Boolean(!busy && selectedFile && localPreviewUrl)}
-              testId="digital-product-cover-fit-editor"
-            />
-          ) : (
-            <div className={styles.coverPreviewEmpty}>
-              <ImagePlus aria-hidden="true" />
-              <span>{previewLoading ? 'Loading saved cover…' : 'Select a cover to preview it.'}</span>
-            </div>
-          )}
-          <p>{localPreviewUrl ? 'This preview shows the 4:5 crop that will be saved and displayed on storefront cards.' : selected ? 'Current saved cover.' : 'Your preview appears here before saving.'}</p>
-        </div>
+      <div className={styles.coverUpload} data-testid="digital-product-cover-preview" data-preview-source={cover.previewUrl ? 'local' : selected ? 'stored' : 'empty'}>
+        <AdminImageUploadField image={cover} target={coverTarget}
+          storedUrl={selected ? supabase.storage.from(DIGITAL_PRODUCT_IMAGE_BUCKET).getPublicUrl(selected.image_path).data.publicUrl : null}
+          sourcePath={selected?.image_source_path} alt={draft.name ? `Cover ${draft.name}` : 'Digital product cover preview'}
+          disabled={busy} onApplied={() => setFieldErrors(current => ({ ...current, file:undefined }))} />
+        {fieldErrors.file ? <small className="form-error">{fieldErrors.file}</small> : null}
       </div>
     </section>
     <section className={styles.formSection} aria-labelledby="digital-product-content-heading"><div className={styles.sectionHeading}><h3 id="digital-product-content-heading">Protected content</h3><p>Select a product type and upload the paid content file. Access uses temporary private links.</p></div><fieldset className={styles.contentTypeFieldset}><legend>Product type</legend><div className={styles.typeOptions}><label className={draft.contentType === 'pdf' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="pdf" checked={draft.contentType === 'pdf'} onChange={() => { setDraft(current => ({ ...current, contentType:'pdf' })); setSelectedContentFile(null); setContentError('') }} /><FileText aria-hidden="true" /> PDF</label><label className={draft.contentType === 'video' ? styles.typeOptionActive : styles.typeOption}><input type="radio" name="content-type" value="video" checked={draft.contentType === 'video'} onChange={() => { setDraft(current => ({ ...current, contentType:'video' })); setSelectedContentFile(null); setContentError('') }} /><PlayCircle aria-hidden="true" /> Video</label></div></fieldset>{draft.contentType ? <label className={styles.field}>{draft.contentType === 'pdf' ? 'PDF source' : 'Video source'}<input data-testid="digital-product-content-input" type="file" accept={draft.contentType === 'pdf' ? 'application/pdf,.pdf' : 'video/mp4,video/webm,.mp4,.webm'} onChange={event => { setSelectedContentFile(event.target.files?.[0] ?? null); setContentError('') }} /><small className={styles.helper}>{storedContentCompatible ? `Saved content: ${selected?.content_file_name ?? 'protected file'}${formatFileSize(selected?.content_size_bytes ?? null) ? ` · ${formatFileSize(selected?.content_size_bytes ?? null)}` : ''}. Select a new file only to replace it.` : draft.contentType === 'pdf' ? 'PDF · maximum 500 MB.' : 'MP4 or WebM · maximum 500 MB.'}</small></label> : null}{selectedContentFile ? <div className={styles.protectedFileSummary}><ShieldCheck aria-hidden="true" /><span><strong>{selectedContentFile.name}</strong>{formatFileSize(selectedContentFile.size)} · {selectedContentFile.type}</span></div> : null}{contentError ? <small className="form-error" data-testid="digital-product-content-error">{contentError}</small> : null}<label className={styles.publishToggle}><input type="checkbox" checked={draft.isPublished} onChange={event => { setDraft(current => ({ ...current, isPublished:event.target.checked })); setContentError('') }} /><span><strong>Publish to storefront</strong><small>Drafts remain available to administrators. Publishing requires a product type and protected content file.</small></span></label></section>

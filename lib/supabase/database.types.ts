@@ -28,7 +28,7 @@ export type AboutFeaturedStory = { id:string; slot:AboutFeaturedStorySlot; title
 export type HomepageWhoWeArePhotoRole = 'primary'|'upper_right'|'lower_right'
 export type HomepageWhoWeArePhoto = { role:HomepageWhoWeArePhotoRole; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; badge_text:string|null; created_at:string; updated_at:string }
 export type AboutUsStoryMedia = { id:string; image_path:string|null; source_image_path:string|null; image_crop:Json|null; alt_text:string|null; created_at:string; updated_at:string }
-export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
+export type DigitalProduct = { id:string; name:string; slug:string; description:string; image_path:string; image_source_path?:string|null; image_crop?:Json|null; price_amount:number; reference_price_amount?:number|null; content_type:DigitalProductContentType|null; content_path:string|null; content_mime_type:string|null; content_file_name:string|null; content_size_bytes:number|null; page_count:number|null; duration_seconds:number|null; is_published:boolean; homepage_featured:boolean; homepage_featured_order:number; show_sales_count?:boolean; show_rating?:boolean; created_at:string; updated_at:string }
 export type DigitalProductReview = { id:string; product_id:string; user_id:string; rating:number; comment:string|null; created_at:string; updated_at:string }
 export type AdminDigitalProductReview = DigitalProductReview & { customer_name:string }
 export type DigitalProductAccessSession = { id:string; user_id:string; product_id:string; order_id:string|null; order_item_id:string|null; created_at:string; expires_at:string }
@@ -183,6 +183,7 @@ export type Database = {
       admin_list_publications: { Args:Record<PropertyKey,never>; Returns:Publication[] }
       admin_list_competition_recognitions: { Args:Record<PropertyKey,never>; Returns:CompetitionRecognition[] }
       admin_list_trusted_partners: { Args:Record<PropertyKey,never>; Returns:TrustedPartner[] }
+      admin_list_digital_products: { Args:Record<PropertyKey,never>; Returns:DigitalProduct[] }
       admin_list_about_featured_stories: { Args:Record<PropertyKey,never>; Returns:AboutFeaturedStory[] }
       admin_list_competitions: { Args:Record<PropertyKey,never>; Returns:Competition[] }
       admin_list_marketing_testimonials: { Args:Record<PropertyKey,never>; Returns:MarketingTestimonial[] }

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 
 import { adminFormError as formError } from '@/lib/auth/errors'
 import { formatRupiah } from '@/lib/commerce/money'
+import { DIGITAL_PRODUCT_PUBLIC_COLUMNS } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/client'
 import dataStyles from './data-management.module.css'
 import { DiscountCodeAnalytics } from './discount-code-analytics'
@@ -92,7 +93,7 @@ export function DiscountCodeManagement() {
       const [codeResult, categoryResult, productResult, partnerResult] = await Promise.all([
         supabase.from('commerce_discount_codes').select('*').order('created_at', { ascending: false }),
         supabase.from('commerce_discount_code_categories').select('*'),
-        supabase.from('digital_products').select('*').order('name'),
+        supabase.from('digital_products').select(DIGITAL_PRODUCT_PUBLIC_COLUMNS).order('name'),
         supabase.rpc('admin_list_trusted_partners'),
       ])
       if (!mounted.current || sequence !== loadSequence.current) return

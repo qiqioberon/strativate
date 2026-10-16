@@ -7,6 +7,7 @@ type Options = {
   derivative: File | null
   sourcePrefix: string
   derivativePrefix: string
+  derivativeBucket?: string
   previous: ImageReferences
   upload: (bucket: string, path: string, file: File) => Promise<void>
   remove: (bucket: string, path: string) => Promise<void>
@@ -17,6 +18,7 @@ type Options = {
 // Never remove an old object until persistence succeeds (or reconciliation confirms it).
 export async function persistAdminImage(options: Options): Promise<ImageReferences & { warning: string }> {
   const { previous, sourcePrefix, derivativePrefix, upload, remove, persist, reconcile } = options
+  const derivativeBucket = options.derivativeBucket ?? 'marketing-editorial'
   const next = { ...previous }
   let uploadedPath: string | null = null
   let uploadedSourcePath: string | null = null
@@ -33,7 +35,7 @@ export async function persistAdminImage(options: Options): Promise<ImageReferenc
     }
     if (options.derivative) {
       uploadedPath = `${derivativePrefix}${crypto.randomUUID()}.webp`
-      await upload('marketing-editorial', uploadedPath, options.derivative)
+      await upload(derivativeBucket, uploadedPath, options.derivative)
       next.path = uploadedPath
     }
     await persist(next)
@@ -48,13 +50,13 @@ export async function persistAdminImage(options: Options): Promise<ImageReferenc
       (!uploadedPath || row.path === uploadedPath) && (!uploadedSourcePath || row.sourcePath === uploadedSourcePath)
     ))
     if (!confirmed) {
-      if (uploadedPath && !rows.some(row => row.path === uploadedPath)) await cleanup('marketing-editorial', uploadedPath)
+      if (uploadedPath && !rows.some(row => row.path === uploadedPath)) await cleanup(derivativeBucket, uploadedPath)
       if (uploadedSourcePath && !rows.some(row => row.sourcePath === uploadedSourcePath)) await cleanup(PHOTO_SOURCE_BUCKET, uploadedSourcePath)
       throw new Error(`${caught instanceof Error ? caught.message : 'Image could not be saved.'}${warning}`)
     }
   }
   if (previous.path && previous.path !== next.path && previous.path.startsWith(derivativePrefix)) {
-    await cleanup('marketing-editorial', previous.path)
+    await cleanup(derivativeBucket, previous.path)
   }
   if (previous.sourcePath && previous.sourcePath !== next.sourcePath && previous.sourcePath.startsWith(sourcePrefix)) {
     await cleanup(PHOTO_SOURCE_BUCKET, previous.sourcePath)

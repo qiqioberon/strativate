@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { DIGITAL_PRODUCT_IMAGE_BUCKET } from '@/lib/digital-products/config'
+import { DIGITAL_PRODUCT_IMAGE_BUCKET, DIGITAL_PRODUCT_PUBLIC_COLUMNS } from '@/lib/digital-products/config'
 import { createClient } from '@/lib/supabase/server'
 import type {
   DigitalProduct,
@@ -41,7 +41,7 @@ export async function listPublicDigitalProducts(): Promise<PublicDigitalProduct[
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('digital_products')
-    .select('*')
+    .select(DIGITAL_PRODUCT_PUBLIC_COLUMNS)
     .eq('is_published', true)
     .order('created_at', { ascending: false })
     .order('id')
@@ -54,7 +54,7 @@ export async function listHomepageDigitalProducts(limit = 5): Promise<PublicDigi
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('digital_products')
-    .select('*')
+    .select(DIGITAL_PRODUCT_PUBLIC_COLUMNS)
     .eq('is_published', true)
     .eq('homepage_featured', true)
     .order('homepage_featured_order', { ascending: true })
@@ -73,7 +73,7 @@ export async function getPublicDigitalProduct(slug: string): Promise<PublicDigit
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('digital_products')
-    .select('*')
+    .select(DIGITAL_PRODUCT_PUBLIC_COLUMNS)
     .eq('is_published', true)
     .eq('slug', slug)
     .maybeSingle()

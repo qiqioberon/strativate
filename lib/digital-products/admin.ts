@@ -244,6 +244,7 @@ export function isDigitalProductSetupRequired(error: unknown) {
   const code = typeof candidate.code === 'string' ? candidate.code.toUpperCase() : ''
   const message = typeof candidate.message === 'string' ? candidate.message.toLowerCase() : ''
   return code === 'PGRST205'
+    || code === 'PGRST202'
     || code === '42P01'
     || code === '42703'
     || (message.includes('digital_products') && (
