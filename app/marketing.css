@@ -1184,102 +1184,110 @@
   gap: clamp(14px, 1.6vw, 22px);
 }
 .homepage-programs .marketing-program-card {
-  --program-accent: #ee6414;
-  --program-tint: #fff0e4;
+  --program-accent: #e85d0c;
+  --program-ink: #9a3a06;
+  --program-field: #ffe7d4;
+  display: flex;
   min-height: 455px;
-  border-color: rgba(122, 65, 29, .13);
-  border-radius: 28px;
-  background: linear-gradient(155deg, rgba(255, 255, 255, .97), rgba(255, 250, 244, .93));
-  box-shadow: 0 18px 44px rgba(104, 55, 23, .075);
-  backdrop-filter: blur(8px);
+  flex-direction: column;
+  border: 1px solid rgba(122, 65, 29, .1);
+  border-radius: 24px;
+  background: #fffdfa;
+  box-shadow: 0 1px 2px rgba(104, 55, 23, .04);
   transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
 }
-.homepage-programs .marketing-program-card.is-red { --program-accent: #c94e3d; --program-tint: #fbe9e6; }
-.homepage-programs .marketing-program-card.is-yellow { --program-accent: #ce941b; --program-tint: #fff4cf; }
+.homepage-programs .marketing-program-card.is-red { --program-accent: #c94430; --program-ink: #8e2a1c; --program-field: #fbe0da; }
+.homepage-programs .marketing-program-card.is-yellow { --program-accent: #c98a0c; --program-ink: #7a5300; --program-field: #fdefc4; }
 .homepage-programs .marketing-program-card.is-placeholder {
   min-height: 455px;
   border-style: solid;
-  border-color: rgba(122, 65, 29, .13);
-}
-.homepage-programs .marketing-program-card::before {
-  position: absolute;
-  top: -72px;
-  right: -60px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: var(--program-tint);
-  content: '';
-  opacity: .82;
-  pointer-events: none;
-}
-.homepage-programs .marketing-program-card::after {
-  position: absolute;
-  right: 22px;
-  bottom: 22px;
-  width: 68px;
-  height: 68px;
-  background-image: radial-gradient(var(--program-accent) 1.2px, transparent 1.2px);
-  background-size: 10px 10px;
-  content: '';
-  opacity: .13;
-  pointer-events: none;
+  border-color: rgba(122, 65, 29, .1);
 }
 .homepage-programs .marketing-program-card:hover {
-  border-color: color-mix(in srgb, var(--program-accent) 42%, transparent);
-  box-shadow: 0 28px 58px rgba(104, 55, 23, .13);
-  transform: translateY(-7px);
+  border-color: color-mix(in srgb, var(--program-accent) 34%, transparent);
+  box-shadow: 0 22px 44px rgba(104, 55, 23, .1);
+  transform: translateY(-4px);
 }
-.homepage-programs .marketing-program-card__rail,
-.homepage-programs .marketing-program-card__body { position: relative; z-index: 1; }
-.homepage-programs .marketing-program-card__rail {
-  gap: 14px;
-  padding: 25px 0;
-  border-right-color: rgba(103, 58, 29, .1);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--program-tint) 72%, transparent), transparent 68%);
+.homepage-programs .marketing-program-card__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  padding: 0;
 }
-.homepage-programs .marketing-program-card__rail span {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--program-accent) 20%, transparent);
-  border-radius: 11px;
-  color: var(--program-accent);
-  background: rgba(255, 255, 255, .82);
-  box-shadow: 0 8px 18px rgba(105, 53, 19, .07);
-  font-size: .72rem;
-}
-.homepage-programs .marketing-program-card__rail i {
-  width: 2px;
-  border-radius: 999px;
-  background: linear-gradient(var(--program-accent), color-mix(in srgb, var(--program-accent) 8%, transparent));
-}
-.homepage-programs .marketing-program-card__body { padding: 27px 27px 29px; }
-.homepage-programs .marketing-program-card__icon {
-  color: var(--program-accent);
-  border-color: color-mix(in srgb, var(--program-accent) 18%, transparent);
-  background: var(--program-tint);
-}
-.homepage-programs .marketing-program-card__tag { color: var(--program-accent); }
 .homepage-programs .marketing-program-card h3 {
-  margin-top: 32px;
-  font-size: clamp(1.6rem, 2.1vw, 2.15rem);
+  margin: 0;
+  padding: 34px 30px 0;
+  border-radius: 23px 23px 0 0;
+  color: #24140c;
+  background: var(--program-field);
+  font-size: clamp(1.7rem, 2.3vw, 2.3rem);
   font-weight: 650;
+  letter-spacing: -.045em;
+  line-height: 1.02;
 }
-.homepage-programs .marketing-program-card__body > p { color: #665a53; font-size: .79rem; line-height: 1.72; }
-.homepage-programs .marketing-program-card ul { color: #5b504a; }
-.homepage-programs .marketing-program-card li svg { color: var(--program-accent); }
-.homepage-programs .marketing-program-card__bottom { border-top-color: rgba(101, 56, 28, .1); }
-.homepage-programs .marketing-program-card__action {
-  color: #fff !important;
-  background: var(--program-accent) !important;
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--program-accent) 24%, transparent);
+.homepage-programs .marketing-program-card .marketing-program-card__tag {
+  max-width: none;
+  margin: 0;
+  padding: 10px 30px 30px;
+  color: var(--program-ink);
+  background: var(--program-field);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.4;
+  text-align: left;
+  text-transform: none;
 }
+.homepage-programs .marketing-program-card .marketing-program-card__summary {
+  margin: 0;
+  padding: 26px 30px 0;
+  color: #4f433c;
+  font-size: .84rem;
+  line-height: 1.7;
+}
+.homepage-programs .marketing-program-card ul {
+  gap: 11px;
+  margin: 22px 0 0;
+  padding: 0 30px;
+  color: #3f342e;
+  font-size: .78rem;
+}
+.homepage-programs .marketing-program-card li { gap: 10px; }
+.homepage-programs .marketing-program-card li svg { margin-top: 2px; color: var(--program-accent); }
+.homepage-programs .marketing-program-card__bottom {
+  align-items: center;
+  margin: auto 0 0;
+  padding: 30px 30px 28px;
+  border-top: 0;
+}
+.homepage-programs .marketing-program-card__bottom strong { color: #24140c; font-size: .9rem; }
+.homepage-programs .marketing-program-card__bottom small { color: #75675f; font-size: .66rem; }
+.homepage-programs .marketing-program-card__arrow,
 .homepage-programs .marketing-program-card__pending {
-  color: var(--program-accent);
-  border-color: color-mix(in srgb, var(--program-accent) 18%, transparent);
-  background: var(--program-tint);
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+}
+.homepage-programs .marketing-program-card__arrow {
+  color: #fff;
+  background: var(--program-accent);
+  transition: transform 220ms ease;
+}
+.homepage-programs .marketing-program-card:hover .marketing-program-card__arrow { transform: translateX(3px); }
+.homepage-programs .marketing-program-card__pending {
+  color: var(--program-ink);
+  background: var(--program-field);
+}
+@media (prefers-reduced-motion: reduce) {
+  .homepage-programs .marketing-program-card,
+  .homepage-programs .marketing-program-card__arrow { transition: none; }
+  .homepage-programs .marketing-program-card:hover,
+  .homepage-programs .marketing-program-card:hover .marketing-program-card__arrow { transform: none; }
 }
 .homepage-programs__footer { display: flex; justify-content: center; margin-top: clamp(30px, 4vw, 48px); }
 .homepage-programs__view-all {
@@ -1294,7 +1302,8 @@
   .homepage-programs__head { grid-template-columns: 1fr !important; gap: 36px; }
   .homepage-programs__method { width: min(100%, 520px); justify-self: start; }
   .homepage-programs .marketing-program-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .homepage-programs .marketing-program-card:nth-child(3) { grid-column: 1 / -1; }
+  .homepage-programs .marketing-program-card:nth-child(3) { grid-column: 1 / -1; min-height: 0; }
+  .homepage-programs .marketing-program-card:nth-child(3) .marketing-program-card__bottom { margin-top: 0; }
 }
 @media (max-width: 620px) {
   .homepage-programs { background-size: 34px 34px, 34px 34px, auto, auto, auto; }
@@ -1314,11 +1323,14 @@
   .homepage-programs .marketing-program-card:nth-child(3) { grid-column: auto; }
   .homepage-programs .marketing-program-card,
   .homepage-programs .marketing-program-card.is-placeholder {
-    min-height: 410px;
+    min-height: 0;
     border-radius: 22px;
   }
-  .homepage-programs .marketing-program-card__body { padding: 22px 19px 24px; }
-  .homepage-programs .marketing-program-card h3 { margin-top: 28px; }
+  .homepage-programs .marketing-program-card h3 { padding: 28px 22px 0; border-radius: 21px 21px 0 0; }
+  .homepage-programs .marketing-program-card .marketing-program-card__tag { padding: 8px 22px 24px; }
+  .homepage-programs .marketing-program-card .marketing-program-card__summary { padding: 22px 22px 0; }
+  .homepage-programs .marketing-program-card ul { padding-inline: 22px; }
+  .homepage-programs .marketing-program-card__bottom { padding: 26px 22px 22px; }
   .homepage-programs__view-all { width: min(100%, 280px); }
 }
 
