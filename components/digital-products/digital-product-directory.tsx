@@ -36,6 +36,10 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
       <label><SlidersHorizontal aria-hidden="true" size={17}/><span className="sr-only">Sort products</span><select value={sort} onChange={event => setSort(event.target.value as Sort)} data-testid="digital-product-sort"><option value="newest">Newest</option><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
     </div>
 
+    <p className="digital-product-directory__count" aria-live="polite" data-testid="digital-product-count">
+      Showing <strong>{filtered.length}</strong> {filtered.length === 1 ? 'product' : 'products'}
+    </p>
+
     {filtered.length === 0 ? (
       <div className="digital-products-empty">
         <h2>No products match your filters.</h2>
