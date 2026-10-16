@@ -1217,19 +1217,21 @@
 }
 .homepage-programs .marketing-program-card h3 {
   margin: 0;
-  padding: 34px 30px 0;
+  position: relative;
+  z-index: 1;
+  padding: 34px 30px 4px;
   border-radius: 23px 23px 0 0;
   color: #24140c;
   background: var(--program-field);
   font-size: clamp(1.7rem, 2.3vw, 2.3rem);
   font-weight: 650;
   letter-spacing: -.045em;
-  line-height: 1.02;
+  line-height: 1.12;
 }
 .homepage-programs .marketing-program-card .marketing-program-card__tag {
   max-width: none;
   margin: 0;
-  padding: 10px 30px 30px;
+  padding: 6px 30px 30px;
   color: var(--program-ink);
   background: var(--program-field);
   font-size: .82rem;
@@ -1326,8 +1328,8 @@
     min-height: 0;
     border-radius: 22px;
   }
-  .homepage-programs .marketing-program-card h3 { padding: 28px 22px 0; border-radius: 21px 21px 0 0; }
-  .homepage-programs .marketing-program-card .marketing-program-card__tag { padding: 8px 22px 24px; }
+  .homepage-programs .marketing-program-card h3 { padding: 28px 22px 4px; border-radius: 21px 21px 0 0; }
+  .homepage-programs .marketing-program-card .marketing-program-card__tag { padding: 4px 22px 24px; }
   .homepage-programs .marketing-program-card .marketing-program-card__summary { padding: 22px 22px 0; }
   .homepage-programs .marketing-program-card ul { padding-inline: 22px; }
   .homepage-programs .marketing-program-card__bottom { padding: 26px 22px 22px; }
@@ -2369,19 +2371,15 @@
 }
 .homepage-hero h1.marketing-hero__headline {
   text-shadow:
-    0 -.008em 0 #fff,
-    .004em .012em 0 #ffd2ab,
-    .008em .024em 0 #ffb06f,
-    .012em .036em 0 #f8913f,
-    .016em .048em 0 #ec7424,
-    .02em .06em 0 #dc5f14,
-    .024em .072em 0 #c64f0b,
-    .028em .084em 0 #ad4106,
-    .032em .096em 0 #943503,
-    .036em .108em 0 #7c2b01,
-    .04em .13em .02em rgba(74, 20, 0, .55),
-    .05em .2em .12em rgba(74, 20, 0, .4),
-    .06em .32em .34em rgba(74, 20, 0, .3);
+    .003em .012em 0 #ffd5b0,
+    .006em .024em 0 #ffb274,
+    .009em .036em 0 #f78e3e,
+    .012em .048em 0 #e86e20,
+    .015em .06em 0 #d25812,
+    .018em .072em 0 #b9490a,
+    .021em .084em 0 #9c3c05,
+    .028em .11em .03em rgba(84, 24, 0, .46),
+    .04em .22em .24em rgba(84, 24, 0, .3);
 }
 .homepage-hero .marketing-hero__lede {
   max-width: 720px;
