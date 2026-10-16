@@ -501,6 +501,8 @@
 .digital-product-directory__toolbar input, .digital-product-directory__toolbar select { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--marketing-ink); background: transparent; font: inherit; }
 .digital-product-directory__toolbar select { appearance: none; cursor: pointer; padding-right: 18px; }
 .digital-product-directory__toolbar label:has(select)::after { width: 6px; height: 6px; flex: 0 0 auto; border-right: 1.5px solid #8c7465; border-bottom: 1.5px solid #8c7465; content: ''; transform: rotate(45deg) translateY(-2px); pointer-events: none; }
+.digital-product-directory__count { display: flex; align-items: center; gap: 8px; margin: 0 0 18px; color: var(--marketing-muted); font-size: .82rem; font-weight: 550; }
+.digital-product-directory__count strong { display: inline-grid; min-width: 34px; height: 28px; padding: 0 10px; place-items: center; border-radius: 999px; color: var(--marketing-orange); background: #fff1e0; font-size: .82rem; font-weight: 750; }
 @media (max-width: 620px) { .digital-product-directory__toolbar { align-items: stretch; flex-direction: column; } .digital-product-directory__toolbar label { width: 100%; } }
 
 
