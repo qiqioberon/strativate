@@ -39,8 +39,10 @@ export function DigitalProductCard({ product, headingLevel = 'h2', linkTestId }:
           <AggregateRating averageRating={product.averageRating ?? 0} ratingCount={ratingCount} />
           {product.salesCount !== null ? <span className="digital-product-card__sales"><Users size={15} strokeWidth={2} />{product.salesCount.toLocaleString('en-US')} sold</span> : null}
         </div>
-        <Heading className="digital-product-card__title">{product.name}</Heading>
-        <p className="digital-product-card__description-preview">{product.description}</p>
+        <div className="digital-product-card__copy">
+          <Heading className="digital-product-card__title">{product.name}</Heading>
+          <p className="digital-product-card__description-preview">{product.description}</p>
+        </div>
         <div className="digital-product-card__meta">
           <div className="digital-product-card__price-preview">{referencePrice != null ? <del>{formatRupiah(referencePrice)}</del> : null}<strong>{formatRupiah(product.price_amount)}</strong></div>
         </div>
