@@ -2357,14 +2357,19 @@
 }
 .homepage-hero h1.marketing-hero__headline {
   text-shadow:
-    0 .012em 0 #ffd9b8,
-    0 .024em 0 #ffb27a,
-    0 .036em 0 #f58a3c,
-    0 .048em 0 #e2661c,
-    0 .06em 0 #c8500d,
-    0 .072em 0 #a83f06,
-    0 .1em .06em rgba(96, 28, 0, .38),
-    0 .2em .3em rgba(96, 28, 0, .28);
+    0 -.008em 0 #fff,
+    .004em .012em 0 #ffd2ab,
+    .008em .024em 0 #ffb06f,
+    .012em .036em 0 #f8913f,
+    .016em .048em 0 #ec7424,
+    .02em .06em 0 #dc5f14,
+    .024em .072em 0 #c64f0b,
+    .028em .084em 0 #ad4106,
+    .032em .096em 0 #943503,
+    .036em .108em 0 #7c2b01,
+    .04em .13em .02em rgba(74, 20, 0, .55),
+    .05em .2em .12em rgba(74, 20, 0, .4),
+    .06em .32em .34em rgba(74, 20, 0, .3);
 }
 .homepage-hero .marketing-hero__lede {
   max-width: 720px;
