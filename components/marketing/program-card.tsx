@@ -35,7 +35,7 @@ export function ProgramCard({ program }: { program: MarketingProgram }) {
 
       <div className="marketing-program-card__bottom">
         <div>
-          <strong>{isPlaceholder ? 'Service overview' : 'Program information'}</strong>
+          <strong>{isPlaceholder ? 'Coming soon' : 'Program information'}</strong>
           <small>{isPlaceholder ? 'Commercial details are not available yet' : 'Commercial details are being updated'}</small>
         </div>
         {program.href ? (
