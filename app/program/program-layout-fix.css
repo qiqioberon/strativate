@@ -83,14 +83,8 @@
 }
 
 .program-page .marketing-service-card--primary .marketing-service-card__action {
-  justify-content: flex-start;
+  justify-content: center;
   width: fit-content;
-  padding-top: 18px;
-}
-
-.program-page .marketing-service-card--primary .marketing-service-card__action-icon {
-  width: 31px;
-  height: 31px;
 }
 
 .program-page .marketing-service-card--secondary {
@@ -104,7 +98,6 @@
   justify-self: start;
   align-self: end;
   margin-top: 12px;
-  padding: 10px 14px;
 }
 
 .program-page .marketing-service-card--secondary::after {
