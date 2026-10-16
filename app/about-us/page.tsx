@@ -56,10 +56,9 @@ export default async function AboutPage() {
 
         <section className="marketing-section about-reference-mission" data-reveal data-testid="about-vision-mission-section">
           <div className="marketing-container">
-            <div className="about-reference-vision"><span></span><p className="marketing-kicker">Our Vision</p><h2>To become a youth acceleration platform that equips the next generation with future skills, business literacy, and financial intelligence to thrive in an ever-evolving global workforce.</h2></div>
+            <div className="about-reference-vision"><h2>Our Vision</h2><p>To become a youth acceleration platform that equips the next generation with future skills, business literacy, and financial intelligence to thrive in an ever-evolving global workforce.</p></div>
             <div className="about-mission">
-              <span className="about-mission__accent" aria-hidden="true"></span>
-              <h2 id="about-mission-heading" className="marketing-kicker about-mission__heading">Our Mission</h2>
+              <h2 id="about-mission-heading" className="about-mission__heading">Our Mission</h2>
               <ul className="about-mission__grid" aria-labelledby="about-mission-heading">
                 {preparationPrinciples.map((principle, index) => {
                   const { Icon, tone } = missionPillars[index]
