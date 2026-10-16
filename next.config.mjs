@@ -4,6 +4,7 @@ const nextConfig = {
     '/api/orders/*/receipt': [
       './public/assets/brand/strativate-wordmark.png',
       './public/assets/brand/fonts/poppins-regular.ttf',
+      './public/assets/brand/fonts/poppins-semibold.ttf',
     ],
   },
   allowedDevOrigins: [

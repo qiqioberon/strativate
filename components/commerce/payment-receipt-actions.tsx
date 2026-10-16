@@ -1,6 +1,6 @@
 'use client'
 
-import { Download, Eye, RefreshCw, X } from 'lucide-react'
+import { Download, ExternalLink, Eye, FileText, RefreshCw, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { receiptEndpoint, receiptFilename } from '@/lib/commerce/payment-receipt'
 import type { CommerceLanguage } from '@/lib/commerce/presentation'
@@ -22,9 +22,10 @@ export function PaymentReceiptActions({ orderId, language = 'en' }: { orderId: s
   useEffect(() => {
     const element = dialog.current
     if (!element) return
-    if (open && !element.open) element.showModal()
+    const previousOverflow = document.body.style.overflow
+    if (open && !element.open) { element.showModal(); document.body.style.overflow = 'hidden' }
     if (!open && element.open) { element.close(); previewButton.current?.focus() }
-    return () => { if (element.open) element.close() }
+    return () => { if (element.open) element.close(); document.body.style.overflow = previousOverflow }
   }, [open])
 
   useEffect(() => {
@@ -87,13 +88,23 @@ export function PaymentReceiptActions({ orderId, language = 'en' }: { orderId: s
     {error && !open ? <p className={styles.error} role="alert">{error}</p> : null}
     <dialog ref={dialog} className={styles.dialog} aria-labelledby={id} onCancel={event => { event.stopPropagation(); event.preventDefault(); setOpen(false) }} onClose={event => { event.stopPropagation(); setOpen(false) }}>
       <div className={styles.surface}>
-        <header className={styles.header}><h3 id={id}>{label('Payment Receipt', 'Bukti Pembayaran')}</h3><button type="button" className={styles.close} autoFocus onClick={() => setOpen(false)} aria-label={label('Close receipt preview', 'Tutup pratinjau')}><X size={19} aria-hidden="true" /></button></header>
+        <header className={styles.header}>
+          <span className={styles.documentIcon}><FileText size={21} aria-hidden="true"/></span>
+          <div><h3 id={id}>{label('Payment Receipt', 'Bukti Pembayaran')}</h3><p>PDF · #STR-{orderId.slice(0, 8).toUpperCase()}</p></div>
+          <button type="button" className={styles.close} autoFocus onClick={() => setOpen(false)} aria-label={label('Close receipt preview', 'Tutup pratinjau')}><X size={19} aria-hidden="true" /></button>
+        </header>
         <div className={styles.preview} aria-busy={loading}>
           {loading ? <p className={styles.message} role="status">{label('Preparing receipt…', 'Menyiapkan bukti pembayaran…')}</p> : null}
           {error ? <div className={styles.message} role="alert"><p>{error}</p><button type="button" className={styles.button} onClick={() => setRetry(value => value + 1)}><RefreshCw size={14} aria-hidden="true" />{label('Try again', 'Coba lagi')}</button></div> : null}
-          {pdfUrl ? <object className={styles.pdf} data={pdfUrl} type="application/pdf" aria-label={label('PDF payment receipt preview', 'Pratinjau PDF bukti pembayaran')}><p className={styles.message}>{label('Your browser cannot display PDFs here. Use Download PDF below.', 'Browser tidak mendukung pratinjau PDF. Gunakan Unduh PDF di bawah.')}</p></object> : null}
+          {pdfUrl ? <object className={styles.pdf} data={pdfUrl} type="application/pdf" aria-label={label('PDF payment receipt preview', 'Pratinjau PDF bukti pembayaran')}><p className={styles.message}>{label('Your browser cannot display this PDF here. Open it in a new tab or download it below.', 'Browser tidak mendukung pratinjau PDF. Buka di tab baru atau unduh PDF di bawah.')}</p></object> : null}
         </div>
-        <footer className={styles.footer}><span>{label('If the preview is unavailable, download the PDF.', 'Jika pratinjau tidak tersedia, unduh PDF.')}</span><div className={styles.actions}><button type="button" className={styles.button} onClick={() => setOpen(false)}>{label('Close', 'Tutup')}</button><button type="button" className={`${styles.button} ${styles.primary}`} disabled={downloading || loading} onClick={() => void download()}><Download size={15} aria-hidden="true" />{downloading ? label('Preparing…', 'Menyiapkan…') : label('Download PDF', 'Unduh PDF')}</button></div></footer>
+        <footer className={styles.footer}>
+          <p>{label('Open in a new tab for a full-size view.', 'Buka di tab baru untuk tampilan penuh.')}</p>
+          <div className={styles.actions}>
+            {pdfUrl ? <a className={styles.button} href={receiptEndpoint(orderId)} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true"/>{label('Open in New Tab', 'Buka di Tab Baru')}</a> : <button type="button" className={styles.button} disabled><ExternalLink size={16} aria-hidden="true"/>{label('Open in New Tab', 'Buka di Tab Baru')}</button>}
+            <button type="button" className={`${styles.button} ${styles.primary}`} disabled={downloading || loading} onClick={() => void download()}><Download size={16} aria-hidden="true" />{downloading ? label('Preparing…', 'Menyiapkan…') : label('Download PDF', 'Unduh PDF')}</button>
+          </div>
+        </footer>
       </div>
     </dialog>
   </div>

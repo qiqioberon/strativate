@@ -89,6 +89,8 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
   const [meetingState, setMeetingState] = useState<AdminMeetingState | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloading, setReloading] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -123,13 +125,14 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
 
   const load = useCallback(async () => {
     const sequence = ++loadSequenceRef.current
+    setReloading(true); setLoadError('')
     try {
       const [engagements, mentorRows] = await Promise.all([
         rpc.rpc<Engagement[]>('list_admin_intensive_mentoring_engagements'),
         supabase.from('mentor_profiles').select('user_id,is_active').eq('is_active', true),
       ])
       if (sequence !== loadSequenceRef.current) return
-      if (engagements.error) setError(adminFormError(engagements.error, 'Unable to load Intensive Mentoring. Please refresh.'))
+      if (engagements.error) setLoadError(adminFormError(engagements.error, 'Unable to load Intensive Mentoring. Please try again.'))
       else setRows(engagements.data ?? [])
       if (!mentorRows.error) {
         if (!mentorRows.data?.length) setMentors([])
@@ -140,9 +143,9 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
         }
       }
     } catch {
-      if (sequence === loadSequenceRef.current) setError('Unable to load Intensive Mentoring. Please refresh.')
+      if (sequence === loadSequenceRef.current) setLoadError('Unable to load Intensive Mentoring. Please try again.')
     } finally {
-      if (sequence === loadSequenceRef.current) setLoading(false)
+      if (sequence === loadSequenceRef.current) { setLoading(false); setReloading(false) }
     }
   }, [rpc, supabase])
 
@@ -303,23 +306,23 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
 
   if (loading) return <section className="role-card"><p className="muted">Loading Intensive Mentoring…</p></section>
   return <div className="ops-page intensive-admin-operations">
-    <div className="button-row intensive-operations-heading"><button type="button" className="button button-outline button-compact" onClick={() => { setError(''); void load() }}><RefreshCw aria-hidden="true"/>Refresh</button></div>
     <div className="ops-filter-bar intensive-engagement-filters">
       <label className="ops-field ops-field--wide"><span>Search engagement / Session ID</span><div className="ops-input-with-icon"><Search aria-hidden="true" size={15}/><input type="search" value={query} onChange={event => { setQuery(event.target.value); setPage(0) }} placeholder="Name, email, program, or ID"/></div></label>
       <label className="ops-field"><span>Status</span><select value={statusFilter} onChange={event => { setStatusFilter(event.target.value); setPage(0) }}><option value="">All statuses</option>{Array.from(new Set(rows.map(row => row.status))).sort().map(status => <option key={status} value={status}>{statusLabel(status)}</option>)}</select></label>
       <label className="ops-field"><span>Type</span><select value={typeFilter} onChange={event => { setTypeFilter(event.target.value); setPage(0) }}><option value="">All types</option><option value="package">Package</option><option value="bundle">Bundle</option><option value="custom_offer">Custom</option></select></label>
       <button type="button" className="button button-outline ops-reset-action" onClick={() => { setQuery(''); setStatusFilter(''); setTypeFilter(''); setPage(0) }}><RotateCcw aria-hidden="true"/>Reset</button>
     </div>
+    {!selected && loadError ? <div className="mentoring-load-error" role="alert"><p>{loadError}</p><button type="button" className="button button-outline button-compact" disabled={reloading} onClick={() => void load()}><RefreshCw aria-hidden="true"/>Retry engagements</button></div> : null}
     {!selected && error ? <p className="form-error" role="alert">{error}</p> : null}
     <section className="role-card ops-table-section intensive-engagement-section">
-      <div className="ops-section-heading"><div><h3>Paid Intensive Engagements</h3></div><span>{filteredRows.length} data</span></div>
+      <div className="ops-section-heading"><div><h3>Paid Intensive Engagements</h3></div><span>{filteredRows.length} engagements</span></div>
       <div className="ops-table-wrap"><table className="ops-table intensive-engagement-table"><thead><tr><th>Mentee</th><th>Program</th><th>Type</th><th>Baseline</th><th>Session</th><th>Dedicated Mentor</th><th>Status</th><th>Actions</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.engagement_id}>
-        <td data-label="Mentee"><strong>{row.mentee_name || row.mentee_email}</strong><small className="ops-table-secondary">{row.mentee_email}</small></td>
+        <td data-label="Mentee"><strong>{row.mentee_name || row.mentee_email}</strong><small className="ops-table-secondary">{row.mentee_email.split(/(?=@)/).map((part,index)=><span key={index}>{index>0?<wbr/>:null}{part}</span>)}</small></td>
         <td data-label="Program"><strong>{row.program_name}</strong></td><td data-label="Type">{typeLabel(row.base_kind)}</td>
         <td data-label="Baseline">{row.baseline_sessions_per_month ? row.baseline_sessions_per_month + ' sessions / month' : 'Flexible'}</td><td data-label="Session">{row.sessions.length}</td>
         <td data-label="Dedicated Mentor">{row.primary_mentor_name || 'Not assigned'}</td><td data-label="Status"><span className={'ops-status ' + statusClass(row.status)}>{statusLabel(row.status)}</span></td>
         <td data-label="Actions"><button type="button" className="button button-outline button-compact" onClick={() => openWorkspace(row)}><Settings2 aria-hidden="true"/>Manage</button></td>
-      </tr>)}</tbody></table>{!visibleRows.length ? <p className="calendar-empty">{rows.length ? 'No engagements match these filters.' : 'No paid Intensive Mentoring engagements yet.'}</p> : null}</div>
+      </tr>)}</tbody></table>{!loadError && !visibleRows.length ? <p className="calendar-empty">{rows.length ? 'No engagements match these filters.' : 'No paid Intensive Mentoring engagements yet.'}</p> : null}</div>
       <TablePagination language="en" page={currentPage} pageSize={PAGE_SIZE} totalItems={filteredRows.length} onPageChange={setPage} label="Intensive Mentoring engagement pagination"/>
     </section>
 
@@ -354,6 +357,7 @@ export function IntensiveMentoringSessionManagement({ focusSessionId, focusEngag
             {customBenefits.length ? <div className="intensive-support-row"><h4>Custom benefits</h4><div className="intensive-config-chips">{customBenefits.map(addon => <span className="intensive-addon-chip" key={addon.code + addon.name}>{addon.name}</span>)}</div></div> : null}
             {selected.unassigned_add_ons.length ? <div className="intensive-unassigned-addons"><ShieldAlert aria-hidden="true"/><div><strong>Unlinked add-ons</strong><p>Link only add-ons that belong to this engagement.</p><div className="button-row">{selected.unassigned_add_ons.map(addon => <button type="button" className="button button-outline" disabled={Boolean(busy) || !addon.entitlementId} onClick={() => { if (addon.entitlementId) void attachAddOn(addon.entitlementId) }} key={addon.entitlementId ?? addon.code}><Link2 aria-hidden="true"/>Link {addon.name}</button>)}</div></div></div> : null}
           </section> : null}
+          {loadError ? <div className="mentoring-load-error mentoring-workspace-feedback" role="alert"><p>{loadError}</p><button type="button" className="button button-outline button-compact" disabled={reloading || Boolean(busy)} onClick={() => void load()}><RefreshCw aria-hidden="true"/>Retry engagements</button></div> : null}
           {error ? <p className="form-error mentoring-workspace-feedback" role="alert">{error}</p> : null}
           {message ? <p className="form-success mentoring-workspace-feedback" role="status">{message}</p> : null}
         </section>

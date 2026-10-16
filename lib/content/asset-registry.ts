@@ -31,6 +31,7 @@ export const assetRegistry = {
   'brand.logo.primary': ready('/assets/brand/strativate-wordmark.png', 'Strativate', 'Transparent PNG derivative of supplied Logo Strativate/6.png.'),
   'brand.logo.mark': ready('/assets/brand/strativate-mark.png', 'Strativate', 'Transparent PNG derivative of the mark supplied in Logo Strativate/1.png.'),
   'brand.font.receipt': ready('/assets/brand/fonts/poppins-regular.ttf', 'Poppins receipt font', 'Approved Poppins typography, bundled from google/fonts under the adjacent SIL Open Font License for server-generated receipts.'),
+  'brand.font.receipt.semibold': ready('/assets/brand/fonts/poppins-semibold.ttf', 'Poppins Semibold receipt font', 'Approved Poppins typography, bundled from google/fonts (Poppins-SemiBold.ttf) under the adjacent SIL Open Font License for receipt headings and totals.'),
 
   'mentors.navira-putri.portrait': ready('/assets/mentors/navira-putri.webp', 'Navira Putri', 'Optimized from the verified spreadsheet-linked portrait.'),
   'mentors.safira-aulia.portrait': ready('/assets/mentors/safira-aulia.webp', 'Safira Aulia', 'Optimized from the verified spreadsheet-linked portrait.'),

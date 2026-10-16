@@ -74,6 +74,9 @@
   .shell :global(.role-sidebar nav button) { min-height: 44px; }
   .shell :global(.ops-table .button) { min-height: 40px; }
 }
+@media (max-width: 760px) {
+  .shell :global(.ops-filter-bar > .ops-field) { flex: 0 1 auto; }
+}
 @media (max-width: 480px) {
   .shell :global(.role-content) { width: calc(100% - 24px); }
   .shell :global(.role-topbar) { padding-inline: 12px; }

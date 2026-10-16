@@ -5,7 +5,7 @@
 .workspace button,.summary button,.detailLink{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:7px 11px;border:1px solid #ded8cf;border-radius:9px;background:#fffdfa;color:#443830;font:inherit;font-size:12px;font-weight:600;line-height:1.3;text-decoration:none;cursor:pointer;white-space:normal}
 .workspace button:hover,.summary button:hover,.detailLink:hover{border-color:#e79a71;background:#fff5ee}
 .workspace button:disabled,.summary button:disabled{opacity:.5;cursor:default}
-.workspace :is(button,input,select,a):focus-visible,.summary :is(button,a):focus-visible,.viewTabs button:focus-visible,.backLink:focus-visible,.tableScroll:focus-visible{outline:2px solid #d9743a;outline-offset:3px}
+.workspace :is(button,input,select,a):focus-visible,.summary :is(button,a):focus-visible,.viewTabs button:focus-visible,.tableScroll:focus-visible{outline:2px solid #d9743a;outline-offset:3px}
 .weekControls label,.filters label,.distribution label{display:grid;gap:5px;color:#75685d;font-size:11px;font-weight:600;min-width:0}
 .weekControls label{display:flex;align-items:center;flex-wrap:wrap}
 .workspace input,.workspace select{width:100%;max-width:100%;min-width:0;border:1px solid #ddd5cb;border-radius:8px;background:#fffdfa;padding:8px 10px;color:#302a25;font:inherit;font-size:12px;min-height:35px}
@@ -54,7 +54,10 @@
 .viewTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .viewTabs button{padding:9px 13px;min-height:37px;border:1px solid #e4dbd0;background:#fffdfa;border-radius:9px;color:#756454;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;cursor:pointer}
 .viewTabs button[aria-selected=true]{background:#fff0e6;color:#ad5e2c;border-color:#ebc1a7}
-.backLink{display:inline-flex;align-items:center;gap:6px;margin:0 0 13px;color:#b06436;font-size:12px;text-decoration:none}
+.sessionWorkspace{container-type:inline-size;container-name:mentoring-workspace;gap:18px}
+.sessionWorkspace>:global(.role-page-title){margin-bottom:0}
+.sessionWorkspace>.viewTabs{margin-bottom:0}
+.sessionWorkspace>section[role=tabpanel]:not([hidden]){display:grid;gap:16px;min-width:0}
 @media(max-width:1150px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.search{grid-column:span 2}.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:720px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.search{grid-column:1/-1}.toolbar{align-items:flex-start}.actions{width:100%;justify-content:flex-end}.section,.summary{padding:12px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis dd{font-size:22px}.distribution label{margin-left:0}.range span{display:block;margin-top:3px}.pagination{gap:10px}.leaderboard li{gap:8px}}
 @media(max-width:380px){.filters{grid-template-columns:minmax(0,1fr)}.search{grid-column:auto}.weekControls{gap:6px}.weekControls label{width:100%}}

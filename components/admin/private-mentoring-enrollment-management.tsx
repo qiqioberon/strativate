@@ -126,6 +126,11 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const[packages,setPackages]=useState<PrivateMentoringPackage[]>([])
   const[tiers,setTiers]=useState<MentorTier[]>([])
   const[loading,setLoading]=useState(true)
+  const[catalogLoading,setCatalogLoading]=useState(true)
+  const[sessionsLoading,setSessionsLoading]=useState(false)
+  const[catalogError,setCatalogError]=useState(false)
+  const[enrollmentError,setEnrollmentError]=useState(false)
+  const[sessionError,setSessionError]=useState(false)
   const[error,setError]=useState('')
   const[message,setMessage]=useState('')
   const[warning,setWarning]=useState('')
@@ -146,34 +151,42 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
   const[busyId,setBusyId]=useState<string|null>(null)
 
   const loadCatalog=useCallback(async()=>{
+    setCatalogLoading(true);setCatalogError(false)
+    try{
     const[p,t]=await Promise.all([
       supabase.from('private_mentoring_packages').select('*').order('sort_order').order('id'),
       supabase.from('mentor_tiers').select('*').eq('is_active',true).order('sort_order').order('name'),
     ])
-    if(p.error||t.error){setError('Unable to load the Private Mentoring catalog.');return}
+    if(p.error||t.error){setCatalogError(true);return}
     setPackages(p.data??[])
     setTiers(t.data??[])
+    }catch{setCatalogError(true)}
+    finally{setCatalogLoading(false)}
   },[supabase])
 
   const load=useCallback(async()=>{
-    setLoading(true);setError('')
+    setLoading(true);setEnrollmentError(false)
+    try{
     const{data,error:e}=await rpc.rpc<EnrollmentRow[]>('list_admin_private_mentoring_enrollments_page',{
       p_query:query.trim(),p_package_id:packageId||null,p_tier_id:tierId||null,p_progress:progress,
       p_from:fromDate||null,p_to:toDate||null,p_limit:pageSize,p_offset:page*pageSize,
     })
-    if(e){setError('Unable to load Private Mentoring enrollments.');setLoading(false);return}
+    if(e){setEnrollmentError(true);return}
     const next=data??[]
-    if(next.length===0&&page>0){setPage(value=>Math.max(0,value-1));setLoading(false);return}
+    if(next.length===0&&page>0){setPage(value=>Math.max(0,value-1));return}
     setRows(next)
     setSelected(current=>current?next.find(row=>row.enrollment_id===current.enrollment_id)??null:null)
     setTotal(Number(next[0]?.total_count??0))
-    setLoading(false)
+    }catch{setEnrollmentError(true)}
+    finally{setLoading(false)}
   },[fromDate,packageId,page,pageSize,progress,query,rpc,tierId,toDate])
 
   const loadSessions=useCallback(async(enrollmentId:string)=>{
+    setSessionsLoading(true);setSessionError(false)
+    try{
     const{data,error:e}=await rpc.rpc<SessionRow[]>('get_admin_private_mentoring_enrollment_sessions',{p_enrollment_id:enrollmentId})
     if(activeEnrollmentRef.current!==enrollmentId)return
-    if(e){setError('Unable to load session details.');setSessions([]);setActiveSessionId(null);return}
+    if(e){setSessionError(true);setSessions([]);setActiveSessionId(null);return}
     const next=[...(data??[])].sort((a,b)=>a.session_number-b.session_number)
     setSessions(next)
     if(!editingPrimaryRef.current)setPrimaryMentorId(next[0]?.primary_mentor_id??'')
@@ -182,6 +195,9 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       if(current&&next.some(session=>session.session_id===current))return current
       return selectInitialSession(next)
     })
+    }catch{
+      if(activeEnrollmentRef.current===enrollmentId){setSessionError(true);setSessions([]);setActiveSessionId(null)}
+    }finally{if(activeEnrollmentRef.current===enrollmentId)setSessionsLoading(false)}
   },[focusSessionId,rpc])
 
   const loadEligibleMentors=useCallback(async(enrollmentId:string,purchased:number)=>{
@@ -352,18 +368,20 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
       <button className="button button-outline ops-reset-action" type="button" onClick={resetFilters}><RotateCcw aria-hidden="true"/>Reset</button>
     </div>
 
+    {catalogError?<div className="mentoring-load-error" role="alert"><p>Unable to load the Private Mentoring catalog.</p><button className="button button-outline button-compact" type="button" disabled={catalogLoading} onClick={()=>void loadCatalog()}><RefreshCw aria-hidden="true"/>Retry catalog</button></div>:null}
+    {enrollmentError&&!selected?<div className="mentoring-load-error" role="alert"><p>Unable to load Private Mentoring enrollments.</p><button className="button button-outline button-compact" type="button" disabled={loading} onClick={()=>void load()}><RefreshCw aria-hidden="true"/>Retry enrollments</button></div>:null}
     {error&&!selected?<p className="form-error" role="alert">{error}</p>:null}
     <section className="role-card ops-table-section">
       <div className="ops-section-heading"><div><h3>{total} packages</h3><p>Search by Session ID to find its enrollment.</p></div></div>
       <div className="ops-table-wrap"><table className="ops-table mentoring-enrollment-table"><thead><tr><SortableTableHeader label="User / Username" sortKey="user" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Email" sortKey="email" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Package" sortKey="package" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Purchase date" sortKey="purchased_at" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Progress" sortKey="progress" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><SortableTableHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSortChange={changeSort}/><th>Actions</th></tr></thead><tbody>{visibleRows.map(row=><tr key={row.enrollment_id}>
         <td data-label="User"><strong>{row.mentee_name}</strong><small className="ops-table-secondary">@{row.mentee_username||'username-not-set'}</small></td>
-        <td data-label="Email">{row.mentee_email}</td>
+        <td data-label="Email"><span>{row.mentee_email.split(/(?=@)/).map((part,index)=><span key={index}>{index>0?<wbr/>:null}{part}</span>)}</span></td>
         <td data-label="Package" title={row.package_name}><strong>{compactPackageName(row)}</strong><small className="ops-table-secondary">{compactPackageMeta(row)}</small></td>
         <td data-label="Purchase date">{DATE.format(new Date(row.purchased_at))}</td>
         <td data-label="Progress"><strong>{row.configured_sessions}/{row.purchased_sessions} arranged</strong><small className="ops-table-secondary">{row.completed_sessions} completed</small></td>
         <td data-label="Status"><span className={'ops-status '+enrollmentStatusClass(row)}>{enrollmentStatus(row)}</span></td>
         <td data-label="Actions"><button className="icon-button mentoring-manage-session-button" type="button" onClick={()=>void open(row)} title="Manage sessions" aria-label={'Manage sessions for '+row.mentee_name}><Eye aria-hidden="true"/></button></td>
-      </tr>)}</tbody></table>{!loading&&visibleRows.length===0?<p className="calendar-empty">No enrollments match these filters.</p>:null}{loading?<p className="calendar-loading">Loading…</p>:null}</div>
+      </tr>)}</tbody></table>{!loading&&!enrollmentError&&visibleRows.length===0?<p className="calendar-empty">No enrollments match these filters.</p>:null}{loading?<p className="calendar-loading">Loading…</p>:null}</div>
       <TablePagination language="en" page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} disabled={loading} label="Private Mentoring enrollment pagination"/>
     </section>
 
@@ -383,6 +401,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
             {currentPrimary&&primaryMentorId&&primaryMentorId!==currentPrimary?<label className="ops-field"><span>Reason for change (required)</span><textarea rows={2} value={mentorReason} onChange={event=>setMentorReason(event.target.value)} placeholder="Reason for the mentor change"/></label>:null}
             <div className="button-row"><button className="button button-primary" type="button" disabled={!primaryMentorId||primaryMentorId===currentPrimary||Boolean(currentPrimary&&!mentorReason.trim())||busyId==='mentor:'+selected.enrollment_id} onClick={()=>void setPrimaryMentor()}><Save aria-hidden="true"/>{currentPrimary?'Save mentor change':'Save dedicated mentor'}</button><button className="button button-outline" type="button" disabled={busyId==='mentor:'+selected.enrollment_id} onClick={()=>{setEditingPrimaryMentor(false);setPrimaryMentorId(currentPrimary??'');setMentorReason('')}}><X aria-hidden="true"/>Cancel</button></div>
           </div>:null}
+          {enrollmentError?<div className="mentoring-load-error mentoring-workspace-feedback" role="alert"><p>Unable to load Private Mentoring enrollments.</p><button className="button button-outline button-compact" type="button" disabled={loading} onClick={()=>void load()}><RefreshCw aria-hidden="true"/>Retry enrollments</button></div>:null}
         </section>
 
         <div className="mentoring-workspace-main">
@@ -434,7 +453,7 @@ export function PrivateMentoringSessionManagement({focusSessionId,focusEnrollmen
                 {warning?<p className="calendar-warning mentoring-workspace-feedback" role="status">{warning}</p>:null}
                 {message?<p className="form-success mentoring-workspace-feedback" role="status">{message}</p>:null}
               </div>
-            </div>:<div className="calendar-empty">No sessions in this enrollment yet.</div>}
+            </div>:sessionError?<div className="mentoring-load-error mentoring-workspace-feedback" role="alert"><p>Unable to load session details.</p><button className="button button-outline button-compact" type="button" disabled={sessionsLoading} onClick={()=>void loadSessions(selected.enrollment_id)}><RefreshCw aria-hidden="true"/>Retry sessions</button></div>:<div className="calendar-empty">{sessionsLoading?'Loading sessions…':'No sessions in this enrollment yet.'}</div>}
           </section>
         </div>
       </div>:null}

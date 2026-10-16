@@ -12,7 +12,7 @@ owned by the database-backed mentor public-profile domain introduced by
 | Standalone mark | Ready | `public/assets/brand/strativate-mark.png` | Request SVG master if one exists |
 | Supplied logo sources | Archived | `strativate-logo-source.png`, `strativate-mark-inverse-source.png` | Retained for provenance |
 | Typography | Ready | Poppins through `next/font/google` | None |
-| PDF receipt typography | Ready | `public/assets/brand/fonts/poppins-regular.ttf`, recorded as `brand.font.receipt`; licensed Poppins from google/fonts, with adjacent `OFL.txt` | Bundled with the receipt route; no runtime font download |
+| PDF receipt typography | Ready | `public/assets/brand/fonts/poppins-regular.ttf` and `poppins-semibold.ttf`, recorded as `brand.font.receipt` and `brand.font.receipt.semibold`; licensed Poppins Regular/Semibold from google/fonts (`ofl/poppins/Poppins-Regular.ttf`, `Poppins-SemiBold.ttf`), with adjacent `OFL.txt` | Both weights are bundled with the receipt route; no runtime font download |
 | Brand colors | Ready | Central CSS tokens from supplied palette | None |
 | Browser and Apple icons | Ready | `app/icon.png`, `app/apple-icon.png` | Derived from supplied logo 4 |
 | Default Open Graph image | Ready | `app/opengraph-image.png`, 1200×630 | Developer composition from supplied mark/palette |
