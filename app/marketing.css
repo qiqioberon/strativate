@@ -2355,6 +2355,17 @@
   line-height: 1.02;
   text-wrap: balance;
 }
+.homepage-hero h1.marketing-hero__headline {
+  text-shadow:
+    0 .012em 0 #ffd9b8,
+    0 .024em 0 #ffb27a,
+    0 .036em 0 #f58a3c,
+    0 .048em 0 #e2661c,
+    0 .06em 0 #c8500d,
+    0 .072em 0 #a83f06,
+    0 .1em .06em rgba(96, 28, 0, .38),
+    0 .2em .3em rgba(96, 28, 0, .28);
+}
 .homepage-hero .marketing-hero__lede {
   max-width: 720px;
   margin-top: clamp(22px, 2.4vw, 30px);
