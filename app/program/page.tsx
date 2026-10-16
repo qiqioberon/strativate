@@ -120,9 +120,9 @@ export default function ProgramPage() {
             <div className="marketing-container">
               <div className="program-organizations__head"><p className="marketing-kicker">Schools & Organizations</p><h2>Our Services for Schools & Organizations</h2><p>Comprehensive programs that help students build business skills and prepare for competitions.</p></div>
               <div className="program-organization-grid">
-                {organizationServices.map(({ title, description, emoji }, index) => (
+                {organizationServices.map(({ title, description, emoji }) => (
                   <article key={title}>
-                    <div className="program-organization__marker"><span aria-hidden="true">{emoji}</span><span className="program-organization__number" aria-hidden="true">0{index + 1}</span></div>
+                    <div className="program-organization__marker"><span aria-hidden="true">{emoji}</span></div>
                     <h3>{title}</h3><p>{description}</p>
                   </article>
                 ))}
