@@ -1,4 +1,4 @@
-import { Focus, Repeat2, Waypoints } from 'lucide-react'
+import { ChartNoAxesCombined, GraduationCap, Sprout } from 'lucide-react'
 
 import { AboutFeaturedStories } from '@/components/marketing/about-featured-stories'
 import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
@@ -9,7 +9,11 @@ import { ABOUT_US_STORY_IMAGE_HEIGHT, ABOUT_US_STORY_IMAGE_WIDTH } from '@/lib/m
 import { getAboutUsStoryMedia } from '@/lib/marketing/about-us-story'
 import { listActiveAboutFeaturedStories } from '@/lib/marketing/about-featured-stories'
 
-const icons = [Focus, Waypoints, Repeat2]
+const missionPillars = [
+  { Icon: GraduationCap, tone: 'peach' },
+  { Icon: ChartNoAxesCombined, tone: 'blush' },
+  { Icon: Sprout, tone: 'sage' },
+] as const
 const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
 export default async function AboutPage() {
@@ -53,8 +57,21 @@ export default async function AboutPage() {
         <section className="marketing-section about-reference-mission" data-reveal data-testid="about-vision-mission-section">
           <div className="marketing-container">
             <div className="about-reference-vision"><span></span><p className="marketing-kicker">Our Vision</p><h2>To become a youth acceleration platform that equips the next generation with future skills, business literacy, and financial intelligence to thrive in an ever-evolving global workforce.</h2></div>
-            <div className="marketing-section-head"><div><p className="marketing-kicker">Our Mission</p><h2>Practical learning that helps students keep moving forward.</h2></div></div>
-            <div className="marketing-about-page__principles about-reference-mission__grid">{preparationPrinciples.map((principle, index) => { const Icon = icons[index]; return <article key={principle.number}><Icon aria-hidden="true" size={22} /><span>{principle.number}</span><h3>{principle.title}</h3><p>{principle.description}</p></article> })}</div>
+            <div className="about-mission">
+              <h2 id="about-mission-heading" className="about-mission__heading">Our Mission</h2>
+              <ul className="about-mission__grid" aria-labelledby="about-mission-heading">
+                {preparationPrinciples.map((principle, index) => {
+                  const { Icon, tone } = missionPillars[index]
+                  return (
+                    <li className={`about-mission__card about-mission__card--${tone}`} key={principle.title}>
+                      <span className="about-mission__icon" aria-hidden="true"><Icon size={24} strokeWidth={1.75} /></span>
+                      <h3>{principle.title}</h3>
+                      <p>{principle.description}</p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
           </div>
         </section>
 
