@@ -1,6 +1,6 @@
 'use client'
 
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { ArrowDownWideNarrow, ChevronDown, FileText, LayoutGrid, Search, Video, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
@@ -8,6 +8,12 @@ import { DigitalProductCard } from './digital-product-card'
 
 type Sort = 'newest' | 'name' | 'price-low' | 'price-high'
 type FormatFilter = 'all' | 'pdf' | 'video'
+
+const formatOptions = [
+  { value: 'all', label: 'All formats', Icon: LayoutGrid },
+  { value: 'pdf', label: 'PDF', Icon: FileText },
+  { value: 'video', label: 'Video', Icon: Video },
+] as const
 
 const typeSections = [
   { type: 'pdf', label: 'PDF' },
@@ -37,9 +43,23 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
 
   return <div data-testid="digital-product-directory">
     <div className="digital-product-directory__toolbar">
-      <label><Search aria-hidden="true" size={17}/><span className="sr-only">Search products</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search digital products" data-testid="digital-product-search"/></label>
-      <label><span className="sr-only">Filter by content type</span><select value={contentType} onChange={event => setContentType(event.target.value as FormatFilter)} data-testid="digital-product-content-type-filter"><option value="all">All formats</option><option value="pdf">PDF</option><option value="video">Video</option></select></label>
-      <label><SlidersHorizontal aria-hidden="true" size={17}/><span className="sr-only">Sort products</span><select value={sort} onChange={event => setSort(event.target.value as Sort)} data-testid="digital-product-sort"><option value="newest">Newest</option><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
+      <label className="digital-product-directory__search">
+        <Search aria-hidden="true" size={18}/>
+        <span className="sr-only">Search products</span>
+        <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search digital products" data-testid="digital-product-search"/>
+        {query ? <button type="button" className="digital-product-directory__clear" onClick={() => setQuery('')} aria-label="Clear search"><X aria-hidden="true" size={15}/></button> : null}
+      </label>
+      <div className="digital-product-directory__formats" role="group" aria-label="Filter by content type" data-testid="digital-product-content-type-filter">
+        {formatOptions.map(option => <button type="button" key={option.value} className={`digital-product-directory__format digital-product-directory__format--${option.value}`} aria-pressed={contentType === option.value} onClick={() => setContentType(option.value)}>
+          <option.Icon aria-hidden="true" size={15}/>{option.label}
+        </button>)}
+      </div>
+      <label className="digital-product-directory__sort">
+        <ArrowDownWideNarrow aria-hidden="true" size={17}/>
+        <span className="digital-product-directory__sort-label">Sort</span>
+        <select value={sort} onChange={event => setSort(event.target.value as Sort)} aria-label="Sort products" data-testid="digital-product-sort"><option value="newest">Newest</option><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
+        <ChevronDown aria-hidden="true" size={16}/>
+      </label>
     </div>
 
     <p className="digital-product-directory__count" aria-live="polite" data-testid="digital-product-count">
