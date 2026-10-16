@@ -9,6 +9,12 @@ import { DigitalProductCard } from './digital-product-card'
 type Sort = 'newest' | 'name' | 'price-low' | 'price-high'
 type FormatFilter = 'all' | 'pdf' | 'video'
 
+const typeSections = [
+  { type: 'pdf', label: 'PDF' },
+  { type: 'video', label: 'Video' },
+  { type: 'other', label: 'Other' },
+] as const
+
 export function DigitalProductDirectory({ products }: { products: PublicDigitalProduct[] }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<Sort>('newest')
@@ -46,8 +52,17 @@ export function DigitalProductDirectory({ products }: { products: PublicDigitalP
         <p>Try another keyword or format, or check back when more products are published.</p>
       </div>
     ) : (
-      <div className="marketing-products-directory digital-products-directory">
-        {filtered.map(product => <DigitalProductCard key={product.id} product={product} />)}
+      <div className="digital-product-directory__sections">
+        {typeSections.map(section => {
+          const items = filtered.filter(product => (product.content_type ?? 'other') === section.type)
+          if (items.length === 0) return null
+          return <section className={`digital-product-directory__section digital-product-directory__section--${section.type}`} key={section.type} aria-labelledby={`digital-product-section-${section.type}`}>
+            <h2 className="digital-product-directory__section-title" id={`digital-product-section-${section.type}`}>{section.label}</h2>
+            <div className="marketing-products-directory digital-products-directory">
+              {items.map(product => <DigitalProductCard key={product.id} product={product} headingLevel="h3" />)}
+            </div>
+          </section>
+        })}
       </div>
     )}
   </div>
