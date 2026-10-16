@@ -1,5 +1,3 @@
-import { Focus, Repeat2, Waypoints } from 'lucide-react'
-
 import { AboutFeaturedStories } from '@/components/marketing/about-featured-stories'
 import { ExpertiseFloatingBackdrop } from '@/components/marketing/expertise-floating-backdrop'
 import { MarketingShell } from '@/components/marketing/marketing-shell'
@@ -9,7 +7,6 @@ import { ABOUT_US_STORY_IMAGE_HEIGHT, ABOUT_US_STORY_IMAGE_WIDTH } from '@/lib/m
 import { getAboutUsStoryMedia } from '@/lib/marketing/about-us-story'
 import { listActiveAboutFeaturedStories } from '@/lib/marketing/about-featured-stories'
 
-const icons = [Focus, Waypoints, Repeat2]
 const expertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 
 export default async function AboutPage() {
@@ -53,8 +50,20 @@ export default async function AboutPage() {
         <section className="marketing-section about-reference-mission" data-reveal data-testid="about-vision-mission-section">
           <div className="marketing-container">
             <div className="about-reference-vision"><span></span><p className="marketing-kicker">Our Vision</p><h2>To become a youth acceleration platform that equips the next generation with future skills, business literacy, and financial intelligence to thrive in an ever-evolving global workforce.</h2></div>
-            <div className="marketing-section-head"><div><p className="marketing-kicker">Our Mission</p><h2>Practical learning that helps students keep moving forward.</h2></div></div>
-            <div className="marketing-about-page__principles about-reference-mission__grid">{preparationPrinciples.map((principle, index) => { const Icon = icons[index]; return <article key={principle.number}><Icon aria-hidden="true" size={22} /><span>{principle.number}</span><h3>{principle.title}</h3><p>{principle.description}</p></article> })}</div>
+            <div className="about-mission">
+              <div className="about-mission__intro">
+                <p className="marketing-kicker">Our Mission</p>
+                <h2>Practical learning that helps students keep moving forward.</h2>
+              </div>
+              <ol className="about-mission__list">
+                {preparationPrinciples.map(principle => (
+                  <li key={principle.number}>
+                    <h3>{principle.title}</h3>
+                    <p>{principle.description}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         </section>
 
