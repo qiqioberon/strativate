@@ -24,6 +24,36 @@
 /* Lede: two balanced lines at every width instead of a hard break that left "into competition winners." alone on phones. */
 .stakeholder-homepage .homepage-why__head > p:last-child { max-width: 46ch; text-wrap: balance; }
 
+/* Cards: solid cream stickers in the same ink-outline, hard-shadow language as the labels, method bar and
+   view-all button, replacing the earlier frosted glass. Icon tiles cycle amber / peach / orange. */
+.stakeholder-homepage .homepage-why__card {
+  border: 2px solid var(--decor-ink);
+  border-radius: 20px;
+  background: var(--decor-cream);
+  box-shadow: var(--decor-hard-shadow-lg);
+  backdrop-filter: none;
+  transition: translate 220ms var(--decor-ease), box-shadow 220ms var(--decor-ease);
+}
+.stakeholder-homepage .homepage-why__card:hover {
+  border-color: var(--decor-ink);
+  background: var(--decor-cream);
+  box-shadow: var(--decor-hard-shadow-lg);
+  transform: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .stakeholder-homepage .homepage-why__card:hover { translate: -2px -2px; box-shadow: 7px 7px 0 var(--decor-ink); }
+}
+.stakeholder-homepage .homepage-why__icon {
+  border: 2px solid var(--decor-ink);
+  border-radius: 14px;
+  color: var(--decor-ink);
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+}
+.stakeholder-homepage .homepage-why__card:nth-child(3n + 2) .homepage-why__icon { background: var(--decor-peach-deep); }
+.stakeholder-homepage .homepage-why__card:nth-child(3n) .homepage-why__icon { background: var(--decor-orange); }
+.stakeholder-homepage .homepage-why__card h3 { color: var(--decor-ink); }
+
 /* Section layer (behind the container). --wy-pad mirrors the section padding in marketing.css. The one-line
    heading is about 880px wide at 1440, so pieces stay 520px off centre on the heading rows. */
 .homepage-why__decor { z-index: 0; --wy-pad: clamp(90px, 9vw, 138px); }
@@ -41,8 +71,8 @@
 .homepage-why__spark--a { top: calc(var(--wy-pad) + 4px); right: calc(50% + 540px); width: 30px; height: 30px; }
 .homepage-why__spark--b { top: calc(var(--wy-pad) + 128px); right: calc(50% + 470px); width: 16px; height: 16px; }
 
-/* Grid layer: under the glass cards (negative z inside the container's stacking context). The coil's outer half
-   is crisp beside the grid; the half behind the frosted cards shows as a soft amber glow. */
+/* Grid layer: under the cards (negative z inside the container's stacking context), so only the part of each
+   piece outside the grid shows. */
 .stakeholder-homepage .homepage-why__grid { position: relative; }
 .homepage-why__cards-decor { z-index: -1; }
 .homepage-why__coil { --orn-size: clamp(96px, 9vw, 128px); top: calc(50% - .5 * var(--orn-size)); right: calc(-.56 * var(--orn-size)); }
