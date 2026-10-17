@@ -1,0 +1,563 @@
+/* Student story detail (testimonial dialog) and every equivalent story card/detail on other pages.
+   Section-owned stylesheet, loaded after app/home-decor.css.
+   Markup: components/marketing/story-dialog-panel.tsx, story-details.tsx, about-featured-stories.tsx and the
+   pop-out content in testimonial-circular-gallery.tsx. marketing.css keeps the base (and test-locked) rules;
+   everything here is an override that loads later. */
+
+/* ───────────── Shared story pieces ───────────── */
+
+/* Placement chip: the stored achievement text with a Fluent award icon. Long text wraps instead of overflowing. */
+.story-award {
+  max-width: 100%;
+  padding: .5em 1.1em .5em .7em;
+  font-size: .9375rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1.25;
+  white-space: normal;
+  text-wrap: balance;
+}
+.story-award .neo-sticker__icon { width: 1.65em; height: 1.65em; margin-block: -.3em; }
+.neo-sticker.story-award--gold { background: var(--decor-amber); }
+.neo-sticker.story-award--silver { background: #fff; }
+.neo-sticker.story-award--bronze { background: var(--decor-peach); }
+.neo-sticker.story-award--merit { background: var(--decor-cream); }
+
+/* Quote mark: solid glyph in an orange sticker disc (ink outline + hard shadow). */
+.story-quote-badge {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 2px solid var(--decor-ink);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--decor-orange);
+  box-shadow: var(--decor-hard-shadow);
+}
+.story-quote-badge svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  stroke-width: 1.25px;
+}
+
+/* ───────────── Homepage testimonial dialog ───────────── */
+
+.marketing-testimonial-dialog {
+  --story-dialog-max-h: min(88vh, 780px);
+  /* % of the viewport box (a classic scrollbar excluded), unlike vw. */
+  width: min(1080px, 94%);
+  max-width: none;
+  max-height: var(--story-dialog-max-h);
+  border-radius: 28px;
+  background: #fffdfa;
+  box-shadow: 0 42px 120px rgba(34, 21, 12, .42), 0 0 0 1px rgba(34, 21, 12, .05);
+  overscroll-behavior: contain;
+}
+@supports (height: 100dvh) {
+  .marketing-testimonial-dialog { --story-dialog-max-h: min(88dvh, 780px); }
+}
+.marketing-testimonial-dialog::backdrop {
+  background: rgba(30, 17, 9, .72);
+  backdrop-filter: blur(6px);
+}
+
+/* The page behind a modal story does not scroll; the gutter stays so nothing shifts sideways. */
+html:has(.marketing-testimonial-dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+.marketing-testimonial-dialog .story-dialog {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+}
+
+/* Stage: warm brand field with the hero's square-grid texture; the photo sits on it as a tilted print. */
+.story-dialog__stage {
+  --pad-x: clamp(34px, 3.2vw, 46px);
+  --pad-y: 64px;
+  /* Print width, resolved by every descendant against this container's content box; the side gutter
+     leaves room for the award seal on the print's corner. */
+  --pw: min(100cqi - 28px, 380px);
+  position: relative;
+  z-index: 0;
+  display: grid;
+  min-height: min(var(--story-dialog-max-h), 600px);
+  place-items: center;
+  padding: var(--pad-y) var(--pad-x);
+  overflow: clip;
+  isolation: isolate;
+  container-type: inline-size;
+  background:
+    radial-gradient(110% 70% at 10% 0%, rgba(255, 201, 102, .55) 0%, rgba(255, 201, 102, 0) 58%),
+    radial-gradient(85% 65% at 100% 100%, rgba(204, 82, 0, .5) 0%, rgba(204, 82, 0, 0) 62%),
+    linear-gradient(160deg, #ff9024 0%, #ff7a00 48%, #f46c00 100%);
+}
+.story-dialog__stage::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .14) 1px, transparent 1px);
+  background-position: center;
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(78% 66% at 50% 48%, #000 0%, rgba(0, 0, 0, .5) 58%, transparent 100%);
+  mask-image: radial-gradient(78% 66% at 50% 48%, #000 0%, rgba(0, 0, 0, .5) 58%, transparent 100%);
+  pointer-events: none;
+  content: '';
+}
+.story-dialog__decor { z-index: 0; }
+
+/* Dashed halo centred on the print. */
+.story-dialog__ring {
+  --ring: calc(var(--pw) * 1.12);
+  --decor-ring-color: rgba(255, 255, 255, .58);
+  top: calc(50% - var(--ring) / 2);
+  left: calc(50% - var(--ring) / 2);
+  width: var(--ring);
+  height: var(--ring);
+}
+/* Soft background torus under the print's bottom-left corner (diagonal to the seal's counterpart coil). */
+.story-dialog__torus {
+  --orn-size: 84px;
+  top: calc(50% + var(--pw) * .4 + 30px);
+  left: calc(50% - var(--pw) * .5 + 6px);
+}
+.story-dialog__sparkle--a {
+  top: calc(50% - var(--pw) * .4 - 60px);
+  left: calc(50% - var(--pw) * .5 + 78px);
+  width: 26px;
+}
+.story-dialog__sparkle--b {
+  top: calc(50% - var(--pw) * .4 - 34px);
+  left: calc(50% + var(--pw) * .5 - 22px);
+  width: 18px;
+}
+
+.story-dialog__print-wrap {
+  position: relative;
+  z-index: 1;
+  width: var(--pw);
+  rotate: -2.5deg;
+}
+.story-dialog__print {
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 56px -14px rgba(92, 30, 0, .5), 0 10px 22px rgba(92, 30, 0, .16);
+}
+.marketing-testimonial-dialog .story-dialog__print .marketing-testimonial-dialog__media {
+  align-self: auto;
+  border-radius: 10px;
+  background: #f6eee7;
+}
+/* Brand coil rising from behind the print's bottom-right corner; mostly visible so it reads as a spring. */
+.story-dialog__coil {
+  --orn-size: 112px;
+  right: -30px;
+  bottom: -92px;
+  z-index: -1;
+}
+/* Award seal stuck on the print's top-left corner (icon only; the words are in the reading column). */
+.story-dialog__seal {
+  --burst-size: clamp(72px, 24cqi, 96px);
+  --decor-burst-fill: #fff;
+  position: absolute;
+  top: calc(var(--burst-size) * -.38);
+  left: calc(var(--burst-size) * -.36);
+  z-index: 2;
+  display: block;
+  rotate: -12deg;
+}
+.story-dialog__seal .neo-burst__content { padding: 0; }
+.story-dialog__seal .fluent-icon {
+  width: calc(var(--burst-size) * .5);
+  height: calc(var(--burst-size) * .5);
+  rotate: 12deg;
+}
+
+/* Reading column. Only this column scrolls when a story is long; the close button never moves. */
+.marketing-testimonial-dialog .story-dialog__content {
+  display: flex;
+  min-height: 0;
+  max-height: var(--story-dialog-max-h);
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(46px, 4.4vw, 56px) clamp(40px, 4.6vw, 60px) clamp(40px, 4vw, 52px) clamp(38px, 4vw, 54px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 21, 12, .24) transparent;
+  /* A long story fades out at the bottom edge instead of being cut mid-line, so it reads as scrollable.
+     The fade only ever covers the column's own bottom padding once the end is reached. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+}
+.marketing-testimonial-dialog .story-dialog__label {
+  margin: 0 0 22px;
+  font-size: .875rem;
+}
+.marketing-testimonial-dialog .story-dialog__content h2 {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  color: var(--decor-ink);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.07;
+  text-wrap: balance;
+}
+.marketing-testimonial-dialog .marketing-testimonial-dialog__achievement { margin-top: 20px; }
+
+.story-quote {
+  position: relative;
+  align-self: stretch;
+  margin-top: 46px;
+  padding: 40px clamp(24px, 2.6vw, 34px) 30px;
+  border: 1.5px solid #f1d6ba;
+  border-radius: 22px;
+  background: #fff5ea;
+}
+.story-quote__badge {
+  position: absolute;
+  top: -27px;
+  left: -16px;
+  rotate: -8deg;
+}
+.marketing-testimonial-dialog .story-quote blockquote {
+  margin: 0;
+  color: var(--decor-ink);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.marketing-testimonial-dialog .marketing-testimonial-dialog__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  place-items: center;
+  border: 2px solid var(--decor-ink);
+  border-radius: 50%;
+  color: var(--decor-ink);
+  background: #fff;
+  box-shadow: var(--decor-hard-shadow);
+  cursor: pointer;
+  transition: background-color 180ms ease, box-shadow 160ms ease, translate 160ms ease;
+}
+.marketing-testimonial-dialog .marketing-testimonial-dialog__close svg { transition: rotate 320ms var(--decor-ease); }
+.marketing-testimonial-dialog .marketing-testimonial-dialog__close:active {
+  translate: 2px 2px;
+  box-shadow: 1px 1px 0 var(--decor-ink);
+}
+.marketing-testimonial-dialog .marketing-testimonial-dialog__close:focus-visible {
+  outline: 3px solid var(--decor-orange-text);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close:hover {
+    color: var(--decor-ink);
+    background: var(--decor-amber);
+  }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close:hover svg { rotate: 90deg; }
+}
+
+/* Entrance: the print drops onto the stage, the seal is slapped on, the reading column rises in sequence. */
+@keyframes story-print-in { from { opacity: 0; translate: 0 26px; rotate: -9deg; scale: .94; } }
+@keyframes story-seal-in { from { opacity: 0; scale: .2; rotate: -70deg; } }
+@keyframes story-rise { from { opacity: 0; translate: 0 14px; } }
+.story-dialog__print-wrap { animation: story-print-in 700ms var(--decor-ease) 40ms both; }
+.story-dialog__seal { animation: story-seal-in 620ms cubic-bezier(.34, 1.56, .64, 1) 380ms both; }
+.marketing-testimonial-dialog .story-dialog__content > * { animation: story-rise 560ms var(--decor-ease) both; }
+.marketing-testimonial-dialog .story-dialog__content > :nth-child(1) { animation-delay: 90ms; }
+.marketing-testimonial-dialog .story-dialog__content > :nth-child(2) { animation-delay: 140ms; }
+.marketing-testimonial-dialog .story-dialog__content > :nth-child(3) { animation-delay: 190ms; }
+.marketing-testimonial-dialog .story-dialog__content > :nth-child(4) { animation-delay: 240ms; }
+
+/* Stacked card (tablets, short landscape screens): stage on top, the whole dialog scrolls. */
+@media (max-width: 899px), (max-height: 560px) {
+  .marketing-testimonial-dialog {
+    --story-dialog-max-h: calc(100vh - 48px);
+    width: min(680px, calc(100% - 48px));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  @supports (height: 100dvh) {
+    .marketing-testimonial-dialog { --story-dialog-max-h: calc(100dvh - 48px); }
+  }
+  .marketing-testimonial-dialog .story-dialog {
+    display: flex;
+    flex-direction: column;
+  }
+  /* Pinned to the top-right corner while the sheet scrolls. */
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close {
+    position: sticky;
+    top: 14px;
+    flex: none;
+    align-self: flex-end;
+    margin: 14px 14px -58px 0;
+  }
+  .story-dialog__stage {
+    --stage-h: clamp(270px, 46vh, 400px);
+    --pad-x: 40px;
+    --pad-y: 44px;
+    --pw: min(100cqi - 28px, 340px, calc((var(--stage-h) - 2 * var(--pad-y) - 20px) * 1.25));
+    height: var(--stage-h);
+    min-height: 0;
+    flex: none;
+  }
+  /* The stage is wide and short here, so the soft pieces move beside the print. */
+  .story-dialog__torus {
+    top: calc(50% + 6px);
+    left: calc(50% - var(--pw) * .5 - 118px);
+  }
+  .story-dialog__sparkle--a { top: calc(50% - var(--pw) * .4 - 32px); }
+  .story-dialog__sparkle--b {
+    top: calc(50% - 54px);
+    left: calc(50% + var(--pw) * .5 + 46px);
+  }
+  .story-dialog__coil {
+    right: -96px;
+    bottom: -18px;
+  }
+  .marketing-testimonial-dialog .story-dialog__content {
+    max-height: none;
+    overflow: visible;
+    padding: 34px clamp(22px, 5vw, 44px) 40px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  /* The pinned close button (44px + 14px inset) must never cover the title or the chip while the sheet scrolls. */
+  .marketing-testimonial-dialog .story-dialog__content h2 { padding-right: 36px; }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__achievement { max-width: calc(100% - 36px); }
+}
+
+/* Phone sheet: near full screen, safe-area aware, fewer and smaller decorations. */
+@media (max-width: 719px) {
+  .marketing-testimonial-dialog {
+    --story-dialog-max-h: calc(100vh - 16px);
+    width: calc(100% - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    border-radius: 24px;
+  }
+  @supports (height: 100dvh) {
+    .marketing-testimonial-dialog {
+      --story-dialog-max-h: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+  }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close {
+    top: max(12px, env(safe-area-inset-top, 0px));
+    margin: 12px 12px -56px 0;
+  }
+  .story-dialog__stage {
+    --stage-h: clamp(236px, 40vh, 340px);
+    --pad-x: 26px;
+    --pad-y: 38px;
+    /* Narrow enough that the pinned close button never sits on the photo. */
+    --pw: min(100cqi - 72px, 292px, calc((var(--stage-h) - 2 * var(--pad-y) - 20px) * 1.25));
+  }
+  .story-dialog__torus,
+  .story-dialog__sparkle--b { display: none; }
+  .story-dialog__coil {
+    --orn-size: 74px;
+    right: -44px;
+    bottom: -44px;
+  }
+  .story-dialog__seal { --burst-size: 66px; }
+  .story-dialog__print { padding: 8px; border-radius: 15px; }
+  .marketing-testimonial-dialog .story-dialog__content {
+    padding: 28px 20px calc(30px + env(safe-area-inset-bottom, 0px));
+  }
+  .marketing-testimonial-dialog .story-dialog__label { margin-bottom: 18px; font-size: .8125rem; }
+  .marketing-testimonial-dialog .story-dialog__content h2 { font-size: clamp(26px, 7.4vw, 32px); }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__achievement { margin-top: 16px; font-size: .875rem; }
+  .story-quote {
+    margin-top: 40px;
+    /* Extra right padding keeps the quote text clear of the pinned close button (44px + 12px inset). */
+    padding: 36px 36px 22px 20px;
+    border-radius: 18px;
+  }
+  .story-quote__badge {
+    top: -24px;
+    left: -6px;
+    width: 46px;
+    height: 46px;
+  }
+  .story-quote__badge svg { width: 19px; height: 19px; }
+}
+
+/* ───────────── Gallery hover pop-out ───────────── */
+
+/* Competition name in sentence case at a readable size (the base rule is a 9px uppercase tracked label). */
+.marketing-testimonial-gallery__overlay-content > span {
+  max-width: 100%;
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+  text-transform: none;
+  text-wrap: balance;
+}
+.marketing-testimonial-gallery__overlay-content > .story-popout__award {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.story-popout__award-icon {
+  width: 1.35em;
+  height: 1.35em;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
+}
+/* The only way into a story on touch, so the hit area is 44px tall; negative margins keep the card compact. */
+.marketing-testimonial-gallery__overlay-content > button {
+  min-height: 44px;
+  margin: -6px 0 -8px;
+  font-size: .8125rem;
+}
+
+/* ───────────── About us · Featured stories ───────────── */
+
+.about-featured-story { position: relative; overflow: clip; }
+/* Story two's field is a warm cream like the rest of the page, not the reference's cool grey. */
+.about-featured-story--two {
+  border-top-color: #f1e3d3;
+  background: #faf4ec;
+}
+.about-featured-story__heading { padding-left: 0; }
+.about-featured-story__heading::before { content: none; }
+.about-featured-story__heading .about-featured-story__label {
+  margin: 0 0 16px;
+  color: var(--decor-ink);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+}
+.about-featured-story__heading h2 {
+  color: var(--decor-ink);
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+/* Media frame: anchors a dashed ring and one brand ornament behind the photo(s). */
+.about-featured-story__frame {
+  position: relative;
+  min-width: 0;
+  isolation: isolate;
+}
+.about-featured-story__decor {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.about-featured-story__ring {
+  --decor-ring-color: color-mix(in srgb, var(--decor-orange) 60%, transparent);
+  height: auto;
+  aspect-ratio: 1;
+}
+/* Story one: halo behind the photo's top-right corner, coil rising from behind its bottom-left corner. */
+.about-featured-story__frame--single .about-featured-story__ring { top: -12%; right: -5%; width: 32%; }
+.about-featured-story__frame--single .about-featured-story__ornament {
+  --orn-size: clamp(84px, 8.4vw, 120px);
+  bottom: -15%;
+  left: -3%;
+}
+/* Story two: halo behind the second photo's top-right corner, torus under the first photo's corner. */
+.about-featured-story__frame--pair .about-featured-story__ring { top: -13%; right: -4%; width: 34%; }
+.about-featured-story__frame--pair .about-featured-story__ornament {
+  --orn-size: clamp(74px, 7.5vw, 104px);
+  bottom: -9%;
+  left: -6%;
+}
+
+.about-featured-story__quote {
+  /* Always above the media's decoration, which may tuck behind the card. */
+  z-index: 1;
+  border: 1.5px solid #f1d6ba;
+  border-radius: 22px;
+  background: #fff8f0;
+  box-shadow: 0 24px 44px -20px rgba(124, 45, 0, .24);
+}
+.about-featured-story__quote .story-quote-badge {
+  top: -26px;
+  left: 22px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--decor-orange);
+  box-shadow: var(--decor-hard-shadow);
+  rotate: -8deg;
+}
+.about-featured-story__quote > p {
+  color: var(--decor-ink);
+  font-size: clamp(1rem, 1.25vw, 1.0938rem);
+  line-height: 1.62;
+}
+.about-featured-story__quote footer {
+  flex-wrap: wrap;
+  row-gap: 12px;
+  border-top-color: #f0dbc5;
+}
+.about-featured-story__quote .about-featured-story__person strong { color: var(--decor-ink); }
+.about-featured-story__quote .about-featured-story__person > span {
+  color: #6e5d51;
+  font-size: .8125rem;
+}
+.about-featured-story__award { flex: 0 1 auto; font-size: .875rem; }
+
+@media (max-width: 900px) {
+  .about-featured-story__frame { width: min(100%, 720px); }
+  .about-featured-story--two .about-featured-story__frame { justify-self: end; }
+  /* Stacked: the media touches the heading or the quote card above/below it, so decoration stays at the
+     outer edges and inside the container gutter. */
+  .about-featured-story__frame--single .about-featured-story__ring { top: -9%; right: -2%; width: 30%; }
+  .about-featured-story__frame--single .about-featured-story__ornament {
+    --orn-size: clamp(60px, 11vw, 92px);
+    top: -11%;
+    right: 5%;
+    bottom: auto;
+    left: auto;
+  }
+  .about-featured-story__frame--pair .about-featured-story__ring { top: -9%; right: -2%; width: 30%; }
+  .about-featured-story__frame--pair .about-featured-story__ornament {
+    --orn-size: clamp(58px, 10vw, 84px);
+    bottom: -6%;
+    left: -2%;
+  }
+}
+
+@media (max-width: 560px) {
+  .about-featured-story__heading .about-featured-story__label { margin-bottom: 14px; font-size: .8125rem; }
+  .about-featured-story__quote { border-radius: 18px; }
+  .about-featured-story__quote .story-quote-badge {
+    top: -23px;
+    left: 18px;
+    width: 46px;
+    height: 46px;
+  }
+  .about-featured-story__quote .story-quote-badge svg { width: 19px; height: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-dialog__print-wrap,
+  .story-dialog__seal,
+  .marketing-testimonial-dialog .story-dialog__content > * { animation: none; }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close,
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close svg { transition: none; }
+  .marketing-testimonial-dialog .marketing-testimonial-dialog__close:hover svg { rotate: none; }
+}

@@ -1,0 +1,207 @@
+/* Shared homepage decoration system: brand 3D ornaments, flat accents, neobrutalist stickers, tilt cards.
+   Components live in components/marketing/decor/. Sections own the placement (top/left/size) of every piece
+   in their own stylesheet; this file only defines the look, the idle motion and the fallbacks. */
+:root {
+  --decor-ink: #22150c;
+  --decor-orange: var(--primary, #ff7a00);
+  --decor-orange-deep: #e85d00;
+  /* Brand orange is 2.6:1 on white, so text that must read as orange uses this burnt tone (4.6:1). */
+  --decor-orange-text: #c45200;
+  --decor-amber: #ffc247;
+  --decor-amber-deep: #f5a300;
+  --decor-peach: #ffe4c8;
+  --decor-peach-deep: #ffc794;
+  --decor-cream: #fff7ee;
+  --decor-hard-shadow: 3px 3px 0 var(--decor-ink);
+  --decor-hard-shadow-lg: 5px 5px 0 var(--decor-ink);
+  --decor-ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* The homepage carries no red: the legacy "orange-dark" token is actually #b3151c and --marketing-red is
+   #dc0d16, so both are re-pointed to the brand orange family for everything inside the homepage. */
+.stakeholder-homepage {
+  --marketing-orange-dark: var(--decor-orange-text);
+  /* Its homepage consumer is the white-text discount badge, so it needs an orange that keeps 6.4:1. */
+  --marketing-red: #a83b00;
+  --red: #a83b00;
+  --deep-red: var(--decor-orange-text);
+}
+
+/* Secondary "view all" actions in section heads (mentors, FAQ): an orange outline pill instead of the
+   legacy 12px red text link. The base .marketing-text-link colour is !important, hence the !important. */
+.stakeholder-homepage :is(.homepage-mentors__head, .homepage-faq__head) .marketing-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px 0 20px;
+  border: 1.5px solid color-mix(in srgb, var(--decor-orange) 60%, transparent);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .86);
+  color: var(--decor-orange-text) !important;
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+.stakeholder-homepage :is(.homepage-mentors__head, .homepage-faq__head) .marketing-text-link svg { transition: translate 240ms var(--decor-ease); }
+.stakeholder-homepage :is(.homepage-mentors__head, .homepage-faq__head) .marketing-text-link:is(:hover, :focus-visible) {
+  border-color: var(--decor-orange);
+  background: var(--decor-orange);
+  color: var(--decor-ink) !important;
+}
+.stakeholder-homepage :is(.homepage-mentors__head, .homepage-faq__head) .marketing-text-link:hover svg { translate: 3px 0; }
+
+/* Layer that holds a section's decoration behind (or around) its content. */
+.decor-layer { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+/* Brand 3D ornament. Size with --orn-size, place with top/right/bottom/left. */
+.brand-ornament {
+  position: absolute;
+  display: block;
+  width: var(--orn-size, 120px);
+  pointer-events: none;
+  user-select: none;
+  translate: calc(var(--decor-mx, 0) * var(--orn-depth, .5) * 28px) calc(var(--decor-my, 0) * var(--orn-depth, .5) * 20px);
+  transition: translate 1100ms var(--decor-ease);
+}
+.brand-ornament img {
+  display: block;
+  width: 100%;
+  height: auto;
+  rotate: var(--orn-rotate, 0deg);
+  filter: drop-shadow(0 16px 20px rgba(124, 45, 0, .2));
+  -webkit-user-drag: none;
+}
+.brand-ornament[data-depth='far'] { opacity: .62; filter: blur(1.4px) saturate(.92); }
+.brand-ornament[data-motion='float'] img { animation: decor-float var(--orn-duration, 6s) ease-in-out var(--orn-delay, 0s) infinite; }
+.brand-ornament[data-motion='bob'] img { animation: decor-bob var(--orn-duration, 5s) ease-in-out var(--orn-delay, 0s) infinite; }
+.brand-ornament[data-motion='drift'] img { animation: decor-drift var(--orn-duration, 9s) ease-in-out var(--orn-delay, 0s) infinite; }
+.brand-ornament[data-motion='spin'] img { animation: decor-spin var(--orn-duration, 28s) linear var(--orn-delay, 0s) infinite; }
+
+/* Flat vector accents. */
+.decor-shape {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  translate: calc(var(--decor-mx, 0) * var(--orn-depth, .3) * 28px) calc(var(--decor-my, 0) * var(--orn-depth, .3) * 20px);
+  transition: translate 1100ms var(--decor-ease);
+}
+.decor-shape[data-motion='float'] { animation: decor-float var(--orn-duration, 7s) ease-in-out var(--orn-delay, 0s) infinite; }
+.decor-shape[data-motion='bob'] { animation: decor-bob var(--orn-duration, 5s) ease-in-out var(--orn-delay, 0s) infinite; }
+.decor-shape[data-motion='drift'] { animation: decor-drift var(--orn-duration, 9s) ease-in-out var(--orn-delay, 0s) infinite; }
+.decor-shape[data-motion='spin'] { animation: decor-spin var(--orn-duration, 44s) linear var(--orn-delay, 0s) infinite; }
+.decor-shape[data-motion='twinkle'] { animation: decor-twinkle var(--orn-duration, 3.6s) ease-in-out var(--orn-delay, 0s) infinite; }
+.decor-ring { color: var(--decor-ring-color, var(--decor-orange)); }
+.decor-disc { border-radius: 50%; background: var(--decor-disc-fill, var(--decor-peach)); }
+.decor-squiggle { color: var(--decor-squiggle-color, var(--decor-orange)); }
+.decor-dot-field {
+  position: absolute;
+  pointer-events: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--decor-ink) 16%, transparent) 1.15px, transparent 1.6px);
+  background-size: 18px 18px;
+  -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent);
+  mask-image: radial-gradient(closest-side, #000 35%, transparent);
+}
+
+/* Neobrutalist sticker label (real text). */
+.neo-sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: .5em;
+  width: fit-content;
+  padding: .45em 1em .45em .75em;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  color: var(--decor-ink);
+  font-size: .8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.005em;
+  white-space: nowrap;
+}
+.neo-sticker[data-tone='orange'] { background: var(--decor-orange); }
+.neo-sticker[data-tone='cream'] { background: var(--decor-cream); }
+.neo-sticker[data-tone='white'] { background: #fff; }
+.neo-sticker[data-tone='ink'] { background: var(--decor-ink); color: #fff; box-shadow: 3px 3px 0 var(--decor-orange); }
+.neo-sticker__icon { display: inline-grid; flex: none; place-items: center; width: 1.5em; height: 1.5em; margin-block: -.25em; }
+.neo-sticker__icon > :is(img, svg) { width: 100%; height: 100%; }
+.neo-sticker__label { min-width: 0; }
+
+/* Starburst sticker. */
+.neo-burst { position: relative; display: inline-grid; place-items: center; width: var(--burst-size, 96px); aspect-ratio: 1; }
+.neo-burst__shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.neo-burst[data-spin] .neo-burst__shape { animation: decor-spin 32s linear infinite; }
+.neo-burst__content { position: relative; display: grid; place-items: center; padding: 20%; color: var(--decor-ink); font-size: .78rem; font-weight: 800; line-height: 1.05; text-align: center; }
+
+/* Circular rotating text badge. */
+.circular-badge {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--badge-size, 112px);
+  aspect-ratio: 1;
+  border: 2px solid var(--decor-ink);
+  border-radius: 50%;
+  background: var(--decor-badge-fill, #fff);
+  box-shadow: var(--decor-hard-shadow);
+}
+.circular-badge__ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; animation: decor-spin 26s linear infinite; }
+.circular-badge__ring text { fill: var(--decor-ink); font-family: var(--font-poppins), sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.circular-badge__center {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46%;
+  aspect-ratio: 1;
+  border: 2px solid var(--decor-ink);
+  border-radius: 50%;
+  background: var(--decor-amber);
+}
+.circular-badge__center > :is(img, svg) { width: 64%; height: 64%; }
+
+/* Fluent 3D icon. */
+.fluent-icon { display: inline-block; flex: none; object-fit: contain; vertical-align: middle; user-select: none; -webkit-user-drag: none; }
+
+/* Pointer tilt + glare wrapper (TiltSurface). Give it the wrapped card's border-radius in the section CSS. */
+.tilt-surface {
+  position: relative;
+  transform: perspective(1100px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg));
+}
+.tilt-surface[data-tilting] { will-change: transform; }
+.tilt-surface__glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(480px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 58%);
+  opacity: 0;
+  mix-blend-mode: soft-light;
+  transition: opacity 420ms var(--decor-ease);
+}
+.tilt-surface[data-tilting] .tilt-surface__glare { opacity: 1; }
+
+@keyframes decor-float { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 50% { transform: translate3d(0, -14px, 0) rotate(3deg); } }
+@keyframes decor-bob { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -9px, 0); } }
+@keyframes decor-drift { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 33% { transform: translate3d(7px, -11px, 0) rotate(-3deg); } 66% { transform: translate3d(-6px, -5px, 0) rotate(2deg); } }
+@keyframes decor-spin { to { transform: rotate(360deg); } }
+@keyframes decor-twinkle { 0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(.78) rotate(18deg); opacity: .78; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-ornament,
+  .decor-shape { translate: none; transition: none; }
+  .brand-ornament img,
+  .decor-shape,
+  .neo-burst__shape,
+  .circular-badge__ring { animation: none !important; }
+  .tilt-surface { transform: none; }
+  .tilt-surface__glare { display: none; }
+  .stakeholder-homepage :is(.homepage-mentors__head, .homepage-faq__head) .marketing-text-link svg { transition: none; translate: none; }
+}

@@ -27,11 +27,57 @@ const placeholder = (src: string, alt: string, priority: AssetPriority, notes: s
   src, alt, priority, notes, placeholder: true, status: 'placeholder',
 })
 
+// Decorative artwork is announced as empty alt text: it never carries information of its own.
+const ornament = (file: string, source: string): FrontendAsset => ready(
+  `/assets/brand/ornaments/${file}.webp`,
+  '',
+  `Decorative 3D brand ornament taken from the strativate.id production artwork (${source}) at the stakeholder's request in "Perbaikan Section Home"; trimmed to tight bounds with stray edge pixels removed.`,
+  'P2',
+)
+
+const fluentIcon = (file: string): FrontendAsset => ready(
+  `/assets/icons/fluent-emoji-3d/${file}.webp`,
+  '',
+  'Microsoft Fluent Emoji 3D icon (MIT, see THIRD_PARTY_NOTICES.md), resized to 160px WebP for badges and accents.',
+  'P2',
+)
+
 export const assetRegistry = {
   'brand.logo.primary': ready('/assets/brand/strativate-wordmark.png', 'Strativate', 'Transparent PNG derivative of supplied Logo Strativate/6.png.'),
   'brand.logo.mark': ready('/assets/brand/strativate-mark.png', 'Strativate', 'Transparent PNG derivative of the mark supplied in Logo Strativate/1.png.'),
   'brand.font.receipt': ready('/assets/brand/fonts/poppins-regular.ttf', 'Poppins receipt font', 'Approved Poppins typography, bundled from google/fonts under the adjacent SIL Open Font License for server-generated receipts.'),
   'brand.font.receipt.semibold': ready('/assets/brand/fonts/poppins-semibold.ttf', 'Poppins Semibold receipt font', 'Approved Poppins typography, bundled from google/fonts (Poppins-SemiBold.ttf) under the adjacent SIL Open Font License for receipt headings and totals.'),
+
+  'brand.ornament.coil-amber': ornament('coil-amber', '3d-ornament-1'),
+  'brand.ornament.coil-orange': ornament('coil-orange', '3d-ornament-2'),
+  'brand.ornament.coil-white': ornament('coil-white', '3d-ornament-2-white'),
+  'brand.ornament.torus-orange': ornament('torus-orange', '3d-ornament-3'),
+  'brand.ornament.pyramid-orange': ornament('pyramid-orange', '3d-ornament-4'),
+  'brand.ornament.cone-white': ornament('cone-white', '3d-ornament-4-white'),
+  'brand.ornament.coil-coral': ornament('coil-coral', '3d-ornament-5'),
+  'brand.ornament.cylinder-amber': ornament('cylinder-amber', '3d-ornament-6'),
+  'brand.ornament.cylinder-white': ornament('cylinder-white', '3d-ornament-6-white'),
+
+  'decor.icon.trophy': fluentIcon('trophy'),
+  'decor.icon.medal-1st': fluentIcon('medal-1st'),
+  'decor.icon.medal-2nd': fluentIcon('medal-2nd'),
+  'decor.icon.medal-3rd': fluentIcon('medal-3rd'),
+  'decor.icon.medal-sports': fluentIcon('medal-sports'),
+  'decor.icon.graduation-cap': fluentIcon('graduation-cap'),
+  'decor.icon.briefcase': fluentIcon('briefcase'),
+  'decor.icon.page': fluentIcon('page'),
+  'decor.icon.bookmark-tabs': fluentIcon('bookmark-tabs'),
+  'decor.icon.clapper': fluentIcon('clapper'),
+  'decor.icon.puzzle': fluentIcon('puzzle'),
+  'decor.icon.speech': fluentIcon('speech'),
+  'decor.icon.question': fluentIcon('question'),
+  'decor.icon.bullseye': fluentIcon('bullseye'),
+  'decor.icon.rocket': fluentIcon('rocket'),
+  'decor.icon.sparkles': fluentIcon('sparkles'),
+  'decor.icon.light-bulb': fluentIcon('light-bulb'),
+  'decor.icon.books': fluentIcon('books'),
+  'decor.icon.calendar': fluentIcon('calendar'),
+  'decor.icon.chart': fluentIcon('chart'),
 
   'mentors.navira-putri.portrait': ready('/assets/mentors/navira-putri.webp', 'Navira Putri', 'Optimized from the verified spreadsheet-linked portrait.'),
   'mentors.safira-aulia.portrait': ready('/assets/mentors/safira-aulia.webp', 'Safira Aulia', 'Optimized from the verified spreadsheet-linked portrait.'),

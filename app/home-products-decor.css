@@ -1,0 +1,428 @@
+/* Digital Products: layered stage around the card swap, stickers and decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css. Components: components/marketing/home-products-showcase.tsx
+   and components/marketing/digital-product-card-swap.tsx. Everything that touches the shared card or swap classes is
+   scoped under .homepage-products so the /digital-products storefront and the Playwright fixture keep their styles. */
+
+/* ── Panel: a warm field instead of the flat white box ─────────────────────────────────────────────────────── */
+.homepage-programs__library.homepage-products {
+  --products-pad: clamp(28px, 4vw, 54px);
+  --products-gap: clamp(28px, 4.6vw, 64px);
+  --products-radius: 32px;
+  --products-cream: #fff3e6;
+  --products-peach: #ffdcb8;
+  /* Orange text that sits on the peach field, not on cream: --decor-orange-text only reaches ~3.6:1 there. */
+  --products-orange-on-peach: #a34400;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  max-width: 1120px;
+  margin: clamp(56px, 7vw, 96px) auto 0;
+  padding: var(--products-pad);
+  border-radius: var(--products-radius);
+  background: var(--products-cream);
+  box-shadow: inset 0 0 0 1px rgb(196 82 0 / .1);
+}
+.homepage-programs__library .marketing-product-library__grid {
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: var(--products-gap);
+}
+
+/* ── Copy column ────────────────────────────────────────────────────────────────────────────────────────────── */
+.homepage-programs__library .marketing-product-library__copy {
+  position: relative;
+  z-index: 1;
+  /* The stack's caption and controls hang below the cards: lift the copy so it centres on the cards. */
+  padding-block: 8px clamp(8px, 4.5vw, 64px);
+}
+.homepage-programs__library .marketing-product-library__copy h3 {
+  color: var(--decor-ink);
+  font-size: clamp(2.2rem, 4vw, 3.15rem);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1;
+  text-wrap: balance;
+}
+.homepage-programs__library .marketing-product-library__lede {
+  max-width: 30rem;
+  margin-top: 18px;
+  color: #3d2c21;
+  font-size: clamp(1rem, .3vw + .92rem, 1.0625rem);
+  line-height: 1.65;
+}
+.home-products-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 10px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.home-products-formats .neo-sticker {
+  padding: .5em 1.05em .5em .7em;
+  font-size: .9375rem;
+}
+.home-products-formats .neo-sticker__icon { width: 1.6em; height: 1.6em; }
+/* Placed by hand, not snapped to a grid: a slight, alternating lean. */
+.home-products-formats li:nth-child(1) .neo-sticker { rotate: -2deg; }
+.home-products-formats li:nth-child(2) .neo-sticker { rotate: 1.5deg; }
+.home-products-formats li:nth-child(3) .neo-sticker { rotate: -1deg; }
+.homepage-programs__library .marketing-product-library__cta {
+  min-width: 236px;
+  margin-top: 30px;
+  border-radius: 999px;
+  color: var(--decor-ink);
+}
+.homepage-programs__library .marketing-product-library__cta svg { transition: translate 240ms var(--decor-ease); }
+@media (hover: hover) {
+  .homepage-programs__library .marketing-product-library__cta:hover svg { translate: 4px 0; }
+}
+/* The format list adds a fourth copy child: keep the entrance stagger in reading order. */
+.homepage-programs__library.is-visible .marketing-product-library__copy > :nth-child(4) { animation-delay: 270ms; }
+
+/* ── Stage: the peach field runs to the panel edges; the disc and ring bleed off it ─────────────────────────── */
+.home-products-stage {
+  position: relative;
+  display: grid;
+  align-self: stretch;
+  align-content: center;
+  min-width: 0;
+}
+.home-products-stage__field {
+  /* Disc centre: just inside the panel's right edge, level with the top of the stack. */
+  --products-disc: clamp(400px, 35vw, 500px);
+  --products-disc-x: calc(var(--products-pad) + 90px);
+  --products-disc-y: 36%;
+  position: absolute;
+  z-index: 0;
+  top: calc(-1 * var(--products-pad));
+  right: calc(-1 * var(--products-pad));
+  bottom: calc(-1 * var(--products-pad));
+  left: calc(-.5 * var(--products-gap));
+  overflow: clip;
+  border-radius: 84px var(--products-radius) var(--products-radius) 84px / 50% var(--products-radius) var(--products-radius) 50%;
+  background: var(--products-peach);
+  pointer-events: none;
+}
+.home-products-stage__disc {
+  --decor-disc-fill: var(--decor-orange);
+  top: calc(var(--products-disc-y) - var(--products-disc) * .5);
+  right: calc(var(--products-disc-x) - var(--products-disc) * .5);
+  width: var(--products-disc);
+  aspect-ratio: 1;
+}
+.home-products-stage__ring {
+  --decor-ring-color: color-mix(in srgb, var(--decor-orange-deep) 60%, transparent);
+  --orn-duration: 52s;
+  top: calc(var(--products-disc-y) - var(--products-disc) * .68);
+  right: calc(var(--products-disc-x) - var(--products-disc) * .68);
+  width: calc(var(--products-disc) * 1.36);
+  height: calc(var(--products-disc) * 1.36);
+}
+.home-products-stage__decor { z-index: 2; }
+.home-products-stage__torus {
+  --orn-size: clamp(96px, 9vw, 132px);
+  right: calc(-1 * var(--products-pad) - 30px);
+  bottom: calc(-1 * var(--products-pad) - 40px);
+}
+.home-products-stage__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+.home-products-stage .stakeholder-empty-state {
+  border: 2px dashed color-mix(in srgb, var(--decor-ink) 28%, transparent);
+  background: rgb(255 255 255 / .78);
+  color: #4d3b30;
+}
+
+/* ── Ornaments anchored to the stack (inside the Card Swap scene, so they follow its scale and offset) ───────── */
+.home-products-stack-decor {
+  --unit: calc(var(--swap-scale) / .82);
+  --card-w: calc(480px * var(--swap-scale));
+  --card-h: calc(600px * var(--swap-scale));
+  --rise: calc(var(--swap-stack-rise) * var(--swap-scale));
+  --front-left: calc(50% - var(--swap-center-offset) - var(--card-w) / 2);
+  --front-right: calc(50% - var(--swap-center-offset) + var(--card-w) / 2);
+  --front-top: calc(50% - var(--card-h) / 2);
+  --front-bottom: calc(50% + var(--card-h) / 2);
+}
+.home-products-stack-decor--back { z-index: -1; }
+.home-products-stack-decor--front { z-index: 2; }
+.home-products-stack-decor__coil {
+  --orn-size: calc(150px * var(--unit));
+  top: calc(var(--front-top) - var(--orn-size) * .62);
+  left: calc(var(--front-left) - var(--orn-size) * .6);
+}
+.home-products-stack-decor__window {
+  --window-w: calc(176px * var(--unit));
+  top: calc(var(--front-bottom) - var(--window-w) * .6);
+  left: calc(var(--front-left) - var(--window-w) * .58);
+  width: var(--window-w);
+  height: auto;
+  rotate: -9deg;
+}
+.home-products-stack-decor__halo {
+  --decor-disc-fill: var(--decor-orange);
+  --halo: calc(var(--card-h) * 1.08);
+  display: none;
+  top: calc(50% - var(--card-h) * .06 - var(--halo) / 2);
+  left: calc(50% - var(--swap-center-offset) + var(--card-w) * .06 - var(--halo) / 2);
+  width: var(--halo);
+  aspect-ratio: 1;
+}
+/* Sits on the rear cards' top-right corner, over the disc so the frosted glass has colour to blur. */
+.home-products-stack-decor__badge {
+  position: absolute;
+  top: calc(var(--front-top) - var(--rise) - 6px * var(--unit));
+  left: calc(var(--front-right) + var(--rise) * .7 - 150px * var(--unit));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 11px;
+  border: 1.5px solid rgb(255 255 255 / .9);
+  border-radius: 16px;
+  background: rgb(255 255 255 / .52);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow: 0 16px 32px -12px rgb(124 45 0 / .42), inset 0 1px 0 rgb(255 255 255 / .9);
+  color: var(--decor-ink);
+  font-size: .9375rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1;
+  white-space: nowrap;
+  rotate: 5deg;
+  translate: calc(var(--decor-mx, 0) * .9 * 28px) calc(var(--decor-my, 0) * .9 * 20px);
+  transition: translate 1100ms var(--decor-ease);
+  animation: decor-bob 6.5s ease-in-out -1.8s infinite;
+}
+/* One product: no rear cards to sit on, so keep clear of the front card's discount badge. */
+.digital-product-card-swap[data-product-count='1'] .home-products-stack-decor__badge {
+  top: calc(var(--front-top) - 58px * var(--unit));
+}
+.home-products-stack-decor__burst {
+  --burst-size: calc(86px * var(--unit));
+  --decor-burst-fill: #fff;
+  position: absolute;
+  top: calc(var(--front-bottom) - var(--burst-size) * .62);
+  left: calc(var(--front-right) - var(--burst-size) * .36);
+  translate: calc(var(--decor-mx, 0) * 1.2 * 28px) calc(var(--decor-my, 0) * 1.2 * 20px);
+  transition: translate 1100ms var(--decor-ease);
+}
+.home-products-stack-decor__burst .fluent-icon { width: calc(34px * var(--unit)); height: auto; }
+.home-products-stack-decor__burst .neo-burst__content { padding: 0; }
+
+/* ── Cards: white-bordered prints on the field; badges speak the sticker language, no red ───────────────────── */
+/* Until GSAP places the cards (hydration), stack them in the front slot so the first paint is not scattered:
+   the same transform the front slot gets, with the first product on top. */
+.homepage-products .rb-card-swap__card:not([style*='transform']) { transform: translate(-50%, -50%) skewY(4deg); }
+.homepage-products .rb-card-swap__card:first-child:not([style*='transform']) { z-index: 1; }
+.homepage-products .digital-product-swap-card > .digital-product-card {
+  border: 10px solid #fff;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 30px 52px -22px rgb(124 45 0 / .5), 0 2px 6px rgb(34 21 12 / .06);
+}
+.homepage-products .digital-product-swap-card > .digital-product-card:is(:hover, :focus-within) {
+  border-color: #fff;
+  box-shadow: 0 38px 64px -22px rgb(124 45 0 / .58), 0 4px 10px rgb(34 21 12 / .08);
+}
+.homepage-products .digital-product-card__badges { top: 14px; right: 14px; left: 14px; }
+.homepage-products .digital-product-card__type,
+.homepage-products .digital-product-card__discount {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 2px solid var(--decor-ink);
+  box-shadow: 2px 2px 0 var(--decor-ink);
+  color: var(--decor-ink);
+  font-size: .84rem;
+  font-weight: 800;
+}
+.homepage-products .digital-product-card__type { background: #fff; }
+.homepage-products .digital-product-card__discount { background: var(--decor-orange); }
+/* An empty catalogue rating ("(0)" under five grey stars) is not shown on the homepage. */
+.homepage-products .digital-product-rating-aggregate--catalogue:not(:has(strong)) { display: none; }
+
+/* ── Caption + one control group under the stack ────────────────────────────────────────────────────────────── */
+.homepage-products .digital-product-card-swap { --swap-pagination-gap: 18px; }
+.homepage-products .digital-product-card-swap__footer {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding-right: calc(var(--swap-center-offset) * 2);
+  text-align: center;
+}
+.homepage-products .digital-product-card-swap__caption {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  max-width: min(100%, calc(480px * var(--swap-scale) + 40px));
+  animation: home-products-caption-in 460ms var(--decor-ease) both;
+}
+.homepage-products .digital-product-card-swap__caption strong {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--decor-ink);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.3;
+}
+.homepage-products .digital-product-card-swap__caption span {
+  color: var(--products-orange-on-peach);
+  font-size: .9375rem;
+  font-weight: 700;
+}
+.homepage-products .digital-product-card-swap__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--decor-hard-shadow);
+}
+.homepage-products .digital-product-card-swap__arrow {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--decor-ink);
+  background: var(--decor-cream);
+  box-shadow: none;
+  transform: none;
+  transition: background-color 180ms ease, scale 160ms ease;
+}
+.homepage-products .digital-product-card-swap__arrow:hover { transform: none; }
+.homepage-products .digital-product-card-swap__arrow:active { transform: none; scale: .92; }
+.homepage-products .digital-product-card-swap__arrow:focus-visible { outline: 3px solid var(--decor-orange-text); outline-offset: 2px; }
+.homepage-products .digital-product-card-swap__dots {
+  gap: 0;
+  padding: 0 4px;
+}
+/* Each dot is a 40x44 target (the capsule's full inner height, level with the 44px arrows); the visible dot stays small. */
+.homepage-products .digital-product-card-swap__dots button {
+  position: relative;
+  width: 40px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  transform: none;
+  transition: width 260ms var(--decor-ease);
+}
+.homepage-products .digital-product-card-swap__dots button::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: #fff;
+  content: '';
+  translate: -50% -50%;
+  transition: width 260ms var(--decor-ease), background-color 200ms ease;
+}
+.homepage-products .digital-product-card-swap__dots button:hover { transform: none; }
+/* .is-active marks the card that is visibly in front; aria-current commits after the swap finishes. */
+.homepage-products .digital-product-card-swap__dots button:is(.is-active, [aria-current='true']) {
+  background: transparent;
+  transform: none;
+}
+.homepage-products .digital-product-card-swap__dots button.is-active { width: 50px; }
+.homepage-products .digital-product-card-swap__dots button.is-active::before {
+  width: 26px;
+  background: var(--decor-orange);
+}
+.homepage-products .digital-product-card-swap__dots button:focus-visible { outline: 3px solid var(--decor-orange-text); outline-offset: 0; }
+@media (hover: hover) {
+  .homepage-products .digital-product-card-swap__arrow:hover { background: var(--decor-orange); }
+  .homepage-products .digital-product-card-swap__dots button:not(.is-active):hover::before { background: var(--decor-peach-deep); }
+}
+
+@keyframes home-products-caption-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+
+/* ── Responsive ─────────────────────────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  /* The page gutter is ~32px here: a 30px bleed past the panel would put the torus on the viewport edge. */
+  .home-products-stage__torus { right: calc(-1 * var(--products-pad) - 10px); }
+  .home-products-formats { gap: 10px 8px; }
+  .home-products-formats .neo-sticker { padding: .45em .95em .45em .62em; font-size: .875rem; }
+}
+
+@media (max-width: 900px) {
+  .home-products-stage__torus { right: -14px; }
+  .homepage-programs__library .marketing-product-library__grid {
+    grid-template-columns: 1fr;
+    gap: calc(var(--products-gap) + 24px);
+  }
+  .homepage-programs__library .marketing-product-library__copy { max-width: 620px; padding-block: 0; }
+  .homepage-programs__library .marketing-product-library__copy h3 { font-size: clamp(2.2rem, 5.6vw, 2.9rem); }
+  .home-products-stage__field {
+    top: calc(-.5 * var(--products-gap) - 12px);
+    left: calc(-1 * var(--products-pad));
+    border-radius: 50% 50% var(--products-radius) var(--products-radius) / 64px 64px var(--products-radius) var(--products-radius);
+  }
+  .home-products-stage__disc,
+  .home-products-stage__ring { display: none; }
+  .home-products-stack-decor__halo { display: block; }
+}
+
+@media (max-width: 620px) {
+  .homepage-programs__library.homepage-products { --products-radius: 26px; }
+  /* Copy first, then the stage (marketing.css moves the copy after the stack at this width). */
+  .homepage-programs__library .marketing-product-library__copy { order: 0; }
+  .home-products-stack-decor__window,
+  .home-products-stack-decor__badge,
+  .home-products-stack-decor__burst { display: none; }
+  /* Below the control capsule, hanging off the panel's bottom edge. */
+  .home-products-stage__torus {
+    --orn-size: 84px;
+    right: -6px;
+    bottom: calc(-1 * var(--products-pad) - 60px);
+  }
+}
+
+/* Phones: the storefront scales the stack down to .39-.54, which would leave the type and discount chips at
+   5-7px. Size them in card units divided by the scale so they render at about 10px text in a 26px pill. */
+@media (max-width: 560px) {
+  .homepage-products .digital-product-card__badges {
+    top: calc(10px / var(--swap-scale));
+    right: calc(10px / var(--swap-scale));
+    left: calc(10px / var(--swap-scale));
+    gap: calc(6px / var(--swap-scale));
+  }
+  .homepage-products .digital-product-card__type,
+  .homepage-products .digital-product-card__discount {
+    gap: calc(4px / var(--swap-scale));
+    min-height: calc(26px / var(--swap-scale));
+    padding: 0 calc(10px / var(--swap-scale));
+    border-width: calc(1.5px / var(--swap-scale));
+    box-shadow: calc(2px / var(--swap-scale)) calc(2px / var(--swap-scale)) 0 var(--decor-ink);
+    font-size: calc(10px / var(--swap-scale));
+  }
+  .homepage-products .digital-product-card__type svg {
+    width: calc(12px / var(--swap-scale));
+    height: calc(12px / var(--swap-scale));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-products-stack-decor__badge,
+  .home-products-stack-decor__burst { translate: none; transition: none; animation: none; }
+  .homepage-products .digital-product-card-swap__caption { animation: none; }
+  .homepage-products .digital-product-card-swap__arrow,
+  .homepage-products .digital-product-card-swap__dots button,
+  .homepage-products .digital-product-card-swap__dots button::before,
+  .homepage-programs__library .marketing-product-library__cta svg { transition: none; }
+}

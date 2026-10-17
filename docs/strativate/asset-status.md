@@ -1,6 +1,6 @@
 # Strativate asset and content status registry
 
-Current as of 15 October 2026. Runtime asset metadata lives in
+Current as of 17 October 2026. Runtime asset metadata lives in
 `lib/content/asset-registry.ts`; public mentor profile/content runtime data is
 owned by the database-backed mentor public-profile domain introduced by
 `202609170001_mentor_public_profiles_expertise.sql`. The full source receipt is in
@@ -16,6 +16,8 @@ owned by the database-backed mentor public-profile domain introduced by
 | Brand colors | Ready | Central CSS tokens from supplied palette | None |
 | Browser and Apple icons | Ready | `app/icon.png`, `app/apple-icon.png` | Derived from supplied logo 4 |
 | Default Open Graph image | Ready | `app/opengraph-image.png`, 1200×630 | Developer composition from supplied mark/palette |
+| Decorative 3D brand ornaments | Ready (P2 decorative) | Nine WebP files in `public/assets/brand/ornaments/` (coils, torus, pyramid, cone, cylinders), registered as `brand.ornament.*` and rendered through `components/marketing/decor/brand-ornament.tsx`. Taken from the strativate.id production artwork (`/images/3d-ornament-*.webp`) at the stakeholder's request in "Perbaikan Section Home" (17 October 2026); trimmed to tight bounds and cleaned of stray edge pixels. Decorative only (empty alt) | Swap a file in place if Strativate supplies higher-resolution renders |
+| Badge and accent icons | Ready (P2 decorative) | Twenty Microsoft Fluent Emoji 3D icons (MIT; `THIRD_PARTY_NOTICES.md`, `LICENSE.txt` beside the files) in `public/assets/icons/fluent-emoji-3d/`, registered as `decor.icon.*` and rendered through `components/marketing/decor/fluent-icon.tsx` for placement, mentor-role, product-type and FAQ accents | None; icons sit beside visible text and never replace it |
 | Mentor roster and public profiles | Approved development account seed | `public.mentor_public_profiles`, `public.mentor_public_achievements`, `public.mentor_public_profile_expertise`, and `list_public_mentors()` own runtime public mentor data. The approved 26-row website workbook is normalized without plaintext email in `supabase/seed/mentor_website_profiles.json`; the guarded development seeder verifies local workbook emails against those hashes, creates or reuses Auth accounts, configures the mentor domain, and sets a temporary shared password from local environment configuration. `lib/content/mentors.ts` is not a production runtime source. | Apply migrations through `202609210004_dev_mentor_account_seed.sql`, configure the development-only environment values locally, run `pnpm seed:mentor-website -- --dry-run`, then run the seed without `--dry-run` after reviewing the counts |
 | Mentor expertise | Database-backed; admin-manageable | `public.mentor_expertise` is seeded with the eight approved expertise labels and managed through Admin → Mentor Expertise; mentor profiles use the many-to-many junction | Maintain names/status/order through the mentor expertise admin domain |
 | Mentor portraits | Partial | 19 optimized WebP files in `public/assets/mentors/`; 7 explicit brand-mark fallbacks remain media assets. New mentor public profiles may use `portrait_url`; the asset registry remains media metadata, not mentor profile truth | Supply missing originals when available; no upload subsystem exists in this phase |

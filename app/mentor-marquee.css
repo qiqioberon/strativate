@@ -1,121 +1,437 @@
-.marketing-mentor-marquee__card {
-  grid-template-columns: 176px minmax(0, 1fr);
-  align-items: center;
-  gap: 24px;
-  width: 548px;
-  min-height: 252px;
+/* Homepage "Meet Our Mentors" marquee (components/marketing/mentor-marquee*.tsx). Loaded after marketing.css and
+   overrides its base .marketing-mentor-marquee* rules. At rest every card is a 4:5 portrait tile; one card at a
+   time opens sideways into a detail panel. The motion hook marks the rail [data-enhanced] and the open card
+   [data-open]; without JavaScript, :hover and :focus-visible open a card directly.
+   The loop distance is in pixels (mentor count x collapsed card pitch), so a card that widens while the rail is
+   paused never makes the track jump. */
+
+.marketing-mentor-marquee {
+  --card-w: 248px;
+  --card-h: 310px;
+  --card-gap: 20px;
+  --card-open: 612px;
+  --card-mat: 8px;
+  --rail-fade: 40px;
+  --mentor-ease: var(--decor-ease, cubic-bezier(.16, 1, .3, 1));
+  --mentor-open-ms: 640ms;
+}
+
+.homepage-mentors__rail .marketing-mentor-marquee {
+  position: relative;
+  margin-inline: 0;
+  padding: 24px 0 56px;
   overflow: hidden;
-  padding: 18px;
-  border-color: transparent;
-  border-radius: 26px;
-  background: #faf5f0;
+  overflow: clip;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--rail-fade), #000 calc(100% - var(--rail-fade)), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 var(--rail-fade), #000 calc(100% - var(--rail-fade)), transparent);
+}
+
+.marketing-mentor-marquee .marketing-mentor-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: mentor-portrait-loop 175s linear infinite;
+  translate: var(--mentor-shift, 0px) 0;
+  transition: translate var(--mentor-open-ms) var(--mentor-ease);
+}
+.marketing-mentor-marquee:hover .marketing-mentor-marquee__track,
+.marketing-mentor-marquee:focus-within .marketing-mentor-marquee__track,
+.marketing-mentor-marquee[data-paused] .marketing-mentor-marquee__track,
+.marketing-mentor-marquee[data-holding] .marketing-mentor-marquee__track { animation-play-state: paused; }
+
+.marketing-mentor-marquee .marketing-mentor-marquee__group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--card-gap);
+  padding-right: var(--card-gap);
+}
+
+/* Card: a white mat around the portrait tile; the detail panel sits beside the tile and is clipped until open. */
+.marketing-mentor-marquee .marketing-mentor-marquee__card {
+  --open: 0;
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  gap: 0;
+  width: calc(var(--card-w) + var(--open) * (var(--card-open) - var(--card-w)));
+  height: var(--card-h);
+  min-height: 0;
+  padding: var(--card-mat);
+  overflow: hidden;
+  border: 1px solid #f0dfcf;
+  border-radius: 30px;
+  color: var(--decor-ink);
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(74, 38, 14, .05),
+    0 calc(var(--open) * 28px) calc(var(--open) * 56px) calc(var(--open) * -24px) rgba(124, 45, 0, .32);
   text-align: left;
   cursor: pointer;
-  transition: border-color 220ms ease, box-shadow 260ms ease, transform 260ms cubic-bezier(.2, .72, .2, 1), background-color 260ms ease;
+  -webkit-tap-highlight-color: transparent;
+  transition: width var(--mentor-open-ms) var(--mentor-ease), border-color 260ms ease, box-shadow 420ms ease, scale 180ms ease;
 }
-.marketing-mentor-marquee__card:hover, .marketing-mentor-marquee__card:focus-visible, .marketing-mentor-marquee__card:focus {
-  background: #fff;
-  box-shadow: 0 20px 44px rgba(74, 38, 14, .12);
-  transform: translateY(-4px);
+.marketing-mentor-marquee[data-enhanced] .marketing-mentor-marquee__card[data-open],
+.marketing-mentor-marquee:not([data-enhanced]) .marketing-mentor-marquee__card:focus-visible { --open: 1; border-color: #ffcfa6; }
+@media (hover: hover) and (pointer: fine) {
+  .marketing-mentor-marquee:not([data-enhanced]) .marketing-mentor-marquee__card:hover { --open: 1; border-color: #ffcfa6; }
 }
-.marketing-mentor-marquee__card:hover:not(:focus-visible) { border-color: transparent; }
-.marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media {
-  width: 176px;
-  height: 216px;
-  border-radius: 18px;
+.marketing-mentor-marquee .marketing-mentor-marquee__card:focus-visible { outline: 3px solid var(--decor-orange-text); outline-offset: 3px; }
+@media (hover: none) {
+  .marketing-mentor-marquee .marketing-mentor-marquee__card:active { scale: .98; }
 }
-.marketing-mentor-marquee__portrait img { transition: scale 600ms cubic-bezier(.2, .72, .2, 1); }
-.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__portrait img { scale: 1.05; }
-/* Mentors without a published photo: a calm brand placeholder instead of a cropped logo and caption. */
-.marketing-mentor-marquee__portrait [data-asset-status='missing'] { background: #f3e6da; }
-.marketing-mentor-marquee__portrait [data-asset-status='missing'] img { object-fit: contain !important; padding: 26% !important; opacity: .85; }
-.marketing-mentor-marquee__portrait [data-asset-status='missing'] figcaption { display: none; }
-.marketing-mentor-marquee__content {
+
+/* Portrait tile: soft disc + dashed ring behind the person. The photos are white-background JPEG-style WebPs,
+   so the figure multiplies onto the tile and the white turns into the tile colour. */
+.marketing-mentor-marquee .marketing-mentor-marquee__portrait {
+  --tile: #fff8f0;
+  --halo: #ffe8cf;
+  --ring: rgba(255, 122, 0, .55);
   position: relative;
-  display: block !important;
-  min-width: 0;
-  height: 216px;
-}
-.marketing-mentor-marquee__identity {
-  display: grid;
-  gap: 7px;
-  transform: translateY(80px);
-  transform-origin: left top;
-  transition: transform 260ms cubic-bezier(.2, .72, .2, 1);
-}
-.marketing-mentor-marquee__card .marketing-mentor-marquee__tier {
-  color: var(--marketing-orange-dark);
-  font-size: .76rem;
-  font-weight: 800;
-  letter-spacing: .08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  transition: font-size 260ms ease, letter-spacing 260ms ease;
-}
-.marketing-mentor-marquee__card .marketing-mentor-marquee__name {
-  display: block;
+  flex: none;
+  width: calc(var(--card-w) - 2 * var(--card-mat) - 2px);
+  height: 100%;
   overflow: hidden;
-  font-size: 1.85rem;
-  font-weight: 750;
-  letter-spacing: -.045em;
-  line-height: 1.05;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: font-size 260ms ease, letter-spacing 260ms ease;
+  isolation: isolate;
+  border-radius: 22px;
+  background: var(--tile);
 }
-.marketing-mentor-marquee__details {
-  display: grid;
-  gap: 7px;
-  margin-top: 16px;
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
-  transition: opacity 180ms ease 30ms, transform 220ms ease;
+.marketing-mentor-marquee .marketing-mentor-marquee__card[data-role='student'] .marketing-mentor-marquee__portrait { --tile: #fff9ec; --halo: #ffe7b4; }
+.marketing-mentor-marquee .marketing-mentor-marquee__card[data-role='professional'] .marketing-mentor-marquee__portrait { --tile: #fff7f1; --halo: #ffdcc6; }
+.marketing-mentor-marquee .marketing-mentor-marquee__halo {
+  position: absolute;
+  z-index: 0;
+  top: 46%;
+  left: 50%;
+  width: 84%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--halo);
+  transform: translate(-50%, -50%) scale(calc(1 + var(--open) * .05));
+  transition: transform 900ms var(--mentor-ease);
 }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__title,
-.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials,
-.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { opacity: 1; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__title { display: block; max-width: 100%; overflow: hidden; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials { gap: 4px; margin-top: 0; font-size: .74rem; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { display: flex; flex-wrap: nowrap; gap: 4px; overflow: hidden; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__expertise span {
-  flex: 0 0 auto;
-  padding: 4px 8px;
-  border-radius: 999px;
-  color: #8d3915;
-  background: #fff0e5;
-  font-size: .62rem;
+.marketing-mentor-marquee .marketing-mentor-marquee__ring {
+  z-index: 1;
+  top: 45%;
+  left: 50%;
+  width: 94%;
+  height: auto;
+  aspect-ratio: 1;
+  color: var(--ring);
+  transform: translate(calc(-50% + var(--halo-shift, 0) * 6px), -50%) rotate(calc(var(--halo-shift, 0) * 26deg + var(--open) * 60deg));
+  transition: transform 1400ms var(--mentor-ease);
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__portrait .asset-media {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+  mix-blend-mode: multiply;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__portrait img {
+  object-fit: cover;
+  object-position: 50% 22%;
+  scale: calc(1 + var(--open) * .03);
+  transform-origin: 50% 75%;
+  transition: scale 900ms var(--mentor-ease);
+}
+/* No published photo: initials on an orange disc instead of a cropped logo. The disc stays in the pastel family
+   of the photo halos so a placeholder never shouts louder than a real portrait (initials #a84300 on #ffcf9f =
+   4.3:1, above the 3:1 large-text minimum; they are decorative, the link carries the name). */
+.marketing-mentor-marquee .marketing-mentor-marquee__portrait[data-photo='missing'] .marketing-mentor-marquee__halo { width: 70%; background: #ffcf9f; }
+.marketing-mentor-marquee .marketing-mentor-marquee__monogram {
+  position: absolute;
+  z-index: 2;
+  top: 46%;
+  left: 50%;
+  translate: -50% -50%;
+  color: #a84300;
+  font-family: var(--font-heading), var(--font-poppins), sans-serif;
+  font-size: 3.4rem;
   font-weight: 800;
-  letter-spacing: 0;
-  line-height: 1.25;
+  letter-spacing: -.05em;
+  line-height: 1;
   text-transform: none;
 }
-.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__identity,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__identity,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__identity { transform: translateY(0); }
-.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__tier,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__tier,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__tier { font-size: .6rem; letter-spacing: .07em; }
-.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__name,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__name,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__name { font-size: 1.15rem; letter-spacing: -.03em; }
-.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__details,
-.marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__details,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__details { opacity: 1; transform: translateY(0); }
-@media (max-width: 640px) {
-  .marketing-mentor-marquee__card { grid-template-columns: 112px minmax(0, 1fr); gap: 16px; width: min(420px, calc(100vw - 40px)); min-height: 172px; padding: 14px; border-radius: 22px; }
-  .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media { width: 112px; height: 144px; border-radius: 15px; }
-  .marketing-mentor-marquee__content { height: 144px; }
-  .marketing-mentor-marquee__identity { transform: translateY(46px); }
-  .marketing-mentor-marquee__card .marketing-mentor-marquee__name { font-size: 1.4rem; }
+
+/* Role mark (rest state): amber for students, white for professionals, cream otherwise. */
+.marketing-mentor-marquee .marketing-mentor-marquee__mark {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 50%;
+  background: var(--decor-cream);
+  box-shadow: 2px 2px 0 var(--decor-ink);
+  /* The open panel's sticker repeats the role, so the corner mark steps back. */
+  opacity: calc(1 - var(--open));
+  scale: calc(1 - var(--open) * .25);
+  transition: opacity 240ms ease, scale 420ms var(--mentor-ease);
 }
+.marketing-mentor-marquee .marketing-mentor-marquee__card[data-role='student'] .marketing-mentor-marquee__mark { background: var(--decor-amber); }
+.marketing-mentor-marquee .marketing-mentor-marquee__card[data-role='professional'] .marketing-mentor-marquee__mark { background: #fff; }
+.marketing-mentor-marquee .marketing-mentor-marquee__mark .fluent-icon { width: 24px; height: 24px; }
+
+/* Name strip for touch screens and phones, where nothing can be revealed on hover. */
+.marketing-mentor-marquee .marketing-mentor-marquee__caption {
+  position: absolute;
+  z-index: 3;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: none;
+  gap: 1px;
+  padding: 8px 12px 9px;
+  border-radius: 15px;
+  color: var(--decor-ink);
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 8px 18px -10px rgba(74, 38, 14, .5);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  opacity: calc(1 - var(--open));
+  transition: opacity 240ms ease;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__caption b,
+.marketing-mentor-marquee .marketing-mentor-marquee__caption i {
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__caption b { font-size: .875rem; font-weight: 700; letter-spacing: -.01em; }
+.marketing-mentor-marquee .marketing-mentor-marquee__caption i { color: var(--decor-orange-text); font-size: .75rem; font-style: normal; font-weight: 600; }
+
+/* Detail panel. */
+.marketing-mentor-marquee .marketing-mentor-marquee__card > .marketing-mentor-marquee__content {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  width: calc(var(--card-open) - var(--card-w));
+  min-width: 0;
+  height: 100%;
+  padding: 14px 16px 12px 24px;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__identity {
+  display: grid;
+  justify-items: start;
+  opacity: var(--open);
+  translate: calc((1 - var(--open)) * -18px) 0;
+  transition: opacity 300ms ease, translate var(--mentor-open-ms) var(--mentor-ease);
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__tier.neo-sticker {
+  color: var(--decor-ink);
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: none;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__tier.neo-sticker[data-tone='ink'] { color: #fff; }
+.marketing-mentor-marquee .marketing-mentor-marquee__tier .neo-sticker__label,
+.marketing-mentor-marquee .marketing-mentor-marquee__tier .neo-sticker__icon {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__name {
+  display: -webkit-box;
+  margin-top: 14px;
+  overflow: hidden;
+  color: var(--decor-ink);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.1;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__title {
+  display: -webkit-box;
+  margin-top: 6px;
+  overflow: hidden;
+  color: #5a4535;
+  font-size: .875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 1;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__details {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1.5px dashed #f1d8c2;
+  opacity: var(--open);
+  translate: calc((1 - var(--open)) * -28px) 0;
+  pointer-events: none;
+  transition: opacity 340ms ease 60ms, translate var(--mentor-open-ms) var(--mentor-ease) 30ms;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__credentials {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  color: var(--decor-ink);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.38;
+  list-style: none;
+  opacity: 1;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__credentials li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__award {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--decor-orange-deep);
+  background: #ffead6;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__credentials svg { margin: 0; color: currentColor; }
+.marketing-mentor-marquee .marketing-mentor-marquee__credential {
+  display: -webkit-box;
+  overflow: hidden;
+  padding-top: 1px;
+  color: var(--decor-ink);
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+/* Wrapping inside a one-row box shows only whole chips; a chip that does not fit drops out of view. */
+.marketing-mentor-marquee .marketing-mentor-marquee__expertise {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  height: 26px;
+  margin: 0;
+  overflow: hidden;
+  opacity: 1;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__expertise span {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid #ffd4b0;
+  border-radius: 999px;
+  color: #9a3f00;
+  background: #fff4ea;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 14px;
+  text-transform: none;
+  white-space: nowrap;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__cue {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--decor-orange-text);
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  text-transform: none;
+  white-space: nowrap;
+}
+.marketing-mentor-marquee .marketing-mentor-marquee__cue svg { translate: calc(var(--open) * 3px) 0; transition: translate 500ms var(--mentor-ease) 120ms; }
+
+@keyframes mentor-portrait-loop {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(var(--mentor-count, 1) * (var(--card-w) + var(--card-gap)) * -1), 0, 0); }
+}
+
+@media (hover: none) {
+  .marketing-mentor-marquee .marketing-mentor-marquee__caption { display: grid; }
+}
+@media (max-width: 1023px) {
+  .marketing-mentor-marquee { --card-w: 216px; --card-h: 270px; --card-gap: 18px; --card-open: 556px; --rail-fade: 28px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card { border-radius: 26px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__portrait { border-radius: 19px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card > .marketing-mentor-marquee__content { padding: 10px 12px 6px 20px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__name { margin-top: 10px; font-size: 1.3rem; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__title { font-size: .8125rem; -webkit-line-clamp: 1; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__details { margin-top: 10px; padding-top: 10px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__footer { margin-top: 12px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__credentials { gap: 6px; font-size: .78rem; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__monogram { font-size: 3rem; }
+}
+@media (max-width: 640px) {
+  .marketing-mentor-marquee { --card-w: 176px; --card-h: 220px; --card-gap: 14px; --card-open: 176px; --card-mat: 6px; --rail-fade: 0px; }
+  .homepage-mentors__rail .marketing-mentor-marquee { padding: 16px 0 36px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card { border-radius: 22px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__portrait { border-radius: 17px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card > .marketing-mentor-marquee__content { display: none; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__caption { right: 6px; bottom: 6px; left: 6px; display: grid; padding: 7px 10px 8px; border-radius: 12px; opacity: 1; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__caption b { font-size: .8125rem; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__caption i { font-size: .72rem; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__mark { top: 9px; left: 9px; width: 34px; height: 34px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__mark .fluent-icon { width: 20px; height: 20px; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__monogram { top: 40%; font-size: 2.4rem; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__portrait[data-photo='missing'] .marketing-mentor-marquee__halo { top: 40%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .marketing-mentor-marquee__portrait img { transition: none; }
-  .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__portrait img { scale: none; }
-  .marketing-mentor-marquee__card,
-  .marketing-mentor-marquee__identity,
-  .marketing-mentor-marquee__tier,
-  .marketing-mentor-marquee__name,
-  .marketing-mentor-marquee__details { transition: none; }
+  .homepage-mentors__rail .marketing-mentor-marquee {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-inline: max(16px, calc((100% - 1320px) / 2));
+    scroll-padding-inline: max(16px, calc((100% - 1320px) / 2));
+    scroll-snap-type: x mandatory;
+    scrollbar-color: #f2c9a4 transparent;
+    scrollbar-width: thin;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .marketing-mentor-marquee .marketing-mentor-marquee__track { animation: none; translate: none; transition: none; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__group { padding-right: 0; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__group[aria-hidden='true'] { display: none; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card { scroll-snap-align: start; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__card,
+  .marketing-mentor-marquee .marketing-mentor-marquee__halo,
+  .marketing-mentor-marquee .marketing-mentor-marquee__ring,
+  .marketing-mentor-marquee .marketing-mentor-marquee__portrait img,
+  .marketing-mentor-marquee .marketing-mentor-marquee__mark,
+  .marketing-mentor-marquee .marketing-mentor-marquee__caption,
+  .marketing-mentor-marquee .marketing-mentor-marquee__identity,
+  .marketing-mentor-marquee .marketing-mentor-marquee__details,
+  .marketing-mentor-marquee .marketing-mentor-marquee__cue svg { transition: none; }
+  .marketing-mentor-marquee .marketing-mentor-marquee__portrait img { scale: none; }
 }

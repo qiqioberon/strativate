@@ -1,0 +1,146 @@
+/* Page intro (every non-home page hero): brand 3D ornaments, idle float and pointer parallax around the
+   centred title, description and actions. Section-owned stylesheet, loaded after app/home-decor.css. */
+
+/* ---------------------------------------------------------------------------------------------------
+   Background. The shared intro gradient in marketing.css (test-locked there) puts its deepest radial stops
+   at hue 14-17deg, which reads red next to the brand orange. Same placement and depth as the homepage hero's
+   warmed field (app/home-hero-decor.css), hue >= 21deg. The ::before highlight layer stays.
+   --------------------------------------------------------------------------------------------------- */
+.marketing-page-intro {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(180, 66, 0, .74) 0%, rgba(226, 88, 0, .48) 25%, transparent 52%),
+    radial-gradient(circle at 86% 31%, rgba(255, 207, 151, .3) 0%, rgba(255, 191, 116, .12) 32%, transparent 58%),
+    linear-gradient(154deg, #e95700 0%, #f66305 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%);
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Decor layer. The intro is its own stacking context (isolation: isolate): ::before 0, shape grid canvas 0,
+   copy grid 2. The layer itself must not form a context (z-index auto) so its pieces sit at 1: over the
+   canvas, under the copy.
+   The intro is short (about 430-520px at 1440) and the title is one or two lines, so every piece is anchored
+   to the section edges (top / bottom) and kept outside the centred copy column with calc(50% +/- guard):
+   the title box is at most 940px wide (half 470) and the description 720px (half 360), so a 500px guard
+   clears the title with room for parallax (depth x 28px) and idle motion, whatever the page.
+   --pi-pad mirrors the intro's top padding in marketing.css.
+   --------------------------------------------------------------------------------------------------- */
+.marketing-page-intro > .page-intro-decor {
+  z-index: auto;
+  --pi-pad: clamp(86px, 9vw, 132px);
+}
+
+.page-intro-decor .page-intro-decor__orn,
+.page-intro-decor .page-intro-decor__spark {
+  z-index: 1;
+  transition:
+    translate 1100ms var(--decor-ease),
+    opacity 640ms ease var(--pi-in, 0ms),
+    scale 900ms var(--decor-ease) var(--pi-in, 0ms);
+}
+.page-intro-decor .page-intro-decor__spark { --decor-sparkle-fill: #ffe08a; }
+/* Far plane: the small white coil keeps its lower opacity but only a hint of blur (a coil further back, not a smudge). */
+.page-intro-decor .page-intro-decor__orn--spring { opacity: .5; filter: blur(.6px) saturate(.92); }
+/* The coral coil is drawn at hue ~18deg; a 6deg turn keeps it a deeper orange than the field
+   (so they still separate from it) without reading red. */
+.page-intro-decor .page-intro-decor__orn--coral img { filter: hue-rotate(6deg) drop-shadow(0 16px 20px rgba(124, 45, 0, .2)); }
+
+/* Entrance: the pieces settle in one after another while the intro reveals (MarketingMotion adds .is-visible
+   to the [data-reveal] section; the copy itself fades in on the same class). */
+.marketing-page-intro:not(.is-visible) .page-intro-decor__orn { opacity: 0; scale: .72; }
+.marketing-page-intro:not(.is-visible) .page-intro-decor__spark { scale: 0; }
+.page-intro-decor__orn--amber { --pi-in: 140ms; }
+.page-intro-decor__orn--coral { --pi-in: 220ms; }
+.page-intro-decor__orn--spring { --pi-in: 300ms; }
+.page-intro-decor__orn--pyramid { --pi-in: 420ms; }
+.page-intro-decor__orn--torus { --pi-in: 520ms; }
+.page-intro-decor__orn--cylinder { --pi-in: 640ms; }
+.page-intro-decor__spark--crown { --pi-in: 700ms; }
+.page-intro-decor__spark--base { --pi-in: 780ms; }
+
+/* ---------------------------------------------------------------------------------------------------
+   Desktop (>= 1200px): every piece. Left: amber coil high, pyramid at mid height, torus breaking the lower
+   corner. Right: coral coil high with the far coil tucked behind its base, cylinder standing in the lower
+   corner. Sizes scale with the viewport (25vw - 180px: 120px at 1200, 180px at 1440) so the coils bleed off
+   the edge on narrow desktops instead of crowding the copy.
+   --------------------------------------------------------------------------------------------------- */
+/* Amber coil: upper left, its right edge 500px off centre. */
+.page-intro-decor__orn--amber { --orn-size: clamp(120px, 25vw - 180px, 184px); top: calc(var(--pi-pad) - 88px); right: calc(50% + 500px); }
+/* Coral coil: upper right, a little lower than the amber one. */
+.page-intro-decor__orn--coral { --orn-size: clamp(104px, 20vw - 136px, 152px); top: calc(var(--pi-pad) - 40px); left: calc(50% + 518px); }
+/* Far coil: small, white and soft, peeking from behind the base of the coral coil (drawn first, so it sits behind). */
+.page-intro-decor__orn--spring { --orn-size: clamp(54px, 4.8vw, 70px); top: calc(var(--pi-pad) + 146px); left: calc(50% + 496px); }
+/* Pyramid: mid height on the left, between the amber coil and the torus. */
+.page-intro-decor__orn--pyramid { --orn-size: clamp(60px, 5.4vw, 78px); top: calc(var(--pi-pad) + 112px); left: calc(50% - 500px - var(--orn-size)); }
+/* Torus: near plane, breaking the lower left corner of the section (overflow: hidden crops it). */
+.page-intro-decor__orn--torus { --orn-size: clamp(124px, 11.5vw, 166px); bottom: -44px; left: -30px; }
+/* Cylinder: the nearest piece, standing in the lower right corner with its base cropped by the section edge. */
+.page-intro-decor__orn--cylinder { --orn-size: clamp(110px, 10vw, 150px); bottom: -50px; right: -12px; }
+/* Sparkles: one above the title's right end, one low left between the torus and the description. */
+.page-intro-decor__spark--crown { width: clamp(24px, 2.2vw, 32px); height: clamp(24px, 2.2vw, 32px); top: calc(var(--pi-pad) - 64px); left: calc(50% + 446px); }
+.page-intro-decor__spark--base { width: 24px; height: 24px; top: calc(var(--pi-pad) + 206px); right: calc(50% + 392px); }
+
+/* ---------------------------------------------------------------------------------------------------
+   Tablet and narrow desktop (761-1199px): the copy column fills most of the width (the one-line
+   "Discover Top Competitions" title reaches within 60px of the edges), so four pieces take the corners:
+   small coils in the top padding band, torus and cylinder breaking the bottom corners. Each piece keeps
+   >= 14px from the copy at its idle-motion peak. No pointer parallax: there is no room for it.
+   --------------------------------------------------------------------------------------------------- */
+@media (max-width: 1199px) {
+  .page-intro-decor__orn--spring,
+  .page-intro-decor__orn--pyramid,
+  .page-intro-decor__spark--base { display: none; }
+  .page-intro-decor .page-intro-decor__orn,
+  .page-intro-decor .page-intro-decor__spark { translate: none; }
+  .page-intro-decor__orn--amber { --orn-size: clamp(56px, 6vw, 72px); top: 4px; right: auto; left: clamp(8px, 2.5vw, 28px); }
+  .page-intro-decor__orn--coral { --orn-size: clamp(44px, 5vw, 60px); top: 4px; left: auto; right: clamp(10px, 3vw, 36px); }
+  .page-intro-decor__spark--crown { width: 22px; height: 22px; top: 20px; left: auto; right: calc(clamp(10px, 3vw, 36px) + clamp(44px, 5vw, 60px) + 12px); }
+  .page-intro-decor__orn--torus { --orn-size: clamp(96px, 10vw, 112px); bottom: -48px; left: -22px; }
+  .page-intro-decor__orn--cylinder { --orn-size: clamp(92px, 9.5vw, 108px); bottom: -64px; right: -14px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Small tablet and phones (<= 760px): the copy spans the full width and the top padding is 86px
+   (70px <= 620px), so three small pieces sit in the corners, bobbing gently: amber coil top left,
+   pyramid top right, torus tucked under the lower left corner (plus the cylinder lower right until 620px).
+   --------------------------------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  .marketing-page-intro {
+    background:
+      radial-gradient(circle at 4% 0%, rgba(180, 66, 0, .64), transparent 47%),
+      linear-gradient(157deg, #ee5a00 0%, #ff7505 48%, #ffad58 100%);
+  }
+  .page-intro-decor__orn--coral,
+  .page-intro-decor__spark { display: none; }
+  .page-intro-decor__orn--pyramid { display: block; }
+  .page-intro-decor .page-intro-decor__orn[data-motion] img { animation-name: decor-bob; }
+  .page-intro-decor__orn--amber { --orn-size: clamp(40px, 10.5vw, 48px); top: 4px; left: 10px; }
+  .page-intro-decor__orn--pyramid { --orn-size: clamp(32px, 9vw, 40px); top: 10px; left: auto; right: 10px; }
+  .page-intro-decor__orn--torus { --orn-size: clamp(72px, 20vw, 92px); bottom: -40px; left: -18px; }
+  .page-intro-decor__orn--cylinder { --orn-size: 84px; bottom: -46px; right: -12px; }
+}
+@media (max-width: 620px) {
+  .page-intro-decor__orn--cylinder { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-intro-decor .page-intro-decor__orn,
+  .page-intro-decor .page-intro-decor__spark { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Description legibility, matching the homepage hero lede (app/home-hero-decor.css): cream at 500 with an
+   ink text shadow and a soft ink wash behind the description and the actions.
+   --------------------------------------------------------------------------------------------------- */
+.marketing-page-intro .marketing-page-intro__description {
+  position: relative;
+  color: #fff7ec;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(84, 24, 0, .45), 0 2px 14px rgba(120, 44, 0, .22);
+}
+.marketing-page-intro .marketing-page-intro__description::before {
+  position: absolute;
+  z-index: -1;
+  inset: -36px -140px -116px;
+  background: radial-gradient(ellipse at 50% 42%, rgba(84, 24, 0, .28), rgba(84, 24, 0, .14) 44%, transparent 72%);
+  pointer-events: none;
+  content: '';
+}

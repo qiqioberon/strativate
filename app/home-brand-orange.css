@@ -1,0 +1,41 @@
+/* Homepage red-to-orange audit for sections without their own decor stylesheet (header as rendered on '/',
+   recognition, expertise, why-choose, trusted partners). Section-owned stylesheet, loaded after app/home-decor.css.
+   Scope: only the homepage (.stakeholder-homepage / .marketing-header--home); other routes keep their styles.
+   The legacy --marketing-orange-dark token is the brand deep red (#b3151c); app/home-decor.css re-points it
+   inside <main>, and the header is outside <main>, so its mobile menu and cart icon are re-pointed here. */
+
+/* Header on '/': the mobile menu's active link and its icon tiles, and the cart icon. The inactive links keep
+   their inherited ink (browser tests lock rgb(0,0,0)); the active label uses a deeper orange for AA on #ffebdc. */
+.marketing-header--home .marketing-mobile-link.is-active { color: #a83b00; }
+.marketing-header--home .marketing-mobile-link__icon { color: var(--decor-orange-text, #c45200); }
+.marketing-header--home .marketing-cart-link svg { color: var(--decor-orange-text, #c45200); }
+
+/* Recognition band under the hero: the rust-red top-left corner (hue 14) becomes a deep orange (hue 24),
+   the same depth and spread so the band keeps its warmth. */
+.stakeholder-homepage .homepage-recognition__statement {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(196, 82, 0, .7) 0%, rgba(232, 96, 0, .46) 25%, transparent 52%),
+    radial-gradient(circle at 86% 31%, rgba(255, 207, 151, .3) 0%, rgba(255, 191, 116, .12) 32%, transparent 58%),
+    linear-gradient(154deg, #e85d00 0%, #f66a05 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%);
+}
+.stakeholder-homepage .homepage-recognition__statement::after {
+  background: linear-gradient(180deg, rgba(133, 52, 0, .04), rgba(255, 160, 77, .02) 52%, rgba(128, 50, 0, .08));
+}
+.stakeholder-homepage .homepage-recognition h2 { text-shadow: 0 2px 20px rgba(120, 48, 0, .18); }
+
+/* Expertise and Why Choose: the same rust corner glow (hue 15) shifted to deep orange (hue 22). */
+.stakeholder-homepage .homepage-expertise,
+.stakeholder-homepage .homepage-why {
+  background:
+    radial-gradient(circle at 8% 5%, rgba(190, 72, 0, .46) 0%, rgba(230, 92, 0, .24) 27%, transparent 50%),
+    radial-gradient(circle at 91% 88%, rgba(255, 215, 164, .46) 0%, rgba(255, 187, 103, .14) 31%, transparent 58%),
+    linear-gradient(148deg, #e95708 0%, #f86a08 38%, #ff861c 69%, #f9a34f 100%);
+}
+
+/* Trusted partners: the faint pink wash in the bottom-right corner becomes an amber wash. */
+.stakeholder-homepage .homepage-partners {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 122, 0, .075), transparent 31%),
+    radial-gradient(circle at 87% 82%, rgba(255, 170, 60, .07), transparent 30%),
+    #fffaf5;
+}

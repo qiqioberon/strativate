@@ -7,7 +7,7 @@
  */
 
 import Image from 'next/image'
-import { ArrowRight, Quote, X } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -22,6 +22,9 @@ import {
   type TestimonialDragIntent,
 } from '@/lib/marketing/testimonial-gallery-input'
 import { usePageMotionReady } from '@/components/navigation/use-page-motion-ready'
+import { awardStyleFor } from '@/components/marketing/decor/award-tier'
+import { FluentIcon } from '@/components/marketing/decor/fluent-icon'
+import { StoryDialogPanel } from '@/components/marketing/story-dialog-panel'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 
 type GL = Renderer['gl']
@@ -1026,7 +1029,10 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
             />
             <div className="marketing-testimonial-gallery__overlay-content">
               <span>{hoveredItem.competition_name}</span>
-              <strong>{hoveredItem.achievement}</strong>
+              <strong className="story-popout__award">
+                <FluentIcon name={awardStyleFor(hoveredItem.achievement).icon} size={20} className="story-popout__award-icon" />
+                {hoveredItem.achievement}
+              </strong>
               <button
                 type="button"
                 onClick={() => open(hoveredIndex)}
@@ -1054,23 +1060,7 @@ export function TestimonialCircularGallery({ items }: { items: MarketingTestimon
         }}
         data-testid="testimonial-dialog"
       >
-        {selected ? (
-          <div className="marketing-testimonial-dialog__panel">
-            <div className="marketing-testimonial-dialog__media">
-              <Image src={selected.imageUrl} alt={selected.altText} fill sizes="(max-width: 720px) 92vw, 46vw" unoptimized />
-            </div>
-            <div className="marketing-testimonial-dialog__content">
-              <button type="button" className="marketing-testimonial-dialog__close" onClick={close} aria-label="Close testimonial">
-                <X aria-hidden="true" size={18} />
-              </button>
-              <p className="marketing-kicker">Student stories</p>
-              <h2 id="testimonial-dialog-title">{selected.competition_name}</h2>
-              <strong className="marketing-testimonial-dialog__achievement">{selected.achievement}</strong>
-              <Quote aria-hidden="true" size={25} />
-              <blockquote>{selected.testimonial}</blockquote>
-            </div>
-          </div>
-        ) : null}
+        {selected ? <StoryDialogPanel story={selected} onClose={close} /> : null}
       </dialog>
     </>
   )

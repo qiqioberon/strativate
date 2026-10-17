@@ -1,0 +1,63 @@
+/* Partnered with Leading Organizations: sentence-case sticker label and anchored brand decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css. Decoration is rendered by
+   components/marketing/home-partners-decor.tsx in one layer behind the container: an orange dashed orbit and
+   a sparkle in the heading gutters, a pyramid beside the lede, and a torus and a coil resting against the
+   logo wall's lower corners (fully outside the wall, which scrolls and would show anything behind it). */
+
+/* Label: the same neobrutalist sticker as "Who we are" (ink outline, hard shadow, sentence case). */
+.stakeholder-homepage .homepage-partners__head .marketing-kicker {
+  display: block;
+  padding: 7px 15px 7px 14px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  color: var(--decor-ink);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+.stakeholder-homepage .homepage-partners__head .marketing-kicker::first-letter { text-transform: uppercase; }
+.stakeholder-homepage .homepage-partners__head h2 { margin-top: 22px; }
+
+/* --pt-pad mirrors the section padding in marketing.css; the heading column is at most 920px wide and the
+   logo wall 1160px, so pieces keep 480px (heading rows) and 580px (wall rows) off centre. */
+.homepage-partners__decor { z-index: 0; --pt-pad: clamp(90px, 9vw, 138px); }
+.homepage-partners__ring {
+  --decor-ring-color: rgba(255, 122, 0, .42);
+  --orn-duration: 75s;
+  top: calc(var(--pt-pad) - 24px);
+  right: calc(50% + 480px);
+  width: 230px;
+  height: 230px;
+}
+.homepage-partners__spark--a { top: calc(var(--pt-pad) + 20px); left: calc(50% + 490px); width: 28px; height: 28px; }
+.homepage-partners__spark--b { top: calc(var(--pt-pad) + 196px); right: calc(50% + 520px); width: 16px; height: 16px; }
+/* Pyramid: right gutter, level with the lede. */
+.homepage-partners__pyramid { --orn-size: clamp(60px, 5.4vw, 78px); top: calc(var(--pt-pad) + 92px); left: calc(50% + 540px); }
+/* Torus: resting against the wall's bottom-left corner, bleeding off the viewport edge on narrow desktops. */
+.homepage-partners__torus { --orn-size: clamp(110px, 10vw, 150px); bottom: calc(var(--pt-pad) - 52px); right: calc(50% + 586px); }
+/* Coil: against the wall's lower-right edge. */
+.homepage-partners__coil { --orn-size: clamp(64px, 6vw, 96px); bottom: calc(var(--pt-pad) + 36px); left: calc(50% + 592px); }
+
+@media (max-width: 1199px) {
+  /* The wall fills the container from here (gutters 32px): corner pieces only, in the section's corners. */
+  .homepage-partners__ring,
+  .homepage-partners__coil,
+  .homepage-partners__spark--b { display: none; }
+  .homepage-partners__spark--a { top: calc(var(--pt-pad) + 8px); left: auto; right: clamp(60px, 8vw, 110px); }
+  .homepage-partners__pyramid { --orn-size: 58px; top: calc(var(--pt-pad) - 46px); left: auto; right: clamp(14px, 2.5vw, 30px); }
+  .homepage-partners__torus { --orn-size: 110px; right: auto; left: -34px; bottom: calc(var(--pt-pad) - 60px); }
+  .homepage-partners__decor .brand-ornament,
+  .homepage-partners__decor .decor-shape { translate: none; }
+}
+@media (max-width: 760px) {
+  .homepage-partners__spark { display: none; }
+  .homepage-partners__pyramid { --orn-size: 44px; top: calc(var(--pt-pad) - 40px); right: 12px; }
+  .homepage-partners__torus { --orn-size: 92px; left: -30px; bottom: calc(var(--pt-pad) - 56px); }
+}
+@media (max-width: 620px) {
+  .homepage-partners__decor { --pt-pad: 82px; }
+}

@@ -1,0 +1,248 @@
+/* Who We Are: neobrutalist framing vectors and sticker labels around the photo collage.
+   Section-owned stylesheet, loaded after app/home-decor.css. The base layout and the test-locked values stay in
+   app/marketing.css; this file only restyles and adds the decoration planes rendered by who-we-are-backdrop.tsx.
+
+   How the decoration is anchored: both planes are absolutely positioned children of .homepage-who__layout and sit in the
+   collage's grid area (an absolutely positioned grid child uses its grid area as containing block). Inside, a square
+   .homepage-who__stage mirrors the collage box, so every piece is placed in % of the same square as the photo frames:
+   primary 0–48% x 1.5–65.5%, upper right 52.5–100% x 0–47.5%, lower right 52.9–100.4% x 52.5–100%. */
+
+/* ---------- Section field and copy ---------- */
+.homepage-who__layout { position: relative; }
+.homepage-who .homepage-who__copy { z-index: 1; }
+.homepage-who .homepage-who__collage { z-index: 1; }
+
+/* Kicker as a sentence-case sticker label. The source text stays "WHO WE ARE"; CSS reads it as "Who we are". */
+.homepage-who .homepage-who__copy > .marketing-kicker {
+  display: block;
+  width: fit-content;
+  padding: 7px 15px 7px 14px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  color: var(--decor-ink);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+.homepage-who .homepage-who__copy > .marketing-kicker::first-letter { text-transform: uppercase; }
+.homepage-who .homepage-who__copy h2 { margin-top: 22px; }
+/* Same display scale as the other homepage section heads, so the copy holds its own against the dressed collage. Phones
+   keep the marketing.css size. */
+@media (min-width: 521px) {
+  .homepage-who .homepage-who__copy h2 { font-size: clamp(2.2rem, 3.7vw, 3.4rem); }
+}
+/* Brand orange is 2.5:1 on this cream; the deep brand orange keeps the accent orange and passes AA for large text. */
+.homepage-who .homepage-who__copy h2 .homepage-who__accent { color: var(--decor-orange-deep); }
+.homepage-who .homepage-who__copy > .homepage-who__lede { color: #453a33; }
+
+/* CTA: same ink outline and hard shadow as the stickers; it lifts on hover and presses on click. Ink text on brand
+   orange is 6.8:1 (white was 2.6:1). */
+.homepage-who .homepage-who__cta {
+  border: 2px solid var(--decor-ink);
+  color: var(--decor-ink) !important;
+  background: var(--decor-orange);
+  box-shadow: var(--decor-hard-shadow);
+  font-size: .9rem;
+  letter-spacing: -.005em;
+  transition: transform 220ms var(--decor-ease), box-shadow 220ms var(--decor-ease);
+}
+.homepage-who .homepage-who__cta:hover { border-color: var(--decor-ink); background: var(--decor-orange); transform: none; }
+.homepage-who .homepage-who__cta:focus-visible { outline: 3px solid var(--decor-ink); outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .homepage-who .homepage-who__cta:hover { transform: translate(-2px, -2px); box-shadow: var(--decor-hard-shadow-lg); }
+}
+.homepage-who .homepage-who__cta:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--decor-ink); }
+
+/* ---------- Photo frames and badges ---------- */
+.homepage-who .homepage-who__frame {
+  border-width: clamp(5px, .42vw, 7px);
+  border-radius: 18px;
+  box-shadow: 0 0 0 2px var(--decor-ink), 5px 6px 0 2px var(--decor-ink);
+  transition: scale 520ms var(--homepage-ease, ease), box-shadow 320ms var(--decor-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .homepage-who .homepage-who__frame:hover { scale: 1.018; box-shadow: 0 0 0 2px var(--decor-ink), 8px 10px 0 2px var(--decor-ink); }
+}
+@media (hover: none), (pointer: coarse) {
+  .homepage-who .homepage-who__frame:hover { scale: none; }
+}
+
+/* Admin badge text as an amber sticker. A single line reads as a pill; a long badge wraps into a soft rectangle. */
+.homepage-who .homepage-who__frame figcaption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  left: 10px;
+  bottom: 10px;
+  /* Kept clear of the seal on the portrait's right edge and of the coil on the lower-right corner. */
+  max-width: 72%;
+  padding: 5px 12px 5px 11px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 15px;
+  color: var(--decor-ink);
+  background: var(--decor-amber);
+  box-shadow: 2px 2px 0 var(--decor-ink);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.homepage-who .homepage-who__badge-mark { width: 18px; height: 18px; margin: -3px 0 -3px -3px; }
+
+/* Every image failed after render: drop the empty square so the still life below can take its place. */
+.homepage-who__collage:not(:has(> .homepage-who__frame)) { display: none; }
+
+/* ---------- Decoration planes ---------- */
+/* Both lines are explicit: an absolutely positioned grid child with an `auto` end line stretches to the container edge. */
+.homepage-who .homepage-who__decor {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  display: grid;
+  align-items: center;
+  justify-items: end;
+}
+.homepage-who .homepage-who__decor--front { z-index: 2; }
+.homepage-who__stage { position: relative; width: min(100%, 650px); aspect-ratio: 1; }
+
+.homepage-who__dots {
+  inset: -15%;
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
+}
+/* Centred on the stage whatever its proportions: margins resolve against width, so -57% is half of a 114% ring. */
+.homepage-who__ring {
+  --decor-ring-color: color-mix(in srgb, var(--decor-orange) 48%, transparent);
+  --orn-duration: 150s;
+  top: 50%;
+  left: 50%;
+  width: 114%;
+  height: auto;
+  margin: -57% 0 0 -57%;
+}
+
+.homepage-who__piece { height: auto; }
+/* Membership card tucked behind the portrait's top-left corner. */
+.homepage-who__piece--id { top: -7%; left: -11%; width: 34%; rotate: -11deg; }
+/* Checklist window peeking over the upper-right frame: title bar and checks show above its top edge. */
+.homepage-who__piece--window { top: -12%; right: 6%; width: 23%; rotate: 6deg; }
+/* Score card under the portrait, its folder tab tucked behind the portrait's bottom edge. */
+.homepage-who__piece--score { top: 60%; left: 3%; width: 42%; rotate: -4deg; }
+
+/* Trophy seal pinned on the seam between the portrait and the lower-right frame, just under the upper-right frame, so
+   it never reaches a badge (badges sit at each frame's lower-left corner). */
+.homepage-who__seal {
+  --badge-size: clamp(60px, 17%, 116px);
+  position: absolute;
+  top: 58.5%;
+  left: 50.4%;
+  margin: calc(var(--badge-size) / -2) 0 0 calc(var(--badge-size) / -2);
+  translate: calc(var(--decor-mx, 0) * 14px) calc(var(--decor-my, 0) * 10px);
+  transition: translate 1100ms var(--decor-ease);
+}
+/* Brand coil hooked on the lower-right frame's corner, the way strativate.id dresses its own Who We Are photos. */
+.homepage-who__coil { --orn-size: 13%; right: -7.5%; bottom: -9%; }
+.homepage-who__spark { height: auto; }
+/* One sparkle sits on the ring's top line, one catches the score card's lower corner. */
+.homepage-who__spark--top { top: -9.1%; left: 47.9%; width: 4.2%; }
+.homepage-who__spark--low { top: 82.5%; left: 0; width: 3.4%; }
+
+/* One or two photos: the frames sit in a plain grid, so only the quiet field stays, centred on the grid cell. */
+.homepage-who__layout:has(> .homepage-who__collage > .homepage-who__frame):not(:has(> .homepage-who__collage > .homepage-who__frame:nth-child(3))) :is(.homepage-who__piece, .homepage-who__seal, .homepage-who__coil, .homepage-who__spark) { display: none; }
+.homepage-who__layout:has(> .homepage-who__collage > .homepage-who__frame):not(:has(> .homepage-who__collage > .homepage-who__frame:nth-child(3))) .homepage-who__stage { width: 100%; aspect-ratio: auto; align-self: stretch; }
+/* The stage is then as wide as the column and as tall as the frames, so the ring follows the frames' height instead of
+   the width: it stays a full circle inside the section instead of a 114%-wide arc sliced by the section edges (and, in
+   one column, running through the copy). The SVG letterboxes when max-width wins, so the circle keeps its centre. */
+.homepage-who__layout:has(> .homepage-who__collage > .homepage-who__frame):not(:has(> .homepage-who__collage > .homepage-who__frame:nth-child(3))) .homepage-who__ring {
+  width: auto;
+  height: 112%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0;
+  translate: -50% -50%;
+}
+
+/* Entrance: the back plane settles with the frames, the front pieces land last. */
+@keyframes homepage-who-decor-in { from { opacity: 0; scale: .94; } to { opacity: 1; scale: 1; } }
+.homepage-who.is-visible .homepage-who__decor--back { animation: homepage-who-decor-in 900ms var(--decor-ease) 200ms both; }
+.homepage-who.is-visible .homepage-who__decor--front { animation: homepage-who-decor-in 760ms var(--decor-ease) 560ms both; }
+
+/* ---------- No photos: the kit regroups into a still life beside the copy (desktop only). ---------- */
+@media (min-width: 901px) {
+  .homepage-who--empty .homepage-who__layout { grid-template-columns: minmax(320px, .82fr) minmax(480px, 1.18fr); }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__stage { width: min(100%, 520px); }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__ring { width: 100%; margin: -50% 0 0 -50%; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__piece--id { top: 14%; left: 2%; width: 62%; rotate: -9deg; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__piece--window { top: 0; right: 2%; width: 40%; rotate: 7deg; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__piece--score { top: 56%; left: auto; right: 0; width: 60%; rotate: 4deg; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__seal { --badge-size: clamp(88px, 24%, 124px); top: 78%; left: 16%; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__coil { --orn-size: 18%; top: 42%; right: -4%; bottom: auto; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__spark--top { top: 4%; left: 6%; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__spark--low { top: 96%; left: 62%; }
+}
+
+/* ---------- Responsive ---------- */
+/* Narrower desktop gap: keep the left-hand pieces clear of the copy column. */
+/* Two columns with only the 32px container gutter on the right: the coil hooks on tighter so it is never sliced. */
+@media (min-width: 901px) and (max-width: 1384px) {
+  .homepage-who__coil { right: -3.5%; }
+}
+/* Narrow two-column band: the base column minimums (320px + 480px + gap) outgrow the container below ~930px and the
+   collage ran past the right edge, so the collage column gives way first here. */
+@media (min-width: 901px) and (max-width: 1023px) {
+  .homepage-who .homepage-who__layout { grid-template-columns: minmax(300px, .82fr) minmax(0, 1.18fr); }
+}
+@media (max-width: 1180px) {
+  .homepage-who__piece--id { left: -6%; }
+  .homepage-who__piece--window { top: -11.5%; width: 24%; }
+}
+
+/* One column: the collage sits below the copy, centred. */
+@media (max-width: 900px) {
+  /* Room for the cards that peek above the collage, so they never crowd the CTA. */
+  .homepage-who .homepage-who__layout { row-gap: 84px; }
+  .homepage-who .homepage-who__decor { grid-column: 1 / 2; grid-row: 2 / 3; justify-items: center; }
+  .homepage-who__layout:not(:has(> .homepage-who__collage > .homepage-who__frame)) .homepage-who__decor { display: none; }
+  .homepage-who__piece--id { top: -6%; left: -5%; }
+  .homepage-who__piece--window { top: -11.5%; }
+  .homepage-who__coil { right: -4%; }
+}
+/* Tablets between the phone collage and 768px: the collage (and the stage that mirrors it) leaves room in the gutter
+   for the card and coil that hang past its edges, so neither is sliced by the section. */
+@media (min-width: 521px) and (max-width: 900px) {
+  .homepage-who .homepage-who__collage[data-count='3'],
+  .homepage-who__stage { width: min(100% - 72px, 650px); }
+}
+
+/* Phones: three small pieces at most (card, score card, seal); the field stays as texture. */
+@media (max-width: 640px) {
+  .homepage-who :is(.homepage-who__piece--window, .homepage-who__coil, .homepage-who__spark) { display: none; }
+  .homepage-who__ring { opacity: .7; }
+  .homepage-who__layout:has(> .homepage-who__collage > .homepage-who__frame):not(:has(> .homepage-who__collage > .homepage-who__frame:nth-child(3))) .homepage-who__ring { display: none; }
+  .homepage-who .homepage-who__frame { box-shadow: 0 0 0 2px var(--decor-ink), 4px 5px 0 1px var(--decor-ink); }
+  .homepage-who .homepage-who__frame figcaption { left: 8px; bottom: 8px; padding: 4px 10px 4px 9px; }
+}
+
+/* Small phones: the collage leads above the copy (marketing.css order: -1), so the planes follow it to row 1. */
+@media (max-width: 520px) {
+  .homepage-who .homepage-who__layout { row-gap: 56px; }
+  .homepage-who .homepage-who__decor { grid-row: 1 / 2; }
+  .homepage-who__stage { width: min(80vw, 320px); }
+  .homepage-who .homepage-who__copy > .marketing-kicker { font-size: .8125rem; }
+  .homepage-who .homepage-who__copy h2 { margin-top: 18px; }
+  .homepage-who__piece--id { top: -7%; left: -6%; width: 36%; }
+  .homepage-who__piece--score { top: 63%; left: 2%; width: 43%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage-who.is-visible .homepage-who__decor { animation: none; }
+  .homepage-who__seal { translate: none; transition: none; }
+  .homepage-who .homepage-who__cta,
+  .homepage-who .homepage-who__frame { transition: none; }
+  .homepage-who .homepage-who__cta:is(:hover, :active) { transform: none; }
+}

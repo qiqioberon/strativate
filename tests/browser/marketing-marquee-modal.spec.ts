@@ -10,14 +10,14 @@ test('homepage mentor marquee reveals compact details and opens the shared mento
   const card = marquee.locator('.marketing-mentor-marquee__group:not([aria-hidden]) .marketing-mentor-marquee__card').first()
   const name = card.locator('.marketing-mentor-marquee__name')
   const details = card.locator('.marketing-mentor-marquee__details')
-  const initialNameSize = Number.parseFloat(await name.evaluate((element) => getComputedStyle(element).fontSize))
+  // At rest a card is only the portrait; focus opens it sideways into the name and detail panel.
+  const portraitWidth = await card.evaluate((element) => element.getBoundingClientRect().width)
 
   await expect(details).toHaveCSS('opacity', '0')
   await card.focus()
   await expect(card).toBeFocused()
   await expect(details).toHaveCSS('opacity', '1')
-  const compactNameSize = Number.parseFloat(await name.evaluate((element) => getComputedStyle(element).fontSize))
-  expect(compactNameSize).toBeLessThan(initialNameSize)
+  await expect.poll(() => card.evaluate((element) => element.getBoundingClientRect().width)).toBeGreaterThan(portraitWidth * 2)
 
   const mentorName = (await name.textContent())?.trim()
   await card.press('Enter')

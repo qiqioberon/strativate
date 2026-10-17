@@ -1,0 +1,71 @@
+/* Why Choose Strativate?: sentence-case sticker label, balanced lede and anchored brand decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css. Decoration is rendered by
+   components/marketing/home-why-decor.tsx in two layers: one behind the container (heading gutters) and one
+   inside the card grid (an amber coil breaking the grid's right edge, a white cone behind the bottom-left corner). */
+
+/* Label: the same neobrutalist sticker as "Who we are" (ink outline, hard shadow, sentence case). */
+.stakeholder-homepage .homepage-why__head .marketing-kicker {
+  display: block;
+  min-height: 0;
+  padding: 7px 15px 7px 14px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  color: var(--decor-ink);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+.stakeholder-homepage .homepage-why__head .marketing-kicker::first-letter { text-transform: uppercase; }
+.stakeholder-homepage .homepage-why__head h2 { margin-top: 22px; }
+/* Lede: two balanced lines at every width instead of a hard break that left "into competition winners." alone on phones. */
+.stakeholder-homepage .homepage-why__head > p:last-child { max-width: 46ch; text-wrap: balance; }
+
+/* Section layer (behind the container). --wy-pad mirrors the section padding in marketing.css. The one-line
+   heading is about 880px wide at 1440, so pieces stay 520px off centre on the heading rows. */
+.homepage-why__decor { z-index: 0; --wy-pad: clamp(90px, 9vw, 138px); }
+/* Right gutter: a slow white dashed orbit level with the heading. */
+.homepage-why__ring {
+  --decor-ring-color: rgba(255, 247, 236, .4);
+  --orn-duration: 85s;
+  top: calc(var(--wy-pad) - 44px);
+  left: calc(50% + 520px);
+  width: 230px;
+  height: 230px;
+}
+/* Left gutter: two sparkles, one level with the label, a smaller one beside the lede. */
+.homepage-why__spark { --decor-sparkle-fill: #ffe08a; }
+.homepage-why__spark--a { top: calc(var(--wy-pad) + 4px); right: calc(50% + 540px); width: 30px; height: 30px; }
+.homepage-why__spark--b { top: calc(var(--wy-pad) + 128px); right: calc(50% + 470px); width: 16px; height: 16px; }
+
+/* Grid layer: under the glass cards (negative z inside the container's stacking context). The coil's outer half
+   is crisp beside the grid; the half behind the frosted cards shows as a soft amber glow. */
+.stakeholder-homepage .homepage-why__grid { position: relative; }
+.homepage-why__cards-decor { z-index: -1; }
+.homepage-why__coil { --orn-size: clamp(96px, 9vw, 128px); top: calc(50% - .5 * var(--orn-size)); right: calc(-.56 * var(--orn-size)); }
+/* The cone stays mostly outside the corner: the icon tiles sit at the cards' left edge, so only the card's
+   bottom padding may be over it. */
+.homepage-why__cone { --orn-size: clamp(96px, 9vw, 120px); bottom: calc(-.44 * var(--orn-size)); left: calc(-.68 * var(--orn-size)); }
+
+@media (max-width: 1199px) {
+  .homepage-why__ring { display: none; }
+  .homepage-why__spark--a { right: clamp(16px, 3vw, 40px); }
+  .homepage-why__spark--b { right: clamp(40px, 6vw, 80px); }
+}
+@media (max-width: 900px) {
+  .homepage-why__coil { --orn-size: 100px; }
+  .homepage-why__cone { --orn-size: 96px; }
+  .homepage-why__spark--b { display: none; }
+}
+@media (max-width: 760px) {
+  .homepage-why__spark { display: none; }
+}
+@media (max-width: 620px) {
+  /* Phones, one column: card titles can run to the right padding, so the coil moves to the top-right corner
+     (over the first card's corner padding only) and the cone stays at the bottom-left. */
+  .homepage-why__coil { --orn-size: 72px; top: -30px; right: -26px; }
+  .homepage-why__cone { --orn-size: 76px; bottom: -40px; left: -48px; }
+}
