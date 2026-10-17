@@ -1,10 +1,10 @@
-import { ArrowDownRight, ArrowRight, BadgeCheck, BookOpenText, CircleHelp, Handshake, Heart, MessageCircle, Route, Settings2, Trophy, UsersRound, Zap } from 'lucide-react'
+import { ArrowRight, BadgeCheck, ChevronDown, Handshake, Heart, MessageCircle, Route, UsersRound, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/components/ui/button'
 import type { PublicDigitalProduct } from '@/lib/commerce/types'
 import { socialProof } from '@/lib/content/brand'
-import { bigClassPlaceholder, faqPreview, homepageExpertise, whyChooseStrativate } from '@/lib/content/marketing-content'
+import { faqPreview, homepageExpertise, whyChooseStrativate } from '@/lib/content/marketing-content'
 import type { MarketingTestimonialView } from '@/lib/marketing/testimonial-types'
 import type { CompetitionRecognitionView } from '@/lib/marketing/competition-recognitions'
 import type { TrustedPartnerView } from '@/lib/marketing/trusted-partners'
@@ -44,29 +44,16 @@ export function HomePage({
   trustedPartners: TrustedPartnerView[]
   whoWeArePhotos: HomepageWhoWeArePhotoView[]
 }) {
-  const homePrograms: MarketingProgram[] = mentoringProgramEditorial.map((program, index) => ({
+  const homePrograms: MarketingProgram[] = mentoringProgramEditorial.map((program) => ({
     id: program.slug,
-    number: String(index + 1).padStart(2, '0'),
     title: program.title,
-    kicker: program.kicker,
+    tagline: program.tagline,
     description: program.shortDescription,
-    highlights: program.highlights,
+    sessionRhythm: program.sessionRhythm,
+    mentorSupport: program.mentorSupport,
     href: `/program/${program.slug}`,
-    assetKey: program.assetKey,
-    status: 'information',
     tone: program.tone,
   }))
-  homePrograms.push({
-    id: 'big-class-placeholder',
-    number: String(homePrograms.length + 1).padStart(2, '0'),
-    title: bigClassPlaceholder.title,
-    kicker: bigClassPlaceholder.kicker,
-    description: bigClassPlaceholder.description,
-    highlights: [],
-    assetKey: bigClassPlaceholder.cover,
-    status: 'overview',
-    tone: 'yellow',
-  })
   const whatsappHref = buildWhatsAppHref('Hello Strativate, I would like to learn more about your mentoring programs.')
 
   return (
@@ -133,18 +120,17 @@ export function HomePage({
         </div>
       </section>
 
+      {/* Programs and Digital Products share one homepage section: every way to prepare, side by side. */}
       <section className="marketing-section stakeholder-section homepage-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
         <div className="marketing-container homepage-programs__inner">
-          <div className="marketing-section-head is-wide homepage-programs__head">
-            <div className="homepage-programs__copy">
-              <p className="marketing-kicker">Our Programs</p>
-              <h2 id="program-heading">Choose the right program to build your skills and win competitions</h2>
-              <p className="stakeholder-section__lede">Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.</p>
-            </div>
-            <div className="homepage-programs__method" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
-              <div className="homepage-programs__stat is-theory"><BookOpenText aria-hidden="true" size={22} /><strong>40%</strong><span>theory</span></div>
-              <div className="homepage-programs__stat is-practice"><Settings2 aria-hidden="true" size={22} /><strong>60%</strong><span>practice</span></div>
-              <div className="homepage-programs__stat is-impact"><Trophy aria-hidden="true" size={22} /><strong>100%</strong><span>impact</span></div>
+          <div className="homepage-programs__head">
+            <h2 id="program-heading">Choose your path to Competition Success</h2>
+            <div className="homepage-programs__method" role="img" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
+              <div className="homepage-programs__mix">
+                <div className="homepage-programs__share is-theory"><strong>40%</strong><span>theory</span></div>
+                <div className="homepage-programs__share is-practice"><strong>60%</strong><span>practice</span></div>
+              </div>
+              <div className="homepage-programs__impact"><strong>100%</strong><span>impact</span></div>
             </div>
           </div>
 
@@ -157,15 +143,30 @@ export function HomePage({
               View all programs <ArrowRight aria-hidden="true" size={16} />
             </Link>
           </div>
+
+          {digitalProductsEnabled ? (
+            <section className="homepage-products homepage-programs__library" aria-labelledby="digital-products-heading" data-reveal data-testid="homepage-products-section">
+              <div className="marketing-product-library__grid">
+                <div className="marketing-product-library__copy">
+                  <h3 id="digital-products-heading">Digital Products</h3>
+                  <p className="marketing-product-library__lede">Learn beyond the session with ready-to-use guides, videos, and templates that help you prepare for business competitions.</p>
+                  <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/digital-products" data-testid="homepage-products-cta">Explore digital products <ArrowRight aria-hidden="true" size={16} /></Link>
+                </div>
+                {digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
 
       <section className="marketing-section stakeholder-section stakeholder-mentors" aria-labelledby="mentor-heading" data-reveal data-testid="homepage-mentors-section">
-        <div className="marketing-container"><div className="marketing-section-head is-wide"><div><p className="marketing-kicker">Meet Our Mentors</p><h2 id="mentor-heading">Learn from people who have<br />{' '}been where you want to go</h2></div><div className="marketing-section-head__note"><p>Learn from competition champions and industry professionals who have been where you want to go.</p><Link className="marketing-text-link" href="/mentor">Meet the mentors <ArrowRight aria-hidden="true" size={16} /></Link></div></div><MentorMarquee mentors={mentors} /></div>
-      </section>
-
-      <section className="marketing-section stakeholder-section stakeholder-products marketing-product-library homepage-products" aria-labelledby="digital-products-heading" data-reveal data-testid="homepage-products-section">
-            <div className="marketing-container stakeholder-product-grid marketing-product-library__grid"><div className="marketing-product-library__copy"><p className="marketing-kicker">Digital Products</p><h2 id="digital-products-heading">Learn beyond the session</h2><p className="stakeholder-section__lede">Ready-to-use guides, videos, and templates to help you prepare for business competitions.</p><Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/digital-products" data-testid="homepage-products-cta">Explore now <ArrowRight aria-hidden="true" size={16} /></Link></div>{digitalProductsEnabled && digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}</div>
+        <div className="marketing-container homepage-mentors__head">
+          <h2 id="mentor-heading">Meet Our Mentors</h2>
+          <Link className="marketing-text-link" href="/mentor">View all mentors <ArrowRight aria-hidden="true" size={16} /></Link>
+        </div>
+        <div className="homepage-mentors__rail">
+          <MentorMarquee mentors={mentors} />
+        </div>
       </section>
 
       <section className="marketing-section stakeholder-section homepage-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
@@ -195,7 +196,22 @@ export function HomePage({
 
       <TrustedPartnersSection partners={trustedPartners} />
 
-      <section className="marketing-section marketing-faq-preview homepage-faq-preview stakeholder-section" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section"><div className="marketing-container marketing-faq-preview__grid"><div><CircleHelp aria-hidden="true" size={26} /><p className="marketing-kicker">FAQ</p><h2 id="faq-heading">Start with the<br />{' '}right questions</h2><Link className={cn(buttonVariants({ variant: 'secondary', size: 'marketing' }), 'marketing-faq-preview__button')} href="/faq">Read all FAQs <ArrowRight aria-hidden="true" size={16} /></Link></div><div className="marketing-faq-list">{faqPreview.slice(0, 3).map((item, index) => <details key={item.question} open={index === 0}><summary><span>0{index + 1}</span>{item.question}<ArrowDownRight aria-hidden="true" size={18} /></summary><p>{item.answer}</p></details>)}</div></div></section>
+      <section className="marketing-section stakeholder-section homepage-faq" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section">
+        <div className="marketing-container">
+          <div className="homepage-faq__head">
+            <h2 id="faq-heading">FAQ</h2>
+            <Link className="marketing-text-link" href="/faq">See all questions <ArrowRight aria-hidden="true" size={16} /></Link>
+          </div>
+          <div className="homepage-faq__grid">
+            {faqPreview.slice(0, 4).map((item) => (
+              <details className="homepage-faq__item" key={item.question}>
+                <summary><span>{item.question}</span><span className="homepage-faq__toggle" aria-hidden="true"><ChevronDown size={20} /></span></summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
     </main>
   )
 }

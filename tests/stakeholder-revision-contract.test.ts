@@ -23,7 +23,7 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
   ])
 
   assert.match(source, /Win Business Competitions with Expert Mentoring/)
-  assert.match(whoWeAre, /Where Future-Ready Skills Meet Competition Success/)
+  assert.match(whoWeAre, /Ready to compete <span className="homepage-who__accent">with confidence<\/span>/)
   assert.match(source, /What We Specialize In/)
   assert.match(source, /TestimonialCircularGallery/)
   assert.match(source, /homepage-programs__method/)
@@ -31,6 +31,8 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
   assert.match(source, /60%/)
   assert.match(source, /100%/)
   assert.match(source, /homepage-programs-view-all/)
+  assert.match(source, /Choose your path to Competition Success/)
+  assert.doesNotMatch(source, /bigClassPlaceholder|Big Class/)
   assert.doesNotMatch(source, /stakeholder-service-list/)
   assert.doesNotMatch(source, /Partnered with Leading Organizations/)
   assert.doesNotMatch(source, /TextType|hero-text-type/)
@@ -39,9 +41,10 @@ test('homepage uses the stakeholder copy and new proof-led order without typing 
     'homepage-success-proof-section',
     '<WhoWeAreSection',
     'homepage-expertise-section',
+    // Digital Products live inside the Programs section ("choose your path"), before Mentors.
     'homepage-programs-section',
-    'homepage-mentors-section',
     'homepage-products-section',
+    'homepage-mentors-section',
     'homepage-why-choose-section',
   ]
   const positions = sections.map(section => source.indexOf(section))
