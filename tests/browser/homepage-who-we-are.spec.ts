@@ -51,8 +51,9 @@ for (const width of widths) {
     const collage = page.getByTestId('homepage-who-we-are-collage')
     await section.scrollIntoViewIfNeeded()
     await expect(section).toContainText('WHO WE ARE')
-    await expect(section.getByRole('heading', { name: 'Where Future-Ready Skills Meet Competition Success' })).toBeVisible()
-    await expect(section.getByRole('link', { name: 'Learn More About Us' })).toHaveAttribute('href', '/tentang-kami')
+    await expect(section.getByRole('heading', { name: 'Ready to compete with confidence' })).toBeVisible()
+    await expect(section.locator('.homepage-who__accent')).toHaveText('with confidence')
+    await expect(section.getByRole('link', { name: 'Learn More About Us' })).toHaveAttribute('href', '/about-us')
     await expect(collage.locator('figure')).toHaveCount(3)
 
     const geometry = await section.evaluate(node => {
@@ -113,15 +114,16 @@ for (const width of widths) {
       expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(20)
       expect(geometry.ledeMarginTop).toBeLessThanOrEqual(24)
     } else {
-      expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(34)
-      expect(geometry.ledeMarginTop).toBeGreaterThanOrEqual(34)
+      // Calmer editorial rhythm: one clear step between headline and lede, not a gulf.
+      expect(geometry.headingToLedeGap).toBeGreaterThanOrEqual(22)
+      expect(geometry.headingToLedeGap).toBeLessThanOrEqual(28)
+      expect(geometry.ledeMarginTop).toBe(24)
     }
     expect(geometry.ledeFontSize).toBeGreaterThanOrEqual(16)
     expect(geometry.kickerFontSize).toBeGreaterThanOrEqual(12)
-    if (width <= 430) {
-      expect(geometry.headingLines).toBeGreaterThanOrEqual(2.7)
-      expect(geometry.headingLines).toBeLessThanOrEqual(3.3)
-    }
+    // "Ready to compete / with confidence" holds two lines at every width.
+    expect(geometry.headingLines).toBeGreaterThanOrEqual(1.7)
+    expect(geometry.headingLines).toBeLessThanOrEqual(2.3)
     await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true)
   })
 }

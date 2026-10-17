@@ -181,37 +181,79 @@
 .marketing-faq-list summary svg { transition: transform 180ms ease; }
 .marketing-faq-list details[open] summary svg { transform: rotate(45deg); }
 .marketing-faq-list details p { max-width: 640px; padding: 0 46px 27px 49px; color: var(--marketing-muted); font-size: .75rem; line-height: 1.7; }
-.homepage-faq-preview {
-  color: #fffaf4;
-  background:
-    radial-gradient(circle at 8% 10%, rgba(166, 38, 0, .46), transparent 42%),
-    radial-gradient(circle at 88% 86%, rgba(255, 211, 150, .26), transparent 38%),
-    linear-gradient(142deg, #df4504 0%, #f66108 38%, #ff7b10 66%, #f7a04a 100%);
+/* Homepage FAQ: question boxes on a warm grey band. */
+.homepage-faq { background: #f7f5f2; }
+.homepage-faq__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
 }
-.homepage-faq-preview .marketing-kicker { color: #ffe5b8; }
-.homepage-faq-preview h2 { color: #fffaf4; }
-.homepage-faq-preview .marketing-faq-preview__grid > div:first-child > svg { color: #ffe0a3; }
-.homepage-faq-preview .marketing-faq-list { border-top-color: rgba(255,255,255,.28); }
-.homepage-faq-preview .marketing-faq-list details { border-bottom-color: rgba(255,255,255,.24); }
-.homepage-faq-preview .marketing-faq-list summary { color: #fffdf8; }
-.homepage-faq-preview .marketing-faq-list summary > span { color: #ffe3a2; }
-.homepage-faq-preview .marketing-faq-list summary svg { color: #fff5df; }
-.homepage-faq-preview .marketing-faq-list summary:focus-visible { outline: 2px solid #fff3d2; outline-offset: 4px; }
-.homepage-faq-preview .marketing-faq-list details p { color: rgba(255,255,255,.84); }
-.homepage-faq-preview .marketing-faq-preview__button {
-  border: 1px solid rgba(255,255,255,.72);
-  color: #9f3d0b;
-  background: #fff9ef;
-  box-shadow: 0 10px 24px rgba(112, 38, 7, .16);
+.homepage-faq__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
 }
-.homepage-faq-preview .marketing-faq-preview__button:hover {
-  color: #7f2d05;
+.homepage-faq__item {
+  min-width: 0;
+  border-radius: 22px;
   background: #fff;
-  box-shadow: 0 14px 30px rgba(112, 38, 7, .2);
+  transition: box-shadow 260ms ease, transform 260ms cubic-bezier(.2, .72, .2, 1);
 }
-.homepage-faq-preview .marketing-faq-preview__button:focus-visible {
-  outline: 3px solid rgba(255,255,255,.92);
-  outline-offset: 4px;
+.homepage-faq__item:hover { transform: translateY(-2px); }
+.homepage-faq__item[open] { box-shadow: 0 18px 40px rgba(60, 36, 20, .08); }
+.homepage-faq__item summary {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 26px;
+  border-radius: 22px;
+  color: #22150d;
+  cursor: pointer;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.45;
+  list-style: none;
+}
+.homepage-faq__item summary::-webkit-details-marker { display: none; }
+.homepage-faq__item summary:focus-visible { outline: 3px solid var(--marketing-orange-dark); outline-offset: 3px; }
+.homepage-faq__toggle {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #6d5d52;
+  background: #f4efe9;
+  transition: background-color 220ms ease, color 220ms ease;
+}
+.homepage-faq__toggle svg { transition: transform 320ms cubic-bezier(.2, .72, .2, 1); }
+.homepage-faq__item:hover .homepage-faq__toggle { color: var(--marketing-orange-dark); background: #ffe8d4; }
+.homepage-faq__item[open] .homepage-faq__toggle { color: #fff; background: var(--marketing-orange); }
+.homepage-faq__item[open] .homepage-faq__toggle svg { transform: rotate(180deg); }
+.homepage-faq__item > p {
+  max-width: 560px;
+  margin: 0;
+  padding: 0 26px 26px;
+  color: #5a4c43;
+  font-size: .95rem;
+  line-height: 1.75;
+}
+@media (max-width: 760px) {
+  .homepage-faq__grid { grid-template-columns: 1fr; gap: 14px; }
+  .homepage-faq__item summary { min-height: 80px; padding: 20px; font-size: .98rem; }
+  .homepage-faq__item > p { padding: 0 20px 22px; font-size: .92rem; }
+}
+@media (max-width: 620px) {
+  .homepage-faq__head { flex-wrap: wrap; align-items: baseline; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .homepage-faq__item, .homepage-faq__toggle, .homepage-faq__toggle svg { transition: none; }
+  .homepage-faq__item:hover { transform: none; }
 }
 
 .marketing-footer { display: block; width: 100%; max-width: none; margin: 0; padding: 0; border-top: 0; color: #fff; background: #171314; }
@@ -580,7 +622,7 @@
 @keyframes whatsapp-pulse { 0% { opacity: .55; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.2); } }
 
 .marketing-mentor-marquee { overflow: hidden; padding: 8px 0 16px; mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
-.marketing-mentor-marquee__track { display: flex; width: max-content; animation: mentor-marquee 150s linear infinite; }
+.marketing-mentor-marquee__track { display: flex; width: max-content; animation: mentor-marquee 175s linear infinite; }
 .marketing-mentor-marquee:hover .marketing-mentor-marquee__track, .marketing-mentor-marquee:focus-within .marketing-mentor-marquee__track { animation-play-state: paused; }
 .marketing-mentor-marquee__group { display: flex; gap: 18px; padding-right: 18px; }
 .marketing-mentor-marquee__card { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: start; gap: 18px; width: 556px; min-height: 152px; padding: 17px; border: 1px solid var(--marketing-line); border-radius: 6px 21px 21px 21px; color: inherit; background: #fffdfa; transition: border-color 180ms ease, box-shadow 180ms ease; }
@@ -954,17 +996,18 @@
   letter-spacing: .16em;
 }
 .homepage-who__copy h2 {
-  max-width: 610px;
-  margin-top: 20px;
-  font-size: clamp(2.35rem, 3.8vw, 4rem);
+  max-width: 560px;
+  margin-top: 16px;
+  font-size: clamp(2.2rem, 3.3vw, 3.25rem);
   font-weight: 650;
-  letter-spacing: var(--marketing-display-tracking);
-  line-height: 1.02;
+  letter-spacing: -.04em;
+  line-height: 1.06;
   text-wrap: balance;
 }
+.homepage-who__copy h2 .homepage-who__accent { color: var(--marketing-orange); }
 .homepage-who__copy > .homepage-who__lede {
-  max-width: 560px;
-  margin-top: 36px;
+  max-width: 540px;
+  margin-top: 24px;
   color: var(--marketing-muted);
   font-size: clamp(1rem, 1.12vw, 1.1rem);
   line-height: 1.72;
@@ -1076,264 +1119,237 @@
   width: 100%;
   transform: none;
 }
-/* Homepage programs showcase */
-.homepage-programs {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background:
-    linear-gradient(rgba(196, 91, 22, .065) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(196, 91, 22, .065) 1px, transparent 1px),
-    radial-gradient(circle at 8% 18%, rgba(255, 167, 92, .22), transparent 28%),
-    radial-gradient(circle at 88% 72%, rgba(244, 112, 24, .16), transparent 32%),
-    linear-gradient(135deg, #fffaf4 0%, #fff5ea 48%, #ffe9d2 100%);
-  background-size: 48px 48px, 48px 48px, auto, auto, auto;
+/* Homepage programs + digital products: one "choose your path" section */
+.homepage-programs { position: relative; background: #fff8f1; }
+.homepage-programs__inner { position: relative; }
+.homepage-programs__head,
+.homepage-mentors__head,
+.homepage-faq__head { margin-bottom: clamp(32px, 4vw, 56px); }
+.homepage-programs__head h2,
+.homepage-mentors__head h2,
+.homepage-faq__head h2 {
+  font-size: clamp(2.3rem, 3.7vw, 3.4rem);
+  font-weight: 650;
+  letter-spacing: -.045em;
+  line-height: 1.04;
+  text-wrap: balance;
 }
-.homepage-programs::before,
-.homepage-programs::after {
-  position: absolute;
-  z-index: -1;
-  border-radius: 50%;
-  content: '';
-  pointer-events: none;
-}
-.homepage-programs::before {
-  top: -180px;
-  left: -150px;
-  width: 460px;
-  height: 460px;
-  border: 2px solid rgba(244, 104, 15, .22);
-  background: rgba(255, 239, 220, .34);
-}
-.homepage-programs::after {
-  right: -150px;
-  bottom: -210px;
-  width: 520px;
-  height: 520px;
-  border: 2px solid rgba(244, 104, 15, .18);
-  background: rgba(255, 194, 135, .2);
-}
-.homepage-programs__inner { position: relative; z-index: 1; }
 .homepage-programs__head {
-  grid-template-columns: minmax(0, 1fr) minmax(360px, .72fr) !important;
-  align-items: center;
-  gap: clamp(42px, 6vw, 92px);
-  margin-bottom: clamp(38px, 5vw, 64px);
+  display: grid;
+  max-width: 860px;
+  justify-items: center;
+  margin-inline: auto;
+  text-align: center;
 }
-.homepage-programs__copy { max-width: 850px; }
-.homepage-programs__copy .stakeholder-section__lede {
-  max-width: 670px;
-  margin-top: 22px;
-  color: #756860;
-  font-size: .88rem;
-  line-height: 1.75;
-}
-.homepage-programs__copy > .marketing-kicker {
-  font-size: clamp(.76rem, .82vw, .88rem);
-  letter-spacing: .16em;
-}
+.homepage-programs__head h2 { max-width: 760px; }
+
+/* 40% theory + 60% practice = 100% impact, drawn as one proportional bar. */
 .homepage-programs__method {
-  display: grid;
-  width: min(100%, 470px);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  width: min(100%, 640px);
+  align-items: stretch;
   gap: 10px;
-  justify-self: end;
-  align-items: center;
+  margin-top: clamp(26px, 3vw, 36px);
+  text-align: left;
 }
-.homepage-programs__stat {
-  position: relative;
-  display: grid;
-  min-height: 148px;
-  place-items: center;
-  align-content: center;
-  gap: 4px;
-  padding: 18px 10px;
-  border: 1px solid rgba(191, 78, 11, .12);
-  border-radius: 22px;
-  color: #c64a05;
-  background: rgba(255, 247, 238, .92);
-  box-shadow: 0 18px 34px rgba(129, 63, 22, .09);
-  transition: transform 220ms ease, box-shadow 220ms ease;
+.homepage-programs__mix {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 18px;
 }
-.homepage-programs__stat::after {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
-  width: 30px;
-  height: 30px;
-  border: 1px solid rgba(230, 91, 8, .16);
-  border-radius: 50%;
-  content: '';
+.homepage-programs__share,
+.homepage-programs__impact {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px 20px;
 }
-.homepage-programs__stat.is-theory { background: linear-gradient(145deg, #ffe5c5, #fff0db); transform: rotate(-3deg) translateY(7px); }
-.homepage-programs__stat.is-practice { background: linear-gradient(145deg, #fffaf2, #fff1df); transform: rotate(1.5deg) translateY(-3px); }
-.homepage-programs__stat.is-impact { color: #fffaf4; border-color: rgba(191, 78, 11, .22); background: linear-gradient(145deg, #ff7a22, #e95308); transform: rotate(3deg) translateY(6px); }
-.homepage-programs__stat:hover { box-shadow: 0 24px 42px rgba(129, 63, 22, .13); transform: translateY(-5px) rotate(0); }
-.homepage-programs__stat svg { margin-bottom: 5px; }
-.homepage-programs__stat strong {
+.homepage-programs__share.is-theory { flex: 40; color: #9a3a06; background: #ffe3c9; }
+.homepage-programs__share.is-practice { flex: 60; color: #1f130b; background: var(--marketing-orange); }
+.homepage-programs__impact { flex: 0 0 auto; border-radius: 18px; color: #fff8f1; background: #22150d; }
+.homepage-programs__method strong {
   font-family: var(--font-heading);
-  font-size: clamp(1.9rem, 3vw, 2.65rem);
-  font-weight: 720;
-  letter-spacing: -.06em;
-  line-height: .95;
+  font-size: clamp(1.35rem, 2vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -.04em;
+  line-height: 1;
 }
-.homepage-programs__stat span { font-size: .68rem; font-weight: 750; letter-spacing: -.01em; }
+.homepage-programs__method span { font-size: .82rem; font-weight: 600; }
 
 .homepage-programs .marketing-program-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 1.6vw, 22px);
+  max-width: 1120px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 24px);
+  margin-inline: auto;
 }
-.homepage-programs .marketing-program-card {
-  --program-accent: #e85d0c;
-  --program-ink: #9a3a06;
-  --program-field: #ffe7d4;
+.homepage-programs .marketing-program-card,
+.homepage-programs .marketing-program-card.is-orange {
+  --program-accent: #c94f06;
+  --program-muted: #5a4c43;
+  --program-field: #fff6ee;
   display: flex;
-  min-height: 455px;
-  flex-direction: column;
-  border: 1px solid rgba(122, 65, 29, .1);
-  border-radius: 24px;
-  background: #fffdfa;
-  box-shadow: 0 1px 2px rgba(104, 55, 23, .04);
-  transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  min-height: 0;
+  border: 0;
+  border-radius: 28px;
+  color: #22150d;
+  background: #fff;
+  transition: transform 280ms cubic-bezier(.2, .72, .2, 1), box-shadow 280ms ease;
 }
-.homepage-programs .marketing-program-card.is-red { --program-accent: #c94430; --program-ink: #8e2a1c; --program-field: #fbe0da; }
-.homepage-programs .marketing-program-card.is-yellow { --program-accent: #c98a0c; --program-ink: #7a5300; --program-field: #fdefc4; }
-.homepage-programs .marketing-program-card.is-placeholder {
-  min-height: 455px;
-  border-style: solid;
-  border-color: rgba(122, 65, 29, .1);
+.homepage-programs .marketing-program-card.is-red {
+  --program-accent: #ff9d52;
+  --program-muted: rgba(255, 246, 238, .74);
+  --program-field: rgba(255, 255, 255, .06);
+  color: #fff6ee;
+  background: #22150d;
 }
 .homepage-programs .marketing-program-card:hover {
-  border-color: color-mix(in srgb, var(--program-accent) 34%, transparent);
-  box-shadow: 0 22px 44px rgba(104, 55, 23, .1);
-  transform: translateY(-4px);
+  border-color: transparent;
+  box-shadow: 0 26px 54px rgba(74, 38, 14, .13);
+  transform: translateY(-6px);
+}
+.homepage-programs .marketing-program-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--marketing-orange) 45%, transparent);
+  outline-offset: 4px;
 }
 .homepage-programs .marketing-program-card__body {
   display: flex;
-  flex: 1;
   min-width: 0;
+  flex: 1;
   flex-direction: column;
-  padding: 0;
+  padding: clamp(28px, 3.2vw, 44px);
 }
 .homepage-programs .marketing-program-card h3 {
   margin: 0;
-  position: relative;
-  z-index: 1;
-  padding: 34px 30px 4px;
-  border-radius: 23px 23px 0 0;
-  color: #24140c;
-  background: var(--program-field);
-  font-size: clamp(1.7rem, 2.3vw, 2.3rem);
+  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
   font-weight: 650;
   letter-spacing: -.045em;
-  line-height: 1.12;
+  line-height: 1.08;
 }
-.homepage-programs .marketing-program-card .marketing-program-card__tag {
-  max-width: none;
-  margin: 0;
-  padding: 6px 30px 30px;
-  color: var(--program-ink);
-  background: var(--program-field);
-  font-size: .82rem;
+.homepage-programs .marketing-program-card__tagline {
+  margin-top: 10px;
+  color: var(--program-accent);
+  font-size: clamp(1rem, 1.2vw, 1.12rem);
   font-weight: 600;
-  letter-spacing: -.005em;
   line-height: 1.4;
-  text-align: left;
-  text-transform: none;
 }
-.homepage-programs .marketing-program-card .marketing-program-card__summary {
-  margin: 0;
-  padding: 26px 30px 0;
-  color: #4f433c;
-  font-size: .84rem;
+.homepage-programs .marketing-program-card__summary {
+  max-width: 470px;
+  margin-top: 16px;
+  color: var(--program-muted);
+  font-size: .95rem;
   line-height: 1.7;
 }
-.homepage-programs .marketing-program-card ul {
-  gap: 11px;
-  margin: 22px 0 0;
-  padding: 0 30px;
-  color: #3f342e;
-  font-size: .78rem;
-}
-.homepage-programs .marketing-program-card li { gap: 10px; }
-.homepage-programs .marketing-program-card li svg { margin-top: 2px; color: var(--program-accent); }
-.homepage-programs .marketing-program-card__bottom {
-  align-items: center;
-  margin: auto 0 0;
-  padding: 30px 30px 28px;
-  border-top: 0;
-}
-.homepage-programs .marketing-program-card__bottom strong { color: #24140c; font-size: .9rem; }
-.homepage-programs .marketing-program-card__bottom small { color: #75675f; font-size: .66rem; }
-.homepage-programs .marketing-program-card__arrow,
-.homepage-programs .marketing-program-card__pending {
+.homepage-programs .marketing-program-card__facts {
   display: grid;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 0;
-  border-radius: 999px;
-}
-.homepage-programs .marketing-program-card__arrow {
-  color: #fff;
-  background: var(--program-accent);
-  transition: transform 220ms ease;
-}
-.homepage-programs .marketing-program-card:hover .marketing-program-card__arrow { transform: translateX(3px); }
-.homepage-programs .marketing-program-card__pending {
-  color: var(--program-ink);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 22px;
+  margin: 28px 0 0;
+  padding: 20px 22px;
+  border-radius: 20px;
   background: var(--program-field);
 }
+.homepage-programs .marketing-program-card__facts dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .8rem;
+  font-weight: 700;
+}
+.homepage-programs .marketing-program-card__facts dt svg { flex: 0 0 auto; color: var(--program-accent); }
+.homepage-programs .marketing-program-card__facts dd {
+  margin: 6px 0 0;
+  color: var(--program-muted);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+.homepage-programs .marketing-program-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 30px;
+  color: var(--program-accent);
+  font-size: .92rem;
+  font-weight: 700;
+}
+.homepage-programs .marketing-program-card__cta svg { transition: transform 260ms cubic-bezier(.2, .72, .2, 1); }
+.homepage-programs .marketing-program-card:hover .marketing-program-card__cta svg { transform: translateX(5px); }
 @media (prefers-reduced-motion: reduce) {
   .homepage-programs .marketing-program-card,
-  .homepage-programs .marketing-program-card__arrow { transition: none; }
+  .homepage-programs .marketing-program-card__cta svg { transition: none; }
   .homepage-programs .marketing-program-card:hover,
-  .homepage-programs .marketing-program-card:hover .marketing-program-card__arrow { transform: none; }
+  .homepage-programs .marketing-program-card:hover .marketing-program-card__cta svg { transform: none; }
 }
-.homepage-programs__footer { display: flex; justify-content: center; margin-top: clamp(30px, 4vw, 48px); }
-.homepage-programs__view-all {
-  min-width: 220px;
-  border-radius: 999px !important;
-  box-shadow: 0 16px 34px rgba(208, 76, 0, .22);
-}
+.homepage-programs__footer { display: flex; justify-content: center; margin-top: clamp(28px, 3.5vw, 44px); }
+.homepage-programs__view-all { min-width: 220px; border-radius: 999px !important; }
 .homepage-programs__view-all svg { transition: transform 180ms ease; }
 .homepage-programs__view-all:hover svg { transform: translateX(4px); }
 
+/* Digital products, the self-paced path inside the same section. */
+.homepage-programs__library.homepage-products {
+  max-width: 1120px;
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 32px;
+  background: #fff;
+}
+.homepage-programs__library .marketing-product-library__grid {
+  grid-template-columns: minmax(0, .85fr) minmax(320px, 1.15fr);
+  gap: clamp(28px, 5vw, 72px);
+}
+.homepage-programs__library h3 {
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -.045em;
+  line-height: 1.05;
+}
+.homepage-programs__library .marketing-product-library__lede {
+  max-width: 420px;
+  margin-top: 16px;
+  color: #5a4c43;
+  font-size: .95rem;
+  line-height: 1.7;
+}
+.homepage-programs__library .marketing-product-library__cta { margin-top: 28px; }
+
+/* Mentors: heading row, then a full-bleed marquee rail. */
+.homepage-mentors__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.homepage-mentors__rail .marketing-mentor-marquee {
+  margin-inline: 0;
+  padding: 14px 0 30px;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+
 @media (max-width: 900px) {
-  .homepage-programs__head { grid-template-columns: 1fr !important; gap: 36px; }
-  .homepage-programs__method { width: min(100%, 520px); justify-self: start; }
-  .homepage-programs .marketing-program-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .homepage-programs .marketing-program-card:nth-child(3) { grid-column: 1 / -1; min-height: 0; }
-  .homepage-programs .marketing-program-card:nth-child(3) .marketing-program-card__bottom { margin-top: 0; }
+  .homepage-programs__library .marketing-product-library__grid { grid-template-columns: 1fr; gap: 34px; }
+}
+@media (max-width: 760px) {
+  .homepage-programs .marketing-program-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
-  .homepage-programs { background-size: 34px 34px, 34px 34px, auto, auto, auto; }
-  .homepage-programs__head { gap: 30px; margin-bottom: 34px; }
-  .homepage-programs__copy .stakeholder-section__lede { margin-top: 18px; font-size: .83rem; }
-  .homepage-programs__method { gap: 7px; }
-  .homepage-programs__stat {
-    min-height: 112px;
-    gap: 2px;
-    padding: 13px 6px;
-    border-radius: 17px;
-  }
-  .homepage-programs__stat svg { width: 18px; height: 18px; margin-bottom: 3px; }
-  .homepage-programs__stat strong { font-size: 1.55rem; }
-  .homepage-programs__stat span { font-size: .6rem; }
-  .homepage-programs .marketing-program-grid { grid-template-columns: 1fr; }
-  .homepage-programs .marketing-program-card:nth-child(3) { grid-column: auto; }
+  .homepage-programs__head h2,
+  .homepage-mentors__head h2,
+  .homepage-faq__head h2 { font-size: clamp(1.85rem, 8vw, 2.3rem); }
+  .homepage-programs__method { flex-wrap: wrap; justify-content: center; }
+  .homepage-programs__mix { flex-basis: 100%; }
+  .homepage-programs__share, .homepage-programs__impact { padding: 14px 16px; }
   .homepage-programs .marketing-program-card,
-  .homepage-programs .marketing-program-card.is-placeholder {
-    min-height: 0;
-    border-radius: 22px;
-  }
-  .homepage-programs .marketing-program-card h3 { padding: 28px 22px 4px; border-radius: 21px 21px 0 0; }
-  .homepage-programs .marketing-program-card .marketing-program-card__tag { padding: 4px 22px 24px; }
-  .homepage-programs .marketing-program-card .marketing-program-card__summary { padding: 22px 22px 0; }
-  .homepage-programs .marketing-program-card ul { padding-inline: 22px; }
-  .homepage-programs .marketing-program-card__bottom { padding: 26px 22px 22px; }
+  .homepage-programs .marketing-program-card.is-orange { border-radius: 24px; }
+  .homepage-programs .marketing-program-card__facts { grid-template-columns: 1fr; padding: 18px; }
   .homepage-programs__view-all { width: min(100%, 280px); }
+  .homepage-programs__library.homepage-products { border-radius: 26px; }
+  .homepage-mentors__head { flex-wrap: wrap; align-items: baseline; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .homepage-mentors__rail .marketing-mentor-marquee { mask-image: none; }
 }
 
 .stakeholder-method { display: grid; gap: 26px; align-content: end; justify-items: start; }

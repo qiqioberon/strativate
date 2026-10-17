@@ -42,13 +42,12 @@ test('homepage section headlines share clean punctuation and no inline accent em
   if (await intro.count()) await expect(intro).toBeHidden({ timeout: 6000 })
 
   const expectations = [
-    ['homepage-who-we-are-section', 'Where Future-Ready Skills Meet Competition Success'],
-    ['homepage-programs-section', 'Choose the right program to build your skills and win competitions'],
-    ['homepage-products-section', 'Learn beyond the session'],
-    ['homepage-expertise-section', 'Our Expertise'],
-    ['homepage-mentors-section', 'Learn from people who have been where you want to go'],
-    ['homepage-why-choose-section', 'A path that fits your ambition'],
-    ['homepage-faq-section', 'Start with the right questions'],
+    ['homepage-who-we-are-section', 'Ready to compete with confidence'],
+    ['homepage-programs-section', 'Choose your path to Competition Success'],
+    ['homepage-expertise-section', 'What We Specialize In'],
+    ['homepage-mentors-section', 'Meet Our Mentors'],
+    ['homepage-why-choose-section', 'Why Choose Strativate?'],
+    ['homepage-faq-section', 'FAQ'],
   ] as const
 
   for (const [testId, expectedText] of expectations) {
@@ -60,7 +59,7 @@ test('homepage section headlines share clean punctuation and no inline accent em
   }
 })
 
-test('homepage programs is a three-card showcase with decorative learning mix and no service table', async ({ page }) => {
+test('homepage programs is a two-path showcase with the learning-mix bar, digital products, and no service table', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
   const intro = page.getByTestId('initial-brand-intro')
@@ -69,32 +68,15 @@ test('homepage programs is a three-card showcase with decorative learning mix an
   const section = page.getByTestId('homepage-programs-section')
   await section.scrollIntoViewIfNeeded()
   await expect(section).toBeVisible()
-  await expect(section.getByRole('heading', { name: 'Choose the right program to build your skills and win competitions' })).toBeVisible()
-  await expect(section.getByText('Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.', { exact: true })).toBeVisible()
-
-  const programsKicker = section.getByText('Our Programs', { exact: true })
-  const whoKicker = page.getByTestId('homepage-who-we-are-section').getByText('WHO WE ARE', { exact: true })
-  const kickerStyles = await Promise.all([
-    programsKicker.evaluate(node => {
-      const style = getComputedStyle(node)
-      return {
-        fontSize: style.fontSize,
-        letterSpacing: style.letterSpacing,
-        before: getComputedStyle(node, '::before').content,
-        after: getComputedStyle(node, '::after').content,
-      }
-    }),
-    whoKicker.evaluate(node => {
-      const style = getComputedStyle(node)
-      return { fontSize: style.fontSize, letterSpacing: style.letterSpacing }
-    }),
-  ])
-  expect(kickerStyles[0].fontSize).toBe(kickerStyles[1].fontSize)
-  expect(kickerStyles[0].letterSpacing).toBe(kickerStyles[1].letterSpacing)
-  expect(kickerStyles[0].before).toBe('none')
-  expect(kickerStyles[0].after).toBe('none')
+  await expect(section.getByRole('heading', { name: 'Choose your path to Competition Success' })).toBeVisible()
+  // Headline only: no kicker and no subtitle above or below it.
+  await expect(section.locator('.homepage-programs__head .marketing-kicker')).toHaveCount(0)
+  await expect(section.getByText('Comprehensive mentoring and coaching services to help you win in business competitions and build future-ready skills.', { exact: true })).toHaveCount(0)
+  await expect(section.locator('.homepage-programs__head')).toHaveCSS('text-align', 'center')
 
   const method = page.getByTestId('homepage-programs-method')
+  await expect(method).toHaveAttribute('role', 'img')
+  await expect(method).toHaveAttribute('aria-label', '40% theory, 60% practice, 100% impact')
   await expect(method.getByText('40%', { exact: true })).toBeVisible()
   await expect(method.getByText('theory', { exact: true })).toBeVisible()
   await expect(method.getByText('60%', { exact: true })).toBeVisible()
@@ -103,10 +85,12 @@ test('homepage programs is a three-card showcase with decorative learning mix an
   await expect(method.getByText('impact', { exact: true })).toBeVisible()
 
   const cards = page.getByTestId('homepage-program-cards').locator('.marketing-program-card')
-  await expect(cards).toHaveCount(3)
+  await expect(cards).toHaveCount(2)
   await expect(cards.nth(0)).toContainText('Private Mentoring')
+  await expect(cards.nth(0)).toContainText('Focused help for what you’re working on.')
   await expect(cards.nth(1)).toContainText('Intensive Mentoring')
-  await expect(cards.nth(2)).toContainText('Big Class')
+  await expect(cards.nth(1)).toContainText('Ongoing support throughout your preparation.')
+  await expect(section.getByText('Big Class')).toHaveCount(0)
   await expect(cards.locator('img')).toHaveCount(0)
   await expect(section.locator('.stakeholder-service-list')).toHaveCount(0)
 
@@ -114,9 +98,12 @@ test('homepage programs is a three-card showcase with decorative learning mix an
   await expect(viewAll).toHaveAttribute('href', '/program')
   await expect(viewAll).toHaveText(/View all programs/)
 
-  const background = await section.evaluate(node => getComputedStyle(node).backgroundImage)
-  expect(background).not.toBe('none')
-  await expect(cards.first()).not.toHaveCSS('box-shadow', 'none')
+  // Digital Products are the self-paced path inside the same section when the storefront is enabled.
+  const products = section.getByTestId('homepage-products-section')
+  if (await products.count()) {
+    await expect(products.getByRole('heading', { level: 3, name: 'Digital Products' })).toBeVisible()
+    await expect(products.getByTestId('homepage-products-cta')).toHaveAttribute('href', '/digital-products')
+  }
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.getByTestId('homepage-program-cards')).toHaveCSS('grid-template-columns', /.+/)
@@ -135,7 +122,7 @@ test('homepage mentor marquee provides one accessible directory sequence and mot
   await expect(marquee.locator('.marketing-mentor-marquee__group[aria-hidden="true"] a').first()).toHaveAttribute('tabindex', '-1')
   await expect(marquee.locator('.marketing-mentor-marquee__group:not([aria-hidden]) a')).toHaveCount(26)
   await expect(marquee.locator('.marketing-mentor-marquee__card').first()).toHaveAttribute('href', /^\/mentor#mentor-/)
-  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-duration', '140s')
+  await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-duration', '175s')
   await marquee.hover()
   await expect(marquee.locator('.marketing-mentor-marquee__track')).toHaveCSS('animation-play-state', 'paused')
   await marquee.locator('.marketing-mentor-marquee__card').first().focus()

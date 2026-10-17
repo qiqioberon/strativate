@@ -1,0 +1,80 @@
+/* Homepage entrance choreography.
+   MarketingMotion adds .is-visible to each [data-reveal] block once it scrolls into view; the block itself
+   fades in (marketing.css). These rules then stagger the parts inside it: heading, then copy, then media.
+   Keyframes only touch opacity and the standalone `translate`/`scale`/`clip-path` properties, so the
+   `transform` used by hover states and the tilted photo frames is never overwritten. */
+.stakeholder-homepage { --homepage-ease: cubic-bezier(.2, .72, .2, 1); }
+
+@keyframes homepage-rise { from { opacity: 0; translate: 0 26px; } to { opacity: 1; translate: 0 0; } }
+@keyframes homepage-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes homepage-slide-in { from { opacity: 0; translate: 56px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes homepage-pop { from { opacity: 0; scale: .86; } to { opacity: 1; scale: 1; } }
+@keyframes homepage-mix-wipe { from { clip-path: inset(0 100% 0 0 round 18px); } to { clip-path: inset(0 0 0 0 round 18px); } }
+@keyframes homepage-answer { from { opacity: 0; translate: 0 -8px; } to { opacity: 1; translate: 0 0; } }
+
+/* Who We Are: copy lines rise one after another, then the photo frames settle in. */
+.homepage-who.is-visible .homepage-who__copy > * { animation: homepage-rise 760ms var(--homepage-ease) both; }
+.homepage-who.is-visible .homepage-who__copy > :nth-child(2) { animation-delay: 90ms; }
+.homepage-who.is-visible .homepage-who__copy > :nth-child(3) { animation-delay: 190ms; }
+.homepage-who.is-visible .homepage-who__copy > :nth-child(4) { animation-delay: 290ms; }
+.homepage-who.is-visible .homepage-who__frame { animation: homepage-rise 900ms var(--homepage-ease) both; }
+.homepage-who.is-visible .homepage-who__frame:nth-child(1) { animation-delay: 160ms; }
+.homepage-who.is-visible .homepage-who__frame:nth-child(2) { animation-delay: 280ms; }
+.homepage-who.is-visible .homepage-who__frame:nth-child(3) { animation-delay: 400ms; }
+.homepage-who__frame { transition: scale 520ms var(--homepage-ease); }
+.homepage-who__frame:hover { scale: 1.025; }
+
+/* Programs: headline, then the 40/60 bar draws left to right and "100% impact" lands, then the cards. */
+.homepage-programs.is-visible .homepage-programs__head h2 { animation: homepage-rise 760ms var(--homepage-ease) both; }
+.homepage-programs.is-visible .homepage-programs__mix { animation: homepage-mix-wipe 1100ms cubic-bezier(.65, 0, .35, 1) 240ms both; }
+.homepage-programs.is-visible .homepage-programs__share > * { animation: homepage-fade 520ms ease both; }
+.homepage-programs.is-visible .homepage-programs__share.is-theory > * { animation-delay: 620ms; }
+.homepage-programs.is-visible .homepage-programs__share.is-practice > * { animation-delay: 940ms; }
+.homepage-programs.is-visible .homepage-programs__impact { animation: homepage-pop 560ms var(--homepage-ease) 1220ms both; }
+.homepage-programs.is-visible .marketing-program-card { animation: homepage-rise 820ms var(--homepage-ease) both; }
+.homepage-programs.is-visible .marketing-program-card:nth-child(1) { animation-delay: 360ms; }
+.homepage-programs.is-visible .marketing-program-card:nth-child(2) { animation-delay: 480ms; }
+.homepage-programs.is-visible .homepage-programs__footer { animation: homepage-rise 700ms var(--homepage-ease) 620ms both; }
+
+/* Digital products panel reveals on its own, since it sits further down the section. */
+.homepage-programs__library.is-visible .marketing-product-library__copy > * { animation: homepage-rise 720ms var(--homepage-ease) both; }
+.homepage-programs__library.is-visible .marketing-product-library__copy > :nth-child(2) { animation-delay: 90ms; }
+.homepage-programs__library.is-visible .marketing-product-library__copy > :nth-child(3) { animation-delay: 180ms; }
+.homepage-programs__library.is-visible .marketing-product-library__grid > :last-child { animation: homepage-fade 900ms ease 260ms both; }
+
+/* Mentors: heading row rises, then the rail glides in from the right while it keeps scrolling. */
+.stakeholder-mentors.is-visible .homepage-mentors__head > * { animation: homepage-rise 720ms var(--homepage-ease) both; }
+.stakeholder-mentors.is-visible .homepage-mentors__head > :nth-child(2) { animation-delay: 120ms; }
+.stakeholder-mentors.is-visible .homepage-mentors__rail { animation: homepage-slide-in 1000ms var(--homepage-ease) 180ms both; }
+
+/* FAQ: question boxes arrive in reading order; an answer eases in when its box opens. */
+.homepage-faq.is-visible .homepage-faq__head > * { animation: homepage-rise 720ms var(--homepage-ease) both; }
+.homepage-faq.is-visible .homepage-faq__head > :nth-child(2) { animation-delay: 120ms; }
+.homepage-faq.is-visible .homepage-faq__item { animation: homepage-rise 720ms var(--homepage-ease) both; }
+.homepage-faq.is-visible .homepage-faq__item:nth-child(1) { animation-delay: 140ms; }
+.homepage-faq.is-visible .homepage-faq__item:nth-child(2) { animation-delay: 220ms; }
+.homepage-faq.is-visible .homepage-faq__item:nth-child(3) { animation-delay: 300ms; }
+.homepage-faq.is-visible .homepage-faq__item:nth-child(4) { animation-delay: 380ms; }
+.homepage-faq__item[open] > p { animation: homepage-answer 380ms var(--homepage-ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stakeholder-homepage :is(
+    .homepage-who__copy > *,
+    .homepage-who__frame,
+    .homepage-programs__head h2,
+    .homepage-programs__mix,
+    .homepage-programs__share > *,
+    .homepage-programs__impact,
+    .marketing-program-card,
+    .homepage-programs__footer,
+    .marketing-product-library__copy > *,
+    .marketing-product-library__grid > :last-child,
+    .homepage-mentors__head > *,
+    .homepage-mentors__rail,
+    .homepage-faq__head > *,
+    .homepage-faq__item,
+    .homepage-faq__item > p
+  ) { animation: none !important; }
+  .homepage-who__frame { transition: none; }
+  .homepage-who__frame:hover { scale: none; }
+}

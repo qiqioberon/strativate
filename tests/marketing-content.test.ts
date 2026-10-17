@@ -128,10 +128,11 @@ test('FAQ contact answer reuses the approved public contact record', async () =>
   assert.match(contentSource, /publicContact\.email/)
 })
 
-test('homepage intentionally limits the expanded FAQ directory to three previews', async () => {
+test('homepage intentionally limits the expanded FAQ directory to four boxed previews', async () => {
   const homePage = await readProjectFile('components/marketing/home-page.tsx')
 
-  assert.match(homePage, /faqPreview\.slice\(0,\s*3\)\.map/)
+  assert.match(homePage, /faqPreview\.slice\(0,\s*4\)\.map/)
+  assert.match(homePage, /className="homepage-faq__item"/)
 })
 
 test('asset registry separates supplied production assets from explicit fallbacks', async () => {

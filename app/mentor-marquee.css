@@ -1,58 +1,72 @@
 .marketing-mentor-marquee__card {
-  grid-template-columns: 108px 320px;
+  grid-template-columns: 176px minmax(0, 1fr);
   align-items: center;
-  width: 476px;
-  min-height: 166px;
+  gap: 24px;
+  width: 548px;
+  min-height: 252px;
   overflow: hidden;
-  padding: 16px;
+  padding: 18px;
+  border-color: transparent;
+  border-radius: 26px;
+  background: #faf5f0;
   text-align: left;
   cursor: pointer;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: border-color 220ms ease, box-shadow 260ms ease, transform 260ms cubic-bezier(.2, .72, .2, 1), background-color 260ms ease;
 }
 .marketing-mentor-marquee__card:hover, .marketing-mentor-marquee__card:focus-visible, .marketing-mentor-marquee__card:focus {
-  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 20px 44px rgba(74, 38, 14, .12);
+  transform: translateY(-4px);
 }
+.marketing-mentor-marquee__card:hover:not(:focus-visible) { border-color: transparent; }
 .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media {
-  width: 108px;
-  height: 132px;
+  width: 176px;
+  height: 216px;
+  border-radius: 18px;
 }
+.marketing-mentor-marquee__portrait img { transition: scale 600ms cubic-bezier(.2, .72, .2, 1); }
+.marketing-mentor-marquee__card:hover .marketing-mentor-marquee__portrait img { scale: 1.05; }
+/* Mentors without a published photo: a calm brand placeholder instead of a cropped logo and caption. */
+.marketing-mentor-marquee__portrait [data-asset-status='missing'] { background: #f3e6da; }
+.marketing-mentor-marquee__portrait [data-asset-status='missing'] img { object-fit: contain !important; padding: 26% !important; opacity: .85; }
+.marketing-mentor-marquee__portrait [data-asset-status='missing'] figcaption { display: none; }
 .marketing-mentor-marquee__content {
   position: relative;
   display: block !important;
   min-width: 0;
-  height: 132px;
+  height: 216px;
 }
 .marketing-mentor-marquee__identity {
   display: grid;
-  gap: 5px;
-  transform: translateY(36px);
+  gap: 7px;
+  transform: translateY(80px);
   transform-origin: left top;
-  transition: transform 220ms ease;
+  transition: transform 260ms cubic-bezier(.2, .72, .2, 1);
 }
 .marketing-mentor-marquee__card .marketing-mentor-marquee__tier {
   color: var(--marketing-orange-dark);
-  font-size: .69rem;
-  font-weight: 900;
-  letter-spacing: .1em;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .08em;
   line-height: 1.2;
   text-transform: uppercase;
-  transition: font-size 220ms ease, letter-spacing 220ms ease;
+  transition: font-size 260ms ease, letter-spacing 260ms ease;
 }
 .marketing-mentor-marquee__card .marketing-mentor-marquee__name {
   display: block;
   overflow: hidden;
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-size: 1.85rem;
+  font-weight: 750;
   letter-spacing: -.045em;
   line-height: 1.05;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: font-size 220ms ease, letter-spacing 220ms ease;
+  transition: font-size 260ms ease, letter-spacing 260ms ease;
 }
 .marketing-mentor-marquee__details {
   display: grid;
-  gap: 5px;
-  margin-top: 13px;
+  gap: 7px;
+  margin-top: 16px;
   opacity: 0;
   transform: translateY(12px);
   pointer-events: none;
@@ -61,17 +75,17 @@
 .marketing-mentor-marquee__details .marketing-mentor-marquee__title,
 .marketing-mentor-marquee__details .marketing-mentor-marquee__credentials,
 .marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { opacity: 1; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials { gap: 2px; margin-top: 0; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__title { display: block; max-width: 100%; overflow: hidden; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.marketing-mentor-marquee__details .marketing-mentor-marquee__credentials { gap: 4px; margin-top: 0; font-size: .74rem; }
 .marketing-mentor-marquee__details .marketing-mentor-marquee__credentials li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marketing-mentor-marquee__details .marketing-mentor-marquee__expertise { display: flex; flex-wrap: nowrap; gap: 4px; overflow: hidden; }
 .marketing-mentor-marquee__details .marketing-mentor-marquee__expertise span {
   flex: 0 0 auto;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 999px;
   color: #8d3915;
   background: #fff0e5;
-  font-size: .5rem;
+  font-size: .62rem;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.25;
@@ -82,21 +96,23 @@
 .marketing-mentor-marquee__card:focus .marketing-mentor-marquee__identity { transform: translateY(0); }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__tier,
 .marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__tier,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__tier { font-size: .52rem; letter-spacing: .08em; }
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__tier { font-size: .6rem; letter-spacing: .07em; }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__name,
 .marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__name,
-.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__name { font-size: .9rem; letter-spacing: -.025em; }
+.marketing-mentor-marquee__card:focus .marketing-mentor-marquee__name { font-size: 1.15rem; letter-spacing: -.03em; }
 .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__details,
 .marketing-mentor-marquee__card:focus-visible .marketing-mentor-marquee__details,
 .marketing-mentor-marquee__card:focus .marketing-mentor-marquee__details { opacity: 1; transform: translateY(0); }
 @media (max-width: 640px) {
-  .marketing-mentor-marquee__card { grid-template-columns: 92px 260px; width: 382px; min-height: 150px; }
-  .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media { width: 92px; height: 116px; }
-  .marketing-mentor-marquee__content { height: 116px; }
-  .marketing-mentor-marquee__identity { transform: translateY(29px); }
-  .marketing-mentor-marquee__card .marketing-mentor-marquee__name { font-size: 1.15rem; }
+  .marketing-mentor-marquee__card { grid-template-columns: 112px minmax(0, 1fr); gap: 16px; width: min(420px, calc(100vw - 40px)); min-height: 172px; padding: 14px; border-radius: 22px; }
+  .marketing-mentor-marquee__portrait, .marketing-mentor-marquee__portrait .asset-media { width: 112px; height: 144px; border-radius: 15px; }
+  .marketing-mentor-marquee__content { height: 144px; }
+  .marketing-mentor-marquee__identity { transform: translateY(46px); }
+  .marketing-mentor-marquee__card .marketing-mentor-marquee__name { font-size: 1.4rem; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .marketing-mentor-marquee__portrait img { transition: none; }
+  .marketing-mentor-marquee__card:hover .marketing-mentor-marquee__portrait img { scale: none; }
   .marketing-mentor-marquee__card,
   .marketing-mentor-marquee__identity,
   .marketing-mentor-marquee__tier,

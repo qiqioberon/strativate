@@ -7,6 +7,10 @@ export type ProgramEditorial = {
   title: 'Private Mentoring' | 'Intensive Mentoring'
   shortDescription: string
   kicker: string
+  /** One-line promise shared with the /program path cards. */
+  tagline: string
+  sessionRhythm: string
+  mentorSupport: string
   detail: string
   audience: string
   highlights: string[]
@@ -21,6 +25,9 @@ export const programEditorial: Record<MentoringSlug, ProgramEditorial> = {
     title: 'Private Mentoring',
     shortDescription: 'Get personalized guidance tailored to your goals, whether you’re learning the basics or preparing for a competition.',
     kicker: 'Flexible, focused sessions',
+    tagline: 'Focused help for what you’re working on.',
+    sessionRhythm: 'A flexible number of sessions based on your current needs.',
+    mentorSupport: 'Matched to your topic and mentor availability.',
     detail: 'Start with one focused session and continue as needed. Strengthen your foundations, sharpen a proposal, improve your analysis, or practice your presentation with practical feedback aligned to your goal.',
     audience: 'For beginners building from the basics, individuals or teams preparing for competitions, and participants who need focused review or practice.',
     highlights: ['Choose your focus', 'Learn with a suitable mentor', 'Individual or team preparation'],
@@ -38,6 +45,9 @@ export const programEditorial: Record<MentoringSlug, ProgramEditorial> = {
     title: 'Intensive Mentoring',
     shortDescription: 'Build your skills through structured, ongoing support and focused competition preparation.',
     kicker: 'Structured, ongoing guidance',
+    tagline: 'Ongoing support throughout your preparation.',
+    sessionRhythm: 'Regular or weekly mentoring, with multiple sessions per month tailored to your support needs.',
+    mentorSupport: 'One dedicated mentor for continuity throughout your preparation.',
     detail: 'Build competition readiness through a consistent learning process. Master core concepts, apply them through assignments, refine your work, and track your progress with the same mentor.',
     audience: 'For high-school and university students: beginners, active or experienced competitors, skill builders, and teams who need consistent support toward a shared goal.',
     highlights: ['A dedicated mentor', 'A tailored learning plan', 'Continuous competition preparation'],
