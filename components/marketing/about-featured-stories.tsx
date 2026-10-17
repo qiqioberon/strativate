@@ -1,66 +1,75 @@
-import { GraduationCap, Quote, Trophy } from 'lucide-react'
-
+import { BrandOrnament } from '@/components/marketing/decor/brand-ornament'
+import { DecorRing, NeoSticker } from '@/components/marketing/decor/decor-shapes'
+import { FluentIcon } from '@/components/marketing/decor/fluent-icon'
+import { StoryAwardChip, StoryQuoteBadge } from '@/components/marketing/story-details'
 import type { AboutFeaturedStoryView } from '@/lib/marketing/about-featured-stories'
 
 function StoryMedia({ story }: { story: AboutFeaturedStoryView }) {
   if (story.slot === 'story_one') {
     return (
-      <div className="about-featured-story__media about-featured-story__media--single">
-        {/* Supabase owns this processed public WebP derivative. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={story.primaryImageUrl}
-          alt={story.primary_image_alt_text}
-          width={1200}
-          height={900}
-          loading="lazy"
-          decoding="async"
-        />
+      <div className="about-featured-story__frame about-featured-story__frame--single">
+        <div className="about-featured-story__decor" aria-hidden="true">
+          <DecorRing className="about-featured-story__ring" motion="spin" />
+          <BrandOrnament name="coil-amber" className="about-featured-story__ornament" delay={-1.4} duration={7} />
+        </div>
+        <div className="about-featured-story__media about-featured-story__media--single">
+          {/* Supabase owns this processed public WebP derivative. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={story.primaryImageUrl}
+            alt={story.primary_image_alt_text}
+            width={1200}
+            height={900}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="about-featured-story__media about-featured-story__media--pair">
-      {/* Supabase owns these processed public WebP derivatives. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={story.primaryImageUrl}
-        alt={story.primary_image_alt_text}
-        width={900}
-        height={1200}
-        loading="lazy"
-        decoding="async"
-      />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={story.secondaryImageUrl!}
-        alt={story.secondary_image_alt_text ?? ''}
-        width={900}
-        height={1200}
-        loading="lazy"
-        decoding="async"
-      />
+    <div className="about-featured-story__frame about-featured-story__frame--pair">
+      <div className="about-featured-story__decor" aria-hidden="true">
+        <DecorRing className="about-featured-story__ring" motion="spin" />
+        <BrandOrnament name="torus-orange" className="about-featured-story__ornament" delay={-2.6} duration={8} />
+      </div>
+      <div className="about-featured-story__media about-featured-story__media--pair">
+        {/* Supabase owns these processed public WebP derivatives. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={story.primaryImageUrl}
+          alt={story.primary_image_alt_text}
+          width={900}
+          height={1200}
+          loading="lazy"
+          decoding="async"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={story.secondaryImageUrl!}
+          alt={story.secondary_image_alt_text ?? ''}
+          width={900}
+          height={1200}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
     </div>
   )
 }
 
 function QuoteCard({ story }: { story: AboutFeaturedStoryView }) {
-  const AchievementIcon = story.slot === 'story_one' ? Trophy : GraduationCap
-
   return (
     <blockquote className="about-featured-story__quote">
-      <span className="about-featured-story__quote-badge" aria-hidden="true"><Quote /></span>
+      <StoryQuoteBadge className="about-featured-story__quote-badge" />
       <p>{story.quote}</p>
       <footer>
         <div className="about-featured-story__person">
           <strong>{story.attribution_name}</strong>
           <span>{story.attribution_organization}</span>
-          <span className="about-featured-story__achievement-text">{story.achievement_text}</span>
         </div>
-        <span className="about-featured-story__achievement-icon" aria-hidden="true">
-          <AchievementIcon />
-        </span>
+        <StoryAwardChip achievement={story.achievement_text} className="about-featured-story__award" />
       </footer>
     </blockquote>
   )
@@ -75,7 +84,9 @@ function FeaturedStoryBlock({ story }: { story: AboutFeaturedStoryView }) {
     >
       <div className="marketing-container about-featured-story__inner">
         <header className="about-featured-story__heading">
-          <p>FEATURED STORY</p>
+          <NeoSticker as="p" tone="white" className="about-featured-story__label" icon={<FluentIcon name="sparkles" size={24} />}>
+            Featured story
+          </NeoSticker>
           <h2>{story.title}</h2>
         </header>
         <div className="about-featured-story__content">

@@ -1,0 +1,207 @@
+/* Hero: brand 3D ornaments, idle float and pointer parallax around the headline, CTA and gallery.
+   Section-owned stylesheet, loaded after app/home-decor.css. */
+
+/* ---------------------------------------------------------------------------------------------------
+   Background. The shared hero gradient in marketing.css (test-locked there) puts its deepest radial stops
+   at hue 14-17deg, which reads red next to the brand orange. Same placement and depth, hue >= 21deg.
+   --------------------------------------------------------------------------------------------------- */
+.homepage-hero {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(180, 66, 0, .74) 0%, rgba(226, 88, 0, .48) 25%, transparent 52%),
+    radial-gradient(circle at 86% 31%, rgba(255, 207, 151, .3) 0%, rgba(255, 191, 116, .12) 32%, transparent 58%),
+    linear-gradient(154deg, #e95700 0%, #f66305 23%, #ff7a00 47%, #ff9833 71%, #ffc27f 100%);
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Decor layer. Pieces pick their own plane in the hero's stacking context (shape grid 1, gallery canvas 1,
+   copy 2, lifting popout 3, cloud band 4, raised popout 8), so the layer itself must not form one. The mid
+   plane sits at 1 (with the canvas, behind the copy) and the near plane at 2 (over the cards, under the
+   copy, the popout and the band).
+   1em = the headline size, so the pieces that frame the headline scale and stay anchored with it.
+   The --hh-* lengths mirror the hero rhythm in marketing.css (padding, lede, CTA, gallery, cloud band).
+   The headline wraps to 3 lines from 1200px, 2 lines at 1081-1176px, 3 lines at 640-1080px and 4 lines
+   below that; every rule set below only relies on what is true for its whole range.
+   --------------------------------------------------------------------------------------------------- */
+.homepage-hero > .home-hero-decor {
+  z-index: auto;
+  font-size: clamp(3.1rem, 6.1vw, 6.2rem);
+  --hh-pad: clamp(132px, 11vw, 176px);
+  --hh-copy-bottom: calc(var(--hh-pad) + 3.06em);
+  --hh-lede-top: calc(var(--hh-copy-bottom) + clamp(22px, 2.4vw, 30px));
+  --hh-cta-top: calc(var(--hh-lede-top) + 3.44 * clamp(.98rem, 1.35vw, 1.12rem) + 30px);
+  --hh-gallery-top: calc(var(--hh-cta-top) + 48px + clamp(36px, 4.6vw, 62px));
+  --hh-gallery-h: clamp(330px, 31vw, 430px);
+  --hh-card-top: calc(var(--hh-gallery-top) + (var(--hh-gallery-h) - 1.25 * clamp(220px, 20vw, 300px)) / 2);
+}
+
+.home-hero-decor .home-hero-decor__orn,
+.home-hero-decor .home-hero-decor__spark {
+  z-index: 1;
+  transition:
+    translate 1100ms var(--decor-ease),
+    opacity 640ms ease var(--hh-in, 0ms),
+    scale 900ms var(--decor-ease) var(--hh-in, 0ms);
+}
+/* Near plane: in front of the gallery cards, behind the copy, the testimonial popout and the cloud band. */
+.home-hero-decor .home-hero-decor__orn--near { z-index: 2; }
+/* Far plane: the small white coil keeps its lower opacity but only a hint of blur, so it reads as a coil
+   further back rather than a smudge on the screen. */
+.home-hero-decor .home-hero-decor__orn--sky { opacity: .5; filter: blur(.6px) saturate(.92); }
+.home-hero-decor .home-hero-decor__spark { --decor-sparkle-fill: #ffe08a; }
+/* The coral and small coils are drawn at hue ~18deg; a 6deg turn keeps them a deeper orange than the field
+   (so they still separate from it) without reading red. */
+.home-hero-decor :is(.home-hero-decor__orn--coral, .home-hero-decor__orn--spring) img { filter: hue-rotate(6deg) drop-shadow(0 16px 20px rgba(124, 45, 0, .2)); }
+
+/* Entrance: the pieces settle in one after another while the hero reveals. */
+.homepage-hero:not(.is-visible) .home-hero-decor__orn { opacity: 0; scale: .72; }
+.homepage-hero:not(.is-visible) .home-hero-decor__spark { scale: 0; }
+.home-hero-decor__orn--amber { --hh-in: 140ms; }
+.home-hero-decor__orn--coral { --hh-in: 220ms; }
+.home-hero-decor__orn--sky { --hh-in: 300ms; }
+.home-hero-decor__orn--spring { --hh-in: 360ms; }
+.home-hero-decor__orn--pyramid { --hh-in: 420ms; }
+.home-hero-decor__orn--torus { --hh-in: 520ms; }
+.home-hero-decor__orn--cylinder { --hh-in: 640ms; }
+.home-hero-decor__spark--crown { --hh-in: 700ms; }
+.home-hero-decor__spark--base { --hh-in: 780ms; }
+
+/* ---------------------------------------------------------------------------------------------------
+   Desktop, three-line headline (>= 1200px): every piece.
+   --------------------------------------------------------------------------------------------------- */
+/* Amber coil: beside "Win Business", clear of "Competitions with" below it. */
+.home-hero-decor__orn--amber { --orn-size: 1.95em; top: calc(var(--hh-pad) - .24em); left: calc(50% - 6.95em); }
+/* Coral coil: beside "Competitions with" / "Expert Mentoring", with the soft white coil behind it. */
+.home-hero-decor__orn--coral { --orn-size: 1.7em; top: calc(var(--hh-pad) + .98em); left: calc(50% + 5em); }
+.home-hero-decor__orn--sky { --orn-size: .82em; top: calc(var(--hh-pad) + .52em); left: calc(50% + 6.25em); }
+/* Small coil: left of the lede, outside "Expert" on very wide screens too. */
+.home-hero-decor__orn--spring { --orn-size: clamp(60px, 5.4vw, 84px); top: calc(var(--hh-lede-top) - 4px); right: calc(50% + max(400px, 4.11em + 44px)); }
+/* Pyramid: right of the call to action, under the end of the lede. */
+.home-hero-decor__orn--pyramid { --orn-size: clamp(56px, 4.8vw, 76px); top: calc(var(--hh-cta-top) - 10px); left: calc(50% + 296px); }
+/* Torus: near plane, over the top corner of the first gallery cards. */
+.home-hero-decor__orn--torus { --orn-size: clamp(104px, 10.6vw, 172px); top: calc(var(--hh-card-top) - clamp(56px, 6vw, 92px)); left: clamp(-24px, calc(5vw - 60px), 40px); }
+/* Cylinder: the nearest piece, standing on the cloud band's top edge at the lower right, in front of the
+   band and its lobes (z 5; anything lower is hidden by the lobes) and below the raised testimonial popout
+   (z 8). It overlaps the last card's lower corner, so that card's popout passes it once raised. */
+.home-hero-decor__orn--cylinder { --hh-cyl: clamp(92px, 9vw, 144px); --orn-size: var(--hh-cyl); top: calc(var(--hh-gallery-top) + var(--hh-gallery-h) + 12px - .86 * var(--hh-cyl)); right: clamp(0px, 2vw, 40px); }
+.home-hero-decor .home-hero-decor__orn--cylinder { z-index: 5; }
+/* Sparkles on the headline's corners. */
+.home-hero-decor__spark--crown { width: .48em; height: .48em; top: calc(var(--hh-pad) - .44em); left: calc(50% + 3.46em); }
+.home-hero-decor__spark--base { width: .36em; height: .36em; top: calc(var(--hh-copy-bottom) - .42em); right: calc(50% + 4.42em); }
+
+/* Narrow desktop (1081-1199px): the headline is "Win Business Competitions" / "with Expert Mentoring"
+   up to ~1176px and three lines above, so the coils sit below line one and outside the wider second line. */
+@media (min-width: 1081px) and (max-width: 1199px) {
+  .home-hero-decor__orn--sky,
+  .home-hero-decor__orn--spring,
+  .home-hero-decor__orn--pyramid,
+  .home-hero-decor__spark--base { display: none; }
+  /* Both coils keep >= 8px from the copy even with the pointer in the hero's far corner (full parallax). */
+  .home-hero-decor__orn--amber { --orn-size: 1.3em; top: calc(var(--hh-pad) + 1.02em + 78px); left: calc(50% - 6.55em - 42px); }
+  .home-hero-decor__orn--coral { --orn-size: 1.25em; top: calc(var(--hh-pad) + 1.02em + 42px); left: calc(50% + 5.25em + 50px); }
+  .home-hero-decor__spark--crown { top: calc(var(--hh-pad) - .46em); left: calc(50% + 6.9em); }
+  /* The stats sit closer to the edge here, so the cylinder is smaller and partly off-screen. */
+  .home-hero-decor__orn--cylinder { --hh-cyl: 96px; right: -8px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Tablet (761-1080px, three-line headline): five pieces; the small coil and the pyramid bracket the CTA.
+   --------------------------------------------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .homepage-hero > .home-hero-decor {
+    font-size: clamp(3rem, 7.6vw, 5.4rem);
+    --hh-pad: 118px;
+    --hh-gallery-h: 390px;
+  }
+  .home-hero-decor__orn--sky,
+  .home-hero-decor__orn--cylinder { display: none; }
+  .home-hero-decor__orn--amber { --orn-size: 1.8em; top: calc(var(--hh-pad) - .04em); }
+  .home-hero-decor__orn--coral { --orn-size: 1.55em; }
+  /* Small coil up and out to the left, pyramid lower and closer on the right: a staggered pair, not a bracket. */
+  .home-hero-decor__orn--spring { --orn-size: clamp(56px, 6.4vw, 72px); top: var(--hh-cta-top); right: calc(50% + 80px + clamp(64px, 12.5vw, 108px)); }
+  .home-hero-decor__orn--pyramid { --orn-size: clamp(52px, 6vw, 66px); top: calc(var(--hh-cta-top) + 30px); left: calc(50% + 80px + clamp(32px, 6vw, 72px)); }
+  .home-hero-decor__orn--torus { --orn-size: clamp(96px, 11vw, 124px); top: calc(var(--hh-card-top) - clamp(48px, 6vw, 64px)); left: clamp(-20px, calc(4vw - 40px), 8px); }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Small tablet and phone typography (<= 760px), matching marketing.css: 1.04em lines, 108px top padding,
+   340px gallery, cloud band ~458px tall with stacked stats. 621-760px wraps to three or four lines, so the
+   pieces there are anchored to line one or to the cloud band, never to a line count.
+   --------------------------------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  .homepage-hero {
+    background:
+      radial-gradient(circle at 4% 0%, rgba(180, 66, 0, .64), transparent 47%),
+      linear-gradient(157deg, #ee5a00 0%, #ff7505 48%, #ffad58 100%);
+  }
+  .homepage-hero > .home-hero-decor {
+    font-size: clamp(2.55rem, 11.8vw, 4.2rem);
+    --hh-pad: 108px;
+    --hh-gallery-h: 340px;
+    --hh-cloud-h: 458px;
+  }
+  .home-hero-decor__orn--coral,
+  .home-hero-decor__orn--spring,
+  .home-hero-decor__spark { display: none; }
+  /* Beside "Win Business", above the second line whatever it holds. */
+  .home-hero-decor__orn--amber { --orn-size: .85em; top: calc(var(--hh-pad) - .16em); left: calc(50% - 4.5em); }
+  /* Right of the full-width CTA (350px), level with it: the CTA ends 30px above the gallery. */
+  .home-hero-decor__orn--pyramid { --orn-size: 46px; top: auto; bottom: calc(var(--hh-cloud-h) + var(--hh-gallery-h) + 24px); left: calc(50% + 195px); }
+  /* Real phones never get pointer parallax; narrow desktop windows do not need it either. */
+  .home-hero-decor .home-hero-decor__orn,
+  .home-hero-decor .home-hero-decor__spark { translate: none; }
+  /* Low left, over the first card's corner. */
+  .home-hero-decor__orn--torus { --orn-size: 92px; top: auto; bottom: calc(var(--hh-cloud-h) + var(--hh-gallery-h) - 72px); left: -12px; }
+}
+
+/* Phones (<= 620px): always a four-line headline. Three small pieces in the corners of copy and gallery. */
+@media (max-width: 620px) {
+  /* Beside "with Expert" / "Mentoring", bobbing gently so it never reaches "Competitions" above it. */
+  .home-hero-decor__orn--amber { --hh-amber: clamp(46px, 12vw, 60px); --orn-size: var(--hh-amber); top: calc(var(--hh-pad) + 3.18em); left: calc(50% - 2.7em - 20px - var(--hh-amber)); }
+  .home-hero-decor .home-hero-decor__orn--amber[data-motion] img { animation-name: decor-bob; }
+  /* Beside "Mentoring" on the right, fully inside the viewport and still (a bob would reach "Expert" above it). */
+  .home-hero-decor__orn--pyramid { --orn-size: clamp(34px, 9vw, 42px); top: calc(var(--hh-pad) + 3.24em); bottom: auto; left: auto; right: 12px; }
+  .home-hero-decor .home-hero-decor__orn--pyramid img { animation: none; }
+  /* Low left, its base tucked behind the first cloud lobe. */
+  .home-hero-decor__orn--torus { --orn-size: clamp(64px, 18vw, 92px); bottom: calc(var(--hh-cloud-h) + 16px); }
+}
+@media (max-width: 430px) {
+  .homepage-hero > .home-hero-decor {
+    font-size: clamp(2.35rem, 12.5vw, 3.4rem);
+    --hh-pad: 104px;
+    --hh-cloud-h: 434px;
+  }
+}
+
+/* No testimonial gallery (no published stories): nothing to frame, and the cloud band follows the CTA
+   after a 72px margin, which the bottom-anchored pieces above read as a 42px "gallery". */
+.home-hero-decor--no-gallery .home-hero-decor__orn--near { display: none; }
+@media (max-width: 760px) {
+  .homepage-hero > .home-hero-decor--no-gallery { --hh-gallery-h: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-decor .home-hero-decor__orn,
+  .home-hero-decor .home-hero-decor__spark { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Lede legibility. White at 400 on the brand orange is about 2.9:1. The lede takes the headline's cream at
+   500 with an ink text shadow, and a soft ink wash sits behind the lede and the call to action (about 28%
+   at its centre, fading out before the headline), which lifts the measured contrast of the field behind the
+   text to roughly 3.5:1 without reading as a dark band. The same treatment is applied to every page intro
+   description in app/page-intro-decor.css.
+   --------------------------------------------------------------------------------------------------- */
+.homepage-hero .marketing-hero__lede {
+  position: relative;
+  color: #fff7ec;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(84, 24, 0, .45), 0 2px 14px rgba(120, 44, 0, .22);
+}
+.homepage-hero .marketing-hero__lede::before {
+  position: absolute;
+  z-index: -1;
+  inset: -36px -140px -116px;
+  background: radial-gradient(ellipse at 50% 42%, rgba(84, 24, 0, .28), rgba(84, 24, 0, .14) 44%, transparent 72%);
+  pointer-events: none;
+  content: '';
+}

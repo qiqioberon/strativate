@@ -1,0 +1,22 @@
+/* Marketing header on laptops (1100-1399px). app/marketing.css collapses the desktop navigation to the
+   phone menu below 1400px, so the most common laptop widths (1280, 1366) open on a hamburger. This keeps
+   the pill navigation, "Sign in" and "Start learning" visible down to 1100px with the compact sizes
+   marketing.css already defines for <= 1260px, minus the link icons (about 120px) so everything fits.
+   Loaded after app/marketing.css. */
+@media (min-width: 1100px) and (max-width: 1399px) {
+  .marketing-header__inner { grid-template-columns: auto minmax(0, 1fr) auto; min-height: 76px; gap: 12px; }
+  .marketing-nav { display: flex !important; }
+  .marketing-login,
+  .marketing-start { display: inline-flex !important; }
+  .marketing-menu-button,
+  .marketing-mobile-panel { display: none !important; }
+  .marketing-header__actions { grid-column: auto; margin-left: 0; }
+  .marketing-nav__link { padding-inline: 9px; font-size: .68rem; }
+  .marketing-nav__link .marketing-pill-link__label > svg { display: none; }
+  .marketing-nav__link .marketing-pill-link__label { gap: 0; }
+}
+@media (min-width: 1100px) and (max-width: 1199px) {
+  .marketing-nav { gap: 1px; padding: 4px; }
+  .marketing-nav__link { padding-inline: 7px; font-size: .64rem; }
+  .marketing-brand img { width: 124px; }
+}

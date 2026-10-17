@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { WHO_WE_ARE_PHOTO_TARGETS } from '@/lib/marketing/who-we-are-photo-config'
 import type { HomepageWhoWeArePhotoView } from '@/lib/marketing/who-we-are-photos'
 
-export function WhoWeArePhoto({ photo }: { photo: HomepageWhoWeArePhotoView }) {
+/** `badgeMark` is a decorative award mark rendered on the server, shown before the badge text when the badge names an award. */
+export function WhoWeArePhoto({ photo, badgeMark }: { photo: HomepageWhoWeArePhotoView; badgeMark?: ReactNode }) {
   const [failed, setFailed] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
 
@@ -30,7 +31,7 @@ export function WhoWeArePhoto({ photo }: { photo: HomepageWhoWeArePhotoView }) {
         loading="lazy"
         onError={() => setFailed(true)}
       />
-      {photo.badge_text ? <figcaption>{photo.badge_text}</figcaption> : null}
+      {photo.badge_text ? <figcaption>{badgeMark}<span>{photo.badge_text}</span></figcaption> : null}
     </figure>
   )
 }

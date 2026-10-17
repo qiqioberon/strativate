@@ -1,0 +1,112 @@
+/* FAQ: orange actions and background decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css. The accordion keeps its 2x2 layout from
+   app/marketing.css; this file changes the field (warm peach instead of flat grey), the card edges, the
+   orange hover/open/focus states and places the decoration rendered by components/marketing/home-faq-decor.tsx. */
+
+/* Field: a calm peach step between the white mentors/partners sections and the dark footer. */
+.stakeholder-homepage .homepage-faq {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(255, 199, 148, .34), transparent 36%),
+    radial-gradient(circle at 4% 96%, rgba(255, 214, 164, .3), transparent 32%),
+    #fff2e3;
+}
+.stakeholder-homepage .homepage-faq__inner { position: relative; z-index: 1; }
+.stakeholder-homepage .homepage-faq__head { position: relative; }
+.stakeholder-homepage .homepage-faq__head h2,
+.stakeholder-homepage .homepage-faq__head .marketing-text-link { position: relative; z-index: 1; }
+.stakeholder-homepage .homepage-faq__head .marketing-text-link { flex: none; }
+
+/* Question boxes: a hairline warm edge so they read as objects on the field before hover, orange states. */
+.stakeholder-homepage .homepage-faq__item {
+  position: relative;
+  border: 1px solid rgba(196, 82, 0, .14);
+  box-shadow: 0 1px 2px rgba(124, 45, 0, .04);
+  transition: box-shadow 260ms ease, border-color 220ms ease, transform 260ms cubic-bezier(.2, .72, .2, 1);
+}
+.stakeholder-homepage .homepage-faq__item summary { border-radius: 21px; }
+.stakeholder-homepage .homepage-faq__item:hover { border-color: rgba(255, 122, 0, .5); }
+.stakeholder-homepage .homepage-faq__item[open] {
+  border-color: rgba(255, 122, 0, .6);
+  box-shadow: 0 18px 40px rgba(124, 45, 0, .1);
+}
+.stakeholder-homepage .homepage-faq__item summary:focus-visible { outline: 3px solid var(--decor-orange-text); outline-offset: 3px; }
+.stakeholder-homepage .homepage-faq__item:hover .homepage-faq__toggle { color: var(--decor-orange-text); background: var(--decor-peach); }
+.stakeholder-homepage .homepage-faq__item[open] .homepage-faq__toggle { color: var(--decor-ink); background: var(--decor-orange); }
+.stakeholder-homepage .homepage-faq__item > p { color: #3a2a20; }
+
+/* Heading-row decoration, sized in em of the h2 so it keeps its place at every width:
+   a speech bubble perched after the "FAQ" title, a sparkle, and a dot field across the empty run before the pill. */
+.homepage-faq__head-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  font-size: clamp(2.3rem, 3.7vw, 3.4rem);
+  pointer-events: none;
+}
+.homepage-faq__bubble { top: -.7em; left: 2.3em; width: 1.5em; height: 1.25em; --orn-duration: 6.5s; }
+.homepage-faq__sparkle { top: .18em; left: 3.95em; width: .4em; height: .4em; }
+.homepage-faq__dots {
+  top: -.35em;
+  left: 5.2em;
+  width: min(34%, 480px);
+  height: 1.9em;
+  background-image: radial-gradient(circle, rgba(196, 82, 0, .3) 1.3px, transparent 1.9px);
+  background-size: 20px 20px;
+}
+
+/* Section layer (behind the container): the 3D question mark peeks from behind the grid's right edge, the
+   smaller speech icon sits in the heading row near the pill, a dashed orbit turns under the bottom-right
+   corner of the grid, and a far white cone rests in the bottom-left corner. */
+.homepage-faq__backdrop { z-index: 0; --faq-pad: clamp(90px, 9vw, 138px); --faq-gutter: max(32px, (100% - 1320px) / 2); }
+.homepage-faq__icon { display: block; }
+/* The Fluent question/speech icons ship in lilac; a sepia shift moves them into the brand amber-orange. */
+.homepage-faq__icon img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: sepia(1) saturate(5) hue-rotate(-26deg) brightness(.98) drop-shadow(0 12px 16px rgba(124, 45, 0, .16));
+}
+.homepage-faq__icon--question { top: calc(var(--faq-pad) - 54px); right: calc(var(--faq-gutter) + 222px); width: 100px; }
+.homepage-faq__icon--speech { top: calc(var(--faq-pad) - 22px); right: calc(var(--faq-gutter) + 352px); width: 56px; }
+.homepage-faq__ring {
+  --decor-ring-color: rgba(255, 122, 0, .42);
+  --orn-duration: 70s;
+  right: calc(var(--faq-gutter) + 36px);
+  bottom: calc(var(--faq-pad) - 150px);
+  width: 320px;
+  height: 320px;
+}
+.homepage-faq__cone { --orn-size: 128px; left: calc(var(--faq-gutter) - 24px); bottom: -22px; }
+
+@media (max-width: 1180px) {
+  /* Less room beside the grid: the question mark joins the heading row instead of peeking behind a card. */
+  .homepage-faq__icon--question { top: calc(var(--faq-pad) - 46px); right: calc(var(--faq-gutter) + 214px); width: 96px; }
+  .homepage-faq__icon--speech { right: calc(var(--faq-gutter) + 334px); }
+  .homepage-faq__dots { width: min(26%, 300px); }
+  .homepage-faq__ring { width: 260px; height: 260px; bottom: calc(var(--faq-pad) - 120px); }
+}
+@media (max-width: 880px) {
+  .homepage-faq__backdrop { --faq-gutter: 20px; }
+  .homepage-faq__icon--question { top: calc(var(--faq-pad) - 40px); right: calc(var(--faq-gutter) + 210px); width: 84px; }
+  .homepage-faq__icon--speech,
+  .homepage-faq__dots { display: none; }
+  .homepage-faq__cone { --orn-size: 104px; left: -14px; bottom: -18px; }
+}
+@media (max-width: 620px) {
+  /* Phones: two small pieces only, nothing beside the boxes. */
+  .homepage-faq__backdrop { --faq-pad: 78px; --faq-gutter: 16px; }
+  .homepage-faq__head-decor { font-size: clamp(1.85rem, 8vw, 2.3rem); }
+  .homepage-faq__bubble { top: -.62em; left: 2.25em; width: 1.4em; height: 1.17em; }
+  .homepage-faq__sparkle,
+  .homepage-faq__ring,
+  .homepage-faq__cone { display: none; }
+  .homepage-faq__icon--question { top: auto; right: 10px; bottom: 8px; width: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage-faq__icon { animation: none !important; translate: none; }
+  .stakeholder-homepage .homepage-faq__item { transition: none; }
+}

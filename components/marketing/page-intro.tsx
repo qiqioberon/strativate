@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { HeroShapeGrid } from './hero-shape-grid'
+import { PageIntroDecor } from './page-intro-decor'
 
 type PageIntroProps = {
   title: ReactNode
@@ -12,6 +13,7 @@ export function PageIntro({ title, description, aside }: PageIntroProps) {
   return (
     <section className="marketing-page-intro" data-reveal data-testid="marketing-page-intro">
       <HeroShapeGrid />
+      <PageIntroDecor />
       <div className="marketing-container marketing-page-intro__grid">
         <h1 data-testid="marketing-page-title">{title}</h1>
         <p className="marketing-page-intro__description" data-testid="marketing-page-description">{description}</p>

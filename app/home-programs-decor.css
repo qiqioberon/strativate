@@ -1,0 +1,494 @@
+/* Programs (Choose your path): glass tilt cards, in-card accents and background decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css (and after marketing.css / homepage-motion.css,
+   whose .homepage-programs rules it refines). Markup: components/marketing/home-page.tsx (programs stage),
+   program-card.tsx and home-programs-decor.tsx. */
+
+/* ------------------------------------------------------------------------------------------------
+   Stage: head + cards + footer; decoration sits underneath the cards at z-index 0.
+   ------------------------------------------------------------------------------------------------ */
+.homepage-programs__stage { position: relative; }
+.homepage-programs .homepage-programs__head { position: relative; z-index: 2; margin-bottom: clamp(48px, 5.2vw, 76px); }
+/* Two balanced lines at every width instead of one edge-to-edge line on tablets. */
+.homepage-programs .homepage-programs__head h2 { max-width: 12em; }
+.homepage-programs .homepage-programs__footer { position: relative; z-index: 2; margin-top: clamp(40px, 4.4vw, 60px); }
+.homepage-programs .homepage-programs__cards { position: relative; z-index: 1; }
+
+/* Heading layer: a sparkle sitting on the top-right corner of the "100% impact" pill. The bar is
+   min(100%, 688px) wide and centred, and it is the last thing in the head, so both edges are known. */
+.homepage-programs__sparkle.is-impact {
+  width: 28px;
+  height: 28px;
+  bottom: 40px;
+  left: calc(50% + min(50%, 344px) - 20px);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Behind the cards: two mirrored corner groups (top-left of card one, bottom-right of card two).
+   The discs tuck under the card corners and give the frosted glass colour to blur; the pyramid and the
+   coil sit almost entirely outside the cards, each resting on its disc, so they read as whole objects.
+   ------------------------------------------------------------------------------------------------ */
+.homepage-programs__cards-decor {
+  /* The 1120px grid has 160px of gutter at 1440 but only 32px at 1184 (the page clips at the viewport).
+     Both corner groups slide inward by the amount the gutter falls short of the 1334px layout. */
+  --corner-shift: clamp(0px, 667px - 50vw, 75px);
+  z-index: 0;
+}
+.homepage-programs__dots { inset: -12% -7%; }
+/* Each disc is centred just inside its card corner, so it peeks out rather than floating free, and the
+   quarter under the glass shows up frosted. Amber (not orange) at the end corner keeps it distinct from
+   the orange field of the products panel that follows. */
+.homepage-programs__glow { width: var(--glow-size); height: var(--glow-size); }
+.homepage-programs__glow.is-start { --glow-size: 210px; --decor-disc-fill: var(--decor-peach-deep); left: calc(-75px + var(--corner-shift)); top: -75px; }
+.homepage-programs__glow.is-end { --glow-size: 190px; --decor-disc-fill: var(--decor-amber); right: calc(-61px + var(--corner-shift)); bottom: -61px; }
+.homepage-programs__orbit {
+  --decor-ring-color: color-mix(in srgb, var(--decor-orange) 58%, transparent);
+  width: 262px;
+  height: 262px;
+  left: calc(-101px + var(--corner-shift));
+  top: -101px;
+}
+.homepage-programs__orn.is-pyramid { --orn-size: 100px; left: calc(-54px + var(--corner-shift)); top: -66px; }
+/* The coil hangs off the dark card's corner: only a sliver of its top-left tucks under the rounded corner,
+   the rest sits on the amber disc. It moves inward less than the disc so it never ends up under the card. */
+.homepage-programs__orn.is-coil { --orn-size: 88px; right: calc(-66px + min(var(--corner-shift), 40px)); bottom: -78px; }
+.homepage-programs__sparkle.is-orbit { width: 26px; height: 26px; left: calc(101px + var(--corner-shift)); top: -83px; }
+
+/* ------------------------------------------------------------------------------------------------
+   Program cards: TiltSurface wrapper (tilt + lift + glare) around a frosted glass link card.
+   ------------------------------------------------------------------------------------------------ */
+.homepage-programs .homepage-program-tilt {
+  --program-radius: 28px;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  border-radius: var(--program-radius);
+  transition: translate 460ms var(--decor-ease);
+}
+.homepage-programs .homepage-program-tilt .tilt-surface__glare {
+  mix-blend-mode: normal;
+  background: radial-gradient(440px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 138, 40, .11), rgba(255, 138, 40, 0) 62%);
+}
+.homepage-programs .homepage-program-tilt.is-dark .tilt-surface__glare {
+  background: radial-gradient(440px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 196, 140, .15), rgba(255, 196, 140, 0) 62%);
+}
+
+.homepage-programs .marketing-program-card[data-surface] {
+  min-width: 0;
+  height: 100%;
+  border-radius: var(--program-radius);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  backdrop-filter: blur(22px) saturate(1.6);
+  transition: box-shadow 420ms var(--decor-ease);
+}
+/* The wrapper lifts instead of the card (the card's entrance animation owns `translate`). */
+.homepage-programs .marketing-program-card[data-surface]:hover { transform: none; }
+
+/* Frosted white glass (Private Mentoring). */
+.homepage-programs .marketing-program-card[data-surface='light'] {
+  /* Burnt orange nudged toward ink keeps >= 4.5:1 even where a peach glow tints the glass. */
+  --program-accent: color-mix(in srgb, var(--decor-orange-text) 88%, var(--decor-ink));
+  --program-text: var(--decor-ink);
+  --program-muted: #45352b;
+  --program-field: rgba(255, 255, 255, .78);
+  --program-field-line: rgba(160, 92, 40, .13);
+  --program-field-shadow: rgba(150, 72, 18, .3);
+  --program-rule: rgba(120, 70, 30, .2);
+  --program-chip: var(--decor-peach);
+  --program-chip-ink: var(--decor-orange-text);
+  --program-cta-bg: var(--decor-ink);
+  --program-cta-ink: #fff8f1;
+  --program-disc: var(--decor-peach);
+  --program-ring: color-mix(in srgb, var(--decor-orange) 58%, transparent);
+  --program-shadow:
+    0 0 0 1px rgba(150, 86, 36, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset 0 0 0 1px rgba(255, 255, 255, .6),
+    0 2px 6px rgba(120, 60, 18, .05),
+    0 30px 60px -28px rgba(150, 70, 14, .34);
+  --program-shadow-hover:
+    0 0 0 1px rgba(150, 86, 36, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset 0 0 0 1px rgba(255, 255, 255, .6),
+    0 4px 10px rgba(120, 60, 18, .06),
+    0 42px 76px -30px rgba(150, 70, 14, .42);
+  color: var(--decor-ink);
+  background: rgba(255, 255, 255, .58);
+  box-shadow: var(--program-shadow);
+}
+
+/* Smoked ink glass (Intensive Mentoring). */
+.homepage-programs .marketing-program-card[data-surface='dark'] {
+  --program-accent: #ff9d52;
+  --program-text: #fff6ee;
+  --program-muted: rgba(255, 246, 238, .84);
+  --program-field: rgba(255, 255, 255, .06);
+  --program-field-line: rgba(255, 236, 220, .12);
+  --program-field-shadow: rgba(0, 0, 0, .45);
+  --program-rule: rgba(255, 236, 220, .18);
+  --program-chip: rgba(255, 157, 82, .16);
+  --program-chip-ink: #ffb57a;
+  --program-cta-bg: #fff8f1;
+  --program-cta-ink: var(--decor-ink);
+  --program-disc: color-mix(in srgb, var(--decor-orange) 30%, transparent);
+  --program-ring: color-mix(in srgb, var(--decor-amber) 58%, transparent);
+  --program-shadow:
+    inset 0 1px 0 rgba(255, 228, 200, .16),
+    inset 0 0 0 1px rgba(255, 236, 220, .09),
+    0 2px 6px rgba(34, 21, 12, .12),
+    0 34px 70px -30px rgba(34, 21, 12, .62);
+  --program-shadow-hover:
+    inset 0 1px 0 rgba(255, 228, 200, .2),
+    inset 0 0 0 1px rgba(255, 236, 220, .12),
+    0 4px 10px rgba(34, 21, 12, .14),
+    0 46px 84px -32px rgba(34, 21, 12, .7);
+  color: #fff6ee;
+  background: rgba(20, 10, 3, .9);
+  box-shadow: var(--program-shadow);
+}
+
+/* Top-right accent: a disc bleeding off the corner inside a slowly turning dashed ring. The ring stays
+   above the tagline row, so the copy never runs into it. */
+.homepage-programs .marketing-program-card__accent { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.homepage-programs .marketing-program-card__accent-disc {
+  --decor-disc-fill: var(--program-disc);
+  width: 190px;
+  height: 190px;
+  top: -76px;
+  right: -64px;
+}
+.homepage-programs .marketing-program-card__accent-ring {
+  --decor-ring-color: var(--program-ring);
+  --orn-duration: 56s;
+  width: 222px;
+  height: 222px;
+  top: -92px;
+  right: -80px;
+}
+
+/* The floating 3D icon lives in the tilt wrapper (above the card) and drifts further than the facts card. */
+.homepage-programs .homepage-program-tilt__float {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  z-index: 2;
+  width: 76px;
+  height: 76px;
+  pointer-events: none;
+  transform: translate3d(calc(var(--tilt-px, 0) * 12px), calc(var(--tilt-py, 0) * 9px), 0);
+}
+.homepage-programs .homepage-program-tilt__float .fluent-icon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 14px 14px rgba(124, 45, 0, .24));
+  animation: decor-bob 5.6s ease-in-out infinite;
+}
+/* The source target is pink-red; turning its hue lands it in the brand orange family (dart turns lilac). */
+.homepage-programs .homepage-program-tilt__float[data-icon='bullseye'] .fluent-icon {
+  filter: hue-rotate(50deg) saturate(1.1) drop-shadow(0 14px 14px rgba(124, 45, 0, .24));
+}
+.homepage-programs .homepage-program-tilt.is-dark .homepage-program-tilt__float .fluent-icon {
+  filter: drop-shadow(0 16px 16px rgba(0, 0, 0, .42));
+  animation-delay: -2.6s;
+}
+
+/* Copy */
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__body {
+  position: relative;
+  z-index: 1;
+  padding: clamp(28px, 3.2vw, 44px);
+}
+.homepage-programs .marketing-program-card[data-surface] h3 {
+  /* Two deliberate lines that stay clear of the corner accent. */
+  max-width: 11ch;
+  color: var(--program-text);
+  font-size: clamp(1.95rem, 2.7vw, 2.55rem);
+  font-weight: 700;
+  letter-spacing: -.04em;
+  line-height: 1.02;
+}
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__tagline {
+  margin-top: 14px;
+  color: var(--program-accent);
+  font-size: clamp(1rem, 1.15vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__summary {
+  max-width: 46ch;
+  margin-top: 12px;
+  color: var(--program-muted);
+  font-size: .97rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* Facts: a floating inner glass card that shifts a little with the tilt. Grows so both CTAs line up. */
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts {
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 0;
+  margin: 24px 0 0;
+  padding: 4px 20px;
+  border-radius: 20px;
+  background: var(--program-field);
+  box-shadow: inset 0 0 0 1px var(--program-field-line), 0 18px 34px -22px var(--program-field-shadow);
+  translate: calc(var(--tilt-px, 0) * 7px) calc(var(--tilt-py, 0) * 5px);
+}
+.homepage-programs .marketing-program-card__facts > div { position: relative; padding: 15px 0 15px 52px; }
+.homepage-programs .marketing-program-card__facts > div + div { border-top: 1px dashed var(--program-rule); }
+.homepage-programs .marketing-program-card__fact-icon {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--program-chip);
+  color: var(--program-chip-ink);
+}
+.homepage-programs .marketing-program-card__facts .marketing-program-card__fact-icon svg { color: inherit; }
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts dt {
+  display: block;
+  color: var(--program-text);
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.35;
+}
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts dd {
+  margin: 3px 0 0;
+  color: var(--program-muted);
+  font-size: .9375rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* CTA: a real pill with an arrow button, so the whole card reads as one obvious action. */
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__cta {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+  min-height: 52px;
+  margin-top: 22px;
+  padding: 6px 6px 6px 22px;
+  border-radius: 999px;
+  background: var(--program-cta-bg);
+  color: var(--program-cta-ink);
+  font-size: .9375rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  box-shadow: 0 12px 24px -14px rgba(34, 21, 12, .55);
+}
+.homepage-programs .marketing-program-card[data-surface] .marketing-program-card__cta svg { transform: none; transition: none; }
+.homepage-programs .marketing-program-card__cta-label { min-width: 0; }
+.homepage-programs .marketing-program-card__cta-arrow {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--decor-orange);
+  color: var(--decor-ink);
+  transition: translate 360ms var(--decor-ease);
+}
+
+/* Entrance: each card sits in its own wrapper now, so restore the second card's stagger here and
+   let the floating icon land just after its card. */
+.homepage-programs.is-visible .homepage-programs__cards > :nth-child(2) .marketing-program-card { animation-delay: 480ms; }
+.homepage-programs .homepage-program-tilt__float { opacity: 0; }
+.homepage-programs.is-visible .homepage-program-tilt__float { opacity: 1; animation: homepage-pop 620ms var(--homepage-ease) 640ms both; }
+.homepage-programs.is-visible .homepage-programs__cards > :nth-child(2) .homepage-program-tilt__float { animation-delay: 760ms; }
+
+/* Hover (real pointers only, so nothing sticks after a tap): lift + tilt read as one motion. */
+@media (hover: hover) and (pointer: fine) {
+  .homepage-programs .homepage-program-tilt:hover { translate: 0 -6px; }
+  .homepage-programs .homepage-program-tilt:hover .marketing-program-card[data-surface] { box-shadow: var(--program-shadow-hover); }
+  .homepage-programs .homepage-program-tilt:hover .marketing-program-card__cta-arrow { translate: 4px 0; }
+}
+.homepage-programs .homepage-program-tilt:has(.marketing-program-card:focus-visible) { translate: 0 -6px; }
+/* Keyboard focus: a full-strength burnt-orange ring outside the glass, readable on the cream field next to
+   both the white and the ink card (marketing.css only draws it at 45% opacity). */
+.homepage-programs .marketing-program-card[data-surface]:focus-visible {
+  outline: 3px solid var(--decor-orange-text);
+  outline-offset: 5px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Method bar: 40/60 learning mix + 100% impact, as neobrutalist pieces (ink outline, hard shadow).
+   The outlined frame stays put while the coloured mix inside it wipes in (homepage-motion.css).
+   ------------------------------------------------------------------------------------------------ */
+.homepage-programs .homepage-programs__method {
+  width: min(100%, 688px);
+  gap: 16px;
+  margin-top: clamp(28px, 3vw, 40px);
+}
+.homepage-programs__bar {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  border: 2px solid var(--decor-ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--decor-hard-shadow-lg);
+}
+.homepage-programs .homepage-programs__bar .homepage-programs__mix { border-radius: 16px; }
+.homepage-programs .homepage-programs__share,
+.homepage-programs .homepage-programs__impact { gap: 9px; padding: 13px 18px; }
+/* flex: 40 / 60 splits from a 0 basis; never let a share shrink below its label (it would clip). */
+.homepage-programs .homepage-programs__share { min-width: max-content; }
+.homepage-programs .homepage-programs__share.is-theory { color: var(--decor-ink); background: var(--decor-peach); }
+.homepage-programs .homepage-programs__share.is-practice {
+  color: var(--decor-ink);
+  background: var(--decor-orange);
+  box-shadow: inset 2px 0 0 var(--decor-ink);
+}
+.homepage-programs .homepage-programs__impact {
+  border: 2px solid var(--decor-ink);
+  border-radius: 18px;
+  color: #fff8f1;
+  background: var(--decor-ink);
+  box-shadow: 5px 5px 0 var(--decor-orange);
+}
+.homepage-programs .homepage-programs__method strong { font-weight: 800; }
+.homepage-programs .homepage-programs__method span { font-size: .875rem; font-weight: 600; }
+.homepage-programs__method-icon { align-self: center; width: 28px; height: 28px; }
+
+/* ------------------------------------------------------------------------------------------------
+   View all: same ink-outline language as the method bar, pressable.
+   ------------------------------------------------------------------------------------------------ */
+.homepage-programs .homepage-programs__view-all {
+  height: 54px;
+  padding-inline: 28px 24px;
+  border: 2px solid var(--decor-ink);
+  background: var(--decor-orange);
+  color: var(--decor-ink);
+  font-size: .9375rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  box-shadow: var(--decor-hard-shadow-lg);
+  transition: translate 220ms var(--decor-ease), box-shadow 220ms var(--decor-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .homepage-programs .homepage-programs__view-all:hover { translate: -2px -2px; box-shadow: 7px 7px 0 var(--decor-ink); }
+}
+.homepage-programs .homepage-programs__view-all:active { translate: 3px 3px; box-shadow: 1px 1px 0 var(--decor-ink); }
+
+/* ------------------------------------------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------------------------------------------ */
+/* Narrow desktops (the grid spans the container from 1183px down): the corner groups shrink into the
+   32px gutters, and the coil hangs below the corner instead of beside it. */
+@media (max-width: 1183px) {
+  .homepage-programs__glow.is-start { --glow-size: 130px; left: -31px; top: -31px; }
+  .homepage-programs__glow.is-end { --glow-size: 130px; right: -26px; bottom: -38px; }
+  .homepage-programs__orbit { width: 170px; height: 170px; left: -51px; top: -51px; }
+  .homepage-programs__orn.is-pyramid { --orn-size: 80px; left: -18px; top: -52px; }
+  .homepage-programs__orn.is-coil { --orn-size: 68px; right: -24px; bottom: -62px; }
+  .homepage-programs__sparkle.is-orbit { left: 76px; top: -44px; }
+  .homepage-programs .marketing-program-card__accent-disc { width: 150px; height: 150px; top: -63px; right: -49px; }
+  .homepage-programs .marketing-program-card__accent-ring { width: 176px; height: 176px; top: -76px; right: -62px; }
+  .homepage-programs .homepage-program-tilt__float { top: 14px; right: 16px; width: 62px; height: 62px; }
+}
+
+/* Portrait tablets: one comfortable column instead of two cramped ones. */
+@media (max-width: 899px) {
+  .homepage-programs .marketing-program-grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 620px;
+    gap: 28px;
+  }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts { flex: 0 0 auto; }
+  /* The cards no longer span the width, so the corner groups move into the side margins; the orbit
+     would crowd the method bar from here down, so the corner keeps just its disc and pyramid. */
+  .homepage-programs .homepage-programs__head { margin-bottom: 64px; }
+  .homepage-programs__orbit,
+  .homepage-programs__sparkle.is-orbit { display: none; }
+  .homepage-programs__glow.is-start { --glow-size: 140px; left: -40px; top: -40px; }
+  .homepage-programs__glow.is-end { --glow-size: 130px; right: -35px; bottom: -35px; }
+  /* The pyramid sits lower here so its apex (and its float) stays clear of the method bar above. */
+  .homepage-programs__orn.is-pyramid { left: -42px; top: -32px; }
+  .homepage-programs__orn.is-coil { --orn-size: 64px; right: -28px; bottom: -58px; }
+}
+
+/* Tablets narrower than the full method row: tighter shares so bar + impact pill stay on one line. */
+@media (max-width: 760px) {
+  .homepage-programs .homepage-programs__share,
+  .homepage-programs .homepage-programs__impact { gap: 7px; padding: 13px 14px; }
+  .homepage-programs__method-icon { width: 24px; height: 24px; }
+}
+
+@media (max-width: 620px) {
+  .homepage-programs .homepage-program-tilt { --program-radius: 24px; }
+  .homepage-programs .homepage-programs__head { margin-bottom: 52px; }
+  .homepage-programs .homepage-programs__method { gap: 14px; }
+  .homepage-programs__bar { flex-basis: 100%; }
+  .homepage-programs .homepage-programs__share,
+  .homepage-programs .homepage-programs__impact { gap: 6px; padding: 12px; }
+  .homepage-programs__method-icon { width: 22px; height: 22px; }
+
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__body { padding: 26px 22px 22px; }
+  .homepage-programs .marketing-program-card[data-surface] h3 { font-size: clamp(1.75rem, 8vw, 2.05rem); }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__summary { font-size: .9375rem; }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts { padding: 2px 16px; }
+  .homepage-programs .marketing-program-card__facts > div { padding: 13px 0 13px 48px; }
+  .homepage-programs .marketing-program-card__fact-icon { top: 13px; width: 36px; height: 36px; }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__cta {
+    align-self: stretch;
+    justify-content: space-between;
+    padding-left: 20px;
+    font-size: .875rem;
+  }
+  .homepage-programs .marketing-program-card__accent-disc { width: 140px; height: 140px; top: -58px; right: -50px; }
+  .homepage-programs .marketing-program-card__accent-ring { width: 166px; height: 166px; top: -71px; right: -63px; }
+  .homepage-programs .homepage-program-tilt__float { top: 12px; right: 12px; width: 54px; height: 54px; }
+
+  /* Phones keep two quiet pieces: the pyramid above the first card and the amber disc under the last
+     corner. There is no room beside the card for the coil, so it goes rather than being half-buried. */
+  .homepage-programs__decor,
+  .homepage-programs__dots,
+  .homepage-programs__glow.is-start,
+  .homepage-programs__orbit,
+  .homepage-programs__sparkle.is-orbit,
+  .homepage-programs__orn.is-coil { display: none; }
+  .homepage-programs__glow.is-end { --glow-size: 124px; right: -28px; bottom: -44px; }
+  .homepage-programs__orn.is-pyramid { --orn-size: 64px; left: -12px; top: -40px; }
+  .homepage-programs .homepage-programs__view-all { width: min(100%, 300px); }
+}
+
+@media (max-width: 380px) {
+  /* Small phones: the 40/60 shares drop their icons so the bar keeps its exact proportion. */
+  .homepage-programs .homepage-programs__share .homepage-programs__method-icon { display: none; }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__body { padding-inline: 18px; }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__cta { gap: 10px; padding-left: 16px; }
+  .homepage-programs .marketing-program-card__cta-arrow { width: 36px; height: 36px; }
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Reduced motion: no lift, no drift, no idle bob; everything is simply there.
+   ------------------------------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .homepage-programs .homepage-program-tilt,
+  .homepage-programs .marketing-program-card[data-surface],
+  .homepage-programs .marketing-program-card__cta-arrow,
+  .homepage-programs .homepage-programs__view-all,
+  .homepage-programs .homepage-programs__view-all svg { transition: none; }
+  .homepage-programs .homepage-program-tilt:hover,
+  .homepage-programs .homepage-program-tilt:has(.marketing-program-card:focus-visible),
+  .homepage-programs .homepage-program-tilt:hover .marketing-program-card__cta-arrow,
+  .homepage-programs .homepage-programs__view-all:hover,
+  .homepage-programs .homepage-programs__view-all:active { translate: none; }
+  .homepage-programs .homepage-programs__view-all:hover svg { transform: none; }
+  .homepage-programs .homepage-program-tilt__float { opacity: 1; transform: none; animation: none !important; }
+  .homepage-programs .homepage-program-tilt__float .fluent-icon { animation: none !important; }
+  .homepage-programs .marketing-program-card[data-surface] .marketing-program-card__facts { translate: none; }
+}

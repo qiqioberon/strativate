@@ -1,0 +1,156 @@
+/* Meet Our Mentors: portrait marquee cards that expand on hover, role badges, accents.
+   Section-owned stylesheet, loaded after app/home-decor.css. The marquee cards themselves live in
+   app/mentor-marquee.css; this file owns the section frame, the heading row and the decoration layer. */
+
+.stakeholder-homepage .stakeholder-mentors {
+  overflow: clip;
+  padding-top: clamp(104px, 10.6vw, 160px);
+  padding-bottom: clamp(40px, 4.4vw, 72px);
+  /* The same warm cream as the Digital Products panel above (app/home-products-decor.css), so the two
+     sections read as one field instead of meeting on a hard cream/white seam. */
+  background: #fff3e6;
+}
+
+/* Heading row: title + approved one-line lede on the left, the "View all mentors" pill on the right. */
+.stakeholder-homepage .homepage-mentors__head {
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 22px 48px;
+  margin-bottom: clamp(18px, 2.2vw, 30px);
+}
+.stakeholder-homepage .homepage-mentors__intro {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: 1 1 440px;
+  gap: 16px;
+  min-width: 0;
+}
+.stakeholder-homepage .homepage-mentors__lede {
+  max-width: 31em;
+  color: #3d2c22;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+.stakeholder-homepage .homepage-mentors__head .marketing-text-link { position: relative; z-index: 1; flex: none; margin-bottom: 6px; }
+.stakeholder-homepage .homepage-mentors__rail { position: relative; z-index: 1; }
+
+/* Decoration sits inside the heading row, anchored to the "View all mentors" pill: a brand coil inside a slow
+   dashed orbit perched on the pill's top-right corner, plus two sparkles. It stays behind the pill and text. */
+.homepage-mentors__decor { z-index: 0; }
+.homepage-mentors__orbit {
+  --decor-ring-color: rgba(255, 122, 0, .5);
+  --orn-duration: 60s;
+  right: -45px;
+  bottom: 29px;
+  width: 150px;
+  height: 150px;
+}
+.homepage-mentors__coil { --orn-size: 66px; right: -3px; bottom: 70px; }
+.homepage-mentors__sparkle--a { right: 118px; bottom: 150px; width: 20px; height: 20px; }
+.homepage-mentors__sparkle--b { right: 202px; bottom: 58px; width: 13px; height: 13px; }
+
+/* Profile dialog opened from the marquee. MentorDetailModal is shared with /mentor; these rules only reach the
+   copy rendered inside this homepage section: the tier becomes a sentence-case sticker instead of a tiny tracked
+   label, the name matches the weight of the homepage headings, and running text is set at a readable size. */
+.stakeholder-mentors .marketing-mentor-marquee__dialog { display: contents; }
+.stakeholder-mentors .marketing-mentor-dialog__content > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .5em;
+  width: fit-content;
+  padding: .42em 1em .42em .8em;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  color: var(--decor-ink);
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  font-family: inherit;
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: none;
+}
+/* Same role colours and 3D icon as the card the dialog was opened from (role + icon URL set on the wrapper). */
+.stakeholder-mentors [data-role] .marketing-mentor-dialog__content > span::before {
+  content: '';
+  flex: none;
+  width: 1.45em;
+  height: 1.45em;
+  margin-block: -.2em;
+  background: var(--role-icon) center / contain no-repeat;
+}
+.stakeholder-mentors [data-role='professional'] .marketing-mentor-dialog__content > span { color: #fff; background: var(--decor-ink); box-shadow: 3px 3px 0 var(--decor-orange); }
+.stakeholder-mentors [data-role='mentor'] .marketing-mentor-dialog__content > span { background: var(--decor-cream); }
+/* No approved photo: the dialog repeats the card's monogram (initials on an orange disc inside a dashed ring,
+   --mentor-monogram set by the marquee) instead of the cropped brand mark the shared component falls back to.
+   The fallback image and its caption stay in the DOM, visually hidden, so assistive technology still hears them. */
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready']) {
+  display: grid;
+  place-items: center;
+  background: #fff8f0;
+}
+.stakeholder-mentors [data-role='student'] .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready']) { background: #fff9ec; }
+.stakeholder-mentors [data-role='professional'] .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready']) { background: #fff7f1; }
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready']) :is(img, figcaption) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready'])::before,
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready'])::after {
+  grid-area: 1 / 1;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready'])::before {
+  content: '';
+  width: min(58%, 204px);
+  border: 1.5px dashed rgba(255, 122, 0, .55);
+}
+.stakeholder-mentors .marketing-mentor-dialog__media .asset-media:not([data-asset-status='ready'])::after {
+  content: var(--mentor-monogram, '');
+  display: grid;
+  place-items: center;
+  width: min(45%, 160px);
+  color: #a84300;
+  background: #ffcf9f;
+  font-family: var(--font-heading), var(--font-poppins), sans-serif;
+  font-size: clamp(2.6rem, 10vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -.05em;
+  line-height: 1;
+}
+.stakeholder-mentors .marketing-mentor-dialog__content h2 { margin-top: 20px; font-weight: 800; letter-spacing: -.045em; line-height: 1.02; }
+.stakeholder-mentors .marketing-mentor-dialog__content > p { color: #5a4535; font-size: .9375rem; }
+.stakeholder-mentors .marketing-mentor-dialog__section h3 { font-size: 1rem; font-weight: 700; }
+.stakeholder-mentors .marketing-mentor-dialog__section ul { color: #3d2c22; font-size: .875rem; line-height: 1.55; }
+.stakeholder-mentors .marketing-mentor-dialog .marketing-mentor-card__expertise span {
+  padding: 5px 10px;
+  border: 1px solid #ffd4b0;
+  color: #9a3f00;
+  background: #fff4ea;
+  font-size: .75rem;
+  font-weight: 600;
+}
+.stakeholder-mentors .marketing-mentor-dialog__actions a { font-size: .8125rem; }
+
+@media (max-width: 620px) {
+  .stakeholder-homepage .stakeholder-mentors { padding-top: 92px; padding-bottom: 44px; }
+  .stakeholder-homepage .homepage-mentors__head { gap: 20px; }
+  .stakeholder-homepage .homepage-mentors__intro { flex-basis: 100%; gap: 12px; }
+  .stakeholder-homepage .homepage-mentors__lede { font-size: 1rem; }
+  /* The pill drops under the copy on phones, so the cluster moves to the free corner beside the title. */
+  .homepage-mentors__orbit { top: -78px; right: -50px; bottom: auto; width: 116px; height: 116px; }
+  .homepage-mentors__coil { --orn-size: 46px; top: -54px; right: -2px; bottom: auto; }
+  .homepage-mentors__sparkle--a { top: -40px; right: 78px; bottom: auto; width: 15px; height: 15px; }
+  .homepage-mentors__sparkle--b { display: none; }
+}

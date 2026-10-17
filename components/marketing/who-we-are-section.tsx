@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import type { HomepageWhoWeArePhotoView } from '@/lib/marketing/who-we-are-photos'
 
+import { WhoWeAreBackdrop } from './who-we-are-backdrop'
 import { WhoWeAreCollage } from './who-we-are-collage'
 
 export function WhoWeAreSection({ photos }: { photos: HomepageWhoWeArePhotoView[] }) {
@@ -13,6 +14,7 @@ export function WhoWeAreSection({ photos }: { photos: HomepageWhoWeArePhotoView[
       data-testid="homepage-who-we-are-section"
     >
       <div className="marketing-container homepage-who__layout">
+        <WhoWeAreBackdrop />
         <div className="homepage-who__copy">
           <p className="marketing-kicker">WHO WE ARE</p>
           <h2 id="who-we-are-heading">Ready to compete <span className="homepage-who__accent">with confidence</span></h2>

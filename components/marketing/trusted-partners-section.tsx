@@ -1,6 +1,8 @@
 import type { TrustedPartnerView } from '@/lib/marketing/trusted-partners'
 import { TRUSTED_PARTNER_LOGO_HEIGHT, TRUSTED_PARTNER_LOGO_WIDTH } from '@/lib/marketing/trusted-partner-config'
 
+import { HomePartnersBackdrop } from './home-partners-decor'
+
 type PartnerWallProps = {
   className: string
   columnCount: number
@@ -64,6 +66,7 @@ export function TrustedPartnersSection({ partners }: { partners: TrustedPartnerV
       data-reveal
       data-testid="homepage-partners-section"
     >
+      <HomePartnersBackdrop />
       <div className="marketing-container homepage-partners__inner">
         <header className="homepage-partners__head">
           <p className="marketing-kicker">Trusted Partners</p>

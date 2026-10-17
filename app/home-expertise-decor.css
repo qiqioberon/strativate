@@ -1,0 +1,72 @@
+/* What We Specialize In: sentence-case sticker label and anchored brand decoration.
+   Section-owned stylesheet, loaded after app/home-decor.css. The floating emoji swarm
+   (components/marketing/expertise-floating-backdrop.tsx) is no longer rendered on the homepage; its
+   .homepage-expertise__ambient rules in app/marketing.css are left unused. Decoration is rendered by
+   components/marketing/home-expertise-decor.tsx in two layers: one behind the container (heading gutters)
+   and one inside the card grid (corner pieces that only ever overlap a corner card, never a gutter). */
+
+/* Label: the same neobrutalist sticker as "Who we are" (ink outline, hard shadow, sentence case). */
+.stakeholder-homepage .homepage-expertise__head .marketing-kicker {
+  display: block;
+  min-height: 0;
+  padding: 7px 15px 7px 14px;
+  border: 2px solid var(--decor-ink);
+  border-radius: 999px;
+  background: var(--decor-amber);
+  box-shadow: var(--decor-hard-shadow);
+  color: var(--decor-ink);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+.stakeholder-homepage .homepage-expertise__head .marketing-kicker::first-letter { text-transform: uppercase; }
+.stakeholder-homepage .homepage-expertise__head h2 { margin-top: 22px; }
+
+/* Section layer (behind the container). --xp-pad mirrors the section padding in marketing.css. The heading
+   column is at most 760px wide, so a 410px guard either side of centre keeps every piece off the text. */
+.homepage-expertise__decor { z-index: 0; --xp-pad: clamp(90px, 9vw, 138px); }
+/* Left gutter: a slow white dashed orbit level with the heading. */
+.homepage-expertise__ring {
+  --decor-ring-color: rgba(255, 247, 236, .42);
+  --orn-duration: 80s;
+  top: calc(var(--xp-pad) - 30px);
+  right: calc(50% + 410px);
+  width: 250px;
+  height: 250px;
+}
+/* Right gutter: two sparkles, one level with the label and a smaller one beside the lede. */
+.homepage-expertise__spark { --decor-sparkle-fill: #ffe08a; }
+.homepage-expertise__spark--a { top: calc(var(--xp-pad) + 10px); left: calc(50% + 430px); width: 30px; height: 30px; }
+.homepage-expertise__spark--b { top: calc(var(--xp-pad) + 150px); left: calc(50% + 500px); width: 18px; height: 18px; }
+
+/* Grid layer: under the cards (negative z inside the container's stacking context), so the part of each
+   piece that sits over the corner card is hidden and only the outside peeks. */
+.stakeholder-homepage .homepage-expertise__grid { position: relative; }
+.homepage-expertise__cards-decor { z-index: -1; }
+/* Amber coil behind the top-right card's corner. */
+.homepage-expertise__coil { --orn-size: clamp(120px, 11vw, 160px); top: calc(-.4 * var(--orn-size)); right: calc(-.36 * var(--orn-size)); }
+/* White cone resting behind the bottom-left card's corner. */
+.homepage-expertise__cone { --orn-size: clamp(96px, 9vw, 128px); bottom: calc(-.3 * var(--orn-size)); left: calc(-.4 * var(--orn-size)); }
+
+@media (max-width: 1199px) {
+  /* The gutters beside the heading shrink below 220px: the orbit goes, the sparkles stay near the edge. */
+  .homepage-expertise__ring { display: none; }
+  .homepage-expertise__spark--a { left: auto; right: clamp(16px, 3vw, 40px); }
+  .homepage-expertise__spark--b { left: auto; right: clamp(40px, 6vw, 80px); }
+}
+@media (max-width: 900px) {
+  /* Two columns: the lede can reach the grid's right end, so the coil rises less above the top edge. */
+  .homepage-expertise__coil { --orn-size: 108px; top: -32px; right: -40px; }
+  .homepage-expertise__cone { --orn-size: 100px; }
+  .homepage-expertise__spark--b { display: none; }
+}
+@media (max-width: 760px) {
+  .homepage-expertise__spark { display: none; }
+}
+@media (max-width: 620px) {
+  /* Phones: the two corner pieces only, smaller. */
+  .homepage-expertise__coil { --orn-size: 84px; top: -30px; right: -30px; }
+  .homepage-expertise__cone { --orn-size: 80px; bottom: -22px; left: -30px; }
+}

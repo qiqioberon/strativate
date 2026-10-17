@@ -15,14 +15,20 @@ import { mentoringProgramEditorial } from '@/lib/program-information'
 import { cn } from '@/lib/utils'
 
 import { DigitalProductCardSwap } from './digital-product-card-swap'
+import { HomeProductsFormats, HomeProductsStackDecor, HomeProductsStage } from './home-products-showcase'
 import { CompetitionRecognitionSection } from './competition-recognition-section'
 import { HeroShapeGrid } from './hero-shape-grid'
+import { HomeFaqBackdrop, HomeFaqHeadDecor } from './home-faq-decor'
+import { HomeHeroDecor } from './home-hero-decor'
 import { MentorMarquee } from './mentor-marquee'
+import { MentorSectionDecor } from './mentor-marquee-decor'
 import { ProgramCard, type MarketingProgram } from './program-card'
+import { HomeProgramsBackdrop, HomeProgramsCardsBackdrop, HomeProgramsMethodIcon } from './home-programs-decor'
 import { TestimonialCircularGallery } from './testimonial-circular-gallery'
 import { TrustedPartnersSection } from './trusted-partners-section'
 import { WhoWeAreSection } from './who-we-are-section'
-import { ExpertiseFloatingBackdrop } from './expertise-floating-backdrop'
+import { HomeExpertiseBackdrop, HomeExpertiseCardsBackdrop } from './home-expertise-decor'
+import { HomeWhyBackdrop, HomeWhyCardsBackdrop } from './home-why-decor'
 
 const homepageExpertiseMarks = ['📝', '💼', '✍️', '🔬', '📣', '📊', '🎤', '🏛️'] as const
 const whyChooseIcons = [Zap, UsersRound, BadgeCheck, Heart, Handshake, Route] as const
@@ -60,6 +66,7 @@ export function HomePage({
     <main className="stakeholder-homepage">
       <section className="marketing-hero marketing-hero--revised homepage-hero" data-reveal data-testid="homepage-hero-section">
         <HeroShapeGrid />
+        <HomeHeroDecor gallery={testimonials.length > 0} />
         <div className="marketing-container homepage-hero__content">
           <div className="marketing-hero__copy homepage-hero__copy">
             <h1 className="marketing-hero__headline">Win Business Competitions with Expert Mentoring</h1>
@@ -91,7 +98,7 @@ export function HomePage({
       <WhoWeAreSection photos={whoWeArePhotos} />
 
       <section className="marketing-section stakeholder-section homepage-expertise" aria-labelledby="expertise-heading" data-reveal data-testid="homepage-expertise-section">
-        <ExpertiseFloatingBackdrop />
+        <HomeExpertiseBackdrop />
         <div className="marketing-container homepage-expertise__inner">
           <div className="homepage-expertise__head">
             <p className="marketing-kicker">Our Expertise</p>
@@ -116,6 +123,7 @@ export function HomePage({
                 </article>
               )
             })}
+            <HomeExpertiseCardsBackdrop />
           </div>
         </div>
       </section>
@@ -123,25 +131,31 @@ export function HomePage({
       {/* Programs and Digital Products share one homepage section: every way to prepare, side by side. */}
       <section className="marketing-section stakeholder-section homepage-programs" aria-labelledby="program-heading" data-reveal data-testid="homepage-programs-section">
         <div className="marketing-container homepage-programs__inner">
-          <div className="homepage-programs__head">
-            <h2 id="program-heading">Choose your path to Competition Success</h2>
-            <div className="homepage-programs__method" role="img" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
-              <div className="homepage-programs__mix">
-                <div className="homepage-programs__share is-theory"><strong>40%</strong><span>theory</span></div>
-                <div className="homepage-programs__share is-practice"><strong>60%</strong><span>practice</span></div>
+          <div className="homepage-programs__stage">
+            <div className="homepage-programs__head">
+              <h2 id="program-heading">Choose your path to Competition Success</h2>
+              <div className="homepage-programs__method" role="img" aria-label="40% theory, 60% practice, 100% impact" data-testid="homepage-programs-method">
+                <div className="homepage-programs__bar">
+                  <div className="homepage-programs__mix">
+                    <div className="homepage-programs__share is-theory"><HomeProgramsMethodIcon name="graduation-cap" /><strong>40%</strong><span>theory</span></div>
+                    <div className="homepage-programs__share is-practice"><HomeProgramsMethodIcon name="briefcase" /><strong>60%</strong><span>practice</span></div>
+                  </div>
+                </div>
+                <div className="homepage-programs__impact"><HomeProgramsMethodIcon name="trophy" /><strong>100%</strong><span>impact</span></div>
               </div>
-              <div className="homepage-programs__impact"><strong>100%</strong><span>impact</span></div>
+              <HomeProgramsBackdrop />
             </div>
-          </div>
 
-          <div className="marketing-program-grid homepage-programs__cards" data-testid="homepage-program-cards">
-            {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
-          </div>
+            <div className="marketing-program-grid homepage-programs__cards" data-testid="homepage-program-cards">
+              {homePrograms.map((program) => <ProgramCard key={program.id} program={program} />)}
+              <HomeProgramsCardsBackdrop />
+            </div>
 
-          <div className="homepage-programs__footer">
-            <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'homepage-programs__view-all')} href="/program" data-testid="homepage-programs-view-all">
-              View all programs <ArrowRight aria-hidden="true" size={16} />
-            </Link>
+            <div className="homepage-programs__footer">
+              <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'homepage-programs__view-all')} href="/program" data-testid="homepage-programs-view-all">
+                View all programs <ArrowRight aria-hidden="true" size={16} />
+              </Link>
+            </div>
           </div>
 
           {digitalProductsEnabled ? (
@@ -150,9 +164,12 @@ export function HomePage({
                 <div className="marketing-product-library__copy">
                   <h3 id="digital-products-heading">Digital Products</h3>
                   <p className="marketing-product-library__lede">Learn beyond the session with ready-to-use guides, videos, and templates that help you prepare for business competitions.</p>
+                  <HomeProductsFormats />
                   <Link className={cn(buttonVariants({ variant: 'primary', size: 'marketing' }), 'marketing-product-library__cta')} href="/digital-products" data-testid="homepage-products-cta">Explore digital products <ArrowRight aria-hidden="true" size={16} /></Link>
                 </div>
-                {digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}
+                <HomeProductsStage>
+                  {digitalProducts.length ? <DigitalProductCardSwap products={digitalProducts} decor={<HomeProductsStackDecor />} /> : <div className="stakeholder-empty-state"><strong>Digital products are coming soon.</strong><span>Product details will appear after final approval.</span></div>}
+                </HomeProductsStage>
               </div>
             </section>
           ) : null}
@@ -161,8 +178,12 @@ export function HomePage({
 
       <section className="marketing-section stakeholder-section stakeholder-mentors" aria-labelledby="mentor-heading" data-reveal data-testid="homepage-mentors-section">
         <div className="marketing-container homepage-mentors__head">
-          <h2 id="mentor-heading">Meet Our Mentors</h2>
+          <div className="homepage-mentors__intro">
+            <h2 id="mentor-heading">Meet Our Mentors</h2>
+            <p className="homepage-mentors__lede">Learn from competition champions and industry professionals who have been where you want to go.</p>
+          </div>
           <Link className="marketing-text-link" href="/mentor">View all mentors <ArrowRight aria-hidden="true" size={16} /></Link>
+          <MentorSectionDecor />
         </div>
         <div className="homepage-mentors__rail">
           <MentorMarquee mentors={mentors} />
@@ -170,11 +191,12 @@ export function HomePage({
       </section>
 
       <section className="marketing-section stakeholder-section homepage-why" aria-labelledby="why-choose-heading" data-reveal data-testid="homepage-why-choose-section">
+        <HomeWhyBackdrop />
         <div className="marketing-container homepage-why__inner">
           <div className="homepage-why__head">
             <p className="marketing-kicker">Why Us</p>
             <h2 id="why-choose-heading">Why Choose Strativate?</h2>
-            <p>We’ve built the perfect ecosystem to turn ambitious students<br />{' '}into competition winners.</p>
+            <p>We’ve built the perfect ecosystem to turn ambitious students into competition winners.</p>
           </div>
 
           <div className="homepage-why__grid">
@@ -190,6 +212,7 @@ export function HomePage({
                 </article>
               )
             })}
+            <HomeWhyCardsBackdrop />
           </div>
         </div>
       </section>
@@ -197,10 +220,12 @@ export function HomePage({
       <TrustedPartnersSection partners={trustedPartners} />
 
       <section className="marketing-section stakeholder-section homepage-faq" aria-labelledby="faq-heading" data-reveal data-testid="homepage-faq-section">
-        <div className="marketing-container">
+        <HomeFaqBackdrop />
+        <div className="marketing-container homepage-faq__inner">
           <div className="homepage-faq__head">
             <h2 id="faq-heading">FAQ</h2>
             <Link className="marketing-text-link" href="/faq">See all questions <ArrowRight aria-hidden="true" size={16} /></Link>
+            <HomeFaqHeadDecor />
           </div>
           <div className="homepage-faq__grid">
             {faqPreview.slice(0, 4).map((item) => (
